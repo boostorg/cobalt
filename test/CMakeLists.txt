@@ -5,4 +5,4 @@ add_executable(wrappers wrappers.cpp)
 
 add_executable(main main.cpp)
 
-add_executable(unit_tests doctest.cpp test.cpp allocator.cpp compose.cpp basic_coro.cpp latch.cpp)
+add_executable(unit_tests doctest.cpp allocator.cpp compose.cpp basic_coro.cpp latch.cpp)
