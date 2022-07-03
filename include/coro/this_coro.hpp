@@ -83,8 +83,6 @@ struct promise_executor_base
     executor_type executor_;
 };
 
-
-
 template<typename CancellationSlot = asio::cancellation_slot,
          typename DefaultFilter = asio::enable_terminal_cancellation>
 struct promise_cancellation_base

@@ -77,30 +77,33 @@ struct coro_with_arg
 
         constexpr static bool await_ready() { return false; }
 
-        template <typename Y, typename R, typename E, typename A>
-        auto await_suspend(std::coroutine_handle<coro_promise<Y, R, E, A>> h) -> std::coroutine_handle<>
+        template<typename Promise>
+        auto direct_suspend(std::coroutine_handle<Promise> h)
         {
-            auto & caller = h.promise();
-            detail::throw_if_cancelled_impl(caller);
             auto & callee = *coro.coro_;
-
-            if (caller.get_executor() == callee.get_executor()) // also if void & if vol
-            {
-                callee.awaited_from = h;
-                callee.input_ = std::move(value);
+            auto & caller = h.promise();
+            callee.awaited_from = h;
+            callee.input_ = std::move(value);
+            if constexpr (requires {{caller.cancellation_state()};})
                 callee.reset_cancellation_source(caller.cancellation_state().slot());
-                return callee.get_handle();
-            }
-            else
+            return callee.get_handle();
+        }
+
+        template<typename Promise>
+        auto dispatching_suspend(std::coroutine_handle<Promise> h)
+        {
+            auto & callee = *coro.coro_;
+            auto & caller = h.promise();
+            callee.awaited_from =
+                    try_dispatch_coroutine(
+                            asio::prefer(caller.get_executor(), asio::execution::outstanding_work.tracked),
+                            [h]() mutable { h.resume(); }, &storage_from, sizeof(storage_from));
+
+            callee.reset_error();
+            callee.input_ = std::move(value);
+
+            if constexpr (requires {{caller.cancellation_state()};})
             {
-                callee.awaited_from =
-                        try_dispatch_coroutine(
-                                asio::prefer(caller.get_executor(), asio::execution::outstanding_work.tracked),
-                                [h]() mutable { h.resume(); }, &storage_from, sizeof(storage_from));
-
-                callee.reset_error();
-                callee.input_ = std::move(value);
-
                 callee.reset_cancellation_source(dispatched_signal.slot());
                 if (caller.cancellation_state().slot().is_connected())
                 {
@@ -123,13 +126,30 @@ struct coro_with_arg
                     };
                     caller.cancellation_state().slot().template emplace<cancel_handler>(coro, dispatched_signal);
                 }
-
-                auto hh = std::coroutine_handle<typename coro_t::promise_type>::from_promise(*coro.coro_);
-                return try_dispatch_coroutine(
-                        coro.coro_->get_executor(),
-                        [hh]() mutable { hh.resume(); },
-                        &storage, sizeof(storage));
             }
+
+
+            auto hh = std::coroutine_handle<typename coro_t::promise_type>::from_promise(*coro.coro_);
+            return try_dispatch_coroutine(
+                    coro.coro_->get_executor(),
+                    [hh]() mutable { hh.resume(); },
+                    &storage, sizeof(storage));
+        }
+
+        template <typename Promise>
+        auto await_suspend(std::coroutine_handle<Promise> h) -> std::coroutine_handle<>
+        {
+            auto & callee = *coro.coro_;
+            auto & caller = h.promise();
+            if constexpr (requires {{caller.get_executor()};})
+            {
+                if (caller.get_executor() == callee.get_executor()) // also if void & if vol
+                    return direct_suspend(h);
+                else
+                    return dispatching_suspend(h);
+            }
+            else
+                return direct_suspend(h);
         }
 
         auto await_resume() -> typename coro_t::result_type
@@ -613,6 +633,80 @@ struct basic_coro<Yield, Return, Executor, Allocator>::awaitable_t
     asio::cancellation_signal dispatched_signal;
 
     constexpr static bool await_ready() { return false; }
+
+    template<typename Promise>
+    auto direct_suspend(std::coroutine_handle<Promise> h)
+    {
+        auto & callee = *coro.coro_;
+        auto & caller = h.promise();
+        callee.awaited_from = h;
+        if constexpr (requires {{caller.cancellation_state()};})
+            callee.reset_cancellation_source(caller.cancellation_state().slot());
+        return callee.get_handle();
+    }
+
+    template<typename Promise>
+    auto dispatching_suspend(std::coroutine_handle<Promise> h)
+    {
+        auto & callee = *coro.coro_;
+        auto & caller = h.promise();
+        callee.awaited_from =
+                try_dispatch_coroutine(
+                        asio::prefer(caller.get_executor(), asio::execution::outstanding_work.tracked),
+                        [h]() mutable { h.resume(); }, &storage_from, sizeof(storage_from));
+
+        callee.reset_error();
+
+        if constexpr (requires {{caller.cancellation_state()};})
+        {
+            callee.reset_cancellation_source(dispatched_signal.slot());
+            if (caller.cancellation_state().slot().is_connected())
+            {
+                struct cancel_handler
+                {
+                    coro_t& coro;
+                    asio::cancellation_signal  & dispatched_signal;
+                    cancel_handler(coro_t& coro, asio::cancellation_signal & dispatched_signal)
+                            : coro(coro), dispatched_signal(dispatched_signal) {}
+
+                    void operator()(asio::cancellation_type ct)
+                    {
+                        asio::dispatch(
+                                coro.get_executor(),
+                                [this, ct]
+                                {
+                                    dispatched_signal.emit(ct);
+                                });
+                    }
+                };
+                caller.cancellation_state().slot().template emplace<cancel_handler>(coro, dispatched_signal);
+            }
+        }
+
+
+        auto hh = std::coroutine_handle<typename coro_t::promise_type>::from_promise(*coro.coro_);
+        return try_dispatch_coroutine(
+                coro.coro_->get_executor(),
+                [hh]() mutable { hh.resume(); },
+                &storage, sizeof(storage));
+    }
+
+
+    template <typename Promise>
+    auto await_suspend(std::coroutine_handle<Promise> h) -> std::coroutine_handle<>
+    {
+        auto & callee = *coro.coro_;
+        auto & caller = h.promise();
+        if constexpr (requires {{caller.get_executor()};})
+        {
+            if (caller.get_executor() == callee.get_executor()) // also if void & if vol
+                return direct_suspend(h);
+            else
+                return dispatching_suspend(h);
+        }
+        else
+            return direct_suspend(h);
+    }
 
     template <typename Y, typename R, typename E, typename A>
     auto await_suspend(
