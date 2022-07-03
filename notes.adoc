@@ -1,0 +1,4 @@
+`coro<void>`  -> `yay or nay?` ?
+
+
+`coro<T(U), V, void>` ->

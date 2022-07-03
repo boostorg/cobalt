@@ -1,0 +1,3 @@
+# Detached
+
+A detached basic_coro is one that unlike `coro` is not own by it's handle.

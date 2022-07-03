@@ -1,0 +1,19 @@
+# Properties
+
+1. Executor 
+2. Cancellation
+3. Allocator
+
+(2) is a resumption property, (1) maybe.
+
+default:
+
+    // for detached<...>
+    asio::get_associated_X(completion_token)
+
+alternatives? 
+    stop_token
+    signal2 ?
+
+allocator is in signature after `allocator_arg` -> OR associated to the completion token
+
