@@ -216,6 +216,8 @@ struct promise_cancellation_base
     asio::cancellation_state & cancellation_state() {return state_;}
     asio::cancellation_type cancelled() const {return state_.cancelled();}
 
+    cancellation_slot_type get_cancellation_slot() {return state_.slot();}
+
     void reset_cancellation_source(CancellationSlot source = CancellationSlot())
     {
         state_ = {source_ = source, DefaultFilter() };

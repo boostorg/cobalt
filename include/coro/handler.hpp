@@ -102,7 +102,8 @@ struct completion_handler : detail::completion_handler_base<Promise>
     {
         if constexpr (requires (promise_type & p) {p.notify_suspended();})
             this->self->notify_suspended();
-        result = {std::move(args)...};
+
+        result.emplace(std::move(args)...);
         std::coroutine_handle<promise_type>::from_promise(*this->self.release()).resume();
     }
 };

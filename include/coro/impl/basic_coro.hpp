@@ -72,7 +72,7 @@ struct coro_with_arg
         T value;
         coro_t& coro;
 
-        std::aligned_storage<256u, alignof(void*)> storage_from, storage;
+        std::aligned_storage<128u, alignof(void*)> storage_from, storage;
         asio::cancellation_signal dispatched_signal;
 
         constexpr static bool await_ready() { return false; }
@@ -84,8 +84,8 @@ struct coro_with_arg
             auto & caller = h.promise();
             callee.awaited_from = h;
             callee.input_ = std::move(value);
-            if constexpr (requires {{caller.cancellation_state()};})
-                callee.reset_cancellation_source(caller.cancellation_state().slot());
+            if constexpr (requires {{caller.get_cancellation_slot()};})
+                callee.reset_cancellation_source(caller.get_cancellation_slot());
             return callee.get_handle();
         }
 
@@ -102,7 +102,7 @@ struct coro_with_arg
             callee.reset_error();
             callee.input_ = std::move(value);
 
-            if constexpr (requires {{caller.cancellation_state()};})
+            if constexpr (requires {{caller.get_cancellation_slot()};})
             {
                 callee.reset_cancellation_source(dispatched_signal.slot());
                 if (caller.cancellation_state().slot().is_connected())
@@ -124,7 +124,7 @@ struct coro_with_arg
                                     });
                         }
                     };
-                    caller.cancellation_state().slot().template emplace<cancel_handler>(coro, dispatched_signal);
+                    caller.get_cancellation_slot().template emplace<cancel_handler>(coro, dispatched_signal);
                 }
             }
 
@@ -629,7 +629,7 @@ struct basic_coro<Yield, Return, Executor, Allocator>::awaitable_t
 {
     using coro_t = basic_coro;
     basic_coro& coro;
-    std::aligned_storage<256u, alignof(void*)> storage_from, storage;
+    std::aligned_storage<128u, alignof(void*)> storage_from, storage;
     asio::cancellation_signal dispatched_signal;
 
     constexpr static bool await_ready() { return false; }
@@ -640,8 +640,8 @@ struct basic_coro<Yield, Return, Executor, Allocator>::awaitable_t
         auto & callee = *coro.coro_;
         auto & caller = h.promise();
         callee.awaited_from = h;
-        if constexpr (requires {{caller.cancellation_state()};})
-            callee.reset_cancellation_source(caller.cancellation_state().slot());
+        if constexpr (requires {{caller.get_cancellation_slot()};})
+            callee.reset_cancellation_source(caller.get_cancellation_slot());
         return callee.get_handle();
     }
 
@@ -651,16 +651,16 @@ struct basic_coro<Yield, Return, Executor, Allocator>::awaitable_t
         auto & callee = *coro.coro_;
         auto & caller = h.promise();
         callee.awaited_from =
-                try_dispatch_coroutine(
+                detail::try_dispatch_coroutine(
                         asio::prefer(caller.get_executor(), asio::execution::outstanding_work.tracked),
                         [h]() mutable { h.resume(); }, &storage_from, sizeof(storage_from));
 
         callee.reset_error();
 
-        if constexpr (requires {{caller.cancellation_state()};})
+        if constexpr (requires {{caller.get_cancellation_slot()};})
         {
             callee.reset_cancellation_source(dispatched_signal.slot());
-            if (caller.cancellation_state().slot().is_connected())
+            if (caller.get_cancellation_slot().is_connected())
             {
                 struct cancel_handler
                 {
@@ -679,13 +679,13 @@ struct basic_coro<Yield, Return, Executor, Allocator>::awaitable_t
                                 });
                     }
                 };
-                caller.cancellation_state().slot().template emplace<cancel_handler>(coro, dispatched_signal);
+                caller.get_cancellation_slot().template emplace<cancel_handler>(coro, dispatched_signal);
             }
         }
 
 
         auto hh = std::coroutine_handle<typename coro_t::promise_type>::from_promise(*coro.coro_);
-        return try_dispatch_coroutine(
+        return detail::try_dispatch_coroutine(
                 coro.coro_->get_executor(),
                 [hh]() mutable { hh.resume(); },
                 &storage, sizeof(storage));
