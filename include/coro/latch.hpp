@@ -19,8 +19,8 @@ namespace coro
 template<typename T, typename Executor>
 struct latch;
 
-template<typename T,
-        typename Executor = asio::any_io_executor>
+
+template<typename T, typename Executor = asio::any_io_executor>
 struct latch_promise
 {
     latch<T, Executor> & l;
@@ -59,7 +59,7 @@ struct latch_promise
             auto await_suspend(std::coroutine_handle<latch_promise> h) noexcept
             {
                 h.destroy();
-                return l.waiter;
+                return std::exchange(l.waiter, nullptr);
             }
             void await_resume() noexcept {}
         };
@@ -80,7 +80,6 @@ struct latch
     executor_type get_executor() const {return exec;}
 
     executor_type exec;
-
     asio::cancellation_signal signal;
     void cancel(asio::cancellation_type tp = asio::cancellation_type::all)
     {
@@ -122,11 +121,14 @@ struct latch
     {
         waiter = h;
     }
-    auto await_resume() const
+    auto await_resume()
     {
         if (ex)
-            std::rethrow_exception(ex);
-        return std::move(result);
+            std::rethrow_exception(std::exchange(ex, nullptr));
+        if constexpr (std::is_void_v<T>)
+            result = false;
+        else
+            return std::move(std::exchange(result, std::nullopt).value());
     }
 };
 

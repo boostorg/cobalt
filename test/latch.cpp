@@ -58,7 +58,7 @@ CO_TEST_CASE("posted")
     CHECK(!l.ex);
     auto res = co_await l;
     CHECK(res);
-    CHECK(4.2 == *res);
+    CHECK(4.2 == res);
 }
 
 coro::task<int> posted_throw(asio::any_io_executor exec)
