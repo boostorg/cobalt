@@ -92,16 +92,28 @@ constexpr decltype(auto) get_last_variadic(First && first, Args  && ... args)
 template<typename Promise = void>
 struct coro_deleter
 {
-    coro_deleter() = default;
+    bool * disarmed = nullptr;
+    coro_deleter(bool * disarmed = nullptr) : disarmed(disarmed) {}
     void operator()(Promise * c)
     {
-        if (c != nullptr)
+            if (c != nullptr && (!disarmed || *disarmed))
         {
             if constexpr (std::is_void_v<Promise>)
                 std::coroutine_handle<Promise>::from_address(c).destroy();
             else
                 std::coroutine_handle<Promise>::from_promise(*c).destroy();
         }
+    }
+};
+
+struct armer
+{
+    bool & arm;
+    armer(bool & d) : arm(d) {}
+    ~armer()
+    {
+        if (std::uncaught_exceptions() == 0)
+            arm = true;
     }
 };
 

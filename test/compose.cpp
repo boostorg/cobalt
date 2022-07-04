@@ -165,4 +165,42 @@ TEST_CASE("posted-throw")
 }
 
 
+template <typename CompletionToken>
+auto async_always_throws_1(CompletionToken&& token)
+{
+    return async_initiate<CompletionToken, void()>(
+            [](auto&& completion_handler) // Handler not moved-from on exception.
+            {
+                (void)completion_handler;
+                throw 42;
+            }, token);
+}
+
+struct async_always_throws_impl
+{
+    template<typename Handler, typename Executor>
+    void operator()(asio::io_context & tim,
+                    coro::composed_op<Handler, Executor, void(double)>)
+    {
+        co_await async_always_throws_1(asio::deferred);
+        co_return {4.2};
+    }
+
+};
+
+template<asio::completion_token_for<void(double)> CompletionToken>
+auto async_always_throws(asio::io_context & tim, CompletionToken && token) // async
+{
+    return coro::async_compose<CompletionToken, void(double)>(
+            async_always_throws_impl{}, token, tim);
+}
+
+TEST_CASE("op-throw")
+{
+    asio::io_context ctx;
+    CHECK_THROWS(async_always_throws(ctx, asio::detached));
+
+    ctx.run();
+}
+
 TEST_SUITE_END();

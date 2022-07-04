@@ -26,6 +26,7 @@ struct awaitable_deferred<void(Args...), Ts...>
 {
     asio::deferred_async_operation<void(Args...), Ts...>  op;
     std::optional<std::tuple<Args...>> result;
+    bool armed = false;
 
     constexpr static bool await_ready() { return false; }
 
@@ -33,7 +34,8 @@ struct awaitable_deferred<void(Args...), Ts...>
     void await_suspend( std::coroutine_handle<Promise> h)
     {
         using completion = completion_handler<Promise, Args...>;
-        std::move(op)(completion{h, result});
+        armer _(armed);
+        std::move(op)(completion{h, &armed, result});
     }
 
     auto await_resume()
@@ -60,7 +62,7 @@ struct awaitable_deferred_interpreted<void(Args...), Ts...>
 {
     asio::deferred_async_operation<void(Args...), Ts...>  op;
     std::optional<std::tuple<Args...>> result;
-
+    bool armed = false;
     constexpr static bool await_ready() { return false; }
 
     template<typename Promise>
@@ -68,7 +70,8 @@ struct awaitable_deferred_interpreted<void(Args...), Ts...>
     {
         detail::throw_if_cancelled_impl(h.promise());
         using completion = completion_handler<Promise, Args...>;
-        std::move(op)(completion{h, result});
+        armer _(armed);
+        std::move(op)(completion{h, &armed, result});
     }
 
     auto await_resume()
