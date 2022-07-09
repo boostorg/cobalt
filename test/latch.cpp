@@ -34,7 +34,7 @@ struct immediate_throw
     bool await_suspend(std::coroutine_handle<void>) {assert(!"unreachable"); }
     int await_resume() {throw std::runtime_error("test"); return 42;}
 };
-/*
+
 CO_TEST_CASE("immediate_throw")
 {
     coro::latch<int> l{co_await coro::this_coro::executor};
@@ -93,5 +93,5 @@ CO_TEST_CASE("cancelled")
 }
 
 
-*/
+
 TEST_SUITE_END();

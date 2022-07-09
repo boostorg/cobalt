@@ -116,22 +116,27 @@ struct latch
         ex = std::current_exception();
     }
 
-    bool await_ready() const {return !!result || !!ex;}
-    void await_suspend(std::coroutine_handle<void> h)
+    struct awaitable_t
     {
-        waiter = h;
-    }
-    auto await_resume()
-    {
-        if (ex)
-            std::rethrow_exception(std::exchange(ex, nullptr));
-        if constexpr (std::is_void_v<T>)
-            result = false;
-        else
-            return std::move(std::exchange(result, std::nullopt).value());
-    }
-};
+        latch & l;
+        bool await_ready() const {return !!l.result || !!l.ex;}
+        void await_suspend(std::coroutine_handle<void> h)
+        {
+            l.waiter = h;
+        }
+        auto await_resume()
+        {
+            if (l.ex)
+                std::rethrow_exception(std::exchange(l.ex, nullptr));
+            if constexpr (std::is_void_v<T>)
+                l.result = false;
+            else
+                return std::move(std::exchange(l.result, std::nullopt).value());
+        }
+    };
 
+    awaitable_t operator co_await() {return awaitable_t{*this};}
+};
 
 }
 
