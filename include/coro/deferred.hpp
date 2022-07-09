@@ -10,7 +10,9 @@
 #include <asio/associated_executor.hpp>
 #include <asio/as_tuple.hpp>
 #include <asio/deferred.hpp>
+#include <asio/post.hpp>
 #include <coroutine>
+#include <coro/error.hpp>
 #include <coro/handler.hpp>
 
 namespace coro
@@ -26,16 +28,22 @@ struct awaitable_deferred<void(Args...), Ts...>
 {
     asio::deferred_async_operation<void(Args...), Ts...>  op;
     std::optional<std::tuple<Args...>> result;
-    bool armed = false;
 
     constexpr static bool await_ready() { return false; }
 
     template<typename Promise>
-    void await_suspend( std::coroutine_handle<Promise> h)
+    inline void await_suspend( std::coroutine_handle<Promise> h)
     {
-        using completion = completion_handler<Promise, Args...>;
-        armer _(armed);
-        std::move(op)(completion{h, &armed, result});
+        auto exec = asio::get_associated_executor(h.promise());
+        try
+        {
+            using completion = completion_handler<Promise, Args...>;
+            std::move(op)(completion{h, result});
+        }
+        catch(...)
+        {
+            asio::post(exec, [e = std::current_exception()]{std::rethrow_exception(e);});
+        }
     }
 
     auto await_resume()
@@ -43,6 +51,8 @@ struct awaitable_deferred<void(Args...), Ts...>
         return std::move(result.value()) ;
     }
 };
+
+
 
 struct enable_deferred
 {
@@ -62,27 +72,33 @@ struct awaitable_deferred_interpreted<void(Args...), Ts...>
 {
     asio::deferred_async_operation<void(Args...), Ts...>  op;
     std::optional<std::tuple<Args...>> result;
-    bool armed = false;
     constexpr static bool await_ready() { return false; }
-
-    template<typename Promise>
-    void await_suspend( std::coroutine_handle<Promise> h)
-    {
-        detail::throw_if_cancelled_impl(h.promise());
-        using completion = completion_handler<Promise, Args...>;
-        armer _(armed);
-        std::move(op)(completion{h, &armed, result});
-    }
 
     auto await_resume()
     {
         return interpret_result(std::move(*result));
+    }
+
+    template<typename Promise>
+    inline void await_suspend( std::coroutine_handle<Promise> h) noexcept
+    {
+        auto exec = asio::get_associated_executor(h.promise());
+        try
+        {
+            using completion = completion_handler<Promise, Args...>;
+            std::move(op)(completion{h, result});
+        }
+        catch(...)
+        {
+            asio::post(exec, [e = std::current_exception()]{std::rethrow_exception(e);});
+        }
     }
 };
 
 template<typename Signature, typename ... Ts>
 awaitable_deferred_interpreted(asio::deferred_async_operation<Signature, Ts...>)
                                           -> awaitable_deferred_interpreted<Signature, Ts...>;
+
 
 struct enable_deferred_interpreted
 {

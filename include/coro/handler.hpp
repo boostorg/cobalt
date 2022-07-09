@@ -81,8 +81,8 @@ struct completion_handler_base
           completion_handler_allocator_base<Promise>
 {
     std::unique_ptr<Promise, coro_deleter<Promise>> self;
-    completion_handler_base(std::coroutine_handle<Promise> h, bool * arm = nullptr)
-        : self(&h.promise(), coro_deleter<Promise>{arm}) {}
+    completion_handler_base(std::coroutine_handle<Promise> h)
+        : self(&h.promise(), coro_deleter<Promise>{ }) {}
     completion_handler_base(completion_handler_base && ) = default;
 };
 
@@ -93,9 +93,8 @@ template<typename Promise, typename ... Args>
 struct completion_handler : detail::completion_handler_base<Promise>
 {
     completion_handler(std::coroutine_handle<Promise> h,
-                       bool * arm,
                        std::optional<std::tuple<Args...>> &result)
-            : detail::completion_handler_base<Promise>(h, arm), result(result) {}
+            : detail::completion_handler_base<Promise>(h), result(result) {}
     completion_handler(completion_handler && ) = default;
 
     std::optional<std::tuple<Args...>> &result;

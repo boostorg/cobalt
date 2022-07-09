@@ -5,7 +5,6 @@
 #ifndef CORO_THIS_CORO_HPP
 #define CORO_THIS_CORO_HPP
 
-
 #include <asio/any_io_executor.hpp>
 #include <asio/dispatch.hpp>
 #include <asio/this_coro.hpp>

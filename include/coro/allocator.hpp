@@ -100,7 +100,7 @@ struct promise_allocator_arg_base
     }
 
     template<typename ... Args>
-    promise_allocator_arg_base(Args & ... args) : alloc_(
+    promise_allocator_arg_base(Args && ... args) : alloc_(
             get_variadic<variadic_first<std::allocator_arg_t, std::decay_t<Args>...>() + 1u>(args...)) {}
 
   private:

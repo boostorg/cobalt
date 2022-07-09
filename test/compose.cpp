@@ -86,7 +86,7 @@ struct async_throw_impl
         if (post_first)
             co_await coro::ops::wait(tim);
         throw std::runtime_error("test-exception");
-        co_return {{}, 4.2};
+        co_return {std::error_code{}, 4.2};
     }
 
 };
@@ -198,9 +198,9 @@ auto async_always_throws(asio::io_context & tim, CompletionToken && token) // as
 TEST_CASE("op-throw")
 {
     asio::io_context ctx;
-    CHECK_THROWS(async_always_throws(ctx, asio::detached));
+    async_always_throws(ctx, asio::detached);
 
-    ctx.run();
+    CHECK_THROWS(ctx.run());
 }
 
 TEST_SUITE_END();
