@@ -55,7 +55,7 @@ double foo(asio::steady_timer & tim, asio::error_code & ec) // non-throwing
 struct async_noop_impl
 {
     template<typename Handler>
-    void operator()(asio::io_context & ctx,
+    void operator()(asio::io_context::executor_type exec,
                     coro::composed_op<Handler, asio::io_context::executor_type , void(double)>)
     {
         // some dummy op for demonstration
@@ -65,16 +65,16 @@ struct async_noop_impl
 };
 
 template<asio::completion_token_for<void(double)> CompletionToken>
-auto async_noop(asio::io_context & ctx, CompletionToken && token) // async
+auto async_noop(asio::io_context::executor_type exec, CompletionToken && token) // async
 {
     return coro::async_compose<CompletionToken, void(double)>(
-            async_noop_impl{}, token, ctx);
+            async_noop_impl{}, token, exec);
 }
 
-double noop(asio::io_context & ctx) // throwing
+double noop(asio::io_context::executor_type exec) // throwing
 {
     return coro::compose<void(double)>(
-            async_noop_impl{}, ctx);
+            async_noop_impl{}, exec);
 }
 
 struct async_throw_impl
@@ -120,6 +120,7 @@ TEST_CASE("wait")
     asio::steady_timer tim{ctx};
     async_foo(tim, [](auto ec, auto d) { CHECK(!ec); CHECK(d == 4.2);});
     async_foo(tim, asio::bind_allocator(ra, asio::detached));
+
     auto d = foo(tim);
 
     asio::error_code ec;
@@ -132,9 +133,12 @@ TEST_CASE("noop")
 {
     asio::recycling_allocator<void> ra;
     asio::io_context ctx;
-    async_noop(ctx, [](auto d) {CHECK(d == 2.4);});
-    async_noop(ctx, asio::bind_allocator(ra, asio::detached));
-    CHECK(noop(ctx) == 2.4);
+    async_noop(ctx.get_executor(), [](auto d) {CHECK(d == 2.4);});
+    async_noop(ctx.get_executor(), asio::bind_allocator(ra, asio::detached));
+
+    async_noop(ctx.get_executor(), asio::deferred)(asio::detached);
+
+    CHECK(noop(ctx.get_executor()) == 2.4);
     ctx.run();
 }
 

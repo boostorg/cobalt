@@ -344,7 +344,7 @@ struct composed_initiate
     template<typename Completion, typename ... Args>
     void operator()(Completion && cpl, Args && ... args)
     {
-        auto exec = detail::pick_executor(0, args...);
+        auto exec = detail::pick_executor(cpl, args...);
         impl(std::forward<Args>(args)...,
              composed_op<Completion, decltype(exec), Signatures...>{std::forward<Completion>(cpl), std::move(exec)});
     }
@@ -370,7 +370,7 @@ auto compose(Implementation && implementation,
              IoObjectsOrExecutors && ... io_objects_or_executors)
 {
     composed_completion<Signatures...> cpl;
-    auto exec = detail::pick_executor(0, io_objects_or_executors...);
+    auto exec = detail::pick_executor(cpl, io_objects_or_executors...);
     implementation(
             std::forward<IoObjectsOrExecutors>(io_objects_or_executors)...,
             composed_op<composed_completion<Signatures...>&, decltype(exec), Signatures...>{cpl, std::move(exec)});
@@ -384,7 +384,7 @@ auto compose(Implementation && implementation,
              IoObjectsOrExecutors && ... io_objects_or_executors)
 {
     composed_completion<Signatures...> cpl;
-    auto exec = detail::pick_executor(0, io_objects_or_executors...);
+    auto exec = detail::pick_executor(cpl, io_objects_or_executors...);
     implementation(
             std::forward<IoObjectsOrExecutors>(io_objects_or_executors)...,
             composed_op<composed_completion<Signatures...>&, decltype(exec), Signatures...>{cpl, std::move(exec)});

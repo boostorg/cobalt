@@ -15,49 +15,65 @@ namespace coro
 namespace detail
 {
 
-
 template<typename CompletionHandler>
 auto pick_executor(CompletionHandler &&completion_handler)
 {
     return asio::get_associated_executor(completion_handler);
 }
 
-
 template<typename CompletionHandler,
         typename First,
         typename ... IoObjectsOrExecutors>
-auto pick_executor(CompletionHandler &&completion_handler,
-                   const First &first,
-                   IoObjectsOrExecutors &&... io_objects_or_executors)
--> typename std::enable_if<
-        asio::is_executor<First>::value || asio::execution::is_executor<First>::value, First>::type
+auto pick_executor_impl(rank<1>,
+                        CompletionHandler &completion_handler,
+                        First &first,
+                        IoObjectsOrExecutors &... io_objects_or_executors)
+        -> asio::associated_executor_t<std::decay_t<CompletionHandler>, typename First::executor_type>
 {
-    return first;
+    return asio::get_associated_executor(completion_handler, first.get_executor());
 }
 
 
 template<typename CompletionHandler,
         typename First,
         typename ... IoObjectsOrExecutors>
-auto pick_executor(CompletionHandler &&completion_handler,
-                   First &first,
-                   IoObjectsOrExecutors &&... io_objects_or_executors)
--> typename First::executor_type
+    requires (asio::is_executor<First>::value && asio::execution::is_executor_v<First>)
+auto pick_executor_impl(rank<1>,
+                        CompletionHandler &completion_handler,
+                        First &first,
+                        IoObjectsOrExecutors &... io_objects_or_executors)
+    -> asio::associated_executor_t<std::decay_t<CompletionHandler>,  First>
 {
-    return first.get_executor();
+    return asio::get_associated_executor(completion_handler, first);
 }
-
 
 template<typename CompletionHandler,
         typename First,
         typename ... IoObjectsOrExecutors>
-auto pick_executor(CompletionHandler &&completion_handler,
-                   First &&,
-                   IoObjectsOrExecutors &&... io_objects_or_executors)
+auto pick_executor_impl(rank<0>,
+                        CompletionHandler &completion_handler,
+                        First &,
+                        IoObjectsOrExecutors &... io_objects_or_executors)
 {
-    return pick_executor(std::forward<CompletionHandler>(completion_handler),
-                         std::forward<IoObjectsOrExecutors>(io_objects_or_executors)...);
+    return pick_executor(rank<1>{},
+                         completion_handler,
+                         io_objects_or_executors...);
 }
+
+
+template<typename CompletionHandler,
+        typename ... IoObjectsOrExecutors>
+auto pick_executor(CompletionHandler &completion_handler,
+                   IoObjectsOrExecutors &... io_objects_or_executors)
+{
+    if constexpr (asio::detail::has_executor_type<std::decay_t<CompletionHandler>>::value)
+        return asio::get_associated_executor(completion_handler);
+    else
+        return pick_executor_impl(rank<1>{}, completion_handler, io_objects_or_executors...);
+}
+
+
+
 
 }
 
