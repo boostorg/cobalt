@@ -8,6 +8,7 @@
 #include <asio/associated_allocator.hpp>
 #include <coro/util.hpp>
 
+#include <memory_resource>
 #include <memory>
 #include <limits>
 
@@ -135,6 +136,29 @@ struct promise_allocator_arg_type_impl<true, Args...>
 template<typename ... Args>
 using promise_allocator_arg_type = detail::promise_allocator_arg_type_impl<
         (std::is_same_v<std::decay_t<Args>, std::allocator_arg_t> || ...), Args...>;
+
+template<typename Allocator = std::allocator<void>>
+struct allocator_resource : std::pmr::memory_resource
+{
+    Allocator allocator;
+
+    allocator_resource(Allocator allocator) : allocator(allocator) {}
+
+    bool do_is_equal( const std::pmr::memory_resource& other ) const noexcept override
+    {
+        auto p = reinterpret_cast<const allocator_resource*>(&other);
+        return p != nullptr && p->allocator == allocator;
+    }
+    void do_deallocate( void* p, std::size_t bytes, std::size_t alignment ) override
+    {
+        std::allocator_traits<Allocator>::deallocate(allocator, p, bytes);
+    }
+    void* do_allocate( std::size_t bytes, std::size_t alignment ) override
+    {
+        return std::allocator_traits<Allocator>::allocate(allocator, bytes);
+    }
+
+};
 
 }
 

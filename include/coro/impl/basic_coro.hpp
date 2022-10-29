@@ -12,7 +12,7 @@
 #include <coro/allocator.hpp>
 #include <coro/concepts.hpp>
 #include <coro/detail/wrapper.hpp>
-#include <coro/deferred.hpp>
+#include <coro/async_operation.hpp>
 #include <coro/ops.hpp>
 #include <coro/this_coro.hpp>
 #include <coro/util.hpp>
@@ -538,7 +538,6 @@ struct coro_promise final :
         promise_throw_if_cancelled_base,
         promise_executor_base<Executor>,
         enable_awaitables<coro_promise<Yield, Return, Executor, Allocator>>,
-        enable_deferred,
         enable_operations<>,
         enable_await_allocator<Allocator>,
         coro_promise_error<coro_traits<Yield, Return, Executor>::is_noexcept>,
@@ -617,7 +616,6 @@ struct coro_promise final :
     using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
     using promise_throw_if_cancelled_base::await_transform;
     using enable_awaitables<coro_promise<Yield, Return, Executor, Allocator>>::await_transform;
-    using enable_deferred::await_transform;
     using enable_operations<>::await_transform;
     using promise_executor_base<Executor>::await_transform;
 };

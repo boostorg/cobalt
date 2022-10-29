@@ -2,8 +2,8 @@
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef CORO_DEFERRED_HPP
-#define CORO_DEFERRED_HPP
+#ifndef CORO_ASYNC_OPERATION_HPP
+#define CORO_ASYNC_OPERATION_HPP
 
 #include <asio/associated_allocator.hpp>
 #include <asio/associated_cancellation_slot.hpp>
@@ -17,16 +17,17 @@
 
 namespace coro
 {
-using asio::deferred;
-constexpr auto deferred_tup = asio::as_tuple(asio::deferred);
 
-template<typename Signature, typename ... Ts>
-struct awaitable_deferred;
+template<typename T>
+concept async_operation = asio::async_operation<std::decay_t<T>>;
 
-template<typename ... Args, typename ... Ts>
-struct awaitable_deferred<void(Args...), Ts...>
+template<typename Signature, typename Op>
+struct awaitable_async_operation;
+
+template<typename ... Args, typename Op>
+struct awaitable_async_operation<void(Args...), Op>
 {
-    asio::deferred_async_operation<void(Args...), Ts...>  op;
+    Op op;
     std::optional<std::tuple<Args...>> result;
 
     constexpr static bool await_ready() { return false; }
@@ -38,7 +39,7 @@ struct awaitable_deferred<void(Args...), Ts...>
         try
         {
             using completion = completion_handler<Promise, Args...>;
-            std::move(op)(completion{h, result});
+            static_cast<Op>(op)(completion{h, result});
         }
         catch(...)
         {
@@ -52,25 +53,24 @@ struct awaitable_deferred<void(Args...), Ts...>
     }
 };
 
-
-
-struct enable_deferred
+struct enable_async_operation
 {
-    template<typename ... Ts>
-    auto await_transform(asio::deferred_async_operation< Ts...> && op)
+    template<async_operation Op>
+    auto await_transform(Op && op)
     {
-        return awaitable_deferred<Ts...>{std::move(op)};
+        using signature_type = typename decltype(std::forward<Op>(op)(asio::detail::completion_signature_probe{}))::type;
+        return awaitable_async_operation<signature_type, Op>{std::forward<Op>(op)};
     }
 };
 
 
-template<typename Signature, typename ... Ts>
-struct awaitable_deferred_interpreted;
+template<typename Signature, typename Op>
+struct awaitable_async_operation_interpreted;
 
-template<typename ... Args, typename ... Ts>
-struct awaitable_deferred_interpreted<void(Args...), Ts...>
+template<typename ... Args, typename Op>
+struct awaitable_async_operation_interpreted<void(Args...), Op>
 {
-    asio::deferred_async_operation<void(Args...), Ts...>  op;
+    Op op;
     std::optional<std::tuple<Args...>> result;
     constexpr static bool await_ready() { return false; }
 
@@ -86,7 +86,7 @@ struct awaitable_deferred_interpreted<void(Args...), Ts...>
         try
         {
             using completion = completion_handler<Promise, Args...>;
-            std::move(op)(completion{h, result});
+            static_cast<Op>(op)(completion{h, result});
         }
         catch(...)
         {
@@ -95,20 +95,17 @@ struct awaitable_deferred_interpreted<void(Args...), Ts...>
     }
 };
 
-template<typename Signature, typename ... Ts>
-awaitable_deferred_interpreted(asio::deferred_async_operation<Signature, Ts...>)
-                                          -> awaitable_deferred_interpreted<Signature, Ts...>;
 
-
-struct enable_deferred_interpreted
+struct enable_async_operation_interpreted
 {
-    template<typename ... Ts>
-    auto await_transform(asio::deferred_async_operation< Ts...> && op)
+    template<async_operation Op>
+    auto await_transform(Op && op)
     {
-        return awaitable_deferred_interpreted<Ts...>{std::move(op)};
+        using signature_type = typename decltype(std::forward<Op>(op)(asio::detail::completion_signature_probe{}))::type;
+        return awaitable_async_operation_interpreted<signature_type, Op>{std::forward<Op>(op)};
     }
 };
 
 }
 
-#endif //CORO_DEFERRED_HPP
+#endif //CORO_ASYNC_OPERATION_HPP

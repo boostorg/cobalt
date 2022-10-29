@@ -79,7 +79,7 @@ CO_TEST_CASE("posted_throw")
 coro::task<void> cancelled(asio::any_io_executor exec)
 {
     asio::steady_timer tim{exec, std::chrono::seconds(1234)};
-    coro::interpret_result(co_await tim.async_wait(asio::deferred));
+    co_await tim.async_wait(asio::deferred) ;
 }
 
 CO_TEST_CASE("cancelled")

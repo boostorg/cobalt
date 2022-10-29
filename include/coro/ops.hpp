@@ -6,7 +6,7 @@
 #define CORO_OPS_HPP
 
 #include <tuple>
-#include <coro/deferred.hpp>
+#include <coro/async_operation.hpp>
 #include <asio/read.hpp>
 #include <asio/read_at.hpp>
 #include <asio/read_until.hpp>
@@ -34,8 +34,6 @@ class basic_channel;
 namespace coro
 {
 
-template<typename T>
-concept async_operation = requires (T op) {{op(deferred)};};
 
 template<typename T>
 concept operation = requires (T op, asio::error_code & ec) {op();} && async_operation<T>;
@@ -58,7 +56,7 @@ struct intercept_error
     auto operator()(asio::error_code ec_, Args && ... args) const
     {
         this->ec = ec_;
-        return deferred.values(std::forward<Args>(args)...);
+        return asio::deferred.values(std::forward<Args>(args)...);
     }
 };
 
@@ -107,7 +105,7 @@ struct Name                                                                     
                 }, args);                                                                                              \
     }                                                                                                                  \
                                                                                                                        \
-    template<asio::completion_token_for<void(asio::error_code, std::size_t)> Token>                                    \
+    template<typename Token>                                                                                           \
     auto operator()(Token && tk) &&                                                                                    \
     {                                                                                                                  \
         if constexpr (sizeof...(Args) > 0 &&                                                                           \
@@ -116,7 +114,7 @@ struct Name                                                                     
                     [&]<typename ... Args_>(asio::error_code &ec, Args_ && ... args_)                                  \
                     {                                                                                                  \
                         return Scope::async_##Name(std::forward<Args_>(args_)...,                                      \
-                                                   deferred(detail::intercept_error(ec)))                              \
+                                                   asio::deferred(detail::intercept_error(ec)))                        \
                                                    (std::forward<Token>(tk));                                          \
                     }, std::move(args));                                                                               \
         else                                                                                                           \
@@ -126,7 +124,7 @@ struct Name                                                                     
                         return Scope::async_##Name(std::forward<Args_>(args_)..., std::forward<Token>(tk));            \
                     }, std::move(args));                                                                               \
     }                                                                                                                  \
-    template<asio::completion_token_for<void(asio::error_code, std::size_t)> Token>                                    \
+    template<typename Token>                                                                                           \
     auto operator()(Token && tk) &                                                                                     \
     {                                                                                                                  \
         if constexpr (sizeof...(Args) > 0 &&                                                                           \
@@ -135,7 +133,7 @@ struct Name                                                                     
                     [&]<typename ... Args_>(asio::error_code &ec, Args_ && ... args_)                                  \
                     {                                                                                                  \
                         return Scope::async_##Name(std::forward<Args_>(args_)...,                                      \
-                                                   deferred(detail::intercept_error(ec)))                              \
+                                                   asio::deferred(detail::intercept_error(ec)))                        \
                                                    (std::forward<Token>(tk));                                          \
                     }, args);                                                                                          \
         else                                                                                                           \
@@ -179,14 +177,15 @@ struct Name                                                                     
                 }, std::move(args));                                                                                   \
     }                                                                                                                  \
                                                                                                                        \
-    template<asio::completion_token_for<void(asio::error_code, std::size_t)> Token>                                    \
+    template<typename Token>                                                                                           \
     auto operator()(Token && tk) &&                                                                                    \
     {                                                                                                                  \
         if constexpr (std::is_same_v<variadic_last_t<Args...>, asio::error_code &>)                                    \
             return detail::apply_with_last_at_front(                                                                   \
                 [&]<typename ... Args_>(asio::error_code &ec, Args_ && ... args_)                                      \
                 {                                                                                                      \
-                    return object.async_##Name(std::forward<Args_>(args_)..., deferred(detail::intercept_error(ec)))   \
+                    return object.async_##Name(std::forward<Args_>(args_)...,                                          \
+                                               asio::deferred(detail::intercept_error(ec)))                            \
                                                (std::forward<Token>(tk));                                              \
                 }, std::move(args));                                                                                   \
         else                                                                                                           \
@@ -197,14 +196,15 @@ struct Name                                                                     
                 }, std::move(args));                                                                                   \
     }                                                                                                                  \
                                                                                                                        \
-    template<asio::completion_token_for<void(asio::error_code, std::size_t)> Token>                                    \
+    template<typename Token>                                                                                           \
     auto operator()(Token && tk) &                                                                                     \
     {                                                                                                                  \
         if constexpr (std::is_same_v<variadic_last_t<Args...>, asio::error_code &>)                                    \
             return detail::apply_with_last_at_front(                                                                   \
                 [&]<typename ... Args_>(asio::error_code &ec, Args_ && ... args_)                                      \
                 {                                                                                                      \
-                    return object.async_##Name(std::forward<Args_>(args_)..., deferred(detail::intercept_error(ec)))   \
+                    return object.async_##Name(std::forward<Args_>(args_)...,                                          \
+                                               asio::deferred(detail::intercept_error(ec)))                            \
                                                (std::forward<Token>(tk));                                              \
                 }, args);                                                                                              \
         else                                                                                                           \
@@ -431,13 +431,9 @@ struct send<asio::experimental::basic_channel<Ts...>, Args...> :
 };
 
 template<bool Sync = false>
-struct enable_operations
+struct enable_operations : enable_async_operation_interpreted
 {
-    template<async_operation Op>
-    auto await_transform(Op && op)
-    {
-        return awaitable_deferred_interpreted{std::forward<Op>(op)(deferred)};
-    }
+    using enable_async_operation_interpreted::await_transform;
 };
 
 template<>

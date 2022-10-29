@@ -23,7 +23,7 @@ auto coro_simple_cancel_impl(asio::io_context& ) noexcept -> basic_coro<void() n
     asio::steady_timer timer{co_await this_coro::executor, std::chrono::seconds(1)};
     CHECK(asio::cancellation_type::none == (co_await this_coro::cancellation_state).cancelled());
 
-    auto [ec] = co_await timer.async_wait(deferred);
+    auto [ec] = co_await timer.async_wait(asio::as_tuple(asio::deferred));
 
     CHECK(asio::cancellation_type::none != (co_await this_coro::cancellation_state).cancelled());
 
@@ -53,7 +53,7 @@ TEST_CASE("coro_simple_cancel")
 auto coro_throw_cancel_impl(asio::io_context& ) -> basic_coro<void() , void>
 {
     asio::steady_timer timer{ co_await this_coro::executor, std::chrono::seconds(1)};
-    coro::interpret_result(co_await timer.async_wait(deferred));
+    coro::interpret_result(co_await timer.async_wait(asio::as_tuple(asio::deferred)));
 }
 
 TEST_CASE("coro_throw_cancel")
@@ -93,7 +93,7 @@ auto coro_simple_cancel_nested_k(asio::io_context&, int& cnt) noexcept
             std::chrono::milliseconds(100)};
 
     CHECK(!(co_await this_coro::cancellation_state).cancelled());
-    auto [ec] = co_await timer.async_wait(deferred);
+    auto [ec] = co_await timer.async_wait(asio::as_tuple(asio::deferred));
     cnt++;
     CHECK((co_await this_coro::cancellation_state).cancelled());
 
@@ -222,7 +222,7 @@ CO_TEST_CASE("throwing_generator_test")
             for (int i = 0; i < 10; i++)
             {
                 CHECK(val == i);
-                const auto next = interpret_result(co_await gi.async_resume(deferred));
+                const auto next = interpret_result(co_await gi.async_resume(asio::deferred));
                 CHECK(next);
                 CHECK(val == *next);
                 CHECK(val == i + 1);
@@ -412,7 +412,7 @@ CO_TEST_CASE("generator_test")
         for (int i = 0; i < 10; i++)
         {
             CHECK(val == i);
-            const auto next = interpret_result(co_await gi.async_resume(deferred));
+            const auto next = interpret_result(co_await gi.async_resume(asio::deferred));
             CHECK(next);
             CHECK(val == *next);
             CHECK(val == i + 1);

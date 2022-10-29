@@ -1,4 +1,23 @@
-`coro<void>`  -> `yay or nay?` ?
+
+```cpp
+
+// root coro
+
+async<void> barfoo()
+{
+    co_return 42;
+}
+
+async<void> foobar()
+{
+    co_await barfoo();
+}
 
 
-`coro<T(U), V, void>` ->
+main main()
+{
+    co_yield foobar; // spawn
+    spawn(co_await net::this_coro::executor, foobar, token);
+    // classic spawn -> use the allocator
+}
+```

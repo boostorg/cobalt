@@ -19,14 +19,12 @@ struct test_case { test_case_promise * promise; };
 struct test_case_promise : promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>,
                       promise_throw_if_cancelled_base,
                       enable_awaitables<test_case_promise>,
-                      enable_deferred,
-                      enable_operations<>
+                      enable_async_operation
 {
     using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
     using promise_throw_if_cancelled_base::await_transform;
     using enable_awaitables<test_case_promise>::await_transform;
-    using enable_deferred::await_transform;
-    using enable_operations<>::await_transform;
+    using enable_async_operation::await_transform;
 
     std::suspend_always initial_suspend()          { return {}; }
     std::suspend_never    final_suspend() noexcept { return {}; }

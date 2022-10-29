@@ -13,7 +13,7 @@
 #include <optional>
 
 #include <coro/concepts.hpp>
-#include <coro/deferred.hpp>
+#include <coro/async_operation.hpp>
 #include <coro/ops.hpp>
 #include <coro/this_coro.hpp>
 
@@ -46,8 +46,7 @@ struct main_promise : signal_helper,
                       promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>,
                       promise_throw_if_cancelled_base,
                       enable_awaitables<main_promise>,
-                      enable_deferred,
-                      enable_operations<>
+                      enable_async_operation
 
 {
     main_promise(int, char **) : promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>(
@@ -112,8 +111,7 @@ struct main_promise : signal_helper,
     using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
     using promise_throw_if_cancelled_base::await_transform;
     using enable_awaitables<main_promise>::await_transform;
-    using enable_deferred::await_transform;
-    using enable_operations<>::await_transform;
+    using enable_async_operation::await_transform;
 
     auto await_transform(this_coro::executor_t) const
     {

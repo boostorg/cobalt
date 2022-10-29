@@ -185,7 +185,7 @@ struct basic_coro
      */
     template <typename CompletionToken>
     requires std::is_void_v<input_type>
-    auto async_resume(CompletionToken&& token) &
+    auto async_resume(CompletionToken&& token ASIO_DEFAULT_COMPLETION_TOKEN(Executor)) &
     {
         return asio::async_initiate<CompletionToken,
                 typename traits::completion_handler>(
@@ -202,7 +202,7 @@ struct basic_coro
      * @note This overload is only available for coroutines with an input value.
      */
     template <typename CompletionToken, std::convertible_to<input_type> T>
-    auto async_resume(T&& ip, CompletionToken&& token) &
+    auto async_resume(T&& ip, CompletionToken&& token ASIO_DEFAULT_COMPLETION_TOKEN(Executor)) &
     {
         return asio::async_initiate<CompletionToken,
                 typename traits::completion_handler>(
@@ -304,7 +304,8 @@ struct coro_spawn_op
 }
 
 template<typename T, typename Executor, typename Allocator, typename CompletionToken>
-auto spawn(basic_coro<void(), T, Executor, Allocator> && t, CompletionToken&& token)
+auto spawn(basic_coro<void(), T, Executor, Allocator> && t,
+           CompletionToken&& token ASIO_DEFAULT_COMPLETION_TOKEN(Executor))
 {
     auto exec = t.get_executor();
     return asio::async_compose<CompletionToken, void(std::exception_ptr, T)>(
@@ -313,13 +314,16 @@ auto spawn(basic_coro<void(), T, Executor, Allocator> && t, CompletionToken&& to
 }
 
 template<typename T, typename Executor, typename Allocator, typename CompletionToken>
-auto spawn(basic_coro<void() noexcept, T, Executor, Allocator> && t, CompletionToken&& token)
+auto spawn(basic_coro<void() noexcept, T, Executor, Allocator> && t,
+           CompletionToken&& token ASIO_DEFAULT_COMPLETION_TOKEN(Executor))
 {
     auto exec = t.get_executor();
     return asio::async_compose<CompletionToken, void(T)>(
             detail::coro_spawn_op<void() noexcept, T, Executor, Allocator>{std::move(t)},
             token, exec);
 }
+
+
 
 
 }

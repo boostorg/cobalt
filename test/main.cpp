@@ -4,7 +4,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <coro/main.hpp>
-#include <coro/deferred.hpp>
+#include <coro/async_operation.hpp>
 #include <asio/steady_timer.hpp>
 #include <coro/ops.hpp>
 #include <experimental/source_location>
