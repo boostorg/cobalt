@@ -73,7 +73,8 @@ struct basic_main_promise : signal_helper,
                       promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>,
                       promise_throw_if_cancelled_base,
                       enable_awaitables<basic_main_promise<Context>>,
-                      enable_async_operation
+                      enable_async_operation,
+                      enable_yielding_tasks
 
 {
     basic_main_promise(int, char **) : promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>(
@@ -82,12 +83,12 @@ struct basic_main_promise : signal_helper,
         [[maybe_unused]] volatile auto p = &detail::main;
     }
     std::suspend_always initial_suspend() {return {};}
-    std::suspend_never final_suspend() noexcept
+    auto final_suspend() noexcept
     {
         asio::error_code ec;
         if (signal_set)
             signal_set->cancel(ec);
-        return {};
+        return std::suspend_never(); // enable_yielding_tasks::final_suspend();
     }
 
     void unhandled_exception() { throw ; }
@@ -151,6 +152,16 @@ struct basic_main_promise : signal_helper,
 
     using executor_type = typename Context::executor_type;
     executor_type get_executor() const {return exec->get_executor();}
+
+    using allocator_type = std::pmr::polymorphic_allocator<void>;
+    using resource_type  = std::conditional_t<std::is_same_v<Context, asio::io_context>,
+                                              std::pmr::synchronized_pool_resource,
+                                              std::pmr::unsynchronized_pool_resource>;
+
+    resource_type resource;
+    allocator_type  get_allocator() { return allocator_type(&resource); }
+
+
 
     using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
     using promise_throw_if_cancelled_base::await_transform;
