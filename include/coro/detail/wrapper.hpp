@@ -203,50 +203,6 @@ auto dispatch_coroutine(Context &ctx, CompletionToken token) noexcept
     co_return;
 }
 
-/// these are optimizations to avoid allocations. IF the raw memory is not enough it returns a null handle!
-
-template <asio::execution::executor Executor, typename CompletionToken>
-auto post_coroutine(Executor exec, CompletionToken token, void*, std::size_t) noexcept
-    -> std::coroutine_handle<static_partial_promise>
-{
-    asio::post(exec, std::move(token));
-    co_return;
-}
-
-template <asio::execution::executor Executor, typename CompletionToken>
-auto dispatch_coroutine(Executor exec, CompletionToken token, void*, std::size_t) noexcept
-    -> std::coroutine_handle<static_partial_promise>
-{
-    asio::dispatch(exec, std::move(token));
-    co_return;
-}
-
-
-/// This might compied the completion handler twice!
-template <asio::execution::executor Executor, typename CompletionToken>
-auto try_post_coroutine(Executor exec, CompletionToken token, void* ptr, std::size_t sz) noexcept
-    -> std::coroutine_handle<void>
-{
-    auto p = post_coroutine(exec, std::move(token), ptr, sz);
-
-    if (p)
-        return p;
-    else
-        return post_coroutine(exec, std::move(token));
-
-}
-
-template <asio::execution::executor Executor, typename CompletionToken>
-auto try_dispatch_coroutine(Executor exec, CompletionToken token, void* ptr, std::size_t sz) noexcept
-    -> std::coroutine_handle<void>
-{
-    auto p = dispatch_coroutine(exec, std::move(token), ptr, sz);
-        if (p)
-        return p;
-    else
-        return dispatch_coroutine(exec, std::move(token));
-
-}
 
 }
 

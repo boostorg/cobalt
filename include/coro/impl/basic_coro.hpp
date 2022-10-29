@@ -72,7 +72,8 @@ struct coro_with_arg
         T value;
         coro_t& coro;
 
-        std::aligned_storage<128u, alignof(void*)> storage_from, storage;
+        alignas(sizeof(void*)) char buffer[1024];
+        std::pmr::monotonic_buffer_resource resource{buffer, sizeof(buffer)};
         asio::cancellation_signal dispatched_signal;
 
         constexpr static bool await_ready() { return false; }
@@ -95,9 +96,11 @@ struct coro_with_arg
             auto & callee = *coro.coro_;
             auto & caller = h.promise();
             callee.awaited_from =
-                    try_dispatch_coroutine(
-                            asio::prefer(caller.get_executor(), asio::execution::outstanding_work.tracked),
-                            [h]() mutable { h.resume(); }, &storage_from, sizeof(storage_from));
+                    dispatch_coroutine(
+                        asio::prefer(caller.get_executor(), asio::execution::outstanding_work.tracked),
+                        asio::bind_allocator(
+                                std::pmr::polymorphic_allocator<void>(&resource),
+                                [h]() mutable { h.resume(); }));
 
             callee.reset_error();
             callee.input_ = std::move(value);
@@ -130,10 +133,11 @@ struct coro_with_arg
 
 
             auto hh = std::coroutine_handle<typename coro_t::promise_type>::from_promise(*coro.coro_);
-            return try_dispatch_coroutine(
+            return dispatch_coroutine(
                     coro.coro_->get_executor(),
-                    [hh]() mutable { hh.resume(); },
-                    &storage, sizeof(storage));
+                    asio::bind_allocator(
+                            std::pmr::polymorphic_allocator<void>(&resource),
+                            [hh]() mutable { hh.resume(); }));
         }
 
         template <typename Promise>
@@ -627,7 +631,8 @@ struct basic_coro<Yield, Return, Executor, Allocator>::awaitable_t
 {
     using coro_t = basic_coro;
     basic_coro& coro;
-    std::aligned_storage<128u, alignof(void*)> storage_from, storage;
+    alignas(sizeof(void*)) char buffer[1024];
+    std::pmr::monotonic_buffer_resource resource{buffer, sizeof(buffer)};
     asio::cancellation_signal dispatched_signal;
 
     constexpr static bool await_ready() { return false; }
@@ -649,9 +654,11 @@ struct basic_coro<Yield, Return, Executor, Allocator>::awaitable_t
         auto & callee = *coro.coro_;
         auto & caller = h.promise();
         callee.awaited_from =
-                detail::try_dispatch_coroutine(
+                detail::dispatch_coroutine(
                         asio::prefer(caller.get_executor(), asio::execution::outstanding_work.tracked),
-                        [h]() mutable { h.resume(); }, &storage_from, sizeof(storage_from));
+                        asio::bind_allocator(
+                                std::pmr::polymorphic_allocator<void>(&resource),
+                                [h]() mutable { h.resume(); }));
 
         callee.reset_error();
 
@@ -683,10 +690,11 @@ struct basic_coro<Yield, Return, Executor, Allocator>::awaitable_t
 
 
         auto hh = std::coroutine_handle<typename coro_t::promise_type>::from_promise(*coro.coro_);
-        return detail::try_dispatch_coroutine(
+        return detail::dispatch_coroutine(
                 coro.coro_->get_executor(),
-                [hh]() mutable { hh.resume(); },
-                &storage, sizeof(storage));
+                asio::bind_allocator(
+                        std::pmr::polymorphic_allocator<void>(&resource),
+                        [hh]() mutable { hh.resume(); }));
     }
 
 
@@ -725,9 +733,11 @@ struct basic_coro<Yield, Return, Executor, Allocator>::awaitable_t
         else
         {
             callee.awaited_from =
-                    detail::try_dispatch_coroutine(
+                    detail::dispatch_coroutine(
                             asio::prefer(caller.get_executor(), asio::execution::outstanding_work.tracked),
-                            [h]() mutable { h.resume(); }, &storage_from, sizeof(storage_from));
+                            asio::bind_allocator(
+                                    std::pmr::polymorphic_allocator<void>(&resource),
+                                    [h]() mutable { h.resume(); }));
 
             callee.reset_error();
             callee.reset_cancellation_source(dispatched_signal.slot());
@@ -754,10 +764,11 @@ struct basic_coro<Yield, Return, Executor, Allocator>::awaitable_t
             }
 
             auto hh = std::coroutine_handle<typename coro_t::promise_type>::from_promise(*coro.coro_);
-            return detail::try_dispatch_coroutine(
+            return detail::dispatch_coroutine(
                     coro.coro_->get_executor(),
-                    [hh]() mutable { hh.resume(); },
-                    &storage, sizeof(storage));
+                    asio::bind_allocator(
+                            std::pmr::polymorphic_allocator<void>(&resource),
+                            [hh]() mutable { hh.resume(); }));
         }
     }
 
