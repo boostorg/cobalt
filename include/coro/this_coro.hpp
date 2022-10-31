@@ -17,8 +17,28 @@
 namespace coro
 {
 
+#if defined(CORO_STATIC_COMPLETION_HANDLER)
+
 template<typename Promise, typename ... Args>
 struct completion_handler;
+
+#else
+
+template<typename CancellationSlot,
+         typename Executor,
+         typename Allocator,
+         typename ... Args>
+struct completion_handler_type;
+
+template<typename Promise, typename ... Args>
+using completion_handler = completion_handler_type<
+        typename asio::associated_cancellation_slot_t<Promise, int>,
+        typename asio::associated_executor_t<Promise, int>,
+        typename asio::associated_allocator_t<Promise, int>,
+        Args...>;
+
+
+#endif
 
 namespace this_coro
 {

@@ -51,17 +51,20 @@ auto tag_invoke(const coro::with_exit_tag & wet , finalizer_test & ft)
     return ft.exit(wet.e);
 }
 
+auto ft_test(finalizer_test & ft) -> coro::task<void>
+{
+    co_return ;
+}
+
+auto ft_test2(finalizer_test & ft) -> coro::task<void> { throw std::runtime_error("foobar") ; }
+
 CO_TEST_CASE("finalizer")
 {
     co_await
-            coro::with(finalizer_test{co_await asio::this_coro::executor},
-                [](finalizer_test & ft) -> coro::task<void>
-                {
-                    co_return ;
-                });
+            coro::with(finalizer_test{co_await asio::this_coro::executor}, &ft_test);
 
     finalizer_test f1{co_await asio::this_coro::executor};
-    co_await coro::with(f1, [](finalizer_test & ft) -> coro::task<void> { co_return ; });
+    co_await coro::with(f1, ft_test);
     CHECK(f1.enter_called);
     CHECK(f1.exit_called);
 
@@ -69,9 +72,12 @@ CO_TEST_CASE("finalizer")
 
 
     finalizer_test f2{co_await asio::this_coro::executor};
+
+    auto ft2 = +[](finalizer_test & ft) -> coro::task<void> { throw std::runtime_error("foobar") ; };
+
     try
     {
-        co_await coro::with(f2, [](finalizer_test & ft) -> coro::task<void> { throw std::runtime_error("foobar") ; });
+        co_await coro::with(f2, &ft_test2);
     }
     catch (std::runtime_error & re)
     {

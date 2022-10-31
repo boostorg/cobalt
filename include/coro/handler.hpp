@@ -14,8 +14,12 @@
 namespace coro
 {
 
+
+#if defined(CORO_STATIC_COMPLETION_HANDLER)
+
 namespace detail
 {
+
 
 template<typename Promise>
 struct completion_handler_base;
@@ -74,6 +78,7 @@ struct completion_handler_allocator_base<Promise, std::void_t<typename Promise::
     }
 };
 
+
 template<typename Promise>
 struct completion_handler_base
         : completion_handler_cancellation_base<Promise>,
@@ -109,6 +114,129 @@ struct completion_handler : detail::completion_handler_base<Promise>
         std::coroutine_handle<promise_type>::from_promise(*this->self.release()).resume();
     }
 };
+
+#else
+
+    
+template<typename CancellationSlot>
+struct completion_handler_cancellation_slot 
+{
+    using cancellation_slot_type = CancellationSlot;
+    cancellation_slot_type cancellation_slot ;
+    cancellation_slot_type get_cancellation_slot() const noexcept
+    {
+        return cancellation_slot ;
+    }
+
+    template<typename Promise> 
+    completion_handler_cancellation_slot(std::coroutine_handle<Promise> h) 
+            : cancellation_slot(h.promise().get_cancellation_slot()) {}
+};
+
+template<>
+struct completion_handler_cancellation_slot<int>
+{
+    template<typename Promise>
+    completion_handler_cancellation_slot(std::coroutine_handle<Promise>) {}
+};
+
+
+template<typename CancellationSlot>
+struct completion_handler_executor
+{
+    using executor_type = CancellationSlot;
+    executor_type executor ;
+    executor_type get_executor() const noexcept
+    {
+        return executor ;
+    }
+
+    template<typename Promise>
+    completion_handler_executor(std::coroutine_handle<Promise> h)
+            : executor(h.promise().get_executor()) {}
+};
+
+template<>
+struct completion_handler_executor<int>
+{
+    template<typename Promise>
+    completion_handler_executor(std::coroutine_handle<Promise>) {}
+};
+
+
+template<typename CancellationSlot>
+struct completion_handler_allocator
+{
+    using allocator_type = CancellationSlot;
+    allocator_type allocator ;
+    allocator_type get_allocator() const noexcept
+    {
+        return allocator ;
+    }
+
+    template<typename Promise>
+    completion_handler_allocator(std::coroutine_handle<Promise> h)
+            : allocator(h.promise().get_allocator()) {}
+};
+
+template<>
+struct completion_handler_allocator<int>
+{
+    template<typename Promise>
+    completion_handler_allocator(std::coroutine_handle<Promise>) {}
+};
+
+
+template<typename CancellationSlot,
+         typename Executor,
+         typename Allocator,
+         typename ... Args>
+struct completion_handler_type
+    : completion_handler_cancellation_slot<CancellationSlot>,
+      completion_handler_executor<Executor>,
+      completion_handler_allocator<Allocator>
+{
+    std::unique_ptr<void, coro_deleter<void>> self;
+    std::optional<std::tuple<Args...>> &result;
+
+    void operator()(Args ... args)
+    {
+        if (notify_suspended_impl)
+            notify_suspended_impl(self.get());
+
+        result.emplace(std::move(args)...);
+        auto p = this->self.release();
+        std::coroutine_handle<void>::from_address(p).resume();
+    }
+
+    void  (*notify_suspended_impl)(void*) = nullptr;
+
+    completion_handler_type(completion_handler_type && ) = default;
+
+    template<typename Promise>
+    completion_handler_type(std::coroutine_handle<Promise> h, std::optional<std::tuple<Args...>> &result)
+            : completion_handler_cancellation_slot<CancellationSlot>(h),
+              completion_handler_executor<Executor>(h),
+              completion_handler_allocator<Allocator>(h),
+              self(h.address(), coro_deleter<void>{h}), result(result)
+
+    {
+        if constexpr (requires (Promise & p) {p.notify_suspended();})
+            notify_suspended_impl = +[](void * p) {static_cast<Promise*>(p)->notify_suspended(); };
+    }
+};
+
+
+template<typename Promise, typename ... Args>
+using completion_handler = completion_handler_type<
+        typename asio::associated_cancellation_slot_t<Promise, int>,
+        typename asio::associated_executor_t<Promise, int>,
+        typename asio::associated_allocator_t<Promise, int>,
+        Args...>;
+
+
+#endif
+
 
 inline void interpret_result(std::tuple<> && args)
 {
