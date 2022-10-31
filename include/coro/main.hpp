@@ -10,6 +10,7 @@
 #include <asio/signal_set.hpp>
 
 #include <coroutine>
+#include <memory_resource>
 #include <optional>
 
 #include <coro/concepts.hpp>
@@ -73,8 +74,7 @@ struct basic_main_promise : signal_helper,
                       promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>,
                       promise_throw_if_cancelled_base,
                       enable_awaitables<basic_main_promise<Context>>,
-                      enable_async_operation,
-                      enable_yielding_tasks
+                      enable_async_operation
 
 {
     basic_main_promise(int, char **) : promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>(

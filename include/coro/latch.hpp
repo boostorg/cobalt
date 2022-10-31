@@ -6,12 +6,14 @@
 #define CORO_LATCH_HPP
 
 #include <coro/concepts.hpp>
+#include <coro/async_operation.hpp>
 
 #include <asio/cancellation_signal.hpp>
 
 #include <coroutine>
 #include <optional>
 #include <exception>
+#include <memory_resource>
 
 namespace coro
 {
@@ -35,16 +37,12 @@ struct latch_promise
     template<typename Aw>
     void * operator new(const std::size_t size, latch<T, Executor> & l, Aw & )
     {
-        if (size > 512)
-            return new char[size];
-        else
-            return &l.buffer;
+        return l.resource.allocate(size);
     }
 
     void operator delete(void * raw, const std::size_t size)
     {
-        if (size > 512)
-            delete [] static_cast<char*>(raw);
+        // noop bc monotonic resource
     }
 
     template<typename Aw>
@@ -53,7 +51,8 @@ struct latch_promise
     constexpr static std::suspend_never initial_suspend() {return {};}
     auto final_suspend() noexcept
     {
-        struct cont {
+        struct cont
+        {
             latch<T, Executor> & l;
             bool await_ready() noexcept {return !l.waiter; }
             auto await_suspend(std::coroutine_handle<latch_promise> h) noexcept
@@ -67,7 +66,10 @@ struct latch_promise
     }
 
     void return_void() {}
-    void unhandled_exception() {}
+    void unhandled_exception()
+    {
+        //whut to do here?
+    }
     void get_return_object() {}
 };
 
@@ -98,7 +100,8 @@ struct latch
 
     std::coroutine_handle<void> waiter{nullptr};
 
-    std::aligned_storage_t<512u> buffer;
+    alignas(sizeof(void*)) char buffer[1024];
+    std::pmr::monotonic_buffer_resource resource{buffer, 1024};
 
     template<awaitable Aw>
     void await(Aw aw)
@@ -136,6 +139,65 @@ struct latch
     };
 
     awaitable_t operator co_await() {return awaitable_t{*this};}
+};
+
+struct enable_yielding_tasks
+{
+    struct task;
+    struct task_reference
+    {
+        task & task_;
+        struct promise_type;
+
+        constexpr static bool await_ready() {return true;}
+        static void await_suspend(std::coroutine_handle<void> h) {}
+        task & await_resume() const
+        {
+            return task_;
+        }
+    };
+
+    template<async_operation Op>
+    auto yield_value(Op && op) -> task_reference
+    {
+        co_await std::forward<Op>(op);
+    }
+
+    template<awaitable Aw>
+    auto yield_value(Aw && aw) -> task_reference
+    {
+        co_await std::forward<Aw>(aw);
+    }
+
+    auto final_suspend() noexcept;
+
+
+
+};
+
+struct enable_yielding_tasks::task_reference::promise_type
+{
+    std::suspend_never  initial_suspend() const {return {};}
+    std::suspend_always final_suspend() const noexcept {return {};}
+    void return_void() {}
+
+    template<async_operation Op>
+    auto await_transform(Op && op) -> std::suspend_always
+    {
+
+    }
+
+    template<awaitable Aw>
+    auto await_transform(Aw && aw) -> std::suspend_always
+    {
+
+    }
+};
+
+
+struct enable_yielding_tasks::task
+{
+
 };
 
 }
