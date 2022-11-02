@@ -6,6 +6,9 @@
 #define CORO_THIS_CORO_HPP
 
 #include <asio/any_io_executor.hpp>
+#include <asio/associated_allocator.hpp>
+#include <asio/associated_cancellation_slot.hpp>
+#include <asio/associated_executor.hpp>
 #include <asio/dispatch.hpp>
 #include <asio/this_coro.hpp>
 #include <asio/cancellation_state.hpp>

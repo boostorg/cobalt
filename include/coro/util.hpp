@@ -126,7 +126,6 @@ struct rank : rank<N-1> {};
 template<>
 struct rank<0u> {};
 
-
 }
 
 #endif //CORO_UTIL_HPP

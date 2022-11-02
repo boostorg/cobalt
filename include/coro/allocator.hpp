@@ -23,6 +23,51 @@ constexpr allocator_t allocator;
 
 }
 
+namespace detail
+{
+    inline static std::pmr::memory_resource * default_coro_memory_resource = std::pmr::get_default_resource();
+}
+
+
+inline std::pmr::memory_resource* get_default_resource() noexcept
+{
+    return detail::default_coro_memory_resource;
+}
+
+inline std::pmr::memory_resource* set_default_resource(std::pmr::memory_resource* r) noexcept
+{
+    return detail::default_coro_memory_resource = r;
+}
+
+
+struct promise_memory_resource_base
+{
+    using allocator_type = std::pmr::polymorphic_allocator<void>;
+    allocator_type get_allocator() const {return allocator_type{resource};}
+
+    void * operator new(const std::size_t size)
+    {
+
+        auto res = get_default_resource();
+        const auto p = res->allocate(size + sizeof(std::pmr::memory_resource *), alignof(std::pmr::memory_resource *));
+        auto pp = static_cast<std::pmr::memory_resource**>(p);
+        *pp = res;
+        return pp + 1;
+    }
+
+    void operator delete(void * raw, const std::size_t size)
+    {
+        const auto p = static_cast<std::pmr::memory_resource**>(raw) - 1;
+        std::pmr::memory_resource * res = *p;
+        res->deallocate(p, size + sizeof(std::pmr::memory_resource *), alignof(std::pmr::memory_resource *));
+    }
+
+    promise_memory_resource_base(std::pmr::memory_resource * resource = get_default_resource()) : resource(resource) {}
+
+private:
+    std::pmr::memory_resource * resource = get_default_resource();
+};
+
 /// Allocate the memory and put the allocator behind the coro memory
 template<typename AllocatorType>
 void *allocate_coroutine(const std::size_t size, AllocatorType alloc_)
@@ -49,7 +94,6 @@ void deallocate_coroutine(void *raw_, const std::size_t size)
     const auto align_needed = size % alignof(alloc_type);
     const auto align_offset = align_needed != 0 ? alignof(alloc_type) - align_needed : 0ull;
     const auto alloc_size = size + sizeof(alloc_type) + align_offset;
-
     auto alloc_p = reinterpret_cast<alloc_type *>(raw + size + align_offset);
     auto alloc = std::move(*alloc_p);
     alloc_p->~alloc_type();
@@ -88,10 +132,15 @@ struct promise_allocator_arg_base
     using allocator_type = Allocator;
     allocator_type get_allocator() const {return alloc_;}
 
+    void * operator new(const std::size_t size)
+    {
+        return allocate_coroutine<allocator_type>(size, Allocator());
+    }
+
     template<typename ... Args>
     void * operator new(const std::size_t size, Args & ... args)
     {
-        return allocate_coroutine(size,
+        return allocate_coroutine<allocator_type>(size,
                                   get_variadic<variadic_first<std::allocator_arg_t, std::decay_t<Args>...>() + 1u>(args...));
     }
 
@@ -108,11 +157,48 @@ struct promise_allocator_arg_base
     allocator_type alloc_;
 };
 
-template<>
-struct promise_allocator_arg_base<std::allocator<void>>
+template<typename T>
+struct promise_allocator_arg_base<std::allocator<T>>
 {
     using allocator_type = std::allocator<void>;
     allocator_type get_allocator() const {return {};}
+
+    template<typename ... Args>
+    promise_allocator_arg_base(Args && ... ) {}
+};
+
+
+template<typename T>
+struct promise_allocator_arg_base<std::pmr::polymorphic_allocator<T>>
+{
+    using allocator_type = std::pmr::polymorphic_allocator<T>;
+    allocator_type get_allocator() const {return alloc_;}
+
+
+    void * operator new(const std::size_t size)
+    {
+        return allocate_coroutine<allocator_type>(size, allocator_type(get_default_resource()));
+    }
+
+
+    template<typename ... Args>
+    void * operator new(const std::size_t size, Args & ... args)
+    {
+        return allocate_coroutine<allocator_type>(size,
+                                  get_variadic<variadic_first<std::allocator_arg_t, std::decay_t<Args>...>() + 1u>(args...));
+    }
+
+    void operator delete(void * raw, const std::size_t size)
+    {
+        deallocate_coroutine<allocator_type>(raw, size);
+    }
+
+    template<typename ... Args>
+    promise_allocator_arg_base(Args && ... args) : alloc_(
+            get_variadic<variadic_first<std::allocator_arg_t, std::decay_t<Args>...>() + 1u>(args...)) {}
+
+private:
+    allocator_type alloc_;
 };
 
 
@@ -140,6 +226,7 @@ using promise_allocator_arg_type = detail::promise_allocator_arg_type_impl<
 template<typename Allocator = std::allocator<void>>
 struct allocator_resource : std::pmr::memory_resource
 {
+    static_assert(alignof(typename std::allocator_traits<Allocator>::value_type) == 1);
     Allocator allocator;
 
     allocator_resource(Allocator allocator) : allocator(allocator) {}
@@ -157,7 +244,6 @@ struct allocator_resource : std::pmr::memory_resource
     {
         return std::allocator_traits<Allocator>::allocate(allocator, bytes);
     }
-
 };
 
 }

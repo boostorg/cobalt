@@ -184,13 +184,13 @@ struct enable_yielding_tasks::task_reference::promise_type
     template<async_operation Op>
     auto await_transform(Op && op) -> std::suspend_always
     {
-
+        return {};
     }
 
     template<awaitable Aw>
     auto await_transform(Aw && aw) -> std::suspend_always
     {
-
+        return {};
     }
 };
 

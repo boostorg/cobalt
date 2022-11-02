@@ -573,26 +573,30 @@ struct coro_promise final :
     }
 
     template <typename... Args>
-    coro_promise(Executor executor, Args&&...) noexcept
-            : promise_executor_base<Executor>(std::move(executor))
+    coro_promise(Executor executor, Args&&...args) noexcept
+            : promise_allocator_arg_base<Allocator>(executor, args...),
+              promise_executor_base<Executor>(std::move(executor))
     {
     }
 
     template <typename First, typename... Args>
-    coro_promise(First&&, Executor executor, Args&&...) noexcept
-            : promise_executor_base<Executor>(std::move(executor))
+    coro_promise(First&& f, Executor executor, Args&&... args) noexcept
+            : promise_allocator_arg_base<Allocator>(f, executor, args...),
+              promise_executor_base<Executor>(std::move(executor))
     {
     }
 
     template <typename First, detail::with_get_executor Context, typename... Args>
-    coro_promise(First&&, Context&& ctx, Args&&...) noexcept
-            : promise_executor_base<Executor>(ctx.get_executor())
+    coro_promise(First&& f, Context&& ctx, Args&&... args) noexcept
+            : promise_allocator_arg_base<Allocator>(f, ctx, args...),
+              promise_executor_base<Executor>(ctx.get_executor())
     {
     }
 
     template <detail::with_get_executor Context, typename... Args>
-    coro_promise(Context&& ctx, Args&&...) noexcept
-            : promise_executor_base<Executor>(ctx.get_executor())
+    coro_promise(Context&& ctx, Args&&... args) noexcept
+            : promise_allocator_arg_base<Allocator>(ctx, args...),
+              promise_executor_base<Executor>(ctx.get_executor())
     {
     }
 

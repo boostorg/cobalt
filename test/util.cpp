@@ -6,7 +6,7 @@
 #include <coro/util.hpp>
 
 static_assert(coro::variadic_first<int, double, int>() == 1u);
-static_assert(coro::variadic_first<const int &, int, double>() == -1u);
+static_assert(coro::variadic_first<const int &, int, double>() == -1);
 static_assert(coro::variadic_first<int, double>() == std::numeric_limits<std::size_t>::max());
 
 static_assert(coro::get_variadic<0>(4.2, 3) == 4.2);

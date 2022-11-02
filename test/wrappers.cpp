@@ -6,14 +6,21 @@
 #include <coro/detail/wrapper.hpp>
 
 #include <asio/io_context.hpp>
+#include "asio/bind_allocator.hpp"
 
 int main()
 {
     asio::io_context ctx;
     bool ran = false;
 
-    std::aligned_storage_t<128u, 8u> store;
-    auto p = coro::detail::post_coroutine(ctx.get_executor(), [&]{ran = true; throw 42;}, &store, 128u);
+    char buf[512];
+    std::pmr::monotonic_buffer_resource res{buf, 512};
+    auto p = coro::detail::post_coroutine(ctx.get_executor(),
+                                          asio::bind_allocator(
+                                              std::pmr::polymorphic_allocator<void>(&res),
+                                              [&]{ran = true; throw 42;}
+                                              )
+                                          );
     assert(p);
     assert(!ran);
     p.resume();

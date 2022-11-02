@@ -15,7 +15,7 @@ TEST_SUITE_BEGIN("latch");
 struct immediate
 {
     bool await_ready() { return true; }
-    bool await_suspend(std::coroutine_handle<void>) {assert(!"unreachable"); }
+    void await_suspend(std::coroutine_handle<void>) {assert(!"unreachable"); }
     int await_resume() {return 42;}
 };
 
@@ -31,7 +31,7 @@ CO_TEST_CASE("immediate")
 struct immediate_throw
 {
     bool await_ready() { return true; }
-    bool await_suspend(std::coroutine_handle<void>) {assert(!"unreachable"); }
+    void await_suspend(std::coroutine_handle<void>) {assert(!"unreachable"); }
     int await_resume() {throw std::runtime_error("test"); return 42;}
 };
 

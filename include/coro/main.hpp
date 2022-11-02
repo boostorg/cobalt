@@ -14,6 +14,7 @@
 #include <optional>
 
 #include <coro/concepts.hpp>
+#include <coro/allocator.hpp>
 #include <coro/async_operation.hpp>
 #include <coro/ops.hpp>
 #include <coro/this_coro.hpp>
@@ -74,14 +75,26 @@ struct basic_main_promise : signal_helper,
                       promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>,
                       promise_throw_if_cancelled_base,
                       enable_awaitables<basic_main_promise<Context>>,
-                      enable_async_operation
-
+                      enable_async_operation,
+                      enable_await_allocator<basic_main_promise<Context>>
 {
     basic_main_promise(int, char **) : promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>(
             signal_helper::signal.slot(), asio::enable_total_cancellation())
     {
         [[maybe_unused]] volatile auto p = &detail::main;
     }
+
+    static std::pmr::memory_resource * my_resource;
+    void * operator new(const std::size_t size)
+    {
+        return my_resource->allocate(size);
+    }
+
+    void operator delete(void * raw, const std::size_t size)
+    {
+        return my_resource->deallocate(raw, size);
+    }
+
     std::suspend_always initial_suspend() {return {};}
     auto final_suspend() noexcept
     {
@@ -119,6 +132,15 @@ struct basic_main_promise : signal_helper,
 
     friend int main(int argc, char * argv[])
     {
+        std::conditional_t<std::is_same_v<Context, asio::io_context>,
+                           std::pmr::unsynchronized_pool_resource,
+                           std::pmr::synchronized_pool_resource> root_resource;
+        coro::set_default_resource(&root_resource);
+
+        char buffer[8096];
+        std::pmr::monotonic_buffer_resource main_res{buffer, 8096, &root_resource};
+        my_resource = &main_res;
+
         Context ctx;
 
         ::coro::basic_main<Context> mn = call_co_main(argc, argv, ctx);
@@ -161,12 +183,11 @@ struct basic_main_promise : signal_helper,
     resource_type resource;
     allocator_type  get_allocator() { return allocator_type(&resource); }
 
-
-
     using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
     using promise_throw_if_cancelled_base::await_transform;
     using enable_awaitables<basic_main_promise>::await_transform;
     using enable_async_operation::await_transform;
+    using enable_await_allocator<basic_main_promise<Context>>::await_transform;
 
     auto await_transform(this_coro::executor_t) const
     {
@@ -200,8 +221,10 @@ struct basic_main_promise : signal_helper,
     {
         return ::coro::basic_main<Context>{this};
     }
-
 };
+
+template<typename Context>
+std::pmr::memory_resource *  basic_main_promise<Context>::my_resource = std::pmr::get_default_resource();
 
 }
 

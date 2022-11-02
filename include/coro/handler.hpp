@@ -222,7 +222,7 @@ struct completion_handler_type
 
     {
         if constexpr (requires (Promise & p) {p.notify_suspended();})
-            notify_suspended_impl = +[](void * p) {static_cast<Promise*>(p)->notify_suspended(); };
+            notify_suspended_impl = +[](void * p) {std::coroutine_handle<Promise>::from_address(p).promise().notify_suspended(); };
     }
 };
 
