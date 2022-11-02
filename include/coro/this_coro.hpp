@@ -68,7 +68,7 @@ constexpr initial_t initial;
 template<typename Executor = asio::any_io_executor>
 struct promise_executor_base
 {
-    using executor_type = Executor;
+    using executor_type = std::remove_volatile_t<Executor>;
     executor_type get_executor() const {return executor_;}
 
     promise_executor_base(executor_type exec) : executor_{exec} {}

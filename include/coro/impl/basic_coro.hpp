@@ -543,6 +543,7 @@ struct coro_promise final :
         promise_executor_base<Executor>,
         enable_awaitables<coro_promise<Yield, Return, Executor, Allocator>>,
         enable_operations<>,
+        enable_exchange_executor,
         enable_await_allocator<Allocator>,
         coro_promise_error<coro_traits<Yield, Return, Executor>::is_noexcept>,
         coro_promise_exchange<
@@ -573,14 +574,14 @@ struct coro_promise final :
     }
 
     template <typename... Args>
-    coro_promise(Executor executor, Args&&...args) noexcept
+    coro_promise(std::remove_volatile_t<Executor> executor, Args&&...args) noexcept
             : promise_allocator_arg_base<Allocator>(executor, args...),
               promise_executor_base<Executor>(std::move(executor))
     {
     }
 
     template <typename First, typename... Args>
-    coro_promise(First&& f, Executor executor, Args&&... args) noexcept
+    coro_promise(First&& f, std::remove_volatile_t<Executor> executor, Args&&... args) noexcept
             : promise_allocator_arg_base<Allocator>(f, executor, args...),
               promise_executor_base<Executor>(std::move(executor))
     {
@@ -626,6 +627,7 @@ struct coro_promise final :
     using enable_awaitables<coro_promise<Yield, Return, Executor, Allocator>>::await_transform;
     using enable_operations<>::await_transform;
     using promise_executor_base<Executor>::await_transform;
+    using enable_exchange_executor::await_transform;
 };
 
 } // namespace detail
@@ -789,7 +791,7 @@ struct basic_coro<Yield, Return, Executor, Allocator>::awaitable_t
 template <yield_signature Yield, typename Return, typename Executor, typename Allocator>
 struct basic_coro<Yield, Return, Executor, Allocator>::initiate_async_resume
 {
-    typedef Executor executor_type;
+    typedef std::remove_volatile_t<Executor> executor_type;
     typedef Allocator allocator_type;
 
     explicit initiate_async_resume(basic_coro::promise_type* self)
@@ -926,6 +928,12 @@ struct basic_coro<Yield, Return, Executor, Allocator>::initiate_async_resume
     template <typename WaitHandler>
     void operator()(WaitHandler&& handler)
     {
+        if constexpr (std::is_volatile_v<Executor>)
+        {
+            static_assert(asio::detail::has_executor_type<WaitHandler>::value,
+                          "Volatile executor required bound executor");
+            coro_->exchange_executor(asio::get_associated_executor(handler));
+        }
         const auto exec = asio::prefer(
                 get_associated_executor(handler, get_executor()),
                 asio::execution::outstanding_work.tracked);
@@ -940,6 +948,15 @@ struct basic_coro<Yield, Return, Executor, Allocator>::initiate_async_resume
     template <typename WaitHandler, typename Input>
     void operator()(WaitHandler&& handler, Input&& input)
     {
+
+        if constexpr (std::is_volatile_v<Executor>)
+        {
+            static_assert(asio::detail::has_executor_type<WaitHandler>::value,
+                          "Volatile executor required bound executor");
+            coro_->exchange_executor(asio::get_associated_executor(handler));
+        }
+
+        static_assert(asio::detail::has_executor_type<WaitHandler>::value || !std::is_volatile_v<Executor>);
         const auto exec = asio::prefer(
                 get_associated_executor(handler, get_executor()),
                 asio::execution::outstanding_work.tracked);

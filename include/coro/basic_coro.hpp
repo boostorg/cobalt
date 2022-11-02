@@ -78,7 +78,7 @@ struct basic_coro
 #endif // !defined(GENERATING_DOCUMENTATION)
 
     /// The executor type.
-    using executor_type = Executor;
+    using executor_type = std::remove_volatile_t<Executor>;
 
     /// The allocator type.
     using allocator_type = Allocator;
