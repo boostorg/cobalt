@@ -226,9 +226,9 @@ struct async_promise
         return async<Return>{this};
     }
 
-    asio::cancellation_signal signal;
+    mutable asio::cancellation_signal signal;
     using cancellation_slot_type = asio::cancellation_slot;
-    cancellation_slot_type get_cancellation_slot()
+    cancellation_slot_type get_cancellation_slot() const
     {
         assert(this->receiver);
         return signal.slot();

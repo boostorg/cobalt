@@ -19,35 +19,20 @@
 #include <coro/ops.hpp>
 #include <coro/this_coro.hpp>
 
-namespace asio
-{
-struct thread_pool;
-struct system_context;
-
-}
 
 namespace coro
 {
 
 namespace detail
 {
-
-template<typename Context = asio::io_context>
-struct basic_main_promise;
+struct main_promise;
 }
 
-template<typename Context = asio::io_context>
-struct basic_main { detail::basic_main_promise<Context> * promise; };
-
-using main = basic_main<>;
-using threaded_main = basic_main<asio::thread_pool>;
-using system_main   = basic_main<asio::system_context>;
+struct main { detail::main_promise * promise; };
 
 }
 
 auto co_main         (int argc, char * argv[]) -> coro::main;
-auto co_threaded_main(int argc, char * argv[]) -> coro::threaded_main;
-auto co_system_main  (int argc, char * argv[]) -> coro::system_main;
 
 
 
@@ -70,15 +55,14 @@ inline void run_impl(asio::io_context & ctx) {ctx.run();}
 template<typename Pool, void (Pool::*)() = &Pool::join>
 void run_impl(Pool & tp) {tp.join();}
 
-template<typename Context>
-struct basic_main_promise : signal_helper,
+struct main_promise : signal_helper,
                       promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>,
                       promise_throw_if_cancelled_base,
-                      enable_awaitables<basic_main_promise<Context>>,
+                      enable_awaitables<main_promise>,
                       enable_async_operation,
-                      enable_await_allocator<basic_main_promise<Context>>
+                      enable_await_allocator<main_promise>
 {
-    basic_main_promise(int, char **) : promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>(
+    main_promise(int, char **) : promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>(
             signal_helper::signal.slot(), asio::enable_total_cancellation())
     {
         [[maybe_unused]] volatile auto p = &detail::main;
@@ -111,43 +95,25 @@ struct basic_main_promise : signal_helper,
             *result = res;
     }
 
-    friend auto ::co_main         (int argc, char * argv[]) -> coro::main;
-    friend auto ::co_threaded_main(int argc, char * argv[]) -> coro::threaded_main;
-    friend auto ::co_system_main  (int argc, char * argv[]) -> coro::system_main;
-
-    static auto call_co_main(int argc, char * argv[], asio::io_context &) -> coro::main
-    {
-        return co_main(argc, argv);
-    }
-    static auto call_co_main(int argc, char * argv[], asio::thread_pool &) -> coro::threaded_main
-    {
-        return co_threaded_main(argc, argv);
-    }
-
-    static auto call_co_main(int argc, char * argv[], asio::system_context &) -> coro::system_main
-    {
-        return co_system_main(argc, argv);
-    }
+    friend auto ::co_main (int argc, char * argv[]) -> coro::main;
 
 
     friend int main(int argc, char * argv[])
     {
-        std::conditional_t<std::is_same_v<Context, asio::io_context>,
-                           std::pmr::unsynchronized_pool_resource,
-                           std::pmr::synchronized_pool_resource> root_resource;
+        std::pmr::unsynchronized_pool_resource root_resource;
         coro::set_default_resource(&root_resource);
 
         char buffer[8096];
         std::pmr::monotonic_buffer_resource main_res{buffer, 8096, &root_resource};
         my_resource = &main_res;
 
-        Context ctx;
+        asio::io_context ctx;
 
-        ::coro::basic_main<Context> mn = call_co_main(argc, argv, ctx);
+        ::coro::main mn = co_main(argc, argv);
         int res ;
         mn.promise->result = &res;
         mn.promise->exec.emplace(ctx.get_executor());
-        auto p = std::coroutine_handle<detail::basic_main_promise<Context>>::from_promise(*mn.promise);
+        auto p = std::coroutine_handle<detail::main_promise>::from_promise(*mn.promise);
         asio::signal_set ss{ctx, SIGINT, SIGTERM};
         mn.promise->signal_set = &ss;
         struct work
@@ -172,22 +138,20 @@ struct basic_main_promise : signal_helper,
         return res;
     }
 
-    using executor_type = typename Context::executor_type;
+    using executor_type = typename asio::io_context::executor_type;
     executor_type get_executor() const {return exec->get_executor();}
 
     using allocator_type = std::pmr::polymorphic_allocator<void>;
-    using resource_type  = std::conditional_t<std::is_same_v<Context, asio::io_context>,
-                                              std::pmr::synchronized_pool_resource,
-                                              std::pmr::unsynchronized_pool_resource>;
+    using resource_type  = std::pmr::unsynchronized_pool_resource;
 
     resource_type resource;
     allocator_type  get_allocator() { return allocator_type(&resource); }
 
     using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
     using promise_throw_if_cancelled_base::await_transform;
-    using enable_awaitables<basic_main_promise>::await_transform;
+    using enable_awaitables<main_promise>::await_transform;
     using enable_async_operation::await_transform;
-    using enable_await_allocator<basic_main_promise<Context>>::await_transform;
+    using enable_await_allocator<main_promise>::await_transform;
 
     auto await_transform(this_coro::executor_t) const
     {
@@ -217,14 +181,11 @@ struct basic_main_promise : signal_helper,
     int * result;
     std::optional<asio::executor_work_guard<executor_type>> exec;
     asio::signal_set * signal_set;
-    ::coro::basic_main<Context> get_return_object()
+    ::coro::main get_return_object()
     {
-        return ::coro::basic_main<Context>{this};
+        return ::coro::main{this};
     }
 };
-
-template<typename Context>
-std::pmr::memory_resource *  basic_main_promise<Context>::my_resource = std::pmr::get_default_resource();
 
 }
 
@@ -233,10 +194,10 @@ std::pmr::memory_resource *  basic_main_promise<Context>::my_resource = std::pmr
 namespace std
 {
 
-template<typename Context>
-struct coroutine_traits<coro::basic_main<Context>, int, char**>
+template<>
+struct coroutine_traits<coro::main, int, char**>
 {
-    using promise_type = coro::detail::basic_main_promise<Context>;
+    using promise_type = coro::detail::main_promise;
 };
 
 }

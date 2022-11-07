@@ -25,7 +25,7 @@ constexpr allocator_t allocator;
 
 namespace detail
 {
-    inline static std::pmr::memory_resource * default_coro_memory_resource = std::pmr::get_default_resource();
+  inline static thread_local std::pmr::memory_resource * default_coro_memory_resource = std::pmr::get_default_resource();
 }
 
 
