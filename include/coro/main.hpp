@@ -28,15 +28,14 @@ namespace detail
 struct main_promise;
 }
 
-struct main { detail::main_promise * promise; };
+struct main;
 
 }
 
-auto co_main         (int argc, char * argv[]) -> coro::main;
+auto co_main(int argc, char * argv[]) -> coro::main;
 
-
-
-namespace coro {
+namespace coro
+{
 
 namespace detail
 {
@@ -44,16 +43,23 @@ extern "C"
 {
 int main(int argc, char * argv[]);
 }
+}
 
+class main
+{
+  detail::main_promise * promise;
+  main(detail::main_promise * promise) : promise(promise) {}
+  friend auto ::co_main(int argc, char * argv[]) -> coro::main;
+  friend int detail::main(int argc, char * argv[]);
+  friend struct detail::main_promise;
+};
+
+namespace detail
+{
 struct signal_helper
 {
     asio::cancellation_signal signal;
 };
-
-inline void run_impl(asio::io_context & ctx) {ctx.run();}
-
-template<typename Pool, void (Pool::*)() = &Pool::join>
-void run_impl(Pool & tp) {tp.join();}
 
 struct main_promise : signal_helper,
                       promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>,
@@ -102,7 +108,6 @@ struct main_promise : signal_helper,
     {
         std::pmr::unsynchronized_pool_resource root_resource;
         coro::set_default_resource(&root_resource);
-
         char buffer[8096];
         std::pmr::monotonic_buffer_resource main_res{buffer, 8096, &root_resource};
         my_resource = &main_res;
@@ -134,7 +139,7 @@ struct main_promise : signal_helper,
         ss.async_wait(work{ss, mn.promise->signal});
         asio::post(ctx.get_executor(), [p]{p.resume();});
 
-        run_impl(ctx);
+        ctx.run();
         return res;
     }
 
@@ -144,7 +149,7 @@ struct main_promise : signal_helper,
     using allocator_type = std::pmr::polymorphic_allocator<void>;
     using resource_type  = std::pmr::unsynchronized_pool_resource;
 
-    resource_type resource;
+    resource_type resource{my_resource};
     allocator_type  get_allocator() { return allocator_type(&resource); }
 
     using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;

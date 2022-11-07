@@ -47,7 +47,6 @@ struct promise_memory_resource_base
 
     void * operator new(const std::size_t size)
     {
-
         auto res = get_default_resource();
         const auto p = res->allocate(size + sizeof(std::pmr::memory_resource *), alignof(std::pmr::memory_resource *));
         auto pp = static_cast<std::pmr::memory_resource**>(p);

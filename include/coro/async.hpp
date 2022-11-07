@@ -84,27 +84,19 @@ struct async_receiver : value_holder<T>
 
 
     bool done = false;
-    // can we do this atomically?
-    std::mutex mutex;
     std::coroutine_handle<void> awaited_from{nullptr};
 
     void set_done()
     {
-        std::lock_guard<std::mutex> lock{mutex};
         done = true;
     }
 
     async_receiver() = default;
-    async_receiver(async_receiver && lhs, std::lock_guard<std::mutex>)
+    async_receiver(async_receiver && lhs)
         : exception(std::move(lhs.exception)), done(lhs.done), awaited_from(lhs.awaited_from),
           reference(lhs.reference), cancel_signal(lhs.cancel_signal)
     {
         reference = this;
-    }
-
-    async_receiver(async_receiver && lhs) : async_receiver(std::move(lhs), std::lock_guard<std::mutex>{lhs.mutex})
-    {
-
     }
 
     async_receiver(async_receiver * (&reference), asio::cancellation_signal & cancel_signal)
@@ -138,7 +130,6 @@ struct async_receiver : value_holder<T>
         template<typename Promise>
         bool await_suspend(std::coroutine_handle<Promise> h)
         {
-            std::lock_guard<std::mutex> lock{self->mutex};
             if (self->done) // ok, so we're actually done already, so noop
                 return false;
 
@@ -242,13 +233,13 @@ struct async_promise
             async_promise * promise;
             bool await_ready() const noexcept
             {
-                return promise->receiver->awaited_from.address() == nullptr;
+                return promise->receiver && promise->receiver->awaited_from.address() == nullptr;
             }
 
             auto await_suspend(std::coroutine_handle<async_promise> h) noexcept -> std::coroutine_handle<void>
             {
                 std::coroutine_handle<void> res = std::noop_coroutine();
-                if (promise->receiver->awaited_from.address() != nullptr)
+                if (promise->receiver && promise->receiver->awaited_from.address() != nullptr)
                     res = promise->receiver->awaited_from;
 
                 h.destroy();
@@ -268,8 +259,6 @@ struct async_promise
         assert(this->receiver);
         this->receiver->unhandled_exception();
     }
-    static_assert(std::atomic<std::coroutine_handle<void>>::is_always_lock_free);
-
     friend struct async_initiate;
 };
 
@@ -317,7 +306,6 @@ struct async_initiate
         auto recs = std::allocate_shared<detail::async_receiver<T>>(
                                 alloc, std::move(rec));
 
-        std::lock_guard<std::mutex> lock{recs->mutex};
         if (recs->done)
             return asio::post(asio::append(h, rec.exception, recs->get_result()));
 
@@ -360,7 +348,6 @@ struct async_initiate
         auto recs = std::allocate_shared<detail::async_receiver<void>>(
                                 alloc, std::move(a.receiver_));
 
-        std::lock_guard<std::mutex> lock{recs->mutex};
         if (recs->done)
             return asio::post(asio::append(h, recs->exception));
 
