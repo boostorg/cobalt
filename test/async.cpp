@@ -10,10 +10,10 @@
 
 #include "doctest.h"
 #include "test.hpp"
-#include "asio/detached.hpp"
-#include <asio/steady_timer.hpp>
-#include <asio/awaitable.hpp>
-#include <asio/co_spawn.hpp>
+#include <boost/asio/detached.hpp>
+#include <boost/asio/steady_timer.hpp>
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/co_spawn.hpp>
 
 #include <new>
 
@@ -30,11 +30,11 @@ boost::async::async<double> test2(int i)
 }
 
 
-boost::async::async<int> test1(asio::any_io_executor exec)
+boost::async::async<int> test1(boost::asio::any_io_executor exec)
 {
     co_await test2(42);
     co_await test2(42);
-    co_await asio::post(exec, asio::deferred);
+    co_await boost::asio::post(exec, boost::asio::deferred);
     co_return 452;
 }
 
@@ -43,8 +43,8 @@ TEST_CASE("test-1")
 
     bool done = false;
 
-    asio::io_context ctx;
-    asio::steady_timer tim{ctx};
+    boost::asio::io_context ctx;
+    boost::asio::steady_timer tim{ctx};
     boost::async::this_thread::set_executor(ctx.get_executor());
 
     boost::async::spawn(
@@ -63,7 +63,7 @@ TEST_CASE("test-1")
 
 CO_TEST_CASE("async-1")
 {
-    co_await test1(co_await asio::this_coro::executor);
+    co_await test1(co_await boost::asio::this_coro::executor);
     co_return;
 }
 

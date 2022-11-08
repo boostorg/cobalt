@@ -5,12 +5,12 @@
 #ifndef BOOST_ASYNC_ASYNC_OPERATION_HPP
 #define BOOST_ASYNC_ASYNC_OPERATION_HPP
 
-#include <asio/associated_allocator.hpp>
-#include <asio/associated_cancellation_slot.hpp>
-#include <asio/associated_executor.hpp>
-#include <asio/as_tuple.hpp>
-#include <asio/deferred.hpp>
-#include <asio/post.hpp>
+#include <boost/asio/associated_allocator.hpp>
+#include <boost/asio/associated_cancellation_slot.hpp>
+#include <boost/asio/associated_executor.hpp>
+#include <boost/asio/as_tuple.hpp>
+#include <boost/asio/deferred.hpp>
+#include <boost/asio/post.hpp>
 
 #include <coroutine>
 

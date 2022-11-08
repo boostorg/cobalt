@@ -7,16 +7,16 @@
 
 #include <boost/async/thread.hpp>
 #include <boost/async/async_operation.hpp>
-#include <asio/steady_timer.hpp>
+#include <boost/asio/steady_timer.hpp>
 
 #include "doctest.h"
 
 boost::async::thread thr()
 {
-  asio::steady_timer tim{co_await asio::this_coro::executor, std::chrono::milliseconds(100)};
+  boost::asio::steady_timer tim{co_await boost::asio::this_coro::executor, std::chrono::milliseconds(100)};
 
-  auto exec = co_await asio::this_coro::executor;
-  co_await tim.async_wait(asio::deferred);
+  auto exec = co_await boost::asio::this_coro::executor;
+  co_await tim.async_wait(boost::asio::deferred);
 }
 
 TEST_CASE("thread")

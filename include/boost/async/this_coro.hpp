@@ -5,12 +5,12 @@
 #ifndef BOOST_ASYNC_THIS_CORO_HPP
 #define BOOST_ASYNC_THIS_CORO_HPP
 
-#include <asio/associated_allocator.hpp>
-#include <asio/associated_cancellation_slot.hpp>
-#include <asio/associated_executor.hpp>
-#include <asio/dispatch.hpp>
-#include <asio/this_coro.hpp>
-#include <asio/cancellation_state.hpp>
+#include <boost/asio/associated_allocator.hpp>
+#include <boost/asio/associated_cancellation_slot.hpp>
+#include <boost/asio/associated_executor.hpp>
+#include <boost/asio/dispatch.hpp>
+#include <boost/asio/this_coro.hpp>
+#include <boost/asio/cancellation_state.hpp>
 
 #include <boost/async/this_thread.hpp>
 
@@ -119,11 +119,11 @@ struct promise_cancellation_base
             {
                 state = asio::cancellation_state(
                         source,
-                        ASIO_MOVE_CAST(Filter)(filter_));
+                        BOOST_ASIO_MOVE_CAST(Filter)(filter_));
             }
         };
 
-        return result{state_, ASIO_MOVE_CAST(Filter)(reset.filter), source_};
+        return result{state_, BOOST_ASIO_MOVE_CAST(Filter)(reset.filter), source_};
     }
 
     // This await transformation resets the associated cancellation state.
@@ -153,14 +153,14 @@ struct promise_cancellation_base
             {
                 state = asio::cancellation_state(
                         source,
-                        ASIO_MOVE_CAST(InFilter)(in_filter_),
-                        ASIO_MOVE_CAST(OutFilter)(out_filter_));
+                        BOOST_ASIO_MOVE_CAST(InFilter)(in_filter_),
+                        BOOST_ASIO_MOVE_CAST(OutFilter)(out_filter_));
             }
         };
 
         return result{state_,
-                      ASIO_MOVE_CAST(InFilter)(reset.in_filter),
-                      ASIO_MOVE_CAST(OutFilter)(reset.out_filter),
+                      BOOST_ASIO_MOVE_CAST(InFilter)(reset.in_filter),
+                      BOOST_ASIO_MOVE_CAST(OutFilter)(reset.out_filter),
                       source_};
     }
     const asio::cancellation_state & cancellation_state() const {return state_;}
@@ -249,29 +249,29 @@ struct promise_throw_if_cancelled_base
 
 struct promise_memory_resource_base
 {
-    using allocator_type = std::pmr::polymorphic_allocator<void>;
+    using allocator_type = container::pmr::polymorphic_allocator<void>;
     allocator_type get_allocator() const {return allocator_type{resource};}
 
     void * operator new(const std::size_t size)
     {
         auto res = this_thread::get_default_resource();
-        const auto p = res->allocate(size + sizeof(std::pmr::memory_resource *), alignof(std::pmr::memory_resource *));
-        auto pp = static_cast<std::pmr::memory_resource**>(p);
+        const auto p = res->allocate(size + sizeof(container::pmr::memory_resource *), alignof(container::pmr::memory_resource *));
+        auto pp = static_cast<container::pmr::memory_resource**>(p);
         *pp = res;
         return pp + 1;
     }
 
     void operator delete(void * raw, const std::size_t size)
     {
-        const auto p = static_cast<std::pmr::memory_resource**>(raw) - 1;
-        std::pmr::memory_resource * res = *p;
-        res->deallocate(p, size + sizeof(std::pmr::memory_resource *), alignof(std::pmr::memory_resource *));
+        const auto p = static_cast<container::pmr::memory_resource**>(raw) - 1;
+        container::pmr::memory_resource * res = *p;
+        res->deallocate(p, size + sizeof(container::pmr::memory_resource *), alignof(container::pmr::memory_resource *));
     }
 
-    promise_memory_resource_base(std::pmr::memory_resource * resource = this_thread::get_default_resource()) : resource(resource) {}
+    promise_memory_resource_base(container::pmr::memory_resource * resource = this_thread::get_default_resource()) : resource(resource) {}
 
 private:
-    std::pmr::memory_resource * resource = this_thread::get_default_resource();
+    container::pmr::memory_resource * resource = this_thread::get_default_resource();
 };
 
 /// Allocate the memory and put the allocator behind the async memory

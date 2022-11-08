@@ -5,12 +5,14 @@
 #ifndef BOOST_ASYNC_MAIN_HPP
 #define BOOST_ASYNC_MAIN_HPP
 
-#include <asio/io_context.hpp>
-#include <asio/post.hpp>
-#include <asio/signal_set.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/post.hpp>
+#include <boost/asio/signal_set.hpp>
 
 #include <coroutine>
-#include <memory_resource>
+#include <boost/container/pmr/memory_resource.hpp>
+#include <boost/container/pmr/monotonic_buffer_resource.hpp>
+#include <boost/container/pmr/unsynchronized_pool_resource.hpp>
 #include <optional>
 
 #include <boost/async/concepts.hpp>
@@ -72,7 +74,7 @@ struct main_promise : signal_helper,
         [[maybe_unused]] volatile auto p = &detail::main;
     }
 
-    inline static std::pmr::memory_resource * my_resource = std::pmr::get_default_resource();
+    inline static container::pmr::memory_resource * my_resource = container::pmr::get_default_resource();
     void * operator new(const std::size_t size)
     {
         return my_resource->allocate(size);
@@ -86,7 +88,7 @@ struct main_promise : signal_helper,
     std::suspend_always initial_suspend() {return {};}
     auto final_suspend() noexcept
     {
-        asio::error_code ec;
+        system::error_code ec;
         if (signal_set)
             signal_set->cancel(ec);
         return std::suspend_never(); // enable_yielding_tasks::final_suspend();
@@ -104,10 +106,10 @@ struct main_promise : signal_helper,
 
     friend int main(int argc, char * argv[])
     {
-        std::pmr::unsynchronized_pool_resource root_resource;
+        container::pmr::unsynchronized_pool_resource root_resource;
         auto pre = boost::async::this_thread::set_default_resource(&root_resource);
         char buffer[8096];
-        std::pmr::monotonic_buffer_resource main_res{buffer, 8096, &root_resource};
+        container::pmr::monotonic_buffer_resource main_res{buffer, 8096, &root_resource};
         my_resource = &main_res;
 
         asio::io_context ctx;
@@ -123,7 +125,7 @@ struct main_promise : signal_helper,
         {
             asio::signal_set & ss;
             asio::cancellation_signal & signal;
-            void operator()(asio::error_code ec, int sig) const
+            void operator()(system::error_code ec, int sig) const
             {
                 if (sig == SIGINT)
                     signal.emit(asio::cancellation_type::total);
@@ -144,8 +146,8 @@ struct main_promise : signal_helper,
     using executor_type = typename asio::io_context::executor_type;
     executor_type get_executor() const {return exec->get_executor();}
 
-    using allocator_type = std::pmr::polymorphic_allocator<void>;
-    using resource_type  = std::pmr::unsynchronized_pool_resource;
+    using allocator_type = container::pmr::polymorphic_allocator<void>;
+    using resource_type  = container::pmr::unsynchronized_pool_resource;
 
     mutable resource_type resource{my_resource};
     allocator_type get_allocator() const { return allocator_type(&resource); }

@@ -8,15 +8,16 @@
 #ifndef BOOST_ASYNC_THREAD_HPP
 #define BOOST_ASYNC_THREAD_HPP
 
-#include <asio/io_context.hpp>
-#include <asio/post.hpp>
-#include <asio/signal_set.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/post.hpp>
+#include <boost/asio/signal_set.hpp>
 
 #include <thread>
 
 #include <boost/async/concepts.hpp>
 #include <boost/async/async_operation.hpp>
 #include <boost/async/this_coro.hpp>
+#include <boost/container/pmr/unsynchronized_pool_resource.hpp>
 
 
 namespace boost::async
@@ -83,8 +84,8 @@ struct thread_promise : signal_helper_2,
   using executor_type = typename asio::io_context::executor_type;
   executor_type get_executor() const {return exec->get_executor();}
 
-  using allocator_type = std::pmr::polymorphic_allocator<void>;
-  using resource_type  = std::pmr::unsynchronized_pool_resource;
+  using allocator_type = container::pmr::polymorphic_allocator<void>;
+  using resource_type  = container::pmr::unsynchronized_pool_resource;
 
   mutable resource_type resource;
   allocator_type  get_allocator() const { return allocator_type(&resource); }

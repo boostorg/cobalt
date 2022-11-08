@@ -8,8 +8,8 @@
 #include <coroutine>
 #include <concepts>
 
-#include <asio/is_executor.hpp>
-#include <asio/execution/executor.hpp>
+#include <boost/asio/is_executor.hpp>
+#include <boost/asio/execution/executor.hpp>
 
 namespace boost::async
 {

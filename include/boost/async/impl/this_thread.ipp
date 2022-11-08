@@ -8,14 +8,15 @@
 #ifndef BOOST_ASYNC_THIS_THREAD_IPP
 #define BOOST_ASYNC_THIS_THREAD_IPP
 
-#include <memory_resource>
-#include "asio/io_context.hpp"
+#include <boost/container/pmr/memory_resource.hpp>
+#include <boost/container/pmr/global_resource.hpp>
+#include <boost/asio/io_context.hpp>
 #include <optional>
 
 namespace boost::async::this_thread::detail
 {
 
-thread_local std::pmr::memory_resource * default_coro_memory_resource = std::pmr::get_default_resource();
+thread_local container::pmr::memory_resource * default_coro_memory_resource = container::pmr::get_default_resource();
 thread_local std::optional<asio::io_context::executor_type> executor;
 
 }

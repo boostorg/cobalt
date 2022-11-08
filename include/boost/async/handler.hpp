@@ -5,13 +5,13 @@
 #ifndef BOOST_ASYNC_HANDLER_HPP
 #define BOOST_ASYNC_HANDLER_HPP
 
-#include <asio/io_context.hpp>
+#include <boost/asio/io_context.hpp>
 
 #include <boost/async/this_coro.hpp>
 #include <boost/async/util.hpp>
 
 #include <memory>
-#include <memory_resource>
+#include <boost/container/pmr/memory_resource.hpp>
 #include <optional>
 
 namespace boost::async
@@ -33,7 +33,7 @@ struct completion_handler_base
     return executor ;
   }
 
-  using allocator_type = std::pmr::polymorphic_allocator<void>;
+  using allocator_type = container::pmr::polymorphic_allocator<void>;
   allocator_type allocator ;
   allocator_type get_allocator() const noexcept
   {
@@ -96,10 +96,10 @@ auto interpret_result(std::tuple<std::exception_ptr, Args...> && args)
 }
 
 template<typename ... Args>
-auto interpret_result(std::tuple<asio::error_code, Args...> && args)
+auto interpret_result(std::tuple<system::error_code, Args...> && args)
 {
     if (std::get<0>(args))
-        throw asio::system_error(std::get<0>(args));
+        throw system::system_error(std::get<0>(args));
     return std::apply([](auto first, auto && ... rest) {return std::make_tuple(std::move(rest)...);});
 }
 
@@ -117,10 +117,10 @@ auto interpret_result(std::tuple<std::exception_ptr, Arg> && args)
     return std::get<1>(std::move(args));
 }
 
-inline auto interpret_result(std::tuple<asio::error_code> && args)
+inline auto interpret_result(std::tuple<system::error_code> && args)
 {
     if (std::get<0>(args))
-        throw asio::system_error(std::get<0>(args));
+        throw system::system_error(std::get<0>(args));
 }
 
 
@@ -131,10 +131,10 @@ inline auto interpret_result(std::tuple<std::exception_ptr> && args)
 }
 
 template<typename Arg>
-auto interpret_result(std::tuple<asio::error_code, Arg> && args)
+auto interpret_result(std::tuple<system::error_code, Arg> && args)
 {
     if (std::get<0>(args))
-        throw asio::system_error(std::get<0>(args));
+        throw system::system_error(std::get<0>(args));
     return std::get<1>(std::move(args));
 }
 

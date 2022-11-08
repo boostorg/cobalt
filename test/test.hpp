@@ -40,8 +40,8 @@ struct test_case_promise : promise_cancellation_base<asio::cancellation_slot, as
     using executor_type = asio::io_context::executor_type;
     executor_type get_executor() const {return exec->context().get_executor();}
 
-    using allocator_type = std::pmr::polymorphic_allocator<void>;
-    allocator_type get_allocator() const {return std::pmr::polymorphic_allocator<void>{this_thread::get_default_resource()};}
+    using allocator_type = container::pmr::polymorphic_allocator<void>;
+    allocator_type get_allocator() const {return container::pmr::polymorphic_allocator<void>{this_thread::get_default_resource()};}
 
     auto await_transform(this_coro::executor_t) const
     {
@@ -85,15 +85,15 @@ struct coroutine_traits<boost::async::test_case>
 
 
 #define CO_TEST_CASE_IMPL(Function, ...)                                                                               \
-static ::boost::async::test_case Function();                                                                                   \
+static ::boost::async::test_case Function();                                                                           \
 TEST_CASE(__VA_ARGS__)                                                                                                 \
 {                                                                                                                      \
-    asio::io_context ctx;                                                                                              \
+    boost::asio::io_context ctx;                                                                                       \
     auto tc = Function();                                                                                              \
-    boost::async::this_thread::set_executor(ctx.get_executor());                                                               \
-    tc.promise->exec = asio::require(ctx.get_executor(), asio::execution::outstanding_work.tracked);                   \
-    auto p = std::coroutine_handle<boost::async::test_case_promise>::from_promise(*tc.promise);                                \
-    asio::post(ctx.get_executor(), [p]{p.resume();});                                                                  \
+    boost::async::this_thread::set_executor(ctx.get_executor());                                                       \
+    tc.promise->exec = boost::asio::require(ctx.get_executor(), boost::asio::execution::outstanding_work.tracked);            \
+    auto p = std::coroutine_handle<boost::async::test_case_promise>::from_promise(*tc.promise);                        \
+    boost::asio::post(ctx.get_executor(), [p]{p.resume();});                                                           \
     ctx.run();                                                                                                         \
 }                                                                                                                      \
 static ::boost::async::test_case Function()

@@ -6,10 +6,10 @@
 #define BOOST_ASYNC_WRAPPER_HPP
 
 
-#include <asio/bind_executor.hpp>
-#include <asio/executor.hpp>
-#include <asio/dispatch.hpp>
-#include <asio/post.hpp>
+#include <boost/asio/bind_executor.hpp>
+#include <boost/asio/executor.hpp>
+#include <boost/asio/dispatch.hpp>
+#include <boost/asio/post.hpp>
 
 #include <boost/async/this_coro.hpp>
 #include <boost/async/concepts.hpp>

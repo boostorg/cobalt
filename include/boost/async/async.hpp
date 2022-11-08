@@ -8,17 +8,18 @@
 #ifndef BOOST_ASYNC_ASYNC_HPP
 #define BOOST_ASYNC_ASYNC_HPP
 
-#include <asio/any_io_executor.hpp>
-#include <asio/append.hpp>
-#include <asio/bind_allocator.hpp>
-#include <asio/bind_executor.hpp>
-#include <asio/cancellation_signal.hpp>
-#include <asio/cancellation_state.hpp>
+#include <boost/asio/any_io_executor.hpp>
+#include <boost/asio/append.hpp>
+#include <boost/asio/bind_allocator.hpp>
+#include <boost/asio/bind_executor.hpp>
+#include <boost/asio/cancellation_signal.hpp>
+#include <boost/asio/cancellation_state.hpp>
 
 #include <boost/async/this_coro.hpp>
 #include <boost/async/concepts.hpp>
 #include <boost/async/detail/wrapper.hpp>
 #include <boost/async/async_operation.hpp>
+#include <boost/container/pmr/monotonic_buffer_resource.hpp>
 
 namespace boost::async
 {
@@ -127,7 +128,7 @@ struct async_receiver : value_holder<T>
         }
 
         alignas(sizeof(void*)) char buffer[1024];
-        std::pmr::monotonic_buffer_resource resource{buffer, sizeof(buffer)};
+        container::pmr::monotonic_buffer_resource resource{buffer, sizeof(buffer)};
 
         // the race is fine -> if we miss it, we'll get it in resume.
         bool await_ready() const { return self->done; }
@@ -147,7 +148,7 @@ struct async_receiver : value_holder<T>
                 self->awaited_from = detail::dispatch_coroutine(
                         h.promise().get_executor(),
                         asio::bind_allocator(
-                                std::pmr::polymorphic_allocator<void>(&resource),
+                                container::pmr::polymorphic_allocator<void>(&resource),
                                 [h]() mutable { h.resume(); })
                 );
             else
@@ -207,11 +208,11 @@ struct async_promise
           promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>,
           promise_throw_if_cancelled_base,
           enable_awaitables<async_promise<Return>>,
-          enable_await_allocator<std::pmr::polymorphic_allocator<void>>,
+          enable_await_allocator<container::pmr::polymorphic_allocator<void>>,
           enable_async_operation_interpreted,
           async_promise_result<Return>
 {
-    using enable_await_allocator<std::pmr::polymorphic_allocator<void>>::await_transform;
+    using enable_await_allocator<container::pmr::polymorphic_allocator<void>>::await_transform;
     using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
     using promise_throw_if_cancelled_base::await_transform;
     using enable_awaitables<async_promise<Return>>::await_transform;
@@ -233,8 +234,8 @@ struct async_promise
     executor_type exec{boost::async::this_thread::get_executor()};
     executor_type get_executor() const {return exec;}
 
-    using allocator_type = std::pmr::polymorphic_allocator<void>;
-    allocator_type get_allocator() const {return std::pmr::polymorphic_allocator<void>{this_thread::get_default_resource()};}
+    using allocator_type = container::pmr::polymorphic_allocator<void>;
+    allocator_type get_allocator() const {return container::pmr::polymorphic_allocator<void>{this_thread::get_default_resource()};}
 
     std::suspend_never initial_suspend()        {return {};}
     auto final_suspend() noexcept
@@ -315,7 +316,7 @@ struct async_initiate
         if (rec.done)
             return asio::post(asio::append(h, rec.exception, rec.get_result()));
 
-        auto alloc = asio::get_associated_allocator(h, std::pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()});
+        auto alloc = asio::get_associated_allocator(h, container::pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()});
         auto recs = std::allocate_shared<detail::async_receiver<T>>(
                                 alloc, std::move(rec));
 
@@ -357,7 +358,7 @@ struct async_initiate
         if (a.receiver_.done)
             return asio::post(asio::append(h, a.receiver_.exception));
 
-        auto alloc = asio::get_associated_allocator(h, std::pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()});
+        auto alloc = asio::get_associated_allocator(h, container::pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()});
         auto recs = std::allocate_shared<detail::async_receiver<void>>(
                                 alloc, std::move(a.receiver_));
 
@@ -415,7 +416,7 @@ template<typename ExecutionContext, typename T, typename CompletionToken>
     requires (std::is_convertible<ExecutionContext&, asio::execution_context&>::value)
 auto spawn(ExecutionContext context,
            async<T> && t,
-           CompletionToken&& token ASIO_DEFAULT_COMPLETION_TOKEN(typename ExecutionContext::executor_type))
+           CompletionToken&& token BOOST_ASIO_DEFAULT_COMPLETION_TOKEN(typename ExecutionContext::executor_type))
 {
     return spawn(std::move(t), asio::bind_executor(context.get_executor(), std::forward<CompletionToken>(token)));
 }
@@ -424,7 +425,7 @@ template<typename Executor, typename T, typename CompletionToken>
     requires (asio::is_executor<Executor>::value || asio::execution::is_executor<Executor>::value)
 auto spawn(Executor executor,
            async<T> && t,
-           CompletionToken&& token ASIO_DEFAULT_COMPLETION_TOKEN(Executor))
+           CompletionToken&& token BOOST_ASIO_DEFAULT_COMPLETION_TOKEN(Executor))
 {
     return spawn(std::move(t), asio::bind_executor(executor, std::forward<CompletionToken>(token)));
 }

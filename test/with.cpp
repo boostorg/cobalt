@@ -13,6 +13,7 @@
 
 TEST_SUITE_BEGIN("with");
 
+namespace asio = boost::asio;
 
 struct finalizer_test
 {
