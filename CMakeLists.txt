@@ -5,7 +5,7 @@ include_directories(include ../asio/asio/include)
 
 find_package(Boost REQUIRED program_options)
 
-add_compile_options(-fsanitize=address)
+add_compile_options(-fsanitize=address) #  -ftime-trace
 add_link_options(-fsanitize=address)
 
 add_subdirectory(test)

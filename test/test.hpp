@@ -40,6 +40,9 @@ struct test_case_promise : promise_cancellation_base<asio::cancellation_slot, as
     using executor_type = asio::io_context::executor_type;
     executor_type get_executor() const {return exec->context().get_executor();}
 
+    using allocator_type = std::pmr::polymorphic_allocator<void>;
+    allocator_type get_allocator() const {return std::pmr::polymorphic_allocator<void>{get_default_resource()};}
+
     auto await_transform(this_coro::executor_t) const
     {
         struct exec_helper

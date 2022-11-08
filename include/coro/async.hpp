@@ -20,6 +20,7 @@
 #include <coro/concepts.hpp>
 #include <coro/detail/wrapper.hpp>
 #include <coro/detail/wrapper.hpp>
+#include <coro/executor.hpp>
 
 namespace coro
 {
@@ -229,6 +230,12 @@ struct async_promise
     {
         return signal.slot();
     }
+
+    using executor_type = asio::io_context::executor_type;
+    executor_type get_executor() const {return coro::get_executor();}
+
+    using allocator_type = std::pmr::polymorphic_allocator<void>;
+    allocator_type get_allocator() const {return std::pmr::polymorphic_allocator<void>{get_default_resource()};}
 
     std::suspend_never initial_suspend()        {return {};}
     auto final_suspend() noexcept
