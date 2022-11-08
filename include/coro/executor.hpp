@@ -10,9 +10,8 @@
 #include <asio/io_context.hpp>
 #include <optional>
 
-namespace coro
+namespace coro::this_thread
 {
-
 
 namespace detail
 {

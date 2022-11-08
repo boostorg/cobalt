@@ -232,11 +232,11 @@ struct async_promise
     }
 
     using executor_type = asio::io_context::executor_type;
-    executor_type exec{coro::get_executor()};
+    executor_type exec{coro::this_thread::get_executor()};
     executor_type get_executor() const {return exec;}
 
     using allocator_type = std::pmr::polymorphic_allocator<void>;
-    allocator_type get_allocator() const {return std::pmr::polymorphic_allocator<void>{get_default_resource()};}
+    allocator_type get_allocator() const {return std::pmr::polymorphic_allocator<void>{this_thread::get_default_resource()};}
 
     std::suspend_never initial_suspend()        {return {};}
     auto final_suspend() noexcept
@@ -317,7 +317,7 @@ struct async_initiate
         if (rec.done)
             return asio::post(asio::append(h, rec.exception, rec.get_result()));
 
-        auto alloc = asio::get_associated_allocator(h, std::pmr::polymorphic_allocator<void>{coro::get_default_resource()});
+        auto alloc = asio::get_associated_allocator(h, std::pmr::polymorphic_allocator<void>{coro::this_thread::get_default_resource()});
         auto recs = std::allocate_shared<detail::async_receiver<T>>(
                                 alloc, std::move(rec));
 
@@ -359,7 +359,7 @@ struct async_initiate
         if (a.receiver_.done)
             return asio::post(asio::append(h, a.receiver_.exception));
 
-        auto alloc = asio::get_associated_allocator(h, std::pmr::polymorphic_allocator<void>{coro::get_default_resource()});
+        auto alloc = asio::get_associated_allocator(h, std::pmr::polymorphic_allocator<void>{coro::this_thread::get_default_resource()});
         auto recs = std::allocate_shared<detail::async_receiver<void>>(
                                 alloc, std::move(a.receiver_));
 

@@ -37,7 +37,7 @@ struct awaitable_async_operation<void(Args...), Op>
         auto exec = asio::get_associated_executor(h.promise());
         try
         {
-            using completion = completion_handler<Promise, Args...>;
+            using completion = completion_handler<Args...>;
             static_cast<Op>(op)(completion{h, result});
         }
         catch(...)
@@ -48,7 +48,7 @@ struct awaitable_async_operation<void(Args...), Op>
 
     auto await_resume()
     {
-        return std::move(result.value()) ;
+        return interpret_result(std::move(result.value()));
     }
 };
 
@@ -84,7 +84,7 @@ struct awaitable_async_operation_interpreted<void(Args...), Op>
         auto exec = asio::get_associated_executor(h.promise());
         try
         {
-            using completion = completion_handler<Promise, Args...>;
+            using completion = completion_handler<Args...>;
             static_cast<Op>(op)(completion{h, result});
         }
         catch(...)

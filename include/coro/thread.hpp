@@ -62,14 +62,14 @@ struct thread_promise : signal_helper_2,
 
   void run()
   {
-    coro::set_default_resource(&resource);
+    coro::this_thread::set_default_resource(&resource);
     auto st = std::move(state);
 
     if (st->signal.slot().is_connected())
         st->signal.slot().assign([this](asio::cancellation_type tp){signal.emit(tp);});
 
     exec.emplace(st->ctx.get_executor());
-    coro::set_executor(st->ctx.get_executor());
+    coro::this_thread::set_executor(st->ctx.get_executor());
 
 
     asio::post(st->ctx.get_executor(),

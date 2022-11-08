@@ -18,7 +18,7 @@ struct dummy_promise
 static_assert(asio::detail::has_executor_type<dummy_promise>::value);
 
 
-void test(coro::completion_handler<dummy_promise> ch)
+void test(coro::completion_handler<> ch)
 {
     asio::post(std::move(ch));
 }

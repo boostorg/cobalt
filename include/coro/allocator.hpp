@@ -23,10 +23,15 @@ constexpr allocator_t allocator;
 
 }
 
+namespace this_thread
+{
+
+
 namespace detail
 {
   inline static thread_local std::pmr::memory_resource * default_coro_memory_resource = std::pmr::get_default_resource();
 }
+
 
 
 inline std::pmr::memory_resource* get_default_resource() noexcept
@@ -42,6 +47,13 @@ inline std::pmr::memory_resource* set_default_resource(std::pmr::memory_resource
 }
 
 
+inline std::pmr::polymorphic_allocator<void> get_allocator()
+{
+  return std::pmr::polymorphic_allocator<void>(get_default_resource());
+}
+
+}
+
 struct promise_memory_resource_base
 {
     using allocator_type = std::pmr::polymorphic_allocator<void>;
@@ -49,7 +61,7 @@ struct promise_memory_resource_base
 
     void * operator new(const std::size_t size)
     {
-        auto res = get_default_resource();
+        auto res = this_thread::get_default_resource();
         const auto p = res->allocate(size + sizeof(std::pmr::memory_resource *), alignof(std::pmr::memory_resource *));
         auto pp = static_cast<std::pmr::memory_resource**>(p);
         *pp = res;
@@ -63,10 +75,10 @@ struct promise_memory_resource_base
         res->deallocate(p, size + sizeof(std::pmr::memory_resource *), alignof(std::pmr::memory_resource *));
     }
 
-    promise_memory_resource_base(std::pmr::memory_resource * resource = get_default_resource()) : resource(resource) {}
+    promise_memory_resource_base(std::pmr::memory_resource * resource = this_thread::get_default_resource()) : resource(resource) {}
 
 private:
-    std::pmr::memory_resource * resource = get_default_resource();
+    std::pmr::memory_resource * resource = this_thread::get_default_resource();
 };
 
 /// Allocate the memory and put the allocator behind the coro memory

@@ -5,7 +5,6 @@
 #ifndef CORO_THIS_CORO_HPP
 #define CORO_THIS_CORO_HPP
 
-#include <asio/any_io_executor.hpp>
 #include <asio/associated_allocator.hpp>
 #include <asio/associated_cancellation_slot.hpp>
 #include <asio/associated_executor.hpp>
@@ -20,52 +19,17 @@
 namespace coro
 {
 
-#if defined(CORO_STATIC_COMPLETION_HANDLER)
-
-template<typename Promise, typename ... Args>
+template<typename ... Args>
 struct completion_handler;
-
-#else
-
-template<typename CancellationSlot,
-         typename Executor,
-         typename Allocator,
-         typename ... Args>
-struct completion_handler_type;
-
-template<typename Promise, typename ... Args>
-using completion_handler = completion_handler_type<
-        typename asio::associated_cancellation_slot_t<Promise, int>,
-        typename asio::associated_executor_t<Promise, int>,
-        typename asio::associated_allocator_t<Promise, int>,
-        Args...>;
-
-
-#endif
 
 namespace this_coro
 {
 
 using namespace asio::this_coro;
 
-template<typename Executor>
-struct exchange_executor
-{
-    exchange_executor(Executor exec) : exec(std::move(exec)) {}
-
-    using executor_type = Executor;
-    executor_type get_executor() const {return exec;}
-    Executor exec;
-};
-
-
-struct initial_t {};
-/// Helper for lazy symmetric coroutines, to get the value of the initial_suspend.
-constexpr initial_t initial;
-
 }
 
-template<typename Executor = asio::any_io_executor>
+template<typename Executor>
 struct promise_executor_base
 {
     using executor_type = std::remove_volatile_t<Executor>;
@@ -315,25 +279,6 @@ struct promise_throw_if_cancelled_base
   protected:
     bool throw_if_cancelled_{true};
 };
-
-namespace detail
-{
-
-template<typename Promise>
-inline void throw_if_cancelled_impl(Promise & pro)
-{
-    if constexpr (
-            requires (Promise & p)
-            {
-                {p.throw_if_cancelled()} -> std::convertible_to<bool>;
-                {p.cancelled()} -> std::convertible_to<asio::cancellation_type>;
-            })
-        if (pro.throw_if_cancelled() && pro.cancelled() != asio::cancellation_type::none)
-            throw asio::system_error(asio::error::operation_aborted, "throw-if-cancelled");
-}
-
-}
-
 
 }
 
