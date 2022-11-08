@@ -10,6 +10,12 @@
 
 #include "doctest.h"
 #include "test.hpp"
+#include "asio/detached.hpp"
+#include <asio/steady_timer.hpp>
+#include <asio/awaitable.hpp>
+#include <asio/co_spawn.hpp>
+
+#include <new>
 
 TEST_SUITE_BEGIN("async");
 
@@ -31,11 +37,43 @@ coro::async<int> test1(asio::any_io_executor exec)
     co_return 452;
 }
 
+struct tracking_res final : std::pmr::memory_resource
+{
+  void* do_allocate( std::size_t bytes, std::size_t alignment ) override
+  {
+    auto p = std::pmr::new_delete_resource()->allocate(bytes, alignment);
+    printf("Helau %d -> %p", bytes, p);
+    return p;
+  }
+
+  void do_deallocate( void* p, std::size_t bytes, std::size_t alignment ) override
+  {
+    printf("Byebye %d -> %p", bytes, p);
+    std::pmr::new_delete_resource()->deallocate(p, bytes, alignment);
+  }
+
+  bool do_is_equal( const std::pmr::memory_resource& other ) const noexcept
+  {
+    return dynamic_cast<const tracking_res*>(&other) != nullptr;
+  }
+
+
+};
+
 TEST_CASE("test-1")
 {
 
     bool done = false;
+
+
+
     asio::io_context ctx;
+    asio::steady_timer tim{ctx};
+
+    tracking_res res;
+    asio::co_spawn(ctx,
+                   []() -> asio::awaitable<void> {co_return;},
+                   asio::bind_allocator(std::pmr::polymorphic_allocator<void>(&res), asio::detached));
     coro::spawn(
           ctx.get_executor(),
           test1(ctx.get_executor()),

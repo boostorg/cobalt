@@ -101,7 +101,7 @@ struct async_receiver : value_holder<T>
 
     ~async_receiver()
     {
-      if (reference == this)
+      if (!done && reference == this)
         reference = nullptr;
     }
 
