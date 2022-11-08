@@ -3,7 +3,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <coro/handler.hpp>
+#include <boost/async/handler.hpp>
 
 #include <asio/any_io_executor.hpp>
 #include <asio/post.hpp>
@@ -18,7 +18,7 @@ struct dummy_promise
 static_assert(asio::detail::has_executor_type<dummy_promise>::value);
 
 
-void test(coro::completion_handler<> ch)
+void test(boost::async::completion_handler<> ch)
 {
     asio::post(std::move(ch));
 }

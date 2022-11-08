@@ -2,8 +2,8 @@
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef CORO_MAIN_HPP
-#define CORO_MAIN_HPP
+#ifndef BOOST_ASYNC_MAIN_HPP
+#define BOOST_ASYNC_MAIN_HPP
 
 #include <asio/io_context.hpp>
 #include <asio/post.hpp>
@@ -13,12 +13,12 @@
 #include <memory_resource>
 #include <optional>
 
-#include <coro/concepts.hpp>
-#include <coro/async_operation.hpp>
-#include <coro/this_coro.hpp>
+#include <boost/async/concepts.hpp>
+#include <boost/async/async_operation.hpp>
+#include <boost/async/this_coro.hpp>
 
 
-namespace coro
+namespace boost::async
 {
 
 namespace detail
@@ -30,9 +30,9 @@ struct main;
 
 }
 
-auto co_main(int argc, char * argv[]) -> coro::main;
+auto co_main(int argc, char * argv[]) -> boost::async::main;
 
-namespace coro
+namespace boost::async
 {
 
 namespace detail
@@ -47,7 +47,7 @@ class main
 {
   detail::main_promise * promise;
   main(detail::main_promise * promise) : promise(promise) {}
-  friend auto ::co_main(int argc, char * argv[]) -> coro::main;
+  friend auto ::co_main(int argc, char * argv[]) -> boost::async::main;
   friend int detail::main(int argc, char * argv[]);
   friend struct detail::main_promise;
 };
@@ -99,20 +99,20 @@ struct main_promise : signal_helper,
             *result = res;
     }
 
-    friend auto ::co_main (int argc, char * argv[]) -> coro::main;
+    friend auto ::co_main (int argc, char * argv[]) -> boost::async::main;
 
 
     friend int main(int argc, char * argv[])
     {
         std::pmr::unsynchronized_pool_resource root_resource;
-        auto pre = coro::this_thread::set_default_resource(&root_resource);
+        auto pre = boost::async::this_thread::set_default_resource(&root_resource);
         char buffer[8096];
         std::pmr::monotonic_buffer_resource main_res{buffer, 8096, &root_resource};
         my_resource = &main_res;
 
         asio::io_context ctx;
-        coro::this_thread::set_executor(ctx.get_executor());
-        ::coro::main mn = co_main(argc, argv);
+        boost::async::this_thread::set_executor(ctx.get_executor());
+        ::boost::async::main mn = co_main(argc, argv);
         int res ;
         mn.promise->result = &res;
         mn.promise->exec.emplace(ctx.get_executor());
@@ -184,9 +184,9 @@ struct main_promise : signal_helper,
     int * result;
     std::optional<asio::executor_work_guard<executor_type>> exec;
     asio::signal_set * signal_set;
-    ::coro::main get_return_object()
+    ::boost::async::main get_return_object()
     {
-        return ::coro::main{this};
+        return ::boost::async::main{this};
     }
 };
 
@@ -198,12 +198,12 @@ namespace std
 {
 
 template<>
-struct coroutine_traits<coro::main, int, char**>
+struct coroutine_traits<boost::async::main, int, char**>
 {
-    using promise_type = coro::detail::main_promise;
+    using promise_type = boost::async::detail::main_promise;
 };
 
 }
 
 
-#endif //CORO_MAIN_HPP
+#endif //BOOST_ASYNC_MAIN_HPP

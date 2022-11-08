@@ -2,8 +2,8 @@
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef CORO_CONCEPTS_HPP
-#define CORO_CONCEPTS_HPP
+#ifndef BOOST_ASYNC_CONCEPTS_HPP
+#define BOOST_ASYNC_CONCEPTS_HPP
 
 #include <coroutine>
 #include <concepts>
@@ -11,7 +11,7 @@
 #include <asio/is_executor.hpp>
 #include <asio/execution/executor.hpp>
 
-namespace coro
+namespace boost::async
 {
 
 template<typename T>
@@ -67,4 +67,4 @@ concept with_get_executor = requires (T& t)
 
 }
 
-#endif //CORO_CONCEPTS_HPP
+#endif //BOOST_ASYNC_CONCEPTS_HPP

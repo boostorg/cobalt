@@ -2,8 +2,8 @@
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef CORO_WRAPPER_HPP
-#define CORO_WRAPPER_HPP
+#ifndef BOOST_ASYNC_WRAPPER_HPP
+#define BOOST_ASYNC_WRAPPER_HPP
 
 
 #include <asio/bind_executor.hpp>
@@ -11,14 +11,14 @@
 #include <asio/dispatch.hpp>
 #include <asio/post.hpp>
 
-#include <coro/this_coro.hpp>
-#include <coro/concepts.hpp>
-#include <coro/util.hpp>
+#include <boost/async/this_coro.hpp>
+#include <boost/async/concepts.hpp>
+#include <boost/async/util.hpp>
 
 #include <coroutine>
 #include <utility>
 
-namespace coro::detail
+namespace boost::async::detail
 {
 
 template<typename Allocator>
@@ -142,21 +142,21 @@ namespace std
 {
 
 template <typename T, typename ... Args>
-struct coroutine_traits<coroutine_handle<coro::detail::post_coroutine_promise<T>>, Args...>
+struct coroutine_traits<coroutine_handle<boost::async::detail::post_coroutine_promise<T>>, Args...>
 {
-    using promise_type = coro::detail::post_coroutine_promise<T>;
+    using promise_type = boost::async::detail::post_coroutine_promise<T>;
 };
 
 template <typename T, typename ... Args>
-struct coroutine_traits<coroutine_handle<coro::detail::dispatch_coroutine_promise<T>>, Args...>
+struct coroutine_traits<coroutine_handle<boost::async::detail::dispatch_coroutine_promise<T>>, Args...>
 {
-    using promise_type = coro::detail::dispatch_coroutine_promise<T>;
+    using promise_type = boost::async::detail::dispatch_coroutine_promise<T>;
 };
 
 } // namespace std
 
 
-namespace coro::detail
+namespace boost::async::detail
 {
 
 
@@ -205,4 +205,4 @@ auto dispatch_coroutine(Context &ctx, CompletionToken token) noexcept
 
 }
 
-#endif //CORO_WRAPPER_HPP
+#endif //BOOST_ASYNC_WRAPPER_HPP

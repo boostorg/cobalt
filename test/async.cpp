@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <coro/async.hpp>
-#include <coro/main.hpp>
+#include <boost/async/async.hpp>
+#include <boost/async/main.hpp>
 
 #include "doctest.h"
 #include "test.hpp"
@@ -19,18 +19,18 @@
 
 TEST_SUITE_BEGIN("async");
 
-coro::async<void> test0()
+boost::async::async<void> test0()
 {
     co_return;
 }
-coro::async<double> test2(int i)
+boost::async::async<double> test2(int i)
 {
     co_await test0();
     co_return i;
 }
 
 
-coro::async<int> test1(asio::any_io_executor exec)
+boost::async::async<int> test1(asio::any_io_executor exec)
 {
     co_await test2(42);
     co_await test2(42);
@@ -45,9 +45,9 @@ TEST_CASE("test-1")
 
     asio::io_context ctx;
     asio::steady_timer tim{ctx};
-    coro::this_thread::set_executor(ctx.get_executor());
+    boost::async::this_thread::set_executor(ctx.get_executor());
 
-    coro::spawn(
+    boost::async::spawn(
           ctx.get_executor(),
           test1(ctx.get_executor()),
           [&](std::exception_ptr ex, int res)

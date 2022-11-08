@@ -2,14 +2,14 @@
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef CORO_TEST_HPP
-#define CORO_TEST_HPP
+#ifndef BOOST_ASYNC_TEST_HPP
+#define BOOST_ASYNC_TEST_HPP
 
 #include <coroutine>
 
-#include <coro/main.hpp>
+#include <boost/async/main.hpp>
 
-namespace coro
+namespace boost::async
 {
 
 struct test_case_promise;
@@ -76,30 +76,30 @@ namespace std
 {
 
 template<>
-struct coroutine_traits<coro::test_case>
+struct coroutine_traits<boost::async::test_case>
 {
-    using promise_type = coro::test_case_promise;
+    using promise_type = boost::async::test_case_promise;
 };
 
 }
 
 
 #define CO_TEST_CASE_IMPL(Function, ...)                                                                               \
-static ::coro::test_case Function();                                                                                   \
+static ::boost::async::test_case Function();                                                                                   \
 TEST_CASE(__VA_ARGS__)                                                                                                 \
 {                                                                                                                      \
     asio::io_context ctx;                                                                                              \
     auto tc = Function();                                                                                              \
-    coro::this_thread::set_executor(ctx.get_executor());                                                               \
+    boost::async::this_thread::set_executor(ctx.get_executor());                                                               \
     tc.promise->exec = asio::require(ctx.get_executor(), asio::execution::outstanding_work.tracked);                   \
-    auto p = std::coroutine_handle<coro::test_case_promise>::from_promise(*tc.promise);                                \
+    auto p = std::coroutine_handle<boost::async::test_case_promise>::from_promise(*tc.promise);                                \
     asio::post(ctx.get_executor(), [p]{p.resume();});                                                                  \
     ctx.run();                                                                                                         \
 }                                                                                                                      \
-static ::coro::test_case Function()
+static ::boost::async::test_case Function()
 
 
 #define CO_TEST_CASE(...) CO_TEST_CASE_IMPL(DOCTEST_ANONYMOUS(CO_DOCTEST_ANON_FUNC_), __VA_ARGS__)
 
 
-#endif //CORO_TEST_HPP
+#endif //BOOST_ASYNC_TEST_HPP

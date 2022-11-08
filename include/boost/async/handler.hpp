@@ -2,19 +2,19 @@
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef CORO_HANDLER_HPP
-#define CORO_HANDLER_HPP
+#ifndef BOOST_ASYNC_HANDLER_HPP
+#define BOOST_ASYNC_HANDLER_HPP
 
 #include <asio/io_context.hpp>
 
-#include <coro/this_coro.hpp>
-#include <coro/util.hpp>
+#include <boost/async/this_coro.hpp>
+#include <boost/async/util.hpp>
 
 #include <memory>
 #include <memory_resource>
 #include <optional>
 
-namespace coro
+namespace boost::async
 {
     
 struct completion_handler_base
@@ -140,4 +140,4 @@ auto interpret_result(std::tuple<asio::error_code, Arg> && args)
 
 }
 
-#endif //CORO_HANDLER_HPP
+#endif //BOOST_ASYNC_HANDLER_HPP

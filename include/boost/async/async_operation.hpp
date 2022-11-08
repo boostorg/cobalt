@@ -2,8 +2,8 @@
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef CORO_ASYNC_OPERATION_HPP
-#define CORO_ASYNC_OPERATION_HPP
+#ifndef BOOST_ASYNC_ASYNC_OPERATION_HPP
+#define BOOST_ASYNC_ASYNC_OPERATION_HPP
 
 #include <asio/associated_allocator.hpp>
 #include <asio/associated_cancellation_slot.hpp>
@@ -11,10 +11,12 @@
 #include <asio/as_tuple.hpp>
 #include <asio/deferred.hpp>
 #include <asio/post.hpp>
-#include <coroutine>
-#include <coro/handler.hpp>
 
-namespace coro
+#include <coroutine>
+
+#include <boost/async/handler.hpp>
+
+namespace boost::async
 {
 
 template<typename T>
@@ -107,4 +109,4 @@ struct enable_async_operation_interpreted
 
 }
 
-#endif //CORO_ASYNC_OPERATION_HPP
+#endif //BOOST_ASYNC_ASYNC_OPERATION_HPP

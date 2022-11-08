@@ -2,14 +2,14 @@
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef CORO_UTIL_HPP
-#define CORO_UTIL_HPP
+#ifndef BOOST_ASYNC_UTIL_HPP
+#define BOOST_ASYNC_UTIL_HPP
 
 #include <limits>
 #include <type_traits>
 #include <coroutine>
 
-namespace coro
+namespace boost::async
 {
 
 template<typename T>
@@ -123,4 +123,4 @@ struct coro_deleter<void>
 
 }
 
-#endif //CORO_UTIL_HPP
+#endif //BOOST_ASYNC_UTIL_HPP

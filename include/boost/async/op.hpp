@@ -5,13 +5,13 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef CORO_OP_HPP
-#define CORO_OP_HPP
+#ifndef BOOST_ASYNC_OP_HPP
+#define BOOST_ASYNC_OP_HPP
 
 #include <asio/io_context.hpp>
-#include <coro/handler.hpp>
+#include <handler.hpp>
 
-namespace coro
+namespace boost::async
 {
 
 struct timer_wait_op
@@ -61,4 +61,4 @@ struct timer_wait_op
 
 }
 
-#endif //CORO_OP_HPP
+#endif //BOOST_ASYNC_OP_HPP

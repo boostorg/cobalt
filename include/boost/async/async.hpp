@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef CORO_ASYNC_HPP
-#define CORO_ASYNC_HPP
+#ifndef BOOST_ASYNC_ASYNC_HPP
+#define BOOST_ASYNC_ASYNC_HPP
 
 #include <asio/any_io_executor.hpp>
 #include <asio/append.hpp>
@@ -14,12 +14,13 @@
 #include <asio/bind_executor.hpp>
 #include <asio/cancellation_signal.hpp>
 #include <asio/cancellation_state.hpp>
-#include <coro/this_coro.hpp>
-#include <coro/concepts.hpp>
-#include <coro/detail/wrapper.hpp>
-#include <coro/async_operation.hpp>
 
-namespace coro
+#include <boost/async/this_coro.hpp>
+#include <boost/async/concepts.hpp>
+#include <boost/async/detail/wrapper.hpp>
+#include <boost/async/async_operation.hpp>
+
+namespace boost::async
 {
 
 template<typename Return>
@@ -229,7 +230,7 @@ struct async_promise
     }
 
     using executor_type = asio::io_context::executor_type;
-    executor_type exec{coro::this_thread::get_executor()};
+    executor_type exec{boost::async::this_thread::get_executor()};
     executor_type get_executor() const {return exec;}
 
     using allocator_type = std::pmr::polymorphic_allocator<void>;
@@ -314,7 +315,7 @@ struct async_initiate
         if (rec.done)
             return asio::post(asio::append(h, rec.exception, rec.get_result()));
 
-        auto alloc = asio::get_associated_allocator(h, std::pmr::polymorphic_allocator<void>{coro::this_thread::get_default_resource()});
+        auto alloc = asio::get_associated_allocator(h, std::pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()});
         auto recs = std::allocate_shared<detail::async_receiver<T>>(
                                 alloc, std::move(rec));
 
@@ -356,7 +357,7 @@ struct async_initiate
         if (a.receiver_.done)
             return asio::post(asio::append(h, a.receiver_.exception));
 
-        auto alloc = asio::get_associated_allocator(h, std::pmr::polymorphic_allocator<void>{coro::this_thread::get_default_resource()});
+        auto alloc = asio::get_associated_allocator(h, std::pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()});
         auto recs = std::allocate_shared<detail::async_receiver<void>>(
                                 alloc, std::move(a.receiver_));
 
@@ -432,14 +433,14 @@ auto spawn(Executor executor,
 
 namespace std
 {
-template<typename Handler, typename T>
-struct coroutine_traits<void, coro::detail::async_initiate, Handler, T>
-{
-    using promise_type = coro::detail::async_initiate::promise_type<Handler, T>;
-};
 
+template<typename Handler, typename T>
+struct coroutine_traits<void, boost::async::detail::async_initiate, Handler, T>
+{
+    using promise_type = boost::async::detail::async_initiate::promise_type<Handler, T>;
+};
 
 }
 
 
-#endif //CORO_ASYNC_HPP
+#endif //BOOST_ASYNC_ASYNC_HPP

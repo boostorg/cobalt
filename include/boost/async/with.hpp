@@ -5,14 +5,14 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef CORO_WITH_HPP
-#define CORO_WITH_HPP
+#ifndef BOOST_ASYNC_WITH_HPP
+#define BOOST_ASYNC_WITH_HPP
 
 #include <exception>
 #include <utility>
-#include <coro/util.hpp>
+#include <boost/async/util.hpp>
 
-namespace coro
+namespace boost::async
 {
 
 struct with_enter_tag {};
@@ -75,4 +75,4 @@ auto with(Args &&... args)
 
 }
 
-#endif //CORO_WITH_HPP
+#endif //BOOST_ASYNC_WITH_HPP

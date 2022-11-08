@@ -5,15 +5,15 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef CORO_THIS_THREAD_HPP
-#define CORO_THIS_THREAD_HPP
+#ifndef BOOST_ASYNC_THIS_THREAD_HPP
+#define BOOST_ASYNC_THIS_THREAD_HPP
 
 #include <memory_resource>
 #include <asio/executor.hpp>
 #include <asio/io_context.hpp>
 #include <optional>
 
-namespace coro::this_thread
+namespace boost::async::this_thread
 {
 
 
@@ -57,4 +57,4 @@ inline void set_executor(asio::io_context::executor_type exec) noexcept
 
 }
 
-#endif //CORO_THIS_THREAD_HPP
+#endif //BOOST_ASYNC_THIS_THREAD_HPP

@@ -2,8 +2,8 @@
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef CORO_THIS_CORO_HPP
-#define CORO_THIS_CORO_HPP
+#ifndef BOOST_ASYNC_THIS_CORO_HPP
+#define BOOST_ASYNC_THIS_CORO_HPP
 
 #include <asio/associated_allocator.hpp>
 #include <asio/associated_cancellation_slot.hpp>
@@ -12,13 +12,13 @@
 #include <asio/this_coro.hpp>
 #include <asio/cancellation_state.hpp>
 
-#include <coro/this_thread.hpp>
+#include <boost/async/this_thread.hpp>
 
 #include <coroutine>
 #include <optional>
 #include <tuple>
 
-namespace coro
+namespace boost::async
 {
 
 template<typename ... Args>
@@ -274,7 +274,7 @@ private:
     std::pmr::memory_resource * resource = this_thread::get_default_resource();
 };
 
-/// Allocate the memory and put the allocator behind the coro memory
+/// Allocate the memory and put the allocator behind the async memory
 template<typename AllocatorType>
 void *allocate_coroutine(const std::size_t size, AllocatorType alloc_)
 {
@@ -290,7 +290,7 @@ void *allocate_coroutine(const std::size_t size, AllocatorType alloc_)
     return raw;
 }
 
-/// Deallocate the memory and destroy the allocator in the coro memory.
+/// Deallocate the memory and destroy the allocator in the async memory.
 template<typename AllocatorType>
 void deallocate_coroutine(void *raw_, const std::size_t size)
 {
@@ -332,4 +332,4 @@ struct enable_await_allocator
 
 }
 
-#endif //CORO_THIS_CORO_HPP
+#endif //BOOST_ASYNC_THIS_CORO_HPP

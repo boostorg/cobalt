@@ -5,9 +5,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef CORO_SRC_HPP
-#define CORO_SRC_HPP
+#ifndef BOOST_ASYNC_SRC_HPP
+#define BOOST_ASYNC_SRC_HPP
 
-#include <coro/impl/this_thread.ipp>
+#include <boost/async/impl/this_thread.ipp>
 
-#endif //CORO_SRC_HPP
+#endif //BOOST_ASYNC_SRC_HPP

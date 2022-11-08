@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef CORO_THREAD_HPP
-#define CORO_THREAD_HPP
+#ifndef BOOST_ASYNC_THREAD_HPP
+#define BOOST_ASYNC_THREAD_HPP
 
 #include <asio/io_context.hpp>
 #include <asio/post.hpp>
@@ -14,12 +14,12 @@
 
 #include <thread>
 
-#include <coro/concepts.hpp>
-#include <coro/async_operation.hpp>
-#include <coro/this_coro.hpp>
+#include <boost/async/concepts.hpp>
+#include <boost/async/async_operation.hpp>
+#include <boost/async/this_coro.hpp>
 
 
-namespace coro
+namespace boost::async
 {
 
 namespace detail
@@ -60,14 +60,14 @@ struct thread_promise : signal_helper_2,
 
   void run()
   {
-    coro::this_thread::set_default_resource(&resource);
+    boost::async::this_thread::set_default_resource(&resource);
     auto st = std::move(state);
 
     if (st->signal.slot().is_connected())
         st->signal.slot().assign([this](asio::cancellation_type tp){signal.emit(tp);});
 
     exec.emplace(st->ctx.get_executor());
-    coro::this_thread::set_executor(st->ctx.get_executor());
+    boost::async::this_thread::set_executor(st->ctx.get_executor());
 
 
     asio::post(st->ctx.get_executor(),
@@ -119,7 +119,7 @@ struct thread_promise : signal_helper_2,
     return exec_helper{get_executor()};
   }
 
-  inline coro::thread get_return_object();
+  inline boost::async::thread get_return_object();
 
 
 
@@ -176,12 +176,12 @@ struct thread
   friend struct detail::thread_promise;;
 };
 
-coro::thread detail::thread_promise::get_return_object()
+boost::async::thread detail::thread_promise::get_return_object()
 {
   auto st = state;
-  return coro::thread{std::thread{[this]{run();}}, std::move(st)};
+  return boost::async::thread{std::thread{[this]{run();}}, std::move(st)};
 }
 
 }
 
-#endif //CORO_THREAD_HPP
+#endif //BOOST_ASYNC_THREAD_HPP

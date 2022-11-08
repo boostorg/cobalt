@@ -5,13 +5,13 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <coro/thread.hpp>
-#include <coro/async_operation.hpp>
+#include <boost/async/thread.hpp>
+#include <boost/async/async_operation.hpp>
 #include <asio/steady_timer.hpp>
 
 #include "doctest.h"
 
-coro::thread thr()
+boost::async::thread thr()
 {
   asio::steady_timer tim{co_await asio::this_coro::executor, std::chrono::milliseconds(100)};
 
