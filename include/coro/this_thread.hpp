@@ -19,7 +19,8 @@ namespace coro::this_thread
 
 namespace detail
 {
-inline static thread_local std::pmr::memory_resource * default_coro_memory_resource = std::pmr::get_default_resource();
+extern thread_local std::pmr::memory_resource * default_coro_memory_resource;
+extern thread_local std::optional<asio::io_context::executor_type> executor;
 }
 
 
@@ -41,12 +42,6 @@ inline std::pmr::polymorphic_allocator<void> get_allocator()
   return std::pmr::polymorphic_allocator<void>(get_default_resource());
 }
 
-namespace detail
-{
-
-inline static std::optional<asio::io_context::executor_type> executor;
-
-}
 
 inline typename asio::io_context::executor_type & get_executor()
 {

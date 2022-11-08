@@ -6,6 +6,7 @@
 #include <coro/main.hpp>
 #include <coro/async_operation.hpp>
 #include <asio/steady_timer.hpp>
+#include <coro/src.hpp>
 
 
 coro::main co_main(int argc, char *argv[]) // <asio::thread_pool>
