@@ -15,8 +15,8 @@
 #include <boost/container/pmr/unsynchronized_pool_resource.hpp>
 #include <optional>
 
-#include <boost/async/concepts.hpp>
-#include <boost/async/async_operation.hpp>
+#include "boost/async/detail/concepts.hpp"
+#include "boost/async/detail/async_operation.hpp"
 #include <boost/async/this_coro.hpp>
 
 

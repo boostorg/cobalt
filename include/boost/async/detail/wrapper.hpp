@@ -12,8 +12,8 @@
 #include <boost/asio/post.hpp>
 
 #include <boost/async/this_coro.hpp>
-#include <boost/async/concepts.hpp>
-#include <boost/async/util.hpp>
+#include "concepts.hpp"
+#include "util.hpp"
 
 #include <coroutine>
 #include <utility>

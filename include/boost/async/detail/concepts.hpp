@@ -11,7 +11,7 @@
 #include <boost/asio/is_executor.hpp>
 #include <boost/asio/execution/executor.hpp>
 
-namespace boost::async
+namespace boost::async::detail
 {
 
 template<typename T>

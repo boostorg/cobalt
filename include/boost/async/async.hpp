@@ -16,9 +16,9 @@
 #include <boost/asio/cancellation_state.hpp>
 
 #include <boost/async/this_coro.hpp>
-#include <boost/async/concepts.hpp>
+#include "boost/async/detail/concepts.hpp"
 #include <boost/async/detail/wrapper.hpp>
-#include <boost/async/async_operation.hpp>
+#include "boost/async/detail/async_operation.hpp"
 #include <boost/container/pmr/monotonic_buffer_resource.hpp>
 
 namespace boost::async

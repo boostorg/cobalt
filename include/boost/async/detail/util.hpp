@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <coroutine>
 
-namespace boost::async
+namespace boost::async::detail
 {
 
 template<typename T>

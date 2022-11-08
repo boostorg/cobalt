@@ -10,7 +10,7 @@
 
 #include <exception>
 #include <utility>
-#include <boost/async/util.hpp>
+#include "boost/async/detail/util.hpp"
 
 namespace boost::async
 {

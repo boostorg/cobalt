@@ -14,9 +14,9 @@
 
 #include <coroutine>
 
-#include <boost/async/handler.hpp>
+#include "boost/async/detail/handler.hpp"
 
-namespace boost::async
+namespace boost::async::detail
 {
 
 template<typename T>
