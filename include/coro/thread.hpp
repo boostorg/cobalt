@@ -15,9 +15,7 @@
 #include <thread>
 
 #include <coro/concepts.hpp>
-#include <coro/allocator.hpp>
 #include <coro/async_operation.hpp>
-#include <coro/executor.hpp>
 #include <coro/this_coro.hpp>
 
 

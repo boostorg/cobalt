@@ -15,12 +15,9 @@
 #include <asio/cancellation_signal.hpp>
 #include <asio/cancellation_state.hpp>
 #include <coro/this_coro.hpp>
-#include <coro/allocator.hpp>
 #include <coro/concepts.hpp>
 #include <coro/detail/wrapper.hpp>
-#include <coro/detail/wrapper.hpp>
-#include <coro/executor.hpp>
-#include "async_operation.hpp"
+#include <coro/async_operation.hpp>
 
 namespace coro
 {

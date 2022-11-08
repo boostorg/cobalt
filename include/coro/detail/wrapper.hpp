@@ -11,7 +11,7 @@
 #include <asio/dispatch.hpp>
 #include <asio/post.hpp>
 
-#include <coro/allocator.hpp>
+#include <coro/this_coro.hpp>
 #include <coro/concepts.hpp>
 #include <coro/util.hpp>
 
@@ -20,10 +20,6 @@
 
 namespace coro::detail
 {
-
-
-
-
 
 template<typename Allocator>
 struct partial_promise_base

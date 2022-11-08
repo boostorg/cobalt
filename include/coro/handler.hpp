@@ -7,11 +7,8 @@
 
 #include <asio/io_context.hpp>
 
-#include <coro/allocator.hpp>
-#include <coro/executor.hpp>
 #include <coro/this_coro.hpp>
 #include <coro/util.hpp>
-
 
 #include <memory>
 #include <memory_resource>
