@@ -144,8 +144,8 @@ struct thread
 
   void cancel(asio::cancellation_type type = asio::cancellation_type::all)
   {
-    assert(state_) ;
-    state_->signal.emit(type);
+    if (state_)
+      asio::post(state_->ctx,[s= state_, type]{s->signal.emit(type);});
   }
 
   void join() {thread_.join();}

@@ -99,6 +99,12 @@ struct async_receiver : value_holder<T>
         reference = this;
     }
 
+    ~async_receiver()
+    {
+      if (reference == this)
+        reference = nullptr;
+    }
+
     async_receiver(async_receiver * (&reference), asio::cancellation_signal & cancel_signal)
         : reference(reference), cancel_signal(cancel_signal)
     {
@@ -178,8 +184,8 @@ struct async_promise_result
     async_receiver<Return>* receiver{nullptr};
     void return_value(Return && ret)
     {
-        assert(receiver);
-        receiver->return_value(std::move(ret));
+        if(receiver);
+          receiver->return_value(std::move(ret));
     }
 
 };
@@ -190,8 +196,8 @@ struct async_promise_result<void>
     async_receiver<void>* receiver{nullptr};
     void return_void()
     {
-        assert(receiver);
-        receiver->return_void();
+        if(receiver);
+          receiver->return_void();
     }
 };
 
@@ -221,7 +227,6 @@ struct async_promise
     using cancellation_slot_type = asio::cancellation_slot;
     cancellation_slot_type get_cancellation_slot() const
     {
-        assert(this->receiver);
         return signal.slot();
     }
 
@@ -256,8 +261,10 @@ struct async_promise
 
     void unhandled_exception()
     {
-        assert(this->receiver);
-        this->receiver->unhandled_exception();
+        if (this->receiver)
+          this->receiver->unhandled_exception();
+        else
+          throw ;
     }
     friend struct async_initiate;
 };
