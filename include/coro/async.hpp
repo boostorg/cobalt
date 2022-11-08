@@ -16,11 +16,11 @@
 #include <asio/cancellation_state.hpp>
 #include <coro/this_coro.hpp>
 #include <coro/allocator.hpp>
-#include <coro/ops.hpp>
 #include <coro/concepts.hpp>
 #include <coro/detail/wrapper.hpp>
 #include <coro/detail/wrapper.hpp>
 #include <coro/executor.hpp>
+#include "async_operation.hpp"
 
 namespace coro
 {
@@ -209,15 +209,15 @@ struct async_promise
           promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>,
           promise_throw_if_cancelled_base,
           enable_awaitables<async_promise<Return>>,
-          enable_operations<>,
           enable_await_allocator<std::pmr::polymorphic_allocator<void>>,
+          enable_async_operation_interpreted,
           async_promise_result<Return>
 {
     using enable_await_allocator<std::pmr::polymorphic_allocator<void>>::await_transform;
     using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
     using promise_throw_if_cancelled_base::await_transform;
     using enable_awaitables<async_promise<Return>>::await_transform;
-    using enable_operations<>::await_transform;
+    using enable_async_operation_interpreted::await_transform;
 
     [[nodiscard]] async<Return> get_return_object()
     {
@@ -232,7 +232,8 @@ struct async_promise
     }
 
     using executor_type = asio::io_context::executor_type;
-    executor_type get_executor() const {return coro::get_executor();}
+    executor_type exec{coro::get_executor()};
+    executor_type get_executor() const {return exec;}
 
     using allocator_type = std::pmr::polymorphic_allocator<void>;
     allocator_type get_allocator() const {return std::pmr::polymorphic_allocator<void>{get_default_resource()};}
@@ -316,7 +317,7 @@ struct async_initiate
         if (rec.done)
             return asio::post(asio::append(h, rec.exception, rec.get_result()));
 
-        auto alloc = asio::get_associated_allocator(h);
+        auto alloc = asio::get_associated_allocator(h, std::pmr::polymorphic_allocator<void>{coro::get_default_resource()});
         auto recs = std::allocate_shared<detail::async_receiver<T>>(
                                 alloc, std::move(rec));
 
@@ -358,7 +359,7 @@ struct async_initiate
         if (a.receiver_.done)
             return asio::post(asio::append(h, a.receiver_.exception));
 
-        auto alloc = asio::get_associated_allocator(h);
+        auto alloc = asio::get_associated_allocator(h, std::pmr::polymorphic_allocator<void>{coro::get_default_resource()});
         auto recs = std::allocate_shared<detail::async_receiver<void>>(
                                 alloc, std::move(a.receiver_));
 

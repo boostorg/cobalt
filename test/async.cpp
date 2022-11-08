@@ -45,6 +45,7 @@ TEST_CASE("test-1")
 
     asio::io_context ctx;
     asio::steady_timer tim{ctx};
+    coro::set_executor(ctx.get_executor());
 
     coro::spawn(
           ctx.get_executor(),

@@ -120,11 +120,6 @@ struct coro_deleter<void>
     }
 };
 
-template<std::size_t N>
-struct rank : rank<N-1> {};
-
-template<>
-struct rank<0u> {};
 
 }
 

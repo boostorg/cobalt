@@ -334,48 +334,6 @@ inline void throw_if_cancelled_impl(Promise & pro)
 
 }
 
-struct enable_exchange_executor
-{
-    template<typename Executor>
-    struct impl
-    {
-        constexpr static bool await_ready() { return false; }
-
-        template<typename Promise>
-        bool await_suspend( std::coroutine_handle<Promise> h)
-        {
-            detail::throw_if_cancelled_impl(h.promise());
-            auto & pro = h.promise();
-            exec = pro.exchange_executor(std::move(exec));
-
-            if (exec == pro.get_executor())
-                return false;
-
-            static std::optional<std::tuple<>> dummy;
-            using completion = completion_handler<Promise>;
-            asio::dispatch(pro.get_executor(), completion{h, dummy});
-            return true;
-        }
-
-        auto await_resume()
-        {
-            // previous
-            return exec;
-        }
-        impl(Executor exec) : exec(std::move(exec)) {}
-
-        using executor_type = Executor;
-        executor_type get_executor() const {return exec;}
-
-        Executor exec;
-    };
-
-    template<typename Executor>
-    auto await_transform(this_coro::exchange_executor<Executor> && op)
-    {
-        return impl<Executor>{op.get_executor()};
-    }
-};
 
 }
 

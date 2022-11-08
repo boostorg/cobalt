@@ -5,13 +5,14 @@
 #ifndef CORO_WRAPPER_HPP
 #define CORO_WRAPPER_HPP
 
+
 #include <asio/bind_executor.hpp>
 #include <asio/executor.hpp>
 #include <asio/dispatch.hpp>
 #include <asio/post.hpp>
 
 #include <coro/allocator.hpp>
-#include <coro/coro_traits.hpp>
+#include <coro/concepts.hpp>
 #include <coro/util.hpp>
 
 #include <coroutine>
@@ -20,13 +21,23 @@
 namespace coro::detail
 {
 
+
+
+
+
 template<typename Allocator>
 struct partial_promise_base
 {
-    template<typename ... Args>
-    void * operator new(const std::size_t size, Args & ... args)
+    template<typename CompletionToken>
+    void * operator new(const std::size_t size, CompletionToken & token)
     {
-        return allocate_coroutine(size, asio::get_associated_allocator(get_last_variadic(args...)));
+      return allocate_coroutine(size, asio::get_associated_allocator(token));
+    }
+
+    template<typename Executor, typename CompletionToken>
+    void * operator new(const std::size_t size, Executor & exec, CompletionToken & token)
+    {
+      return allocate_coroutine(size, asio::get_associated_allocator(token));
     }
 
     void operator delete(void * raw, const std::size_t size)
@@ -34,6 +45,10 @@ struct partial_promise_base
         deallocate_coroutine<Allocator>(raw, size);
     }
 };
+
+template<>
+struct partial_promise_base<std::allocator<void>> {};
+
 
 template<>           struct partial_promise_base<void> {};
 template<typename T> struct partial_promise_base<std::allocator<T>> {};
@@ -163,7 +178,7 @@ auto post_coroutine(Executor exec, CompletionToken token) noexcept
     co_yield asio::bind_executor(exec, std::move(token));
 }
 
-template <detail::with_get_executor Context, typename CompletionToken>
+template <with_get_executor Context, typename CompletionToken>
 auto post_coroutine(Context &ctx, CompletionToken token) noexcept
     -> std::coroutine_handle<post_coroutine_promise<asio::associated_allocator_t<CompletionToken>>>
 {
@@ -184,7 +199,7 @@ auto dispatch_coroutine(Executor exec, CompletionToken token) noexcept
     co_yield asio::bind_executor(exec, std::move(token));
 }
 
-template <detail::with_get_executor Context, typename CompletionToken>
+template <with_get_executor Context, typename CompletionToken>
 auto dispatch_coroutine(Context &ctx, CompletionToken token) noexcept
     -> std::coroutine_handle<dispatch_coroutine_promise<asio::associated_allocator_t<CompletionToken>>>
 {

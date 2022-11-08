@@ -12,7 +12,6 @@
 #include <asio/deferred.hpp>
 #include <asio/post.hpp>
 #include <coroutine>
-#include <coro/error.hpp>
 #include <coro/handler.hpp>
 
 namespace coro

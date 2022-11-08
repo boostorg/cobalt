@@ -90,6 +90,7 @@ TEST_CASE(__VA_ARGS__)                                                          
 {                                                                                                                      \
     asio::io_context ctx;                                                                                              \
     auto tc = Function();                                                                                              \
+    coro::set_executor(ctx.get_executor());                                                                            \
     tc.promise->exec = asio::require(ctx.get_executor(), asio::execution::outstanding_work.tracked);                   \
     auto p = std::coroutine_handle<coro::test_case_promise>::from_promise(*tc.promise);                                \
     asio::post(ctx.get_executor(), [p]{p.resume();});                                                                  \

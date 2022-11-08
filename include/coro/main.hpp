@@ -17,7 +17,6 @@
 #include <coro/allocator.hpp>
 #include <coro/async_operation.hpp>
 #include <coro/executor.hpp>
-#include <coro/ops.hpp>
 #include <coro/this_coro.hpp>
 
 
@@ -75,7 +74,7 @@ struct main_promise : signal_helper,
         [[maybe_unused]] volatile auto p = &detail::main;
     }
 
-    static std::pmr::memory_resource * my_resource;
+    inline static std::pmr::memory_resource * my_resource = std::pmr::get_default_resource();
     void * operator new(const std::size_t size)
     {
         return my_resource->allocate(size);

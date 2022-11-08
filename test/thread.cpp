@@ -8,17 +8,15 @@
 #include <coro/thread.hpp>
 #include <coro/async_operation.hpp>
 #include <asio/steady_timer.hpp>
-#include <coro/ops.hpp>
 
 #include "doctest.h"
 
 coro::thread thr()
 {
-  asio::steady_timer tim{co_await asio::this_coro::executor, std::chrono::seconds(1)};
+  asio::steady_timer tim{co_await asio::this_coro::executor, std::chrono::milliseconds(100)};
 
   auto exec = co_await asio::this_coro::executor;
-  asio::error_code ec;
-  co_await coro::ops::wait(tim, ec);
+  co_await tim.async_wait(asio::deferred);
 }
 
 TEST_CASE("thread")
