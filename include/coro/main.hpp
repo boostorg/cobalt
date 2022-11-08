@@ -150,8 +150,8 @@ struct main_promise : signal_helper,
     using allocator_type = std::pmr::polymorphic_allocator<void>;
     using resource_type  = std::pmr::unsynchronized_pool_resource;
 
-    resource_type resource{my_resource};
-    allocator_type  get_allocator() { return allocator_type(&resource); }
+    mutable resource_type resource{my_resource};
+    allocator_type get_allocator() const { return allocator_type(&resource); }
 
     using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
     using promise_throw_if_cancelled_base::await_transform;
