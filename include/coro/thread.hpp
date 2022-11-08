@@ -17,6 +17,7 @@
 #include <coro/concepts.hpp>
 #include <coro/allocator.hpp>
 #include <coro/async_operation.hpp>
+#include <coro/executor.hpp>
 #include <coro/ops.hpp>
 #include <coro/this_coro.hpp>
 
@@ -69,6 +70,8 @@ struct thread_promise : signal_helper_2,
         st->signal.slot().assign([this](asio::cancellation_type tp){signal.emit(tp);});
 
     exec.emplace(st->ctx.get_executor());
+    coro::set_executor(st->ctx.get_executor());
+
 
     asio::post(st->ctx.get_executor(),
                [this]

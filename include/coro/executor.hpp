@@ -7,6 +7,8 @@
 
 #include <asio/associated_executor.hpp>
 #include <asio/executor.hpp>
+#include <asio/io_context.hpp>
+#include <optional>
 
 namespace coro
 {
@@ -72,10 +74,21 @@ auto pick_executor(CompletionHandler &completion_handler,
         return pick_executor_impl(rank<1>{}, completion_handler, io_objects_or_executors...);
 }
 
-
-
-
+inline static std::optional<asio::io_context::executor_type> executor;
 }
+
+inline typename asio::io_context::executor_type & get_executor()
+{
+  if (!detail::executor)
+    throw asio::bad_executor();
+  return *detail::executor;
+}
+
+inline void set_executor(asio::io_context::executor_type exec) noexcept
+{
+  detail::executor = std::move(exec);
+}
+
 
 }
 

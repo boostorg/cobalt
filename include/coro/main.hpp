@@ -16,6 +16,7 @@
 #include <coro/concepts.hpp>
 #include <coro/allocator.hpp>
 #include <coro/async_operation.hpp>
+#include <coro/executor.hpp>
 #include <coro/ops.hpp>
 #include <coro/this_coro.hpp>
 
@@ -107,13 +108,13 @@ struct main_promise : signal_helper,
     friend int main(int argc, char * argv[])
     {
         std::pmr::unsynchronized_pool_resource root_resource;
-        coro::set_default_resource(&root_resource);
+        auto pre = coro::set_default_resource(&root_resource);
         char buffer[8096];
         std::pmr::monotonic_buffer_resource main_res{buffer, 8096, &root_resource};
         my_resource = &main_res;
 
         asio::io_context ctx;
-
+        coro::set_executor(ctx.get_executor());
         ::coro::main mn = co_main(argc, argv);
         int res ;
         mn.promise->result = &res;

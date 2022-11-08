@@ -184,7 +184,7 @@ struct async_promise_result
     async_receiver<Return>* receiver{nullptr};
     void return_value(Return && ret)
     {
-        if(receiver);
+        if(receiver)
           receiver->return_value(std::move(ret));
     }
 
@@ -196,7 +196,7 @@ struct async_promise_result<void>
     async_receiver<void>* receiver{nullptr};
     void return_void()
     {
-        if(receiver);
+        if(receiver)
           receiver->return_void();
     }
 };

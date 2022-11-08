@@ -24,6 +24,6 @@ coro::thread thr()
 TEST_CASE("thread")
 {
   auto t = thr();
+
   t.join();
-  //std::this_thread::sleep_for(std::chrono::seconds(1));
 }

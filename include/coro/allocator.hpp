@@ -36,7 +36,9 @@ inline std::pmr::memory_resource* get_default_resource() noexcept
 
 inline std::pmr::memory_resource* set_default_resource(std::pmr::memory_resource* r) noexcept
 {
-    return detail::default_coro_memory_resource = r;
+  auto pre = get_default_resource();
+  detail::default_coro_memory_resource = r;
+  return pre;
 }
 
 
