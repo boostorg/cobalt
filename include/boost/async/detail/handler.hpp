@@ -40,12 +40,63 @@ struct completion_handler_base
     return allocator ;
   }
 
-    template<typename Promise>
-    completion_handler_base(std::coroutine_handle<Promise> h)
-            : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
-              executor(asio::get_associated_executor(h.promise(), this_thread::get_executor())),
-              allocator(asio::get_associated_allocator(h.promise(), this_thread::get_allocator())) {}
+  template<typename Promise>
+  completion_handler_base(std::coroutine_handle<Promise> h)
+          : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
+            executor(asio::get_associated_executor(h.promise(), this_thread::get_executor())),
+            allocator(asio::get_associated_allocator(h.promise(), this_thread::get_allocator())) {}
 };
+
+template<typename Handler,typename ... Args>
+struct completion_handler_wrapper
+{
+  struct promise_type : promise_memory_resource_base
+  {
+    Handler &handler;
+    std::optional<std::tuple<Args...>> & res;
+    using cancellation_slot_type = asio::cancellation_slot;
+    cancellation_slot_type get_cancellation_slot() const noexcept
+    {
+      return asio::get_associated_cancellation_slot(handler) ;
+    }
+
+    using executor_type = asio::io_context::executor_type;
+    executor_type get_executor() const noexcept
+    {
+      return asio::get_associated_executor(handler, this_thread::get_executor()) ;
+    }
+
+    using allocator_type = container::pmr::polymorphic_allocator<void>;
+    allocator_type get_allocator() const noexcept
+    {
+      return asio::get_associated_allocator(handler, this_thread::get_allocator()) ;
+    }
+
+    promise_type(Handler & handler,
+                 std::optional<std::tuple<Args...>> & res) : handler(handler), res(res) {}
+
+
+
+    std::suspend_always initial_suspend() {return {};}
+    std::suspend_never final_suspend() noexcept {return {};}
+
+    void unhandled_exception() {throw;}
+
+    completion_handler_wrapper get_return_object() { return {std::coroutine_handle<promise_type>::from_promise(*this)}; }
+
+    void return_void() {}
+  };
+
+  std::coroutine_handle<promise_type> promise;
+
+  static auto run(Handler handler, std::optional<std::tuple<Args...>> res = std::nullopt) -> completion_handler_wrapper<Handler, Args...>
+  {
+    std::apply(std::move(handler), std::move(*res));
+    co_return ;
+  }
+
+};
+
 template<typename ... Args>
 struct completion_handler : completion_handler_base
 {
@@ -64,7 +115,7 @@ struct completion_handler : completion_handler_base
 
     void  (*notify_suspended_impl)(void*) = nullptr;
 
-  completion_handler(completion_handler && ) = default;
+    completion_handler(completion_handler && ) = default;
 
     template<typename Promise>
     completion_handler(std::coroutine_handle<Promise> h, std::optional<std::tuple<Args...>> &result)
@@ -74,6 +125,18 @@ struct completion_handler : completion_handler_base
     {
         if constexpr (requires (Promise & p) {p.notify_suspended();})
             notify_suspended_impl = +[](void * p) {std::coroutine_handle<Promise>::from_address(p).promise().notify_suspended(); };
+    }
+
+    template<typename Handler>
+    completion_handler(completion_handler_wrapper<Handler, Args...> w)
+            : completion_handler(w.promise, w.promise.promise().res)
+    {}
+
+    template<std::invocable<Args...> CompletionHandler>
+    completion_handler(CompletionHandler && ch)
+      : completion_handler(completion_handler_wrapper<std::decay_t<CompletionHandler>, Args...>::run(std::forward<CompletionHandler>(ch)))
+    {
+
     }
 };
 
