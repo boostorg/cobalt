@@ -9,5 +9,11 @@
 #define BOOST_ASYNC_SRC_HPP
 
 #include <boost/async/impl/this_thread.ipp>
+#include <boost/async/io/timer/impl/deadline_timer.ipp>
+#include <boost/async/io/timer/impl/high_resolution_timer.ipp>
+#include <boost/async/io/timer/impl/steady_timer.ipp>
+#include <boost/async/io/timer/impl/system_timer.ipp>
+#include <boost/async/io/impl/pipe.ipp>
+#include <boost/async/io/impl/signal_set.ipp>
 
 #endif //BOOST_ASYNC_SRC_HPP

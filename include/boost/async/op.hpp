@@ -19,11 +19,7 @@ struct timer_wait_op
   struct base
   {
     virtual bool await_ready(void * p) const = 0;
-    virtual void await_resume(void * p,
-                              completion_handler_type<
-                                  asio::cancellation_slot,
-                                  typename asio::io_context::executor_type,
-                                  container::pmr::polymorphic_allocator<void>> h) const = 0;
+    virtual void await_suspend(void * p, completion_handler<void(system::error_code)> h) const = 0;
   };
 
   void * impl;
