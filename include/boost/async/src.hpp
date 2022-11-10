@@ -25,6 +25,7 @@
 #include <boost/async/io/ip/impl/icmp.ipp>
 #include <boost/async/io/ip/impl/tcp.ipp>
 #include <boost/async/io/ip/impl/udp.ipp>
+#include <boost/async/io/impl/ssl.ipp>
 #include <boost/async/io/local/impl/datagram.ipp>
 #include <boost/async/io/local/impl/stream.ipp>
 

@@ -869,7 +869,7 @@ namespace detail {
 
 struct ContextOptions //!OCLINT too many fields
 {
-    std::ostream* cout = nullptr; // stdout stream
+    std::ostream* cout = nullptr; // stdout ssl
     String        binary_name;    // the test binary name
 
     const detail::TestCase* currentTest = nullptr;
@@ -1122,7 +1122,7 @@ namespace detail {
     {
         static void fill(std::ostream* stream, const T& in) {
 #if defined(_MSC_VER) && _MSC_VER <= 1900
-        insert_hack_t<T>::insert(*stream, in);
+        insert_hack_t<T>::insert(*ssl, in);
 #else
         operator<<(*stream, in);
 #endif
@@ -2007,7 +2007,7 @@ struct QueryData
 struct DOCTEST_INTERFACE IReporter
 {
     // The constructor has to accept "const ContextOptions&" as a single argument
-    // which has most of the options for the run + a pointer to the stdout stream
+    // which has most of the options for the run + a pointer to the stdout ssl
     // Reporter(const ContextOptions& in)
 
     // called when a query should be reported (listing test cases, printing the version, etc.)
@@ -5151,7 +5151,7 @@ namespace {
                     break;
                 }
 
-                // Plain ASCII: Write it to stream
+                // Plain ASCII: Write it to ssl
                 if (c < 0x7F) {
                     os << c;
                     break;

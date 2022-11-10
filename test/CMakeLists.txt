@@ -8,7 +8,7 @@ add_executable(main main.cpp)
 add_executable(unit_tests doctest.cpp async.cpp with.cpp thread.cpp op.cpp pipe.cpp handler.cpp)
 
 target_link_libraries(main Boost::container uring)
-target_link_libraries(unit_tests Boost::container uring)
+target_link_libraries(unit_tests Boost::container uring OpenSSL::SSL)
 
 add_executable(tdd tdd.cpp)
 target_link_libraries(tdd Boost::container)

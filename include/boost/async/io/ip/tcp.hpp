@@ -140,7 +140,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
 
   /// Construct a socket without opening it.
   /**
-   * This constructor creates a stream socket without opening it. The socket
+   * This constructor creates a ssl socket without opening it. The socket
    * needs to be opened and then connected or accepted before data can be sent
    * or received on it.
    *
@@ -151,7 +151,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
 
   /// Construct a socket without opening it.
   /**
-   * This constructor creates a stream socket without opening it. The socket
+   * This constructor creates a ssl socket without opening it. The socket
    * needs to be opened and then connected or accepted before data can be sent
    * or received on it.
    *
@@ -163,7 +163,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
 
   /// Construct and open a socket.
   /**
-   * This constructor creates and opens a stream socket. The socket needs to be
+   * This constructor creates and opens a ssl socket. The socket needs to be
    * connected or accepted before data can be sent or received on it.
    *
    * @param ex The I/O executor that the socket will use, by default, to
@@ -177,7 +177,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
 
   /// Construct and open a socket.
   /**
-   * This constructor creates and opens a stream socket. The socket needs to be
+   * This constructor creates and opens a ssl socket. The socket needs to be
    * connected or accepted before data can be sent or received on it.
    *
    * @param context An execution context which provides the I/O executor that
@@ -192,14 +192,14 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
   /// Construct a socket, opening it and binding it to the given
   /// local endpoint.
   /**
-   * This constructor creates a stream socket and automatically opens it bound
+   * This constructor creates a ssl socket and automatically opens it bound
    * to the specified endpoint on the local machine. The protocol used is the
    * protocol associated with the given endpoint.
    *
    * @param ex The I/O executor that the socket will use, by default, to
    * dispatch handlers for any asynchronous operations performed on the socket.
    *
-   * @param endpoint An endpoint on the local machine to which the stream
+   * @param endpoint An endpoint on the local machine to which the ssl
    * socket will be bound.
    *
    * @throws boost::system::system_error Thrown on failure.
@@ -209,7 +209,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
   /// Construct a socket, opening it and binding it to the given
   /// local endpoint.
   /**
-   * This constructor creates a stream socket and automatically opens it bound
+   * This constructor creates a ssl socket and automatically opens it bound
    * to the specified endpoint on the local machine. The protocol used is the
    * protocol associated with the given endpoint.
    *
@@ -217,7 +217,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
    * the socket will use, by default, to dispatch handlers for any asynchronous
    * operations performed on the socket.
    *
-   * @param endpoint An endpoint on the local machine to which the stream
+   * @param endpoint An endpoint on the local machine to which the ssl
    * socket will be bound.
    *
    * @throws boost::system::system_error Thrown on failure.
@@ -226,7 +226,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
 
   /// Construct a socket on an existing native socket.
   /**
-   * This constructor creates a stream socket object to hold an existing native
+   * This constructor creates a ssl socket object to hold an existing native
    * socket.
    *
    * @param ex The I/O executor that the socket will use, by default, to
@@ -243,7 +243,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
 
   /// Construct a socket on an existing native socket.
   /**
-   * This constructor creates a stream socket object to hold an existing native
+   * This constructor creates a ssl socket object to hold an existing native
    * socket.
    *
    * @param context An execution context which provides the I/O executor that
@@ -261,7 +261,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
 
   /// Move-construct a socket from another.
   /**
-   * This constructor moves a stream socket from one object to another.
+   * This constructor moves a ssl socket from one object to another.
    *
    * @param other The other socket object from which the move
    * will occur.
@@ -274,7 +274,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
 
   /// Move-assign a socket from another.
   /**
-   * This assignment operator moves a stream socket from one object to another.
+   * This assignment operator moves a ssl socket from one object to another.
    *
    * @param other The other socket object from which the move
    * will occur.
@@ -1211,7 +1211,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
 
   /// Start an asynchronous send.
   /**
-   * This function is used to asynchronously send data on the stream socket.
+   * This function is used to asynchronously send data on the ssl socket.
    * It is an initiating function for an @ref asynchronous_operation, and always
    * returns immediately.
    *
@@ -1264,7 +1264,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
 
   /// Start an asynchronous send.
   /**
-   * This function is used to asynchronously send data on the stream socket.
+   * This function is used to asynchronously send data on the ssl socket.
    * It is an initiating function for an @ref asynchronous_operation, and always
    * returns immediately.
    *
@@ -1319,7 +1319,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
 
   /// Start an asynchronous receive.
   /**
-   * This function is used to asynchronously receive data from the stream
+   * This function is used to asynchronously receive data from the ssl
    * socket. It is an initiating function for an @ref asynchronous_operation,
    * and always returns immediately.
    *
@@ -1374,7 +1374,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
 
   /// Start an asynchronous receive.
   /**
-   * This function is used to asynchronously receive data from the stream
+   * This function is used to asynchronously receive data from the ssl
    * socket. It is an initiating function for an @ref asynchronous_operation,
    * and always returns immediately.
    *
@@ -1431,7 +1431,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
 
   /// Start an asynchronous write.
   /**
-   * This function is used to asynchronously write data to the stream socket.
+   * This function is used to asynchronously write data to the ssl socket.
    * It is an initiating function for an @ref asynchronous_operation, and always
    * returns immediately.
    *
@@ -1486,7 +1486,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
 
   /// Start an asynchronous read.
   /**
-   * This function is used to asynchronously read data from the stream socket.
+   * This function is used to asynchronously read data from the ssl socket.
    * socket. It is an initiating function for an @ref asynchronous_operation,
    * and always returns immediately.
    *

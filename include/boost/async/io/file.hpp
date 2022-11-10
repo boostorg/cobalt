@@ -21,7 +21,7 @@ namespace boost::async::io
 /// Provides file functionality.
 /**
  * The file class template provides functionality that is common to both
- * stream-oriented and random-access files.
+ * ssl-oriented and random-access files.
  *
  * @par Thread Safety
  * @e Distinct @e objects: Safe.@n
@@ -408,10 +408,10 @@ struct file :
 };
 
 
-/// Provides stream-oriented file functionality.
+/// Provides ssl-oriented file functionality.
 /**
  * The stream_file class template provides asynchronous and blocking
- * stream-oriented file functionality.
+ * ssl-oriented file functionality.
  *
  * @par Thread Safety
  * @e Distinct @e objects: Safe.@n
@@ -520,7 +520,7 @@ struct stream_file final : concepts::implements<concepts::cancellable, concepts:
               const std::string& path, asio::file_base::flags open_flags);
   /// Construct a stream_file on an existing native file.
   /**
-   * This constructor initialises a stream file object to hold an existing
+   * This constructor initialises a ssl file object to hold an existing
    * native file.
    *
    * @param ex The I/O executor that the file will use, by default, to
@@ -534,7 +534,7 @@ struct stream_file final : concepts::implements<concepts::cancellable, concepts:
               const native_handle_type& native_file);
   /// Construct a stream_file on an existing native file.
   /**
-   * This constructor initialises a stream file object to hold an existing
+   * This constructor initialises a ssl file object to hold an existing
    * native file.
    *
    * @param context An execution context which provides the I/O executor that
@@ -549,7 +549,7 @@ struct stream_file final : concepts::implements<concepts::cancellable, concepts:
               const native_handle_type& native_file);
   /// Move-construct a stream_file from another.
   /**
-   * This constructor moves a stream file from one object to another.
+   * This constructor moves a ssl file from one object to another.
    *
    * @param other The other stream_file object from which the move
    * will occur.
@@ -562,7 +562,7 @@ struct stream_file final : concepts::implements<concepts::cancellable, concepts:
 
   /// Move-assign a stream_file from another.
   /**
-   * This assignment operator moves a stream file from one object to another.
+   * This assignment operator moves a ssl file from one object to another.
    *
    * @param other The other stream_file object from which the move
    * will occur.
@@ -610,7 +610,7 @@ struct stream_file final : concepts::implements<concepts::cancellable, concepts:
 
   /// Start an asynchronous write.
   /**
-   * This function is used to asynchronously write data to the stream file.
+   * This function is used to asynchronously write data to the ssl file.
    * It is an initiating function for an @ref asynchronous_operation, and always
    * returns immediately.
    *
@@ -664,7 +664,7 @@ struct stream_file final : concepts::implements<concepts::cancellable, concepts:
 
   /// Start an asynchronous read.
   /**
-   * This function is used to asynchronously read data from the stream file.
+   * This function is used to asynchronously read data from the ssl file.
    * It is an initiating function for an @ref asynchronous_operation, and always
    * returns immediately.
    *
