@@ -85,7 +85,6 @@ struct stream::socket final : concepts::implements<concepts::cancellable, concep
   /// A basic_socket is always the lowest layer.
   typedef implementation_type lowest_layer_type;
 
-
   /// Construct from impl
   socket(implementation_type&& impl);
 
@@ -1494,11 +1493,10 @@ struct stream::socket final : concepts::implements<concepts::cancellable, concep
    void async_read_some(static_buffer_base::mutable_buffers_type buffer, concepts::read_handler h) override;
    void async_read_some(multi_buffer::mutable_buffers_type buffer,       concepts::read_handler h) override;
 
+  void async_wait(wait_type wt, boost::async::detail::completion_handler<system::error_code> h) override;
+
   /// Get the underlying asio implementation.
   implementation_type & implementation() {return impl_;}
-
-
-  void async_wait(wait_type wt, boost::async::detail::completion_handler<system::error_code> h) override;
  private:
   implementation_type impl_;
 };
