@@ -22,6 +22,7 @@
 #include <boost/async/io/impl/read_until.ipp>
 #include <boost/async/io/impl/write.ipp>
 #include <boost/async/io/impl/write_at.ipp>
+#include <boost/async/io/ip/impl/icmp.ipp>
 #include <boost/async/io/local/impl/datagram.ipp>
 #include <boost/async/io/local/impl/stream.ipp>
 

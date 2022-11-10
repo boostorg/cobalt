@@ -10,7 +10,8 @@
 
 #include <boost/async/io/buffer.hpp>
 #include <boost/async/io/concepts.hpp>
-#include <boost/async/io/timer.hpp>
+#include <boost/async/io/ip.hpp>
+#include <boost/async/io/local.hpp>
 #include <boost/async/io/read.hpp>
 #include <boost/async/io/read_at.hpp>
 #include <boost/async/io/read_until.hpp>
