@@ -1784,7 +1784,7 @@ struct icmp::socket final : concepts::implements<concepts::cancellable, concepts
   void async_receive_from(asio::mutable_buffer buffers, endpoint_type& sender_endpoint,                                   concepts::read_handler h);
   void async_receive_from(asio::mutable_buffer buffers, endpoint_type& sender_endpoint, socket_base::message_flags flags, concepts::read_handler h);
 
-  void async_wait(wait_type wt, boost::async::detail::completion_handler<system::error_code> h) override;
+  void async_wait(waitable_device::wait_type wt, boost::async::detail::completion_handler<system::error_code> h) override;
 
   /// Get the underlying asio implementation.
   implementation_type & implementation() {return impl_;}

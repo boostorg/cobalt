@@ -150,7 +150,7 @@ std::size_t stream::socket::available(boost::system::error_code& ec) const { ret
 BOOST_ASIO_SYNC_OP_VOID stream::socket::bind(const endpoint_type& endpoint, boost::system::error_code& ec) { return impl_.bind(endpoint, ec); }
 
 
-void stream::socket::async_wait(wait_type w, boost::async::detail::completion_handler<system::error_code> h) { return impl_.async_wait(w, std::move(h)); }
+void stream::socket::async_wait(waitable_device::wait_type w, boost::async::detail::completion_handler<system::error_code> h) { return impl_.async_wait(w, std::move(h)); }
 void stream::socket::async_connect(const endpoint_type& peer_endpoint, boost::async::detail::completion_handler<system::error_code> h){return impl_.async_connect(peer_endpoint, std::move(h));}
 void stream::socket::async_send(      const_buffer buffer, concepts::write_handler h)                           {return impl_.async_send(      buffer,        std::move(h));}
 void stream::socket::async_send(      const_buffer buffer, message_flags flags, concepts::write_handler h)      {return impl_.async_send(      buffer, flags, std::move(h));}
@@ -203,7 +203,7 @@ auto stream::acceptor::native_handle()                        -> native_handle_t
 void stream::acceptor::cancel()                              { impl_.cancel();}
 void stream::acceptor::cancel(boost::system::error_code& ec) { impl_.cancel(ec);}
       
-void stream::acceptor::async_wait(wait_type w, boost::async::detail::completion_handler<system::error_code> h) { return impl_.async_wait(w, std::move(h)); }
+void stream::acceptor::async_wait(waitable_device::wait_type w, boost::async::detail::completion_handler<system::error_code> h) { return impl_.async_wait(w, std::move(h)); }
 void stream::acceptor::async_accept(socket & sock,                               boost::async::detail::completion_handler<system::error_code> h)         { impl_.async_accept(sock.implementation(),          std::move(h)); }
 void stream::acceptor::async_accept(socket & sock, endpoint_type& peer_endpoint, boost::async::detail::completion_handler<system::error_code> h)         { impl_.async_accept(sock.implementation(),          std::move(h)); }
 void stream::acceptor::async_accept(                                             boost::async::detail::completion_handler<system::error_code, socket::implementation_type> h) { impl_.async_accept(                                std::move(h)); }

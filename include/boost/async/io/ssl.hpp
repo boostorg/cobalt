@@ -278,7 +278,7 @@ struct ssl :
   BOOST_ASIO_SYNC_OP_VOID set_verify_callback(VerifyCallback callback,
                                               boost::system::error_code& ec)
   {
-    impl_.set_verify_callback(std::move(callback), ec);
+    return impl_.set_verify_callback(std::move(callback), ec);
   }
 
  private:

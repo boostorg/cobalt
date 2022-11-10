@@ -1540,7 +1540,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
   void async_read_some(static_buffer_base::mutable_buffers_type buffer, concepts::read_handler h) override;
   void async_read_some(multi_buffer::mutable_buffers_type buffer,       concepts::read_handler h) override;
 
-  void async_wait(wait_type wt, boost::async::detail::completion_handler<system::error_code> h) override;
+  void async_wait(waitable_device::wait_type wt, boost::async::detail::completion_handler<system::error_code> h) override;
 
   /// Get the underlying asio implementation.
   implementation_type & implementation() {return impl_;}
@@ -2083,7 +2083,7 @@ struct tcp::acceptor final : concepts::implements<concepts::cancellable, concept
    *
    * @li @c cancellation_type::total
    */
-  void async_wait(wait_type w, boost::async::detail::completion_handler<system::error_code> h) override;
+  void async_wait(waitable_device::wait_type w, boost::async::detail::completion_handler<system::error_code> h) override;
 
   void async_accept(socket & sock, boost::async::detail::completion_handler<system::error_code> h);
 
