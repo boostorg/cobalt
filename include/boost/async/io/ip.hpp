@@ -8,4 +8,8 @@
 #ifndef BOOST_ASYNC_IO_IP_HPP
 #define BOOST_ASYNC_IO_IP_HPP
 
+#include <boost/async/io/ip/icmp.hpp>
+#include <boost/async/io/ip/tcp.hpp>
+#include <boost/async/io/ip/udp.hpp>
+
 #endif //BOOST_ASYNC_IO_IP_HPP
