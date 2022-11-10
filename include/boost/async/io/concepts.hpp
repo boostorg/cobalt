@@ -37,7 +37,9 @@ struct cancellable
 
 struct execution_context
 {
+  /// The type of the executor associated with the object.
   using executor_type = asio::io_context::executor_type;
+  /// Get the executor associated with the object.
   virtual executor_type get_executor() = 0;
   virtual ~execution_context() = default;
 };
@@ -481,8 +483,7 @@ struct random_access_write_device : virtual execution_context
   {
     return write_some_at_op_ec_{this, offset, buffer, ec};
   };
-  virtual void async_write_some_at(std::uint64_t offset, asio::const_buffer buffer,
-                                  boost::async::detail::completion_handler<system::error_code, std::size_t> h) = 0;
+  virtual void async_write_some_at(std::uint64_t offset, asio::const_buffer buffer, write_handler h) = 0;
 
 };
 
@@ -591,7 +592,7 @@ struct waitable_device : virtual execution_context
 };
 
 template<typename ... Args>
-struct implements : Args ...
+struct implements : virtual Args ...
 {
 
 };

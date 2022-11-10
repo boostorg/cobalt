@@ -13,6 +13,7 @@
 #include <boost/async/io/timer/impl/high_resolution_timer.ipp>
 #include <boost/async/io/timer/impl/steady_timer.ipp>
 #include <boost/async/io/timer/impl/system_timer.ipp>
+#include <boost/async/io/impl/file.ipp>
 #include <boost/async/io/impl/pipe.ipp>
 #include <boost/async/io/impl/signal_set.ipp>
 #include <boost/async/io/impl/serial_port.ipp>
