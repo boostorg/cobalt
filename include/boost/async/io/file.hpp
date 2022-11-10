@@ -872,7 +872,7 @@ struct random_access_file final :
    */
   random_access_file(asio::io_context& context, const native_handle_type& native_file);
 
-  random_access_file(random_access_file&& other) BOOST_ASIO_NOEXCEPT;
+  random_access_file(random_access_file&& other) noexcept;
   random_access_file& operator=(random_access_file&& other);
   /// Destroys the file.
   /**

@@ -24,7 +24,7 @@ namespace boost::async::io
  * @e Distinct @e objects: Safe.@n
  * @e Shared @e objects: Unsafe.
  */
-struct serial_port
+struct serial_port final
     : concepts::implements<concepts::cancellable, concepts::closable, concepts::stream>,
       asio::serial_port_base
 {

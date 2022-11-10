@@ -21,9 +21,6 @@
 namespace boost::async
 {
 
-template<typename ... Args>
-struct completion_handler;
-
 namespace this_coro
 {
 

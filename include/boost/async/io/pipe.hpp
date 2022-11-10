@@ -26,7 +26,7 @@ namespace boost::async::io
  * @e Distinct @e objects: Safe.@n
  * @e Shared @e objects: Unsafe.
  */
-struct readable_pipe : concepts::implements<concepts::cancellable, concepts::closable, concepts::read_stream>
+struct readable_pipe final : concepts::implements<concepts::cancellable, concepts::closable, concepts::read_stream>
 {
   /// The underlying asio implementation type.
   typedef asio::basic_readable_pipe<asio::io_context::executor_type> implementation_type;
@@ -289,7 +289,7 @@ struct readable_pipe : concepts::implements<concepts::cancellable, concepts::clo
  * @e Distinct @e objects: Safe.@n
  * @e Shared @e objects: Unsafe.
  */
-struct writable_pipe  : concepts::implements<concepts::cancellable, concepts::closable, concepts::write_stream>
+struct writable_pipe final  : concepts::implements<concepts::cancellable, concepts::closable, concepts::write_stream>
 {
   /// The underlying asio implementation type.
   typedef asio::basic_writable_pipe<asio::io_context::executor_type> implementation_type;
