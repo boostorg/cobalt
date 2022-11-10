@@ -280,18 +280,22 @@ struct async_promise
 }
 
 template<typename Return>
-struct async
+struct [[nodiscard]] async
 {
     using promise_type = detail::async_promise<Return>;
 
     async(const async &) = delete;
     async& operator=(const async &) = delete;
-    // they are not deleted, for RVO.
-    // If you get a compile error here, you're doing something wrong.
+
     async(async &&lhs) noexcept = default;
     async& operator=(async &&) noexcept = default;
 
     auto operator co_await () {return receiver_.get_awaitable();}
+
+    // Ignore the returns value
+    void operator +() const && {}
+
+
   private:
     template<typename>
     friend struct detail::async_promise;

@@ -43,7 +43,7 @@ void write_at_impl(concepts::write_stream & pipe, std::uint64_t offset, streambu
 void write_at_impl(concepts::write_stream & pipe, std::uint64_t offset, streambuf &buffer, detail::completion_condition cond, detail::write_at_handler rh);
 
 template<typename Buffer>
-struct write_at_op
+struct [[nodiscard]] write_at_op
 {
   concepts::write_stream & stream;
   std::uint64_t offset;
@@ -83,7 +83,7 @@ struct write_at_op
 
 
 template<typename Buffer>
-struct write_at_ec_op
+struct [[nodiscard]] write_at_ec_op
 {
   concepts::write_stream & stream;
   std::uint64_t offset;
@@ -121,7 +121,7 @@ struct write_at_ec_op
 
 
 template<typename Buffer, typename CompletionCondition>
-struct write_at_completion_op final : completion_condition_base
+struct [[nodiscard]] write_at_completion_op final : completion_condition_base
 {
   concepts::write_stream & stream;
   std::uint64_t offset;
@@ -167,7 +167,7 @@ struct write_at_completion_op final : completion_condition_base
 
 
 template<typename Buffer, typename CompletionCondition>
-struct write_at_completion_ec_op final : completion_condition_base
+struct [[nodiscard]] write_at_completion_ec_op final : completion_condition_base
 {
   concepts::write_stream & stream;
   std::uint64_t offset;

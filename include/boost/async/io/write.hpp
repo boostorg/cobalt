@@ -42,7 +42,7 @@ void write_impl(concepts::write_stream & pipe, streambuf &buffer, detail::write_
 void write_impl(concepts::write_stream & pipe, streambuf &buffer, detail::completion_condition cond, detail::write_handler rh);
 
 template<typename Buffer>
-struct write_op
+struct [[nodiscard]] write_op
 {
   concepts::write_stream & stream;
   Buffer buffer;
@@ -81,7 +81,7 @@ struct write_op
 
 
 template<typename Buffer>
-struct write_ec_op
+struct [[nodiscard]] write_ec_op
 {
   concepts::write_stream & stream;
   Buffer buffer;
@@ -118,7 +118,7 @@ struct write_ec_op
 
 
 template<typename Buffer, typename CompletionCondition>
-struct write_completion_op final : completion_condition_base
+struct [[nodiscard]] write_completion_op final : completion_condition_base
 {
   concepts::write_stream & stream;
   Buffer buffer;
@@ -164,7 +164,7 @@ struct write_completion_op final : completion_condition_base
 
 
 template<typename Buffer, typename CompletionCondition>
-struct write_completion_ec_op final : completion_condition_base
+struct [[nodiscard]] write_completion_ec_op final : completion_condition_base
 {
   concepts::write_stream & stream;
   Buffer buffer;

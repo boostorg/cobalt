@@ -125,7 +125,7 @@ struct readable_pipe : concepts::implements<concepts::cancellable, concepts::clo
   ~readable_pipe();
 
   /// Get the executor associated with the object.
-  executor_type get_executor() noexcept;
+  executor_type get_executor() noexcept override;
 
   /// Get a reference to the lowest layer.
   /**
@@ -171,7 +171,7 @@ struct readable_pipe : concepts::implements<concepts::cancellable, concepts::clo
               boost::system::error_code &ec);
 
   /// Determine whether the pipe is open.
-  bool is_open() const;
+  bool is_open() const override;
 
   /// Close the pipe.
   /**
@@ -239,7 +239,7 @@ struct readable_pipe : concepts::implements<concepts::cancellable, concepts::clo
    *
    * @throws boost::system::system_error Thrown on failure.
    */
-  void cancel();
+  void cancel() override;
 
   /// Cancel all asynchronous operations associated with the pipe.
   /**
@@ -249,7 +249,7 @@ struct readable_pipe : concepts::implements<concepts::cancellable, concepts::clo
    *
    * @param ec Set to indicate what error occurred, if any.
    */
-  void cancel(boost::system::error_code &ec);
+  void cancel(boost::system::error_code &ec) override;
 
   /// Read some data from the pipe.
   /**
@@ -433,7 +433,7 @@ struct writable_pipe  : concepts::implements<concepts::cancellable, concepts::cl
               boost::system::error_code& ec);
 
   /// Determine whether the pipe is open.
-  bool is_open() const;
+  bool is_open() const override;
 
   /// Close the pipe.
   /**

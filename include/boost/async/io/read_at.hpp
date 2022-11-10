@@ -43,7 +43,7 @@ void read_at_impl(concepts::read_stream & pipe, std::uint64_t offset, streambuf 
 
 
 template<typename Buffer>
-struct read_at_op
+struct [[nodiscard]] read_at_op
 {
   concepts::read_stream & stream;
   std::uint64_t offset;
@@ -83,7 +83,7 @@ struct read_at_op
 
 
 template<typename Buffer>
-struct read_at_ec_op
+struct [[nodiscard]] read_at_ec_op
 {
   concepts::read_stream & stream;
   std::uint64_t offset;
@@ -121,7 +121,7 @@ struct read_at_ec_op
 
 
 template<typename Buffer, typename CompletionCondition>
-struct read_at_completion_op final : completion_condition_base
+struct [[nodiscard]] read_at_completion_op final : completion_condition_base
 {
   concepts::read_stream & stream;
   std::uint64_t offset;
@@ -167,7 +167,7 @@ struct read_at_completion_op final : completion_condition_base
 
 
 template<typename Buffer, typename CompletionCondition>
-struct read_at_completion_ec_op final : completion_condition_base
+struct [[nodiscard]] read_at_completion_ec_op final : completion_condition_base
 {
   concepts::read_stream & stream;
   std::uint64_t offset;

@@ -173,7 +173,7 @@ struct high_resolution_timer final : concepts::implements<concepts::timer>
    * These handlers can no longer be cancelled, and therefore are passed an
    * error code that indicates the successful completion of the wait operation.
    */
-  std::size_t cancel();
+  std::size_t cancel() override;
 
   /// (Deprecated: Use non-error_code overload.) Cancel any asynchronous
   /// operations that are waiting on the timer.
@@ -198,7 +198,7 @@ struct high_resolution_timer final : concepts::implements<concepts::timer>
    * These handlers can no longer be cancelled, and therefore are passed an
    * error code that indicates the successful completion of the wait operation.
    */
-  std::size_t cancel(boost::system::error_code& ec);
+  std::size_t cancel(boost::system::error_code& ec) override;
 
   /// Cancels one asynchronous operation that is waiting on the timer.
   /**
@@ -224,7 +224,7 @@ struct high_resolution_timer final : concepts::implements<concepts::timer>
    * These handlers can no longer be cancelled, and therefore are passed an
    * error code that indicates the successful completion of the wait operation.
    */
-  std::size_t cancel_one();
+  std::size_t cancel_one() override;
 
   /// (Deprecated: Use non-error_code overload.) Cancels one asynchronous
   /// operation that is waiting on the timer.
@@ -251,7 +251,7 @@ struct high_resolution_timer final : concepts::implements<concepts::timer>
    * These handlers can no longer be cancelled, and therefore are passed an
    * error code that indicates the successful completion of the wait operation.
    */
-  std::size_t cancel_one(boost::system::error_code& ec);
+  std::size_t cancel_one(boost::system::error_code& ec) override;
 
   /// (Deprecated: Use expiry().) Get the timer's expiry time as an absolute
   /// time.

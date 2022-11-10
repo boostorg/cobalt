@@ -121,11 +121,11 @@ struct read_stream : virtual execution_context
   virtual void async_read_some(static_buffer_base::mutable_buffers_type buffer, write_handler h) = 0;
   virtual void async_read_some(multi_buffer::mutable_buffers_type buffer,       write_handler h) = 0;
 
-  read_some_op_ read_some(asio::mutable_buffer buffer)
+  [[nodiscard]] read_some_op_ read_some(asio::mutable_buffer buffer)
   {
     return read_some_op_{this, buffer};
   }
-  read_some_op_ec_ read_some(asio::mutable_buffer buffer, system::error_code & ec)
+  [[nodiscard]] read_some_op_ec_ read_some(asio::mutable_buffer buffer, system::error_code & ec)
   {
     return read_some_op_ec_{this, buffer, ec};
   };
@@ -208,11 +208,11 @@ struct write_stream : virtual execution_context
   };
  public:
 
-  write_some_op_    write_some(asio::const_buffer buffer)
+  [[nodiscard]] write_some_op_    write_some(asio::const_buffer buffer)
   {
       return write_some_op_{this, buffer};
   }
-  write_some_op_ec_ write_some(asio::const_buffer buffer, system::error_code & ec)
+  [[nodiscard]] write_some_op_ec_ write_some(asio::const_buffer buffer, system::error_code & ec)
   {
     return  write_some_op_ec_{this, buffer, ec};
   }
@@ -295,8 +295,8 @@ struct timer : virtual execution_context
   virtual void async_wait(boost::async::detail::completion_handler<system::error_code> h) = 0;
   virtual bool expired() const = 0;
 
-  wait_op_    wait()                        {return wait_op_{this}; }
-  wait_op_ec_ wait(system::error_code & ec) { return wait_op_ec_{this, ec}; };
+  [[nodiscard]] wait_op_    wait()                        {return wait_op_{this}; }
+  [[nodiscard]] wait_op_ec_ wait(system::error_code & ec) { return wait_op_ec_{this, ec}; };
 
   virtual std::size_t cancel_one() = 0;
   virtual std::size_t cancel_one(system::error_code & ec) = 0;
@@ -382,11 +382,11 @@ struct random_access_read_device : virtual execution_context
     }
   };
 
-  read_some_at_op_    read_some(std::uint64_t offset, asio::mutable_buffer buffer)
+  [[nodiscard]] read_some_at_op_    read_some(std::uint64_t offset, asio::mutable_buffer buffer)
   {
     return read_some_at_op_{this, offset, buffer};
   }
-  read_some_at_op_ec_ read_some(std::uint64_t offset, asio::mutable_buffer buffer, system::error_code & ec)
+  [[nodiscard]] read_some_at_op_ec_ read_some(std::uint64_t offset, asio::mutable_buffer buffer, system::error_code & ec)
   {
     return read_some_at_op_ec_{this, offset, buffer, ec};
   };
@@ -470,11 +470,11 @@ struct random_access_write_device : virtual execution_context
     }
   };
  public:
-  write_some_at_op_    write_some_at(std::uint64_t offset, asio::const_buffer buffer)
+  [[nodiscard]] write_some_at_op_    write_some_at(std::uint64_t offset, asio::const_buffer buffer)
   {
     return write_some_at_op_{this, offset, buffer};
   }
-  write_some_at_op_ec_ write_someat(std::uint64_t offset, asio::const_buffer buffer, system::error_code & ec)
+  [[nodiscard]] write_some_at_op_ec_ write_someat(std::uint64_t offset, asio::const_buffer buffer, system::error_code & ec)
   {
     return write_some_at_op_ec_{this, offset, buffer, ec};
   };
@@ -575,11 +575,11 @@ struct async_waitable_device : virtual execution_context
 
   virtual bool is_ready() const = 0;
   virtual void async_wait(wait_type wt, boost::async::detail::completion_handler<system::error_code> h) = 0;
-  wait_op_    wait(wait_type wt)
+  [[nodiscard]] wait_op_    wait(wait_type wt)
   {
     return wait_op_{this, wt};
   }
-  wait_op_ec_ wait(wait_type wt, system::error_code & ec)
+  [[nodiscard]] wait_op_ec_ wait(wait_type wt, system::error_code & ec)
   {
     return wait_op_ec_{this, wt, ec};
   }

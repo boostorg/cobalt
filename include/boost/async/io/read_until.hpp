@@ -58,7 +58,7 @@ void read_until_impl(concepts::read_stream & pipe, streambuf &buffer,           
 
 
 template<typename Buffer>
-struct read_until_op
+struct [[nodiscard]] read_until_op
 {
   concepts::read_stream & stream;
   Buffer buffer;
@@ -97,7 +97,7 @@ struct read_until_op
 
 
 template<typename Buffer>
-struct read_until_ec_op
+struct [[nodiscard]] read_until_ec_op
 {
   concepts::read_stream & stream;
   Buffer buffer;
@@ -136,7 +136,7 @@ struct read_until_ec_op
 
 
 template<typename Buffer, typename Matcher>
-struct read_until_matcher_op final
+struct [[nodiscard]] read_until_matcher_op final
 {
   concepts::read_stream & stream;
   Buffer buffer;
@@ -176,7 +176,7 @@ struct read_until_matcher_op final
 
 
 template<typename Buffer, typename Matcher>
-struct read_until_matcher_ec_op final
+struct [[nodiscard]] read_until_matcher_ec_op final
 {
   concepts::read_stream & stream;
   Buffer buffer;
@@ -215,7 +215,7 @@ struct read_until_matcher_ec_op final
 
 
 template<typename Buffer, typename MatchCondition>
-struct read_until_match_condition_op final : match_condition_base<std::decay_t<Buffer>>
+struct [[nodiscard]] read_until_match_condition_op final : match_condition_base<std::decay_t<Buffer>>
 {
   concepts::read_stream & stream;
   Buffer buffer;
@@ -261,7 +261,7 @@ struct read_until_match_condition_op final : match_condition_base<std::decay_t<B
 
 
 template<typename Buffer, typename MatchCondition>
-struct read_until_match_condition_ec_op final : match_condition_base<std::decay_t<Buffer>>
+struct [[nodiscard]] read_until_match_condition_ec_op final : match_condition_base<std::decay_t<Buffer>>
 {
   concepts::read_stream & stream;
   Buffer buffer;

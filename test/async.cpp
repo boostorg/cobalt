@@ -34,6 +34,7 @@ boost::async::async<int> test1(boost::asio::any_io_executor exec)
 {
     co_await test2(42);
     co_await test2(42);
+
     co_await boost::asio::post(exec, boost::asio::deferred);
     co_return 452;
 }

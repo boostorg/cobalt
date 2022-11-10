@@ -5,7 +5,7 @@ include_directories(include)
 
 find_package(Boost REQUIRED container)
 
-add_compile_options(-fsanitize=address) #  -ftime-trace
+add_compile_options(-fsanitize=address -Werror) #  -ftime-trace
 add_link_options(-fsanitize=address)
 
 add_subdirectory(test)

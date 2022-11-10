@@ -42,7 +42,7 @@ void read_impl(concepts::read_stream & stream, streambuf &buffer, detail::read_h
 void read_impl(concepts::read_stream & stream, streambuf &buffer, detail::completion_condition cond, detail::read_handler rh);
 
 template<typename Buffer>
-struct read_op
+struct [[nodiscard]] read_op
 {
   concepts::read_stream & stream;
   Buffer buffer;
@@ -81,7 +81,7 @@ struct read_op
 
 
 template<typename Buffer>
-struct read_ec_op
+struct [[nodiscard]] read_ec_op
 {
   concepts::read_stream & stream;
   Buffer buffer;
@@ -118,7 +118,7 @@ struct read_ec_op
 
 
 template<typename Buffer, typename CompletionCondition>
-struct read_completion_op final : completion_condition_base
+struct [[nodiscard]] read_completion_op final : completion_condition_base
 {
   concepts::read_stream & stream;
   Buffer buffer;
@@ -163,7 +163,7 @@ struct read_completion_op final : completion_condition_base
 
 
 template<typename Buffer, typename CompletionCondition>
-struct read_completion_ec_op final : completion_condition_base
+struct [[nodiscard]] read_completion_ec_op final : completion_condition_base
 {
   concepts::read_stream & stream;
   Buffer buffer;
