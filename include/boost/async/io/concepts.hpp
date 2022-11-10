@@ -220,6 +220,8 @@ struct write_stream : virtual execution_context
   virtual void async_write_some(prepared_buffers, write_handler h) = 0;
 };
 
+struct stream : read_stream, write_stream {};
+
 struct timer : virtual execution_context
 {
  protected:
@@ -381,6 +383,7 @@ struct random_access_read_device : virtual execution_context
       return std::get<1>(*result);
     }
   };
+ public:
 
   [[nodiscard]] read_some_at_op_    read_some(std::uint64_t offset, asio::mutable_buffer buffer)
   {
@@ -390,7 +393,7 @@ struct random_access_read_device : virtual execution_context
   {
     return read_some_at_op_ec_{this, offset, buffer, ec};
   };
-  virtual void async_read_some_at(std::uint64_t offset, asio::mutable_buffer buffer, write_handler h) = 0;
+  virtual void async_read_some_at(std::uint64_t offset, asio::mutable_buffer buffer, read_handler h) = 0;
 };
 
 struct random_access_write_device : virtual execution_context
@@ -483,7 +486,9 @@ struct random_access_write_device : virtual execution_context
 
 };
 
-struct async_waitable_device : virtual execution_context
+struct random_access_device : random_access_read_device, random_access_write_device {};
+
+struct waitable_device : virtual execution_context
 {
   /// Wait types.
   /**
@@ -506,7 +511,7 @@ struct async_waitable_device : virtual execution_context
   struct wait_op_
   {
 
-    async_waitable_device * impl;
+    waitable_device * impl;
     wait_type wt;
     std::optional<std::tuple<system::error_code>> result;
     std::exception_ptr error;
@@ -540,7 +545,7 @@ struct async_waitable_device : virtual execution_context
 
   struct wait_op_ec_
   {
-    async_waitable_device * impl;
+    waitable_device * impl;
     wait_type wt;
     system::error_code & ec;
     std::optional<std::tuple<system::error_code>> result;

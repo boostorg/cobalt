@@ -15,67 +15,19 @@
 namespace boost::async::io::detail
 {
 
-void read_at_impl(concepts::write_stream & stream, std::uint64_t offset, mutable_buffer buffer, detail::read_at_handler rh)
+void read_at_impl(concepts::random_access_read_device & stream, std::uint64_t offset, mutable_buffer buffer, detail::read_at_handler rh)
 {
  asio::async_read_at(stream, offset, buffer, std::move(rh));
 }
-void read_at_impl(concepts::write_stream & stream, std::uint64_t offset, mutable_buffer buffer, detail::completion_condition cond, detail::read_at_handler rh)
+void read_at_impl(concepts::random_access_read_device & stream, std::uint64_t offset, mutable_buffer buffer, detail::completion_condition cond, detail::read_at_handler rh)
 {
   asio::async_read_at(stream, offset, buffer, cond, std::move(rh));
 }
-void read_at_impl(concepts::write_stream & stream, std::uint64_t offset, flat_static_buffer_base &buffer, detail::read_at_handler rh)
-{
-  asio::async_read_at(stream, offset, beast::buffer_ref(buffer), std::move(rh));
-}
-void read_at_impl(concepts::write_stream & stream, std::uint64_t offset, flat_static_buffer_base &buffer, detail::completion_condition cond, detail::read_at_handler rh)
-{
-  asio::async_read_at(stream, offset, beast::buffer_ref(buffer), cond, std::move(rh));
-}
-void read_at_impl(concepts::write_stream & stream, std::uint64_t offset, static_buffer_base &buffer, detail::read_at_handler rh)
-{
-  asio::async_read_at(stream, offset, beast::buffer_ref(buffer), std::move(rh));
-}
-void read_at_impl(concepts::write_stream & stream, std::uint64_t offset, static_buffer_base &buffer, detail::completion_condition cond, detail::read_at_handler rh)
-{
-  asio::async_read_at(stream, offset, beast::buffer_ref(buffer), cond, std::move(rh));
-}
-void read_at_impl(concepts::write_stream & stream, std::uint64_t offset, flat_buffer &buffer, detail::read_at_handler rh)
-{
-  asio::async_read_at(stream, offset, beast::buffer_ref(buffer), std::move(rh));
-}
-void read_at_impl(concepts::write_stream & stream, std::uint64_t offset, flat_buffer &buffer, detail::completion_condition cond, detail::read_at_handler rh)
-{
-  asio::async_read_at(stream, offset, beast::buffer_ref(buffer), cond, std::move(rh));
-}
-void read_at_impl(concepts::write_stream & stream, std::uint64_t offset, multi_buffer &buffer, detail::read_at_handler rh)
-{
-  asio::async_read_at(stream, offset, beast::buffer_ref(buffer), std::move(rh));
-}
-void read_at_impl(concepts::write_stream & stream, std::uint64_t offset, multi_buffer &buffer, detail::completion_condition cond, detail::read_at_handler rh)
-{
-  asio::async_read_at(stream, offset, beast::buffer_ref(buffer), cond, std::move(rh));
-}
-void read_at_impl(concepts::write_stream & stream, std::uint64_t offset, std::string &buffer, detail::read_at_handler rh)
-{
-  asio::async_read_at(stream, offset, asio::dynamic_buffer(buffer), std::move(rh));
-}
-void read_at_impl(concepts::write_stream & stream, std::uint64_t offset, std::string &buffer, detail::completion_condition cond, detail::read_at_handler rh)
-{
-  asio::async_read_at(stream, offset, asio::dynamic_buffer(buffer), cond, std::move(rh));
-}
-void read_at_impl(concepts::write_stream & stream, std::uint64_t offset, std::vector<unsigned char> &buffer, detail::read_at_handler rh)
-{
-  asio::async_read_at(stream, offset, asio::dynamic_buffer(buffer), std::move(rh));
-}
-void read_at_impl(concepts::write_stream & stream, std::uint64_t offset, std::vector<unsigned char> &buffer, detail::completion_condition cond, detail::read_at_handler rh)
-{
-  asio::async_read_at(stream, offset, asio::dynamic_buffer(buffer), cond, std::move(rh));
-}
-void read_at_impl(concepts::write_stream & stream, std::uint64_t offset, streambuf &buffer, detail::read_at_handler rh)
+void read_at_impl(concepts::random_access_read_device & stream, std::uint64_t offset, streambuf &buffer, detail::read_at_handler rh)
 {
   asio::async_read_at(stream, offset, buffer, std::move(rh));
 }
-void read_at_impl(concepts::write_stream & stream, std::uint64_t offset, streambuf &buffer, detail::completion_condition cond, detail::read_at_handler rh)
+void read_at_impl(concepts::random_access_read_device & stream, std::uint64_t offset, streambuf &buffer, detail::completion_condition cond, detail::read_at_handler rh)
 {
   asio::async_read_at(stream, offset, buffer, cond, std::move(rh));
 }

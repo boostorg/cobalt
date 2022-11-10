@@ -15,67 +15,19 @@
 namespace boost::async::io::detail
 {
 
-void write_at_impl(concepts::write_stream & stream, std::uint64_t offset, const_buffer buffer, detail::write_at_handler rh)
+void write_at_impl(concepts::random_access_write_device & stream, std::uint64_t offset, const_buffer buffer, detail::write_at_handler rh)
 {
  asio::async_write_at(stream, offset, buffer, std::move(rh));
 }
-void write_at_impl(concepts::write_stream & stream, std::uint64_t offset, const_buffer buffer, detail::completion_condition cond, detail::write_at_handler rh)
+void write_at_impl(concepts::random_access_write_device & stream, std::uint64_t offset, const_buffer buffer, detail::completion_condition cond, detail::write_at_handler rh)
 {
   asio::async_write_at(stream, offset, buffer, cond, std::move(rh));
 }
-void write_at_impl(concepts::write_stream & stream, std::uint64_t offset, flat_static_buffer_base &buffer, detail::write_at_handler rh)
-{
-  asio::async_write_at(stream, offset, beast::buffer_ref(buffer), std::move(rh));
-}
-void write_at_impl(concepts::write_stream & stream, std::uint64_t offset, flat_static_buffer_base &buffer, detail::completion_condition cond, detail::write_at_handler rh)
-{
-  asio::async_write_at(stream, offset, beast::buffer_ref(buffer), cond, std::move(rh));
-}
-void write_at_impl(concepts::write_stream & stream, std::uint64_t offset, static_buffer_base &buffer, detail::write_at_handler rh)
-{
-  asio::async_write_at(stream, offset, beast::buffer_ref(buffer), std::move(rh));
-}
-void write_at_impl(concepts::write_stream & stream, std::uint64_t offset, static_buffer_base &buffer, detail::completion_condition cond, detail::write_at_handler rh)
-{
-  asio::async_write_at(stream, offset, beast::buffer_ref(buffer), cond, std::move(rh));
-}
-void write_at_impl(concepts::write_stream & stream, std::uint64_t offset, flat_buffer &buffer, detail::write_at_handler rh)
-{
-  asio::async_write_at(stream, offset, beast::buffer_ref(buffer), std::move(rh));
-}
-void write_at_impl(concepts::write_stream & stream, std::uint64_t offset, flat_buffer &buffer, detail::completion_condition cond, detail::write_at_handler rh)
-{
-  asio::async_write_at(stream, offset, beast::buffer_ref(buffer), cond, std::move(rh));
-}
-void write_at_impl(concepts::write_stream & stream, std::uint64_t offset, multi_buffer &buffer, detail::write_at_handler rh)
-{
-  asio::async_write_at(stream, offset, beast::buffer_ref(buffer), std::move(rh));
-}
-void write_at_impl(concepts::write_stream & stream, std::uint64_t offset, multi_buffer &buffer, detail::completion_condition cond, detail::write_at_handler rh)
-{
-  asio::async_write_at(stream, offset, beast::buffer_ref(buffer), cond, std::move(rh));
-}
-void write_at_impl(concepts::write_stream & stream, std::uint64_t offset, std::string &buffer, detail::write_at_handler rh)
-{
-  asio::async_write_at(stream, offset, asio::dynamic_buffer(buffer), std::move(rh));
-}
-void write_at_impl(concepts::write_stream & stream, std::uint64_t offset, std::string &buffer, detail::completion_condition cond, detail::write_at_handler rh)
-{
-  asio::async_write_at(stream, offset, asio::dynamic_buffer(buffer), cond, std::move(rh));
-}
-void write_at_impl(concepts::write_stream & stream, std::uint64_t offset, std::vector<unsigned char> &buffer, detail::write_at_handler rh)
-{
-  asio::async_write_at(stream, offset, asio::dynamic_buffer(buffer), std::move(rh));
-}
-void write_at_impl(concepts::write_stream & stream, std::uint64_t offset, std::vector<unsigned char> &buffer, detail::completion_condition cond, detail::write_at_handler rh)
-{
-  asio::async_write_at(stream, offset, asio::dynamic_buffer(buffer), cond, std::move(rh));
-}
-void write_at_impl(concepts::write_stream & stream, std::uint64_t offset, streambuf &buffer, detail::write_at_handler rh)
+void write_at_impl(concepts::random_access_write_device & stream, std::uint64_t offset, streambuf &buffer, detail::write_at_handler rh)
 {
   asio::async_write_at(stream, offset, buffer, std::move(rh));
 }
-void write_at_impl(concepts::write_stream & stream, std::uint64_t offset, streambuf &buffer, detail::completion_condition cond, detail::write_at_handler rh)
+void write_at_impl(concepts::random_access_write_device & stream, std::uint64_t offset, streambuf &buffer, detail::completion_condition cond, detail::write_at_handler rh)
 {
   asio::async_write_at(stream, offset, buffer, cond, std::move(rh));
 }

@@ -15,8 +15,11 @@
 #include <boost/async/io/timer/impl/system_timer.ipp>
 #include <boost/async/io/impl/pipe.ipp>
 #include <boost/async/io/impl/signal_set.ipp>
+#include <boost/async/io/impl/serial_port.ipp>
 #include <boost/async/io/impl/read.ipp>
+#include <boost/async/io/impl/read_at.ipp>
 #include <boost/async/io/impl/read_until.ipp>
 #include <boost/async/io/impl/write.ipp>
+#include <boost/async/io/impl/write_at.ipp>
 
 #endif //BOOST_ASYNC_SRC_HPP
