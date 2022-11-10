@@ -57,15 +57,14 @@ std::size_t deadline_timer::expires_from_now(const duration_type& expiry_time) {
 std::size_t deadline_timer::expires_from_now(const duration_type& expiry_time,  boost::system::error_code& ec) { return impl_.expires_from_now(expiry_time, ec);}
 
 
-bool deadline_timer::wait_op_impl_::await_ready(void * p) const
+bool deadline_timer::expired() const
 {
-  return static_cast<implementation_type*>(p)->expires_from_now().total_nanoseconds() < 0ll;
+  return expires_from_now().total_nanoseconds() < 0ll;
 }
 
-void deadline_timer::wait_op_impl_::await_suspend(void * p,
-                                                 boost::async::detail::completion_handler<system::error_code> h) const
+void deadline_timer::async_wait(boost::async::detail::completion_handler<system::error_code> h)
 {
-  return static_cast<implementation_type*>(p)->async_wait(std::move(h));
+  impl_.async_wait(std::move(h));
 }
 
 }

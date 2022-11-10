@@ -24,31 +24,27 @@ namespace detail
 
 using read_handler = boost::async::detail::completion_handler<system::error_code, std::size_t>;
 
-template<typename ReadableStream>
-struct read_impl
-{
-  static void call(ReadableStream & pipe, mutable_buffer buffer, detail::read_handler rh);
-  static void call(ReadableStream & pipe, mutable_buffer buffer, detail::completion_condition cond, detail::read_handler rh);
-  static void call(ReadableStream & pipe, flat_static_buffer_base &buffer, detail::read_handler rh);
-  static void call(ReadableStream & pipe, flat_static_buffer_base &buffer, detail::completion_condition cond, detail::read_handler rh);
-  static void call(ReadableStream & pipe, static_buffer_base &buffer, detail::read_handler rh);
-  static void call(ReadableStream & pipe, static_buffer_base &buffer, detail::completion_condition cond, detail::read_handler rh);
-  static void call(ReadableStream & pipe, flat_buffer &buffer, detail::read_handler rh);
-  static void call(ReadableStream & pipe, flat_buffer &buffer, detail::completion_condition cond, detail::read_handler rh);
-  static void call(ReadableStream & pipe, multi_buffer &buffer, detail::read_handler rh);
-  static void call(ReadableStream & pipe, multi_buffer &buffer, detail::completion_condition cond, detail::read_handler rh);
-  static void call(ReadableStream & pipe, std::string &buffer, detail::read_handler rh);
-  static void call(ReadableStream & pipe, std::string &buffer, detail::completion_condition cond, detail::read_handler rh);
-  static void call(ReadableStream & pipe, std::vector<unsigned char> &buffer, detail::read_handler rh);
-  static void call(ReadableStream & pipe, std::vector<unsigned char> &buffer, detail::completion_condition cond, detail::read_handler rh);
-  static void call(ReadableStream & pipe, streambuf &buffer, detail::read_handler rh);
-  static void call(ReadableStream & pipe, streambuf &buffer, detail::completion_condition cond, detail::read_handler rh);
-};
+void read_impl(concepts::read_stream & stream, mutable_buffer buffer, detail::read_handler rh);
+void read_impl(concepts::read_stream & stream, mutable_buffer buffer, detail::completion_condition cond, detail::read_handler rh);
+void read_impl(concepts::read_stream & stream, flat_static_buffer_base &buffer, detail::read_handler rh);
+void read_impl(concepts::read_stream & stream, flat_static_buffer_base &buffer, detail::completion_condition cond, detail::read_handler rh);
+void read_impl(concepts::read_stream & stream, static_buffer_base &buffer, detail::read_handler rh);
+void read_impl(concepts::read_stream & stream, static_buffer_base &buffer, detail::completion_condition cond, detail::read_handler rh);
+void read_impl(concepts::read_stream & stream, flat_buffer &buffer, detail::read_handler rh);
+void read_impl(concepts::read_stream & stream, flat_buffer &buffer, detail::completion_condition cond, detail::read_handler rh);
+void read_impl(concepts::read_stream & stream, multi_buffer &buffer, detail::read_handler rh);
+void read_impl(concepts::read_stream & stream, multi_buffer &buffer, detail::completion_condition cond, detail::read_handler rh);
+void read_impl(concepts::read_stream & stream, std::string &buffer, detail::read_handler rh);
+void read_impl(concepts::read_stream & stream, std::string &buffer, detail::completion_condition cond, detail::read_handler rh);
+void read_impl(concepts::read_stream & stream, std::vector<unsigned char> &buffer, detail::read_handler rh);
+void read_impl(concepts::read_stream & stream, std::vector<unsigned char> &buffer, detail::completion_condition cond, detail::read_handler rh);
+void read_impl(concepts::read_stream & stream, streambuf &buffer, detail::read_handler rh);
+void read_impl(concepts::read_stream & stream, streambuf &buffer, detail::completion_condition cond, detail::read_handler rh);
 
-template<typename ReadableStream, typename Buffer>
+template<typename Buffer>
 struct read_op
 {
-  ReadableStream & stream;
+  concepts::read_stream & stream;
   Buffer buffer;
 
   std::optional<std::tuple<system::error_code, std::size_t>> result;
@@ -61,7 +57,7 @@ struct read_op
   {
     try
     {
-      read_impl<ReadableStream>::call(stream, buffer, {h, result});
+      read_impl(stream, buffer, {h, result});
       return true;
     }
     catch(...)
@@ -84,10 +80,10 @@ struct read_op
 };
 
 
-template<typename ReadableStream, typename Buffer>
+template<typename Buffer>
 struct read_ec_op
 {
-  ReadableStream & stream;
+  concepts::read_stream & stream;
   Buffer buffer;
   system::error_code & ec;
   std::optional<std::tuple<system::error_code, std::size_t>> result;
@@ -100,7 +96,7 @@ struct read_ec_op
   {
     try
     {
-      read_impl<ReadableStream>::call(stream, buffer, {h, result});
+      read_impl(stream, buffer, {h, result});
       return true;
     }
     catch(...)
@@ -121,10 +117,10 @@ struct read_ec_op
 };
 
 
-template<typename ReadableStream, typename Buffer, typename CompletionCondition>
+template<typename Buffer, typename CompletionCondition>
 struct read_completion_op final : completion_condition_base
 {
-  ReadableStream & stream;
+  concepts::read_stream & stream;
   Buffer buffer;
   CompletionCondition completion_condition_;
 
@@ -143,7 +139,7 @@ struct read_completion_op final : completion_condition_base
   {
     try
     {
-      read_impl<ReadableStream>::call(stream, buffer, completion_condition{this}, {h, result});
+      read_impl(stream, buffer, completion_condition{this}, {h, result});
       return true;
     }
     catch(...)
@@ -166,10 +162,10 @@ struct read_completion_op final : completion_condition_base
 };
 
 
-template<typename ReadableStream, typename Buffer, typename CompletionCondition>
+template<typename Buffer, typename CompletionCondition>
 struct read_completion_ec_op final : completion_condition_base
 {
-  ReadableStream & stream;
+  concepts::read_stream & stream;
   Buffer buffer;
   CompletionCondition completion_condition_;
 
@@ -189,7 +185,7 @@ struct read_completion_ec_op final : completion_condition_base
   {
     try
     {
-      read_impl<ReadableStream>::call(stream, buffer, completion_condition{this}, {h, result});
+      read_impl(stream, buffer, completion_condition{this}, {h, result});
       return true;
     }
     catch(...)
@@ -212,41 +208,41 @@ struct read_completion_ec_op final : completion_condition_base
 }
 
 
-template<std::derived_from<concepts::read_stream> Stream> auto read(Stream & stream, mutable_buffer              buffer) -> detail::read_op<Stream, mutable_buffer>              {return {stream, buffer};}
-template<std::derived_from<concepts::read_stream> Stream> auto read(Stream & stream, flat_static_buffer_base    &buffer) -> detail::read_op<Stream, flat_static_buffer_base &>   {return {stream, buffer};}
-template<std::derived_from<concepts::read_stream> Stream> auto read(Stream & stream, static_buffer_base         &buffer) -> detail::read_op<Stream, static_buffer_base &>        {return {stream, buffer};}
-template<std::derived_from<concepts::read_stream> Stream> auto read(Stream & stream, flat_buffer                &buffer) -> detail::read_op<Stream, flat_buffer &>               {return {stream, buffer};}
-template<std::derived_from<concepts::read_stream> Stream> auto read(Stream & stream, multi_buffer               &buffer) -> detail::read_op<Stream, multi_buffer &>              {return {stream, buffer};}
-template<std::derived_from<concepts::read_stream> Stream> auto read(Stream & stream, std::string                &buffer) -> detail::read_op<Stream, std::string&>                {return {stream, buffer};}
-template<std::derived_from<concepts::read_stream> Stream> auto read(Stream & stream, std::vector<unsigned char> &buffer) -> detail::read_op<Stream, std::vector<unsigned char>&> {return {stream, buffer};}
-template<std::derived_from<concepts::read_stream> Stream> auto read(Stream & stream, streambuf                  &buffer) -> detail::read_op<Stream, streambuf&>                  {return {stream, buffer};}
+inline auto read(concepts::read_stream & stream, mutable_buffer              buffer) -> detail::read_op<mutable_buffer>              {return {stream, buffer};}
+inline auto read(concepts::read_stream & stream, flat_static_buffer_base    &buffer) -> detail::read_op<flat_static_buffer_base &>   {return {stream, buffer};}
+inline auto read(concepts::read_stream & stream, static_buffer_base         &buffer) -> detail::read_op<static_buffer_base &>        {return {stream, buffer};}
+inline auto read(concepts::read_stream & stream, flat_buffer                &buffer) -> detail::read_op<flat_buffer &>               {return {stream, buffer};}
+inline auto read(concepts::read_stream & stream, multi_buffer               &buffer) -> detail::read_op<multi_buffer &>              {return {stream, buffer};}
+inline auto read(concepts::read_stream & stream, std::string                &buffer) -> detail::read_op<std::string&>                {return {stream, buffer};}
+inline auto read(concepts::read_stream & stream, std::vector<unsigned char> &buffer) -> detail::read_op<std::vector<unsigned char>&> {return {stream, buffer};}
+inline auto read(concepts::read_stream & stream, streambuf                  &buffer) -> detail::read_op<streambuf&>                  {return {stream, buffer};}
 
-template<std::derived_from<concepts::read_stream> Stream> auto read(Stream & stream, mutable_buffer              buffer, system::error_code & ec) -> detail::read_ec_op<Stream, mutable_buffer>              {return {stream, buffer, ec};}
-template<std::derived_from<concepts::read_stream> Stream> auto read(Stream & stream, flat_static_buffer_base    &buffer, system::error_code & ec) -> detail::read_ec_op<Stream, flat_static_buffer_base &>   {return {stream, buffer, ec};}
-template<std::derived_from<concepts::read_stream> Stream> auto read(Stream & stream, static_buffer_base         &buffer, system::error_code & ec) -> detail::read_ec_op<Stream, static_buffer_base &>        {return {stream, buffer, ec};}
-template<std::derived_from<concepts::read_stream> Stream> auto read(Stream & stream, flat_buffer                &buffer, system::error_code & ec) -> detail::read_ec_op<Stream, flat_buffer &>               {return {stream, buffer, ec};}
-template<std::derived_from<concepts::read_stream> Stream> auto read(Stream & stream, multi_buffer               &buffer, system::error_code & ec) -> detail::read_ec_op<Stream, multi_buffer &>              {return {stream, buffer, ec};}
-template<std::derived_from<concepts::read_stream> Stream> auto read(Stream & stream, std::string                &buffer, system::error_code & ec) -> detail::read_ec_op<Stream, std::string&>                {return {stream, buffer, ec};}
-template<std::derived_from<concepts::read_stream> Stream> auto read(Stream & stream, std::vector<unsigned char> &buffer, system::error_code & ec) -> detail::read_ec_op<Stream, std::vector<unsigned char>&> {return {stream, buffer, ec};}
-template<std::derived_from<concepts::read_stream> Stream> auto read(Stream & stream, streambuf                  &buffer, system::error_code & ec) -> detail::read_ec_op<Stream, streambuf&>                  {return {stream, buffer, ec};}
+inline auto read(concepts::read_stream & stream, mutable_buffer              buffer, system::error_code & ec) -> detail::read_ec_op<mutable_buffer>              {return {stream, buffer, ec};}
+inline auto read(concepts::read_stream & stream, flat_static_buffer_base    &buffer, system::error_code & ec) -> detail::read_ec_op<flat_static_buffer_base &>   {return {stream, buffer, ec};}
+inline auto read(concepts::read_stream & stream, static_buffer_base         &buffer, system::error_code & ec) -> detail::read_ec_op<static_buffer_base &>        {return {stream, buffer, ec};}
+inline auto read(concepts::read_stream & stream, flat_buffer                &buffer, system::error_code & ec) -> detail::read_ec_op<flat_buffer &>               {return {stream, buffer, ec};}
+inline auto read(concepts::read_stream & stream, multi_buffer               &buffer, system::error_code & ec) -> detail::read_ec_op<multi_buffer &>              {return {stream, buffer, ec};}
+inline auto read(concepts::read_stream & stream, std::string                &buffer, system::error_code & ec) -> detail::read_ec_op<std::string&>                {return {stream, buffer, ec};}
+inline auto read(concepts::read_stream & stream, std::vector<unsigned char> &buffer, system::error_code & ec) -> detail::read_ec_op<std::vector<unsigned char>&> {return {stream, buffer, ec};}
+inline auto read(concepts::read_stream & stream, streambuf                  &buffer, system::error_code & ec) -> detail::read_ec_op<streambuf&>                  {return {stream, buffer, ec};}
 
-template<std::derived_from<concepts::read_stream> Stream, typename CompletionCondition> auto read(Stream & stream, mutable_buffer              buffer, CompletionCondition completion_condition) -> detail::read_completion_op<Stream, mutable_buffer, CompletionCondition>              {return {stream, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::read_stream> Stream, typename CompletionCondition> auto read(Stream & stream, flat_static_buffer_base    &buffer, CompletionCondition completion_condition) -> detail::read_completion_op<Stream, flat_static_buffer_base &, CompletionCondition>   {return {stream, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::read_stream> Stream, typename CompletionCondition> auto read(Stream & stream, static_buffer_base         &buffer, CompletionCondition completion_condition) -> detail::read_completion_op<Stream, static_buffer_base &, CompletionCondition>        {return {stream, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::read_stream> Stream, typename CompletionCondition> auto read(Stream & stream, flat_buffer                &buffer, CompletionCondition completion_condition) -> detail::read_completion_op<Stream, flat_buffer &, CompletionCondition>               {return {stream, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::read_stream> Stream, typename CompletionCondition> auto read(Stream & stream, multi_buffer               &buffer, CompletionCondition completion_condition) -> detail::read_completion_op<Stream, multi_buffer &, CompletionCondition>              {return {stream, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::read_stream> Stream, typename CompletionCondition> auto read(Stream & stream, std::string                &buffer, CompletionCondition completion_condition) -> detail::read_completion_op<Stream, std::string&, CompletionCondition>                {return {stream, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::read_stream> Stream, typename CompletionCondition> auto read(Stream & stream, std::vector<unsigned char> &buffer, CompletionCondition completion_condition) -> detail::read_completion_op<Stream, std::vector<unsigned char>&, CompletionCondition> {return {stream, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::read_stream> Stream, typename CompletionCondition> auto read(Stream & stream, streambuf                  &buffer, CompletionCondition completion_condition) -> detail::read_completion_op<Stream, streambuf&, CompletionCondition>                  {return {stream, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto read(concepts::read_stream & stream, mutable_buffer              buffer, CompletionCondition completion_condition) -> detail::read_completion_op<mutable_buffer, CompletionCondition>              {return {stream, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto read(concepts::read_stream & stream, flat_static_buffer_base    &buffer, CompletionCondition completion_condition) -> detail::read_completion_op<flat_static_buffer_base &, CompletionCondition>   {return {stream, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto read(concepts::read_stream & stream, static_buffer_base         &buffer, CompletionCondition completion_condition) -> detail::read_completion_op<static_buffer_base &, CompletionCondition>        {return {stream, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto read(concepts::read_stream & stream, flat_buffer                &buffer, CompletionCondition completion_condition) -> detail::read_completion_op<flat_buffer &, CompletionCondition>               {return {stream, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto read(concepts::read_stream & stream, multi_buffer               &buffer, CompletionCondition completion_condition) -> detail::read_completion_op<multi_buffer &, CompletionCondition>              {return {stream, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto read(concepts::read_stream & stream, std::string                &buffer, CompletionCondition completion_condition) -> detail::read_completion_op<std::string&, CompletionCondition>                {return {stream, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto read(concepts::read_stream & stream, std::vector<unsigned char> &buffer, CompletionCondition completion_condition) -> detail::read_completion_op<std::vector<unsigned char>&, CompletionCondition> {return {stream, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto read(concepts::read_stream & stream, streambuf                  &buffer, CompletionCondition completion_condition) -> detail::read_completion_op<streambuf&, CompletionCondition>                  {return {stream, buffer, std::move(completion_condition)};}
 
-template<std::derived_from<concepts::read_stream> Stream, typename CompletionCondition> auto read(Stream & stream, mutable_buffer              buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_completion_ec_op<Stream, mutable_buffer, CompletionCondition>              {return {stream, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::read_stream> Stream, typename CompletionCondition> auto read(Stream & stream, flat_static_buffer_base    &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_completion_ec_op<Stream, flat_static_buffer_base &, CompletionCondition>   {return {stream, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::read_stream> Stream, typename CompletionCondition> auto read(Stream & stream, static_buffer_base         &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_completion_ec_op<Stream, static_buffer_base &, CompletionCondition>        {return {stream, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::read_stream> Stream, typename CompletionCondition> auto read(Stream & stream, flat_buffer                &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_completion_ec_op<Stream, flat_buffer &, CompletionCondition>               {return {stream, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::read_stream> Stream, typename CompletionCondition> auto read(Stream & stream, multi_buffer               &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_completion_ec_op<Stream, multi_buffer &, CompletionCondition>              {return {stream, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::read_stream> Stream, typename CompletionCondition> auto read(Stream & stream, std::string                &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_completion_ec_op<Stream, std::string&, CompletionCondition>                {return {stream, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::read_stream> Stream, typename CompletionCondition> auto read(Stream & stream, std::vector<unsigned char> &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_completion_ec_op<Stream, std::vector<unsigned char>&, CompletionCondition> {return {stream, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::read_stream> Stream, typename CompletionCondition> auto read(Stream & stream, streambuf                  &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_completion_ec_op<Stream, streambuf&, CompletionCondition>                  {return {stream, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto read(concepts::read_stream & stream, mutable_buffer              buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_completion_ec_op<mutable_buffer, CompletionCondition>              {return {stream, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto read(concepts::read_stream & stream, flat_static_buffer_base    &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_completion_ec_op<flat_static_buffer_base &, CompletionCondition>   {return {stream, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto read(concepts::read_stream & stream, static_buffer_base         &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_completion_ec_op<static_buffer_base &, CompletionCondition>        {return {stream, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto read(concepts::read_stream & stream, flat_buffer                &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_completion_ec_op<flat_buffer &, CompletionCondition>               {return {stream, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto read(concepts::read_stream & stream, multi_buffer               &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_completion_ec_op<multi_buffer &, CompletionCondition>              {return {stream, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto read(concepts::read_stream & stream, std::string                &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_completion_ec_op<std::string&, CompletionCondition>                {return {stream, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto read(concepts::read_stream & stream, std::vector<unsigned char> &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_completion_ec_op<std::vector<unsigned char>&, CompletionCondition> {return {stream, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto read(concepts::read_stream & stream, streambuf                  &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_completion_ec_op<streambuf&, CompletionCondition>                  {return {stream, buffer, std::move(completion_condition), ec};}
 
 
 }

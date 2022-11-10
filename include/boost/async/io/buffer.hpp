@@ -18,9 +18,16 @@
 #include <boost/container/pmr/polymorphic_allocator.hpp>
 
 #include <boost/asio/buffer.hpp>
+#include <boost/asio/detail/consuming_buffers.hpp>
 
 namespace boost::async::io
 {
+
+
+using prepared_buffers =
+    asio::detail::prepared_buffers<
+        asio::const_buffer,
+        asio::detail::buffer_sequence_adapter_base::max_buffers> ;
 
 using asio::buffer;
 using asio::mutable_buffer;

@@ -22,33 +22,29 @@ namespace boost::async::io
 namespace detail
 {
 
-using write_handler = boost::async::detail::completion_handler<system::error_code, std::size_t>;
+using concepts::write_handler;
 
-template<typename WritableStream>
-struct write_impl
-{
-  static void call(WritableStream & pipe, const_buffer buffer, detail::write_handler rh);
-  static void call(WritableStream & pipe, const_buffer buffer, detail::completion_condition cond, detail::write_handler rh);
-  static void call(WritableStream & pipe, flat_static_buffer_base &buffer, detail::write_handler rh);
-  static void call(WritableStream & pipe, flat_static_buffer_base &buffer, detail::completion_condition cond, detail::write_handler rh);
-  static void call(WritableStream & pipe, static_buffer_base &buffer, detail::write_handler rh);
-  static void call(WritableStream & pipe, static_buffer_base &buffer, detail::completion_condition cond, detail::write_handler rh);
-  static void call(WritableStream & pipe, flat_buffer &buffer, detail::write_handler rh);
-  static void call(WritableStream & pipe, flat_buffer &buffer, detail::completion_condition cond, detail::write_handler rh);
-  static void call(WritableStream & pipe, multi_buffer &buffer, detail::write_handler rh);
-  static void call(WritableStream & pipe, multi_buffer &buffer, detail::completion_condition cond, detail::write_handler rh);
-  static void call(WritableStream & pipe, std::string &buffer, detail::write_handler rh);
-  static void call(WritableStream & pipe, std::string &buffer, detail::completion_condition cond, detail::write_handler rh);
-  static void call(WritableStream & pipe, std::vector<unsigned char> &buffer, detail::write_handler rh);
-  static void call(WritableStream & pipe, std::vector<unsigned char> &buffer, detail::completion_condition cond, detail::write_handler rh);
-  static void call(WritableStream & pipe, streambuf &buffer, detail::write_handler rh);
-  static void call(WritableStream & pipe, streambuf &buffer, detail::completion_condition cond, detail::write_handler rh);
-};
+void write_impl(concepts::write_stream & pipe, const_buffer buffer, detail::write_handler rh);
+void write_impl(concepts::write_stream & pipe, const_buffer buffer, detail::completion_condition cond, detail::write_handler rh);
+void write_impl(concepts::write_stream & pipe, flat_static_buffer_base &buffer, detail::write_handler rh);
+void write_impl(concepts::write_stream & pipe, flat_static_buffer_base &buffer, detail::completion_condition cond, detail::write_handler rh);
+void write_impl(concepts::write_stream & pipe, static_buffer_base &buffer, detail::write_handler rh);
+void write_impl(concepts::write_stream & pipe, static_buffer_base &buffer, detail::completion_condition cond, detail::write_handler rh);
+void write_impl(concepts::write_stream & pipe, flat_buffer &buffer, detail::write_handler rh);
+void write_impl(concepts::write_stream & pipe, flat_buffer &buffer, detail::completion_condition cond, detail::write_handler rh);
+void write_impl(concepts::write_stream & pipe, multi_buffer &buffer, detail::write_handler rh);
+void write_impl(concepts::write_stream & pipe, multi_buffer &buffer, detail::completion_condition cond, detail::write_handler rh);
+void write_impl(concepts::write_stream & pipe, std::string &buffer, detail::write_handler rh);
+void write_impl(concepts::write_stream & pipe, std::string &buffer, detail::completion_condition cond, detail::write_handler rh);
+void write_impl(concepts::write_stream & pipe, std::vector<unsigned char> &buffer, detail::write_handler rh);
+void write_impl(concepts::write_stream & pipe, std::vector<unsigned char> &buffer, detail::completion_condition cond, detail::write_handler rh);
+void write_impl(concepts::write_stream & pipe, streambuf &buffer, detail::write_handler rh);
+void write_impl(concepts::write_stream & pipe, streambuf &buffer, detail::completion_condition cond, detail::write_handler rh);
 
-template<typename WritableStream, typename Buffer>
+template<typename Buffer>
 struct write_op
 {
-  WritableStream & stream;
+  concepts::write_stream & stream;
   Buffer buffer;
 
   std::optional<std::tuple<system::error_code, std::size_t>> result;
@@ -61,7 +57,7 @@ struct write_op
   {
     try
     {
-      write_impl<WritableStream>::call(stream, buffer, {h, result});
+      detail::write_impl(stream, buffer, {h, result});
       return true;
     }
     catch(...)
@@ -84,10 +80,10 @@ struct write_op
 };
 
 
-template<typename WritableStream, typename Buffer>
+template<typename Buffer>
 struct write_ec_op
 {
-  WritableStream & stream;
+  concepts::write_stream & stream;
   Buffer buffer;
   system::error_code & ec;
   std::optional<std::tuple<system::error_code, std::size_t>> result;
@@ -100,7 +96,7 @@ struct write_ec_op
   {
     try
     {
-      write_impl<WritableStream>::call(stream, buffer, {h, result});
+      detail::write_impl(stream, buffer, {h, result});
       return true;
     }
     catch(...)
@@ -121,10 +117,10 @@ struct write_ec_op
 };
 
 
-template<typename WritableStream, typename Buffer, typename CompletionCondition>
+template<typename Buffer, typename CompletionCondition>
 struct write_completion_op final : completion_condition_base
 {
-  WritableStream & stream;
+  concepts::write_stream & stream;
   Buffer buffer;
   CompletionCondition completion_condition_;
 
@@ -138,12 +134,13 @@ struct write_completion_op final : completion_condition_base
 
   constexpr static bool await_ready() {return false;}
 
+
   template<typename Promise>
   bool await_suspend(std::coroutine_handle<Promise> h)
   {
     try
     {
-      write_impl<WritableStream>::call(stream, buffer, completion_condition{this}, {h, result});
+      detail::write_impl(stream, buffer, detail::completion_condition{this}, {h, result});
       return true;
     }
     catch(...)
@@ -166,10 +163,10 @@ struct write_completion_op final : completion_condition_base
 };
 
 
-template<typename WritableStream, typename Buffer, typename CompletionCondition>
+template<typename Buffer, typename CompletionCondition>
 struct write_completion_ec_op final : completion_condition_base
 {
-  WritableStream & stream;
+  concepts::write_stream & stream;
   Buffer buffer;
   CompletionCondition completion_condition_;
 
@@ -189,7 +186,7 @@ struct write_completion_ec_op final : completion_condition_base
   {
     try
     {
-      write_impl<WritableStream>::call(stream, buffer, completion_condition{this}, {h, result});
+      detail::write_impl(stream, buffer, detail::completion_condition{this}, {h, result});
       return true;
     }
     catch(...)
@@ -208,45 +205,48 @@ struct write_completion_ec_op final : completion_condition_base
     return std::get<1>(*result);
   }
 };
+
+
 
 }
 
 
-template<std::derived_from<concepts::write_stream> Stream> auto write(Stream & stream, const_buffer                buffer) -> detail::write_op<Stream, const_buffer>                {return {stream, buffer};}
-template<std::derived_from<concepts::write_stream> Stream> auto write(Stream & stream, flat_static_buffer_base    &buffer) -> detail::write_op<Stream, flat_static_buffer_base &>   {return {stream, buffer};}
-template<std::derived_from<concepts::write_stream> Stream> auto write(Stream & stream, static_buffer_base         &buffer) -> detail::write_op<Stream, static_buffer_base &>        {return {stream, buffer};}
-template<std::derived_from<concepts::write_stream> Stream> auto write(Stream & stream, flat_buffer                &buffer) -> detail::write_op<Stream, flat_buffer &>               {return {stream, buffer};}
-template<std::derived_from<concepts::write_stream> Stream> auto write(Stream & stream, multi_buffer               &buffer) -> detail::write_op<Stream, multi_buffer &>              {return {stream, buffer};}
-template<std::derived_from<concepts::write_stream> Stream> auto write(Stream & stream, std::string                &buffer) -> detail::write_op<Stream, std::string&>                {return {stream, buffer};}
-template<std::derived_from<concepts::write_stream> Stream> auto write(Stream & stream, std::vector<unsigned char> &buffer) -> detail::write_op<Stream, std::vector<unsigned char>&> {return {stream, buffer};}
-template<std::derived_from<concepts::write_stream> Stream> auto write(Stream & stream, streambuf                  &buffer) -> detail::write_op<Stream, streambuf&>                  {return {stream, buffer};}
+inline auto write(concepts::write_stream & stream, const_buffer                buffer) -> detail::write_op<const_buffer>                {return {stream, buffer};}
+inline auto write(concepts::write_stream & stream, flat_static_buffer_base    &buffer) -> detail::write_op<flat_static_buffer_base &>   {return {stream, buffer};}
+inline auto write(concepts::write_stream & stream, static_buffer_base         &buffer) -> detail::write_op<static_buffer_base &>        {return {stream, buffer};}
+inline auto write(concepts::write_stream & stream, flat_buffer                &buffer) -> detail::write_op<flat_buffer &>               {return {stream, buffer};}
+inline auto write(concepts::write_stream & stream, multi_buffer               &buffer) -> detail::write_op<multi_buffer &>              {return {stream, buffer};}
+inline auto write(concepts::write_stream & stream, std::string                &buffer) -> detail::write_op<std::string&>                {return {stream, buffer};}
+inline auto write(concepts::write_stream & stream, std::vector<unsigned char> &buffer) -> detail::write_op<std::vector<unsigned char>&> {return {stream, buffer};}
+inline auto write(concepts::write_stream & stream, streambuf                  &buffer) -> detail::write_op<streambuf&>                  {return {stream, buffer};}
 
-template<std::derived_from<concepts::write_stream> Stream> auto write(Stream & stream, const_buffer                buffer, system::error_code & ec) -> detail::write_ec_op<Stream, const_buffer>                {return {stream, buffer, ec};}
-template<std::derived_from<concepts::write_stream> Stream> auto write(Stream & stream, flat_static_buffer_base    &buffer, system::error_code & ec) -> detail::write_ec_op<Stream, flat_static_buffer_base &>   {return {stream, buffer, ec};}
-template<std::derived_from<concepts::write_stream> Stream> auto write(Stream & stream, static_buffer_base         &buffer, system::error_code & ec) -> detail::write_ec_op<Stream, static_buffer_base &>        {return {stream, buffer, ec};}
-template<std::derived_from<concepts::write_stream> Stream> auto write(Stream & stream, flat_buffer                &buffer, system::error_code & ec) -> detail::write_ec_op<Stream, flat_buffer &>               {return {stream, buffer, ec};}
-template<std::derived_from<concepts::write_stream> Stream> auto write(Stream & stream, multi_buffer               &buffer, system::error_code & ec) -> detail::write_ec_op<Stream, multi_buffer &>              {return {stream, buffer, ec};}
-template<std::derived_from<concepts::write_stream> Stream> auto write(Stream & stream, std::string                &buffer, system::error_code & ec) -> detail::write_ec_op<Stream, std::string&>                {return {stream, buffer, ec};}
-template<std::derived_from<concepts::write_stream> Stream> auto write(Stream & stream, std::vector<unsigned char> &buffer, system::error_code & ec) -> detail::write_ec_op<Stream, std::vector<unsigned char>&> {return {stream, buffer, ec};}
-template<std::derived_from<concepts::write_stream> Stream> auto write(Stream & stream, streambuf                  &buffer, system::error_code & ec) -> detail::write_ec_op<Stream, streambuf&>                  {return {stream, buffer, ec};}
+inline auto write(concepts::write_stream & stream, const_buffer                buffer, system::error_code & ec) -> detail::write_ec_op<const_buffer>                {return {stream, buffer, ec};}
+inline auto write(concepts::write_stream & stream, flat_static_buffer_base    &buffer, system::error_code & ec) -> detail::write_ec_op<flat_static_buffer_base &>   {return {stream, buffer, ec};}
+inline auto write(concepts::write_stream & stream, static_buffer_base         &buffer, system::error_code & ec) -> detail::write_ec_op<static_buffer_base &>        {return {stream, buffer, ec};}
+inline auto write(concepts::write_stream & stream, flat_buffer                &buffer, system::error_code & ec) -> detail::write_ec_op<flat_buffer &>               {return {stream, buffer, ec};}
+inline auto write(concepts::write_stream & stream, multi_buffer               &buffer, system::error_code & ec) -> detail::write_ec_op<multi_buffer &>              {return {stream, buffer, ec};}
+inline auto write(concepts::write_stream & stream, std::string                &buffer, system::error_code & ec) -> detail::write_ec_op<std::string&>                {return {stream, buffer, ec};}
+inline auto write(concepts::write_stream & stream, std::vector<unsigned char> &buffer, system::error_code & ec) -> detail::write_ec_op<std::vector<unsigned char>&> {return {stream, buffer, ec};}
+inline auto write(concepts::write_stream & stream, streambuf                  &buffer, system::error_code & ec) -> detail::write_ec_op<streambuf&>                  {return {stream, buffer, ec};}
 
-template<std::derived_from<concepts::write_stream> Stream, typename CompletionCondition> auto write(Stream & stream, const_buffer                buffer, CompletionCondition completion_condition) -> detail::write_completion_op<Stream, const_buffer, CompletionCondition>                {return {stream, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::write_stream> Stream, typename CompletionCondition> auto write(Stream & stream, flat_static_buffer_base    &buffer, CompletionCondition completion_condition) -> detail::write_completion_op<Stream, flat_static_buffer_base &, CompletionCondition>   {return {stream, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::write_stream> Stream, typename CompletionCondition> auto write(Stream & stream, static_buffer_base         &buffer, CompletionCondition completion_condition) -> detail::write_completion_op<Stream, static_buffer_base &, CompletionCondition>        {return {stream, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::write_stream> Stream, typename CompletionCondition> auto write(Stream & stream, flat_buffer                &buffer, CompletionCondition completion_condition) -> detail::write_completion_op<Stream, flat_buffer &, CompletionCondition>               {return {stream, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::write_stream> Stream, typename CompletionCondition> auto write(Stream & stream, multi_buffer               &buffer, CompletionCondition completion_condition) -> detail::write_completion_op<Stream, multi_buffer &, CompletionCondition>              {return {stream, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::write_stream> Stream, typename CompletionCondition> auto write(Stream & stream, std::string                &buffer, CompletionCondition completion_condition) -> detail::write_completion_op<Stream, std::string&, CompletionCondition>                {return {stream, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::write_stream> Stream, typename CompletionCondition> auto write(Stream & stream, std::vector<unsigned char> &buffer, CompletionCondition completion_condition) -> detail::write_completion_op<Stream, std::vector<unsigned char>&, CompletionCondition> {return {stream, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::write_stream> Stream, typename CompletionCondition> auto write(Stream & stream, streambuf                  &buffer, CompletionCondition completion_condition) -> detail::write_completion_op<Stream, streambuf&, CompletionCondition>                  {return {stream, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto write(concepts::write_stream & stream, const_buffer                buffer, CompletionCondition completion_condition) -> detail::write_completion_op<const_buffer, CompletionCondition>                {return {stream, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto write(concepts::write_stream & stream, flat_static_buffer_base    &buffer, CompletionCondition completion_condition) -> detail::write_completion_op<flat_static_buffer_base &, CompletionCondition>   {return {stream, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto write(concepts::write_stream & stream, static_buffer_base         &buffer, CompletionCondition completion_condition) -> detail::write_completion_op<static_buffer_base &, CompletionCondition>        {return {stream, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto write(concepts::write_stream & stream, flat_buffer                &buffer, CompletionCondition completion_condition) -> detail::write_completion_op<flat_buffer &, CompletionCondition>               {return {stream, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto write(concepts::write_stream & stream, multi_buffer               &buffer, CompletionCondition completion_condition) -> detail::write_completion_op<multi_buffer &, CompletionCondition>              {return {stream, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto write(concepts::write_stream & stream, std::string                &buffer, CompletionCondition completion_condition) -> detail::write_completion_op<std::string&, CompletionCondition>                {return {stream, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto write(concepts::write_stream & stream, std::vector<unsigned char> &buffer, CompletionCondition completion_condition) -> detail::write_completion_op<std::vector<unsigned char>&, CompletionCondition> {return {stream, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto write(concepts::write_stream & stream, streambuf                  &buffer, CompletionCondition completion_condition) -> detail::write_completion_op<streambuf&, CompletionCondition>                  {return {stream, buffer, std::move(completion_condition)};}
 
-template<std::derived_from<concepts::write_stream> Stream, typename CompletionCondition> auto write(Stream & stream, const_buffer                buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::write_completion_ec_op<Stream, const_buffer, CompletionCondition>                {return {stream, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::write_stream> Stream, typename CompletionCondition> auto write(Stream & stream, flat_static_buffer_base    &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::write_completion_ec_op<Stream, flat_static_buffer_base &, CompletionCondition>   {return {stream, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::write_stream> Stream, typename CompletionCondition> auto write(Stream & stream, static_buffer_base         &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::write_completion_ec_op<Stream, static_buffer_base &, CompletionCondition>        {return {stream, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::write_stream> Stream, typename CompletionCondition> auto write(Stream & stream, flat_buffer                &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::write_completion_ec_op<Stream, flat_buffer &, CompletionCondition>               {return {stream, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::write_stream> Stream, typename CompletionCondition> auto write(Stream & stream, multi_buffer               &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::write_completion_ec_op<Stream, multi_buffer &, CompletionCondition>              {return {stream, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::write_stream> Stream, typename CompletionCondition> auto write(Stream & stream, std::string                &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::write_completion_ec_op<Stream, std::string&, CompletionCondition>                {return {stream, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::write_stream> Stream, typename CompletionCondition> auto write(Stream & stream, std::vector<unsigned char> &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::write_completion_ec_op<Stream, std::vector<unsigned char>&, CompletionCondition> {return {stream, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::write_stream> Stream, typename CompletionCondition> auto write(Stream & stream, streambuf                  &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::write_completion_ec_op<Stream, streambuf&, CompletionCondition>                  {return {stream, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto write(concepts::write_stream & stream, const_buffer                buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::write_completion_ec_op<const_buffer, CompletionCondition>                {return {stream, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto write(concepts::write_stream & stream, flat_static_buffer_base    &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::write_completion_ec_op<flat_static_buffer_base &, CompletionCondition>   {return {stream, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto write(concepts::write_stream & stream, static_buffer_base         &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::write_completion_ec_op<static_buffer_base &, CompletionCondition>        {return {stream, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto write(concepts::write_stream & stream, flat_buffer                &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::write_completion_ec_op<flat_buffer &, CompletionCondition>               {return {stream, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto write(concepts::write_stream & stream, multi_buffer               &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::write_completion_ec_op<multi_buffer &, CompletionCondition>              {return {stream, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto write(concepts::write_stream & stream, std::string                &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::write_completion_ec_op<std::string&, CompletionCondition>                {return {stream, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto write(concepts::write_stream & stream, std::vector<unsigned char> &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::write_completion_ec_op<std::vector<unsigned char>&, CompletionCondition> {return {stream, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto write(concepts::write_stream & stream, streambuf                  &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::write_completion_ec_op<streambuf&, CompletionCondition>                  {return {stream, buffer, std::move(completion_condition), ec};}
+
 
 
 }

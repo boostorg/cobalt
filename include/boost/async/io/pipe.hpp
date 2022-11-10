@@ -259,40 +259,6 @@ struct readable_pipe : concepts::implements<concepts::cancellable, concepts::clo
    *
    * @param buffers One or more buffers into which the data will be read.
    *
-   * @returns The number of bytes read.
-   *
-   * @throws boost::system::system_error Thrown on failure. An error code of
-   * boost::asio::error::eof indicates that the connection was closed by the
-   * peer.
-   *
-   * @note The read_some operation may not read all of the requested number of
-   * bytes. Consider using the @ref read function if you need to ensure that
-   * the requested amount of data is read before the blocking operation
-   * completes.
-   *
-   * @par Example
-   * To read into a single data buffer use the @ref buffer function as follows:
-   * @code
-   * readable_pipe.read_some(boost::asio::buffer(data, size));
-   * @endcode
-   * See the @ref buffer documentation for information on reading into multiple
-   * buffers in one go, and how to use it with arrays, boost::array or
-   * std::vector.
-   */
-  read_some_op_ read_some(asio::mutable_buffer buffer) override
-  {
-    return {&impl_, buffer, read_some_op_impl};
-
-  }
-
-  /// Read some data from the pipe.
-  /**
-   * This function is used to read data from the pipe. The function call will
-   * block until one or more bytes of data has been read successfully, or until
-   * an error occurs.
-   *
-   * @param buffers One or more buffers into which the data will be read.
-   *
    * @param ec Set to indicate what error occurred, if any.
    *
    * @returns The number of bytes read. Returns 0 if an error occurred.
@@ -302,24 +268,14 @@ struct readable_pipe : concepts::implements<concepts::cancellable, concepts::clo
    * the requested amount of data is read before the blocking operation
    * completes.
    */
-  read_some_op_ec_ read_some(asio::mutable_buffer buffer, system::error_code &ec) override
-  {
-    return {&impl_, buffer, ec, read_some_op_impl};
-  }
+  void async_read_some(asio::mutable_buffer buffer,                     concepts::write_handler h) final;
+  void async_read_some(static_buffer_base::mutable_buffers_type buffer, concepts::write_handler h) final;
+  void async_read_some(multi_buffer::mutable_buffers_type buffer,       concepts::write_handler h) final;
 
   /// Get the underlying asio implementation.
   implementation_type & implementation() {return impl_;}
 
  private:
-  struct read_some_op_impl_ final : read_some_op_base
-  {
-    void await_suspend(void * p, asio::mutable_buffer buffer,
-                      boost::async::detail::completion_handler<system::error_code, std::size_t> h) const final;
-  };
-
-  constexpr static read_some_op_impl_ read_some_op_impl{};
-
-
   implementation_type impl_;
 };
 
@@ -556,70 +512,8 @@ struct writable_pipe  : concepts::implements<concepts::cancellable, concepts::cl
    */
   void cancel(boost::system::error_code& ec) override;
 
- private:
-  struct write_some_op_impl_ final : write_some_op_base
-  {
-    void await_suspend(void * p, asio::const_buffer buffer,
-                      boost::async::detail::completion_handler<system::error_code, std::size_t> h) const final;
-  };
-
-  constexpr static write_some_op_impl_ write_some_op_impl{};
-
- public:
-
-  /// Write some data to the pipe.
-  /**
-   * This function is used to write data to the pipe. The function call will
-   * block until one or more bytes of the data has been written successfully,
-   * or until an error occurs.
-   *
-   * @param buffers One or more data buffers to be written to the pipe.
-   *
-   * @returns The number of bytes written.
-   *
-   * @throws boost::system::system_error Thrown on failure. An error code of
-   * boost::asio::error::eof indicates that the connection was closed by the
-   * peer.
-   *
-   * @note The write_some operation may not transmit all of the data to the
-   * peer. Consider using the @ref write function if you need to ensure that
-   * all data is written before the blocking operation completes.
-   *
-   * @par Example
-   * To write a single data buffer use the @ref buffer function as follows:
-   * @code
-   * pipe.write_some(boost::asio::buffer(data, size));
-   * @endcode
-   * See the @ref buffer documentation for information on writing multiple
-   * buffers in one go, and how to use it with arrays, boost::array or
-   * std::vector.
-   */
-  write_some_op_ write_some(asio::const_buffer buffers) override
-  {
-    return {&impl_, buffers, write_some_op_impl};
-  }
-
-  /// Write some data to the pipe.
-  /**
-   * This function is used to write data to the pipe. The function call will
-   * block until one or more bytes of the data has been written successfully,
-   * or until an error occurs.
-   *
-   * @param buffers One or more data buffers to be written to the pipe.
-   *
-   * @param ec Set to indicate what error occurred, if any.
-   *
-   * @returns The number of bytes written. Returns 0 if an error occurred.
-   *
-   * @note The write_some operation may not transmit all of the data to the
-   * peer. Consider using the @ref write function if you need to ensure that
-   * all data is written before the blocking operation completes.
-   */
-  write_some_op_ec_ write_some(asio::const_buffer buffers,
-                                    boost::system::error_code& ec) override
-  {
-    return {&impl_, buffers, ec, write_some_op_impl};
-  }
+  void async_write_some(asio::const_buffer buffer, concepts::write_handler h) final;
+  void async_write_some(prepared_buffers, concepts::write_handler h) final;
 
   /// Get the underlying asio implementation.
   implementation_type & implementation() {return impl_;}

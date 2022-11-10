@@ -16,6 +16,8 @@
 namespace boost::async::io::concepts
 {
 
+using write_handler = boost::async::detail::completion_handler<system::error_code, std::size_t>;
+using read_handler  = boost::async::detail::completion_handler<system::error_code, std::size_t>;
 
 struct closable
 {
@@ -44,16 +46,10 @@ struct execution_context
 struct read_stream : virtual execution_context
 {
  protected:
-  struct read_some_op_base
-  {
-    virtual void await_suspend(void * p, asio::mutable_buffer buffer,
-                               boost::async::detail::completion_handler<system::error_code, std::size_t> h) const = 0;
-  };
   struct read_some_op_
   {
-    void * impl;
+    read_stream * impl;
     asio::mutable_buffer buffer;
-    const read_some_op_base & methods;
     std::optional<std::tuple<system::error_code, std::size_t>> result;
     std::exception_ptr error;
 
@@ -64,7 +60,7 @@ struct read_stream : virtual execution_context
     {
       try
       {
-        methods.await_suspend(impl, buffer, {h, result});
+        impl->read_some(buffer, {h, result});
         return true;
       }
       catch(...)
@@ -88,10 +84,9 @@ struct read_stream : virtual execution_context
 
   struct read_some_op_ec_
   {
-    void * impl;
+    read_stream * impl;
     asio::mutable_buffer buffer;
     system::error_code & ec;
-    const read_some_op_base & methods;
     std::optional<std::tuple<system::error_code, std::size_t>> result;
     std::exception_ptr error;
 
@@ -102,7 +97,7 @@ struct read_stream : virtual execution_context
     {
       try
       {
-        methods.await_suspend(impl,  buffer, ec, {h, result});
+        impl->read_some(buffer, ec, {h, result});
         return true;
       }
       catch(...)
@@ -122,8 +117,18 @@ struct read_stream : virtual execution_context
   };
 
  public:
-  virtual read_some_op_ read_some(asio::mutable_buffer buffer) = 0;
-  virtual read_some_op_ec_ read_some(asio::mutable_buffer buffer, system::error_code & ec) = 0;
+  virtual void async_read_some(asio::mutable_buffer buffer,                     write_handler h) = 0;
+  virtual void async_read_some(static_buffer_base::mutable_buffers_type buffer, write_handler h) = 0;
+  virtual void async_read_some(multi_buffer::mutable_buffers_type buffer,       write_handler h) = 0;
+
+  read_some_op_ read_some(asio::mutable_buffer buffer)
+  {
+    return read_some_op_{this, buffer};
+  }
+  read_some_op_ec_ read_some(asio::mutable_buffer buffer, system::error_code & ec)
+  {
+    return read_some_op_ec_{this, buffer, ec};
+  };
 
 };
 
@@ -131,18 +136,10 @@ struct write_stream : virtual execution_context
 {
  protected:
 
-  struct write_some_op_base
-  {
-    virtual void await_suspend(void * p, asio::const_buffer,
-                               boost::async::detail::completion_handler<system::error_code, std::size_t> h) const = 0;
-  };
-
-
   struct write_some_op_
   {
-    void * impl;
+    write_stream * impl;
     asio::const_buffer buffer;
-    const write_some_op_base & methods;
     std::optional<std::tuple<system::error_code, std::size_t>> result;
     std::exception_ptr error;
 
@@ -153,7 +150,7 @@ struct write_stream : virtual execution_context
     {
       try
       {
-        methods.await_suspend(impl,  buffer, {h, result});
+        impl->async_write_some(buffer, {h, result});
         return true;
       }
       catch(...)
@@ -177,15 +174,9 @@ struct write_stream : virtual execution_context
 
   struct write_some_op_ec_
   {
-    struct base
-    {
-      virtual void await_suspend(void * p, asio::const_buffer, system::error_code & ec,
-                                boost::async::detail::completion_handler<std::size_t> h) const = 0;
-    };
-    void * impl;
+    write_stream * impl;
     asio::const_buffer buffer;
     system::error_code & ec;
-    const write_some_op_base & methods;
     std::optional<std::tuple<system::error_code,std::size_t>> result;
     std::exception_ptr error;
 
@@ -196,7 +187,7 @@ struct write_stream : virtual execution_context
     {
       try
       {
-        methods.await_suspend(impl,  buffer, ec, {h, result});
+        impl->async_write_some(buffer, {h, result});
         return true;
       }
       catch(...)
@@ -217,36 +208,37 @@ struct write_stream : virtual execution_context
   };
  public:
 
-  virtual write_some_op_    write_some(asio::const_buffer buffer) = 0;
-  virtual write_some_op_ec_ write_some(asio::const_buffer buffer, system::error_code & ec) = 0;
+  write_some_op_    write_some(asio::const_buffer buffer)
+  {
+      return write_some_op_{this, buffer};
+  }
+  write_some_op_ec_ write_some(asio::const_buffer buffer, system::error_code & ec)
+  {
+    return  write_some_op_ec_{this, buffer, ec};
+  }
+  virtual void async_write_some(asio::const_buffer, write_handler h) = 0;
+  virtual void async_write_some(prepared_buffers, write_handler h) = 0;
 };
 
 struct timer : virtual execution_context
 {
  protected:
 
-  struct wait_op_base
-  {
-    virtual bool await_ready(void * p) const = 0;
-    virtual void await_suspend(void * p,
-                               boost::async::detail::completion_handler<system::error_code> h) const = 0;
-  };
   struct wait_op_
   {
 
-    void * impl;
-    const wait_op_base & methods;
+    timer * impl;
     std::optional<std::tuple<system::error_code>> result;
     std::exception_ptr error;
 
-    bool await_ready() const {return methods.await_ready(impl);}
+    bool await_ready() const {return impl->expired();}
 
     template<typename Promise>
     bool await_suspend(std::coroutine_handle<Promise> h)
     {
       try
       {
-        methods.await_suspend(impl,  {h, result});
+        impl->async_wait({h, result});
         return true;
       }
       catch(...)
@@ -268,20 +260,19 @@ struct timer : virtual execution_context
 
   struct wait_op_ec_
   {
-    void * impl;
+    timer * impl;
     system::error_code & ec;
-    const wait_op_base & methods;
     std::optional<std::tuple<system::error_code>> result;
     std::exception_ptr error;
 
-    bool await_ready() const {return methods.await_ready(impl);}
+    bool await_ready() const {return impl->expired();}
 
     template<typename Promise>
     bool await_suspend(std::coroutine_handle<Promise> h)
     {
       try
       {
-        methods.await_suspend(impl,  ec, {h, result});
+        impl->async_wait({h, result});
         return true;
       }
       catch(...)
@@ -300,8 +291,12 @@ struct timer : virtual execution_context
     }
   };
  public:
-  virtual wait_op_    wait() = 0;
-  virtual wait_op_ec_ wait(system::error_code & ec) = 0;
+
+  virtual void async_wait(boost::async::detail::completion_handler<system::error_code> h) = 0;
+  virtual bool expired() const = 0;
+
+  wait_op_    wait()                        {return wait_op_{this}; }
+  wait_op_ec_ wait(system::error_code & ec) { return wait_op_ec_{this, ec}; };
 
   virtual std::size_t cancel_one() = 0;
   virtual std::size_t cancel_one(system::error_code & ec) = 0;
@@ -314,17 +309,11 @@ struct timer : virtual execution_context
 struct random_access_read_device : virtual execution_context
 {
  protected:
-  struct read_some_at_base
-  {
-    virtual void await_suspend(void * p, std::uint64_t offset, asio::mutable_buffer buffer,
-                               boost::async::detail::completion_handler<system::error_code, std::size_t> h) const = 0;
-  };
   struct read_some_at_op_
   {
-    void * impl;
+    random_access_read_device * impl;
     std::uint64_t offset;
     asio::mutable_buffer buffer;
-    const read_some_at_base & methods;
     std::optional<std::tuple<system::error_code, std::size_t>> result;
     std::exception_ptr error;
 
@@ -335,7 +324,7 @@ struct random_access_read_device : virtual execution_context
     {
       try
       {
-        methods.await_suspend(impl,  buffer, {h, result});
+        impl->async_read_some_at(offset, buffer, {h, result});
         return true;
       }
       catch(...)
@@ -360,11 +349,10 @@ struct random_access_read_device : virtual execution_context
   struct read_some_at_op_ec_
   {
 
-    void * impl;
+    random_access_read_device * impl;
     std::uint64_t offset;
     asio::mutable_buffer buffer;
     system::error_code & ec;
-    const read_some_at_base & methods;
     std::optional<std::tuple<system::error_code, std::size_t>> result;
     std::exception_ptr error;
 
@@ -375,7 +363,7 @@ struct random_access_read_device : virtual execution_context
     {
       try
       {
-        methods.await_suspend(impl,  buffer, ec, {h, result});
+        impl->async_read_some_at(offset, buffer, {h, result});
         return true;
       }
       catch(...)
@@ -394,25 +382,26 @@ struct random_access_read_device : virtual execution_context
     }
   };
 
-  virtual read_some_at_op_    read_some(std::uint64_t offset, asio::mutable_buffer buffer) = 0;
-  virtual read_some_at_op_ec_ read_some(std::uint64_t offset, asio::mutable_buffer buffer, system::error_code & ec) = 0;
+  read_some_at_op_    read_some(std::uint64_t offset, asio::mutable_buffer buffer)
+  {
+    return read_some_at_op_{this, offset, buffer};
+  }
+  read_some_at_op_ec_ read_some(std::uint64_t offset, asio::mutable_buffer buffer, system::error_code & ec)
+  {
+    return read_some_at_op_ec_{this, offset, buffer, ec};
+  };
+  virtual void async_read_some_at(std::uint64_t offset, asio::mutable_buffer buffer, write_handler h) = 0;
 };
 
 struct random_access_write_device : virtual execution_context
 {
  protected:
 
-  struct write_some_at_base
-  {
-    virtual void await_suspend(void * p, std::uint64_t offset, asio::const_buffer,
-                               boost::async::detail::completion_handler<system::error_code, std::size_t> h) const = 0;
-  };
   struct write_some_at_op_
   {
-    void * impl;
+    random_access_write_device * impl;
     std::uint64_t offset;
     asio::const_buffer buffer;
-    const write_some_at_base & methods;
     std::optional<std::tuple<system::error_code, std::size_t>> result;
     std::exception_ptr error;
 
@@ -423,7 +412,7 @@ struct random_access_write_device : virtual execution_context
     {
       try
       {
-        methods.await_suspend(impl,  buffer, {h, result});
+        impl->async_write_some_at(buffer, {h, result});
         return true;
       }
       catch(...)
@@ -448,11 +437,10 @@ struct random_access_write_device : virtual execution_context
   struct write_some_at_op_ec_
   {
 
-    void * impl;
+    random_access_write_device * impl;
     std::uint64_t offset;
     asio::const_buffer buffer;
     system::error_code & ec;
-    const write_some_at_base & methods;
     std::optional<std::tuple<system::error_code, std::size_t>> result;
     std::exception_ptr error;
 
@@ -463,7 +451,7 @@ struct random_access_write_device : virtual execution_context
     {
       try
       {
-        methods.await_suspend(impl,  buffer, ec, {h, result});
+        impl->async_write_some_at(buffer, ec, {h, result});
         return true;
       }
       catch(...)
@@ -482,9 +470,16 @@ struct random_access_write_device : virtual execution_context
     }
   };
  public:
-
-  virtual write_some_at_op_    write_some(std::uint64_t offset, asio::const_buffer buffer) = 0;
-  virtual write_some_at_op_ec_ write_some(std::uint64_t offset, asio::const_buffer buffer, system::error_code & ec) = 0;
+  write_some_at_op_    write_some_at(std::uint64_t offset, asio::const_buffer buffer)
+  {
+    return write_some_at_op_{this, offset, buffer};
+  }
+  write_some_at_op_ec_ write_someat(std::uint64_t offset, asio::const_buffer buffer, system::error_code & ec)
+  {
+    return write_some_at_op_ec_{this, offset, buffer, ec};
+  };
+  virtual void async_write_some_at(std::uint64_t offset, asio::const_buffer buffer,
+                                  boost::async::detail::completion_handler<system::error_code, std::size_t> h) = 0;
 
 };
 
@@ -507,29 +502,23 @@ struct async_waitable_device : virtual execution_context
   };
 
  protected:
-  struct wait_op_base
-  {
-    virtual bool await_ready(void * p) const = 0;
-    virtual void await_suspend(void * p, wait_type wt,
-                               boost::async::detail::completion_handler<system::error_code> h) const = 0;
-  };
+
   struct wait_op_
   {
 
-    void * impl;
+    async_waitable_device * impl;
     wait_type wt;
-    const wait_op_base & methods;
     std::optional<std::tuple<system::error_code>> result;
     std::exception_ptr error;
 
-    constexpr static bool await_ready() {return false;}
+    bool await_ready() const {return impl->is_ready();}
 
     template<typename Promise>
     bool await_suspend(std::coroutine_handle<Promise> h)
     {
       try
       {
-        methods.await_suspend(impl,  wt, {h, result});
+        impl->async_wait(wt, {h, result});
         return true;
       }
       catch(...)
@@ -551,21 +540,20 @@ struct async_waitable_device : virtual execution_context
 
   struct wait_op_ec_
   {
-    void * impl;
+    async_waitable_device * impl;
     wait_type wt;
     system::error_code & ec;
-    const wait_op_base & methods;
     std::optional<std::tuple<system::error_code>> result;
     std::exception_ptr error;
 
-    constexpr static bool await_ready() {return false;}
+    bool await_ready() const {return impl->is_ready();}
 
     template<typename Promise>
     bool await_suspend(std::coroutine_handle<Promise> h)
     {
       try
       {
-        methods.await_suspend(impl, wt, ec, {h, result});
+        impl->async_wait(wt, {h, result});
         return true;
       }
       catch(...)
@@ -584,8 +572,17 @@ struct async_waitable_device : virtual execution_context
     }
   };
  public:
-  virtual wait_op_    wait(wait_type wt) = 0;
-  virtual wait_op_ec_ wait(wait_type wt, system::error_code & ec) = 0;
+
+  virtual bool is_ready() const = 0;
+  virtual void async_wait(wait_type wt, boost::async::detail::completion_handler<system::error_code> h) = 0;
+  wait_op_    wait(wait_type wt)
+  {
+    return wait_op_{this, wt};
+  }
+  wait_op_ec_ wait(wait_type wt, system::error_code & ec)
+  {
+    return wait_op_ec_{this, wt, ec};
+  }
 };
 
 template<typename ... Args>

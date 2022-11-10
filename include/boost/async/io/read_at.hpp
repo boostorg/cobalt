@@ -24,31 +24,28 @@ namespace detail
 
 using read_at_handler = boost::async::detail::completion_handler<system::error_code, std::size_t>;
 
-template<typename WritableStream>
-struct read_at_impl
-{
-  static void call(WritableStream & pipe, std::uint64_t offset, mutable_buffer buffer, detail::read_at_handler rh);
-  static void call(WritableStream & pipe, std::uint64_t offset, mutable_buffer buffer, detail::completion_condition cond, detail::read_at_handler rh);
-  static void call(WritableStream & pipe, std::uint64_t offset, flat_static_buffer_base &buffer, detail::read_at_handler rh);
-  static void call(WritableStream & pipe, std::uint64_t offset, flat_static_buffer_base &buffer, detail::completion_condition cond, detail::read_at_handler rh);
-  static void call(WritableStream & pipe, std::uint64_t offset, static_buffer_base &buffer, detail::read_at_handler rh);
-  static void call(WritableStream & pipe, std::uint64_t offset, static_buffer_base &buffer, detail::completion_condition cond, detail::read_at_handler rh);
-  static void call(WritableStream & pipe, std::uint64_t offset, flat_buffer &buffer, detail::read_at_handler rh);
-  static void call(WritableStream & pipe, std::uint64_t offset, flat_buffer &buffer, detail::completion_condition cond, detail::read_at_handler rh);
-  static void call(WritableStream & pipe, std::uint64_t offset, multi_buffer &buffer, detail::read_at_handler rh);
-  static void call(WritableStream & pipe, std::uint64_t offset, multi_buffer &buffer, detail::completion_condition cond, detail::read_at_handler rh);
-  static void call(WritableStream & pipe, std::uint64_t offset, std::string &buffer, detail::read_at_handler rh);
-  static void call(WritableStream & pipe, std::uint64_t offset, std::string &buffer, detail::completion_condition cond, detail::read_at_handler rh);
-  static void call(WritableStream & pipe, std::uint64_t offset, std::vector<unsigned char> &buffer, detail::read_at_handler rh);
-  static void call(WritableStream & pipe, std::uint64_t offset, std::vector<unsigned char> &buffer, detail::completion_condition cond, detail::read_at_handler rh);
-  static void call(WritableStream & pipe, std::uint64_t offset, streambuf &buffer, detail::read_at_handler rh);
-  static void call(WritableStream & pipe, std::uint64_t offset, streambuf &buffer, detail::completion_condition cond, detail::read_at_handler rh);
-};
+void read_at_impl(concepts::read_stream & pipe, std::uint64_t offset, mutable_buffer buffer, detail::read_at_handler rh);
+void read_at_impl(concepts::read_stream & pipe, std::uint64_t offset, mutable_buffer buffer, detail::completion_condition cond, detail::read_at_handler rh);
+void read_at_impl(concepts::read_stream & pipe, std::uint64_t offset, flat_static_buffer_base &buffer, detail::read_at_handler rh);
+void read_at_impl(concepts::read_stream & pipe, std::uint64_t offset, flat_static_buffer_base &buffer, detail::completion_condition cond, detail::read_at_handler rh);
+void read_at_impl(concepts::read_stream & pipe, std::uint64_t offset, static_buffer_base &buffer, detail::read_at_handler rh);
+void read_at_impl(concepts::read_stream & pipe, std::uint64_t offset, static_buffer_base &buffer, detail::completion_condition cond, detail::read_at_handler rh);
+void read_at_impl(concepts::read_stream & pipe, std::uint64_t offset, flat_buffer &buffer, detail::read_at_handler rh);
+void read_at_impl(concepts::read_stream & pipe, std::uint64_t offset, flat_buffer &buffer, detail::completion_condition cond, detail::read_at_handler rh);
+void read_at_impl(concepts::read_stream & pipe, std::uint64_t offset, multi_buffer &buffer, detail::read_at_handler rh);
+void read_at_impl(concepts::read_stream & pipe, std::uint64_t offset, multi_buffer &buffer, detail::completion_condition cond, detail::read_at_handler rh);
+void read_at_impl(concepts::read_stream & pipe, std::uint64_t offset, std::string &buffer, detail::read_at_handler rh);
+void read_at_impl(concepts::read_stream & pipe, std::uint64_t offset, std::string &buffer, detail::completion_condition cond, detail::read_at_handler rh);
+void read_at_impl(concepts::read_stream & pipe, std::uint64_t offset, std::vector<unsigned char> &buffer, detail::read_at_handler rh);
+void read_at_impl(concepts::read_stream & pipe, std::uint64_t offset, std::vector<unsigned char> &buffer, detail::completion_condition cond, detail::read_at_handler rh);
+void read_at_impl(concepts::read_stream & pipe, std::uint64_t offset, streambuf &buffer, detail::read_at_handler rh);
+void read_at_impl(concepts::read_stream & pipe, std::uint64_t offset, streambuf &buffer, detail::completion_condition cond, detail::read_at_handler rh);
 
-template<typename WritableStream, typename Buffer>
+
+template<typename Buffer>
 struct read_at_op
 {
-  WritableStream & stream;
+  concepts::read_stream & stream;
   std::uint64_t offset;
   Buffer buffer;
 
@@ -62,7 +59,7 @@ struct read_at_op
   {
     try
     {
-      read_at_impl<WritableStream>::call(stream, offset, buffer, {h, result});
+      read_at_impl(stream, offset, buffer, {h, result});
       return true;
     }
     catch(...)
@@ -85,10 +82,10 @@ struct read_at_op
 };
 
 
-template<typename WritableStream, typename Buffer>
+template<typename Buffer>
 struct read_at_ec_op
 {
-  WritableStream & stream;
+  concepts::read_stream & stream;
   std::uint64_t offset;
   Buffer buffer;
   system::error_code & ec;
@@ -102,7 +99,7 @@ struct read_at_ec_op
   {
     try
     {
-      read_at_impl<WritableStream>::call(stream, offset, buffer, {h, result});
+      read_at_impl(stream, offset, buffer, {h, result});
       return true;
     }
     catch(...)
@@ -123,10 +120,10 @@ struct read_at_ec_op
 };
 
 
-template<typename WritableStream, typename Buffer, typename CompletionCondition>
+template<typename Buffer, typename CompletionCondition>
 struct read_at_completion_op final : completion_condition_base
 {
-  WritableStream & stream;
+  concepts::read_stream & stream;
   std::uint64_t offset;
   Buffer buffer;
   CompletionCondition completion_condition_;
@@ -146,7 +143,7 @@ struct read_at_completion_op final : completion_condition_base
   {
     try
     {
-      read_at_impl<WritableStream>::call(stream, offset, buffer, completion_condition{this}, {h, result});
+      read_at_impl(stream, offset, buffer, completion_condition{this}, {h, result});
       return true;
     }
     catch(...)
@@ -169,10 +166,10 @@ struct read_at_completion_op final : completion_condition_base
 };
 
 
-template<typename WritableStream, typename Buffer, typename CompletionCondition>
+template<typename Buffer, typename CompletionCondition>
 struct read_at_completion_ec_op final : completion_condition_base
 {
-  WritableStream & stream;
+  concepts::read_stream & stream;
   std::uint64_t offset;
   Buffer buffer;
   CompletionCondition completion_condition_;
@@ -193,7 +190,7 @@ struct read_at_completion_ec_op final : completion_condition_base
   {
     try
     {
-      read_at_impl<WritableStream>::call(stream, offset, buffer, completion_condition{this}, {h, result});
+      read_at_impl(stream, offset, buffer, completion_condition{this}, {h, result});
       return true;
     }
     catch(...)
@@ -216,41 +213,41 @@ struct read_at_completion_ec_op final : completion_condition_base
 }
 
 
-template<std::derived_from<concepts::random_access_write_device> Stream> auto read_at(Stream & stream, std::uint64_t offset, mutable_buffer                buffer) -> detail::read_at_op<Stream, mutable_buffer>                {return {stream, offset, buffer};}
-template<std::derived_from<concepts::random_access_write_device> Stream> auto read_at(Stream & stream, std::uint64_t offset, flat_static_buffer_base    &buffer) -> detail::read_at_op<Stream, flat_static_buffer_base &>   {return {stream, offset, buffer};}
-template<std::derived_from<concepts::random_access_write_device> Stream> auto read_at(Stream & stream, std::uint64_t offset, static_buffer_base         &buffer) -> detail::read_at_op<Stream, static_buffer_base &>        {return {stream, offset, buffer};}
-template<std::derived_from<concepts::random_access_write_device> Stream> auto read_at(Stream & stream, std::uint64_t offset, flat_buffer                &buffer) -> detail::read_at_op<Stream, flat_buffer &>               {return {stream, offset, buffer};}
-template<std::derived_from<concepts::random_access_write_device> Stream> auto read_at(Stream & stream, std::uint64_t offset, multi_buffer               &buffer) -> detail::read_at_op<Stream, multi_buffer &>              {return {stream, offset, buffer};}
-template<std::derived_from<concepts::random_access_write_device> Stream> auto read_at(Stream & stream, std::uint64_t offset, std::string                &buffer) -> detail::read_at_op<Stream, std::string&>                {return {stream, offset, buffer};}
-template<std::derived_from<concepts::random_access_write_device> Stream> auto read_at(Stream & stream, std::uint64_t offset, std::vector<unsigned char> &buffer) -> detail::read_at_op<Stream, std::vector<unsigned char>&> {return {stream, offset, buffer};}
-template<std::derived_from<concepts::random_access_write_device> Stream> auto read_at(Stream & stream, std::uint64_t offset, streambuf                  &buffer) -> detail::read_at_op<Stream, streambuf&>                  {return {stream, offset, buffer};}
+inline auto read_at(concepts::read_stream & stream, std::uint64_t offset, mutable_buffer              buffer) -> detail::read_at_op<mutable_buffer>              {return {stream, offset, buffer};}
+inline auto read_at(concepts::read_stream & stream, std::uint64_t offset, flat_static_buffer_base    &buffer) -> detail::read_at_op<flat_static_buffer_base &>   {return {stream, offset, buffer};}
+inline auto read_at(concepts::read_stream & stream, std::uint64_t offset, static_buffer_base         &buffer) -> detail::read_at_op<static_buffer_base &>        {return {stream, offset, buffer};}
+inline auto read_at(concepts::read_stream & stream, std::uint64_t offset, flat_buffer                &buffer) -> detail::read_at_op<flat_buffer &>               {return {stream, offset, buffer};}
+inline auto read_at(concepts::read_stream & stream, std::uint64_t offset, multi_buffer               &buffer) -> detail::read_at_op<multi_buffer &>              {return {stream, offset, buffer};}
+inline auto read_at(concepts::read_stream & stream, std::uint64_t offset, std::string                &buffer) -> detail::read_at_op<std::string&>                {return {stream, offset, buffer};}
+inline auto read_at(concepts::read_stream & stream, std::uint64_t offset, std::vector<unsigned char> &buffer) -> detail::read_at_op<std::vector<unsigned char>&> {return {stream, offset, buffer};}
+inline auto read_at(concepts::read_stream & stream, std::uint64_t offset, streambuf                  &buffer) -> detail::read_at_op<streambuf&>                  {return {stream, offset, buffer};}
 
-template<std::derived_from<concepts::random_access_write_device> Stream> auto read_at(Stream & stream, std::uint64_t offset, mutable_buffer                buffer, system::error_code & ec) -> detail::read_at_ec_op<Stream, mutable_buffer>                {return {stream, offset, buffer, ec};}
-template<std::derived_from<concepts::random_access_write_device> Stream> auto read_at(Stream & stream, std::uint64_t offset, flat_static_buffer_base    &buffer, system::error_code & ec) -> detail::read_at_ec_op<Stream, flat_static_buffer_base &>   {return {stream, offset, buffer, ec};}
-template<std::derived_from<concepts::random_access_write_device> Stream> auto read_at(Stream & stream, std::uint64_t offset, static_buffer_base         &buffer, system::error_code & ec) -> detail::read_at_ec_op<Stream, static_buffer_base &>        {return {stream, offset, buffer, ec};}
-template<std::derived_from<concepts::random_access_write_device> Stream> auto read_at(Stream & stream, std::uint64_t offset, flat_buffer                &buffer, system::error_code & ec) -> detail::read_at_ec_op<Stream, flat_buffer &>               {return {stream, offset, buffer, ec};}
-template<std::derived_from<concepts::random_access_write_device> Stream> auto read_at(Stream & stream, std::uint64_t offset, multi_buffer               &buffer, system::error_code & ec) -> detail::read_at_ec_op<Stream, multi_buffer &>              {return {stream, offset, buffer, ec};}
-template<std::derived_from<concepts::random_access_write_device> Stream> auto read_at(Stream & stream, std::uint64_t offset, std::string                &buffer, system::error_code & ec) -> detail::read_at_ec_op<Stream, std::string&>                {return {stream, offset, buffer, ec};}
-template<std::derived_from<concepts::random_access_write_device> Stream> auto read_at(Stream & stream, std::uint64_t offset, std::vector<unsigned char> &buffer, system::error_code & ec) -> detail::read_at_ec_op<Stream, std::vector<unsigned char>&> {return {stream, offset, buffer, ec};}
-template<std::derived_from<concepts::random_access_write_device> Stream> auto read_at(Stream & stream, std::uint64_t offset, streambuf                  &buffer, system::error_code & ec) -> detail::read_at_ec_op<Stream, streambuf&>                  {return {stream, offset, buffer, ec};}
+inline auto read_at(concepts::read_stream & stream, std::uint64_t offset, mutable_buffer              buffer, system::error_code & ec) -> detail::read_at_ec_op<mutable_buffer>              {return {stream, offset, buffer, ec};}
+inline auto read_at(concepts::read_stream & stream, std::uint64_t offset, flat_static_buffer_base    &buffer, system::error_code & ec) -> detail::read_at_ec_op<flat_static_buffer_base &>   {return {stream, offset, buffer, ec};}
+inline auto read_at(concepts::read_stream & stream, std::uint64_t offset, static_buffer_base         &buffer, system::error_code & ec) -> detail::read_at_ec_op<static_buffer_base &>        {return {stream, offset, buffer, ec};}
+inline auto read_at(concepts::read_stream & stream, std::uint64_t offset, flat_buffer                &buffer, system::error_code & ec) -> detail::read_at_ec_op<flat_buffer &>               {return {stream, offset, buffer, ec};}
+inline auto read_at(concepts::read_stream & stream, std::uint64_t offset, multi_buffer               &buffer, system::error_code & ec) -> detail::read_at_ec_op<multi_buffer &>              {return {stream, offset, buffer, ec};}
+inline auto read_at(concepts::read_stream & stream, std::uint64_t offset, std::string                &buffer, system::error_code & ec) -> detail::read_at_ec_op<std::string&>                {return {stream, offset, buffer, ec};}
+inline auto read_at(concepts::read_stream & stream, std::uint64_t offset, std::vector<unsigned char> &buffer, system::error_code & ec) -> detail::read_at_ec_op<std::vector<unsigned char>&> {return {stream, offset, buffer, ec};}
+inline auto read_at(concepts::read_stream & stream, std::uint64_t offset, streambuf                  &buffer, system::error_code & ec) -> detail::read_at_ec_op<streambuf&>                  {return {stream, offset, buffer, ec};}
 
-template<std::derived_from<concepts::random_access_write_device> Stream, typename CompletionCondition> auto read_at(Stream & stream, std::uint64_t offset, mutable_buffer                buffer, CompletionCondition completion_condition) -> detail::read_at_completion_op<Stream, mutable_buffer, CompletionCondition>                {return {stream, offset, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::random_access_write_device> Stream, typename CompletionCondition> auto read_at(Stream & stream, std::uint64_t offset, flat_static_buffer_base    &buffer, CompletionCondition completion_condition) -> detail::read_at_completion_op<Stream, flat_static_buffer_base &, CompletionCondition>   {return {stream, offset, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::random_access_write_device> Stream, typename CompletionCondition> auto read_at(Stream & stream, std::uint64_t offset, static_buffer_base         &buffer, CompletionCondition completion_condition) -> detail::read_at_completion_op<Stream, static_buffer_base &, CompletionCondition>        {return {stream, offset, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::random_access_write_device> Stream, typename CompletionCondition> auto read_at(Stream & stream, std::uint64_t offset, flat_buffer                &buffer, CompletionCondition completion_condition) -> detail::read_at_completion_op<Stream, flat_buffer &, CompletionCondition>               {return {stream, offset, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::random_access_write_device> Stream, typename CompletionCondition> auto read_at(Stream & stream, std::uint64_t offset, multi_buffer               &buffer, CompletionCondition completion_condition) -> detail::read_at_completion_op<Stream, multi_buffer &, CompletionCondition>              {return {stream, offset, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::random_access_write_device> Stream, typename CompletionCondition> auto read_at(Stream & stream, std::uint64_t offset, std::string                &buffer, CompletionCondition completion_condition) -> detail::read_at_completion_op<Stream, std::string&, CompletionCondition>                {return {stream, offset, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::random_access_write_device> Stream, typename CompletionCondition> auto read_at(Stream & stream, std::uint64_t offset, std::vector<unsigned char> &buffer, CompletionCondition completion_condition) -> detail::read_at_completion_op<Stream, std::vector<unsigned char>&, CompletionCondition> {return {stream, offset, buffer, std::move(completion_condition)};}
-template<std::derived_from<concepts::random_access_write_device> Stream, typename CompletionCondition> auto read_at(Stream & stream, std::uint64_t offset, streambuf                  &buffer, CompletionCondition completion_condition) -> detail::read_at_completion_op<Stream, streambuf&, CompletionCondition>                  {return {stream, offset, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto read_at(concepts::read_stream & stream, std::uint64_t offset, mutable_buffer              buffer, CompletionCondition completion_condition) -> detail::read_at_completion_op<mutable_buffer, CompletionCondition>              {return {stream, offset, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto read_at(concepts::read_stream & stream, std::uint64_t offset, flat_static_buffer_base    &buffer, CompletionCondition completion_condition) -> detail::read_at_completion_op<flat_static_buffer_base &, CompletionCondition>   {return {stream, offset, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto read_at(concepts::read_stream & stream, std::uint64_t offset, static_buffer_base         &buffer, CompletionCondition completion_condition) -> detail::read_at_completion_op<static_buffer_base &, CompletionCondition>        {return {stream, offset, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto read_at(concepts::read_stream & stream, std::uint64_t offset, flat_buffer                &buffer, CompletionCondition completion_condition) -> detail::read_at_completion_op<flat_buffer &, CompletionCondition>               {return {stream, offset, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto read_at(concepts::read_stream & stream, std::uint64_t offset, multi_buffer               &buffer, CompletionCondition completion_condition) -> detail::read_at_completion_op<multi_buffer &, CompletionCondition>              {return {stream, offset, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto read_at(concepts::read_stream & stream, std::uint64_t offset, std::string                &buffer, CompletionCondition completion_condition) -> detail::read_at_completion_op<std::string&, CompletionCondition>                {return {stream, offset, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto read_at(concepts::read_stream & stream, std::uint64_t offset, std::vector<unsigned char> &buffer, CompletionCondition completion_condition) -> detail::read_at_completion_op<std::vector<unsigned char>&, CompletionCondition> {return {stream, offset, buffer, std::move(completion_condition)};}
+template<typename CompletionCondition> auto read_at(concepts::read_stream & stream, std::uint64_t offset, streambuf                  &buffer, CompletionCondition completion_condition) -> detail::read_at_completion_op<streambuf&, CompletionCondition>                  {return {stream, offset, buffer, std::move(completion_condition)};}
 
-template<std::derived_from<concepts::random_access_write_device> Stream, typename CompletionCondition> auto read_at(Stream & stream, std::uint64_t offset, mutable_buffer                buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_at_completion_ec_op<Stream, mutable_buffer, CompletionCondition>                {return {stream, offset, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::random_access_write_device> Stream, typename CompletionCondition> auto read_at(Stream & stream, std::uint64_t offset, flat_static_buffer_base    &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_at_completion_ec_op<Stream, flat_static_buffer_base &, CompletionCondition>   {return {stream, offset, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::random_access_write_device> Stream, typename CompletionCondition> auto read_at(Stream & stream, std::uint64_t offset, static_buffer_base         &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_at_completion_ec_op<Stream, static_buffer_base &, CompletionCondition>        {return {stream, offset, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::random_access_write_device> Stream, typename CompletionCondition> auto read_at(Stream & stream, std::uint64_t offset, flat_buffer                &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_at_completion_ec_op<Stream, flat_buffer &, CompletionCondition>               {return {stream, offset, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::random_access_write_device> Stream, typename CompletionCondition> auto read_at(Stream & stream, std::uint64_t offset, multi_buffer               &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_at_completion_ec_op<Stream, multi_buffer &, CompletionCondition>              {return {stream, offset, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::random_access_write_device> Stream, typename CompletionCondition> auto read_at(Stream & stream, std::uint64_t offset, std::string                &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_at_completion_ec_op<Stream, std::string&, CompletionCondition>                {return {stream, offset, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::random_access_write_device> Stream, typename CompletionCondition> auto read_at(Stream & stream, std::uint64_t offset, std::vector<unsigned char> &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_at_completion_ec_op<Stream, std::vector<unsigned char>&, CompletionCondition> {return {stream, offset, buffer, std::move(completion_condition), ec};}
-template<std::derived_from<concepts::random_access_write_device> Stream, typename CompletionCondition> auto read_at(Stream & stream, std::uint64_t offset, streambuf                  &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_at_completion_ec_op<Stream, streambuf&, CompletionCondition>                  {return {stream, offset, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto read_at(concepts::read_stream & stream, std::uint64_t offset, mutable_buffer              buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_at_completion_ec_op<mutable_buffer, CompletionCondition>              {return {stream, offset, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto read_at(concepts::read_stream & stream, std::uint64_t offset, flat_static_buffer_base    &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_at_completion_ec_op<flat_static_buffer_base &, CompletionCondition>   {return {stream, offset, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto read_at(concepts::read_stream & stream, std::uint64_t offset, static_buffer_base         &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_at_completion_ec_op<static_buffer_base &, CompletionCondition>        {return {stream, offset, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto read_at(concepts::read_stream & stream, std::uint64_t offset, flat_buffer                &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_at_completion_ec_op<flat_buffer &, CompletionCondition>               {return {stream, offset, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto read_at(concepts::read_stream & stream, std::uint64_t offset, multi_buffer               &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_at_completion_ec_op<multi_buffer &, CompletionCondition>              {return {stream, offset, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto read_at(concepts::read_stream & stream, std::uint64_t offset, std::string                &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_at_completion_ec_op<std::string&, CompletionCondition>                {return {stream, offset, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto read_at(concepts::read_stream & stream, std::uint64_t offset, std::vector<unsigned char> &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_at_completion_ec_op<std::vector<unsigned char>&, CompletionCondition> {return {stream, offset, buffer, std::move(completion_condition), ec};}
+template<typename CompletionCondition> auto read_at(concepts::read_stream & stream, std::uint64_t offset, streambuf                  &buffer, CompletionCondition completion_condition, system::error_code & ec) -> detail::read_at_completion_ec_op<streambuf&, CompletionCondition>                  {return {stream, offset, buffer, std::move(completion_condition), ec};}
 
 
 }

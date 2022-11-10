@@ -61,15 +61,14 @@ std::size_t system_timer::expires_after(const duration& expiry_time) { return im
 auto system_timer::expiry() const -> time_point { return impl_.expiry();}
 
 
-bool system_timer::wait_op_impl_::await_ready(void * p) const
+bool system_timer::expired() const
 {
-  return static_cast<implementation_type*>(p)->expires_from_now().count() < 0;
+  return expires_from_now().count() < 0;
 }
 
-void system_timer::wait_op_impl_::await_suspend(void * p,
-                                                 boost::async::detail::completion_handler<system::error_code> h) const
+void system_timer::async_wait(boost::async::detail::completion_handler<system::error_code> h)
 {
-  return static_cast<implementation_type*>(p)->async_wait(std::move(h));
+  impl_.async_wait(std::move(h));
 }
 
 }

@@ -5,6 +5,7 @@
 
 #include "boost/async/detail/handler.hpp"
 
+#include "doctest.h"
 #include <boost/asio/any_io_executor.hpp>
 #include <boost/asio/post.hpp>
 
@@ -21,4 +22,15 @@ static_assert(boost::asio::detail::has_executor_type<dummy_promise>::value);
 void test(boost::async::detail::completion_handler<> ch)
 {
   boost::asio::post(std::move(ch));
+}
+
+TEST_CASE("testing")
+{
+  int res = 0;
+  boost::async::detail::completion_handler<int> ch{[&](int i ){ res = i;}};
+
+  CHECK(res == 0);
+  ch(42);
+  CHECK(res == 42);
+
 }

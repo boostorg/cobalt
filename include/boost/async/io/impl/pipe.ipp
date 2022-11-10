@@ -9,9 +9,7 @@
 #define BOOST_ASYNC_IO_IMPL_PIPE_IPP
 
 #include <boost/async/io/pipe.hpp>
-#include <boost/async/io/impl/read.hpp>
-#include <boost/async/io/impl/read_until.hpp>
-#include <boost/async/io/impl/write.hpp>
+
 
 namespace boost::async::io
 {
@@ -45,11 +43,17 @@ auto readable_pipe::native_handle() -> native_handle_type { return impl_.native_
 void readable_pipe::cancel() {impl_.cancel();}
 void readable_pipe::cancel(boost::system::error_code &ec) {impl_.cancel(ec);}
 
-void readable_pipe::read_some_op_impl_::await_suspend(
-    void * p, asio::mutable_buffer buffer,
-    boost::async::detail::completion_handler<system::error_code, std::size_t> h) const
+void readable_pipe::async_read_some(asio::mutable_buffer buffer,                     concepts::write_handler  h)
 {
-  return static_cast<implementation_type*>(p)->async_read_some(buffer, std::move(h));
+  impl_.async_read_some(buffer, std::move(h));
+}
+void readable_pipe::async_read_some(static_buffer_base::mutable_buffers_type buffer, concepts::write_handler h)
+{
+  impl_.async_read_some(buffer, std::move(h));
+}
+void readable_pipe::async_read_some(multi_buffer::mutable_buffers_type buffer,       concepts::write_handler h)
+{
+  impl_.async_read_some(buffer, std::move(h));
 }
 
 
@@ -83,11 +87,16 @@ void writable_pipe::cancel() {impl_.cancel();}
 void writable_pipe::cancel(boost::system::error_code &ec) {impl_.cancel(ec);}
 
 
-void writable_pipe::write_some_op_impl_::await_suspend(
-    void * p, asio::const_buffer buffer,
-    boost::async::detail::completion_handler<system::error_code, std::size_t> h) const
+void writable_pipe::async_write_some(
+    asio::const_buffer buffer,
+    boost::async::detail::completion_handler<system::error_code, std::size_t> h)
 {
-  return static_cast<implementation_type*>(p)->async_write_some(buffer, std::move(h));
+  impl_.async_write_some(buffer, std::move(h));
+}
+
+void writable_pipe::async_write_some(prepared_buffers buffer, concepts::write_handler h)
+{
+  impl_.async_write_some(buffer, std::move(h));
 }
 
 void connect_pipe(readable_pipe& read_end, writable_pipe& write_end)
@@ -115,15 +124,6 @@ auto connect_pipe(asio::io_context::executor_type executor, boost::system::error
 
   connect_pipe(read_end, write_end, ec);
   return {std::move(read_end), std::move(write_end)};
-}
-
-
-namespace detail
-{
-
-template struct read_impl<readable_pipe>;
-template struct read_until_impl<readable_pipe>;
-template struct write_impl<writable_pipe>;
 }
 
 

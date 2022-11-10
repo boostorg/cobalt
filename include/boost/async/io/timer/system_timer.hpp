@@ -426,28 +426,14 @@ struct system_timer final : concepts::implements<concepts::timer>
    *
    * @li @c cancellation_type::total
    */
+  void async_wait(boost::async::detail::completion_handler<system::error_code> h) final;
 
-  wait_op_    wait() final
-  {
-    return {&impl_, wait_op_impl};
-  }
 
-  /// @overload wait()
-  wait_op_ec_    wait(system::error_code & ec) final
-  {
-    return {&impl_, ec, wait_op_impl};
-  }
-
+  /// Check if the timer is already expired
+  bool expired() const final;
   /// Get the underlying asio implementation.
   implementation_type & implementation() {return impl_;}
  private:
-  struct wait_op_impl_ final : wait_op_base
-  {
-    bool await_ready(void * p) const final;
-    void await_suspend(void * p, boost::async::detail::completion_handler<system::error_code> h) const final;
-  };
-
-  constexpr static wait_op_impl_ wait_op_impl{};
 
   implementation_type impl_;
 };
