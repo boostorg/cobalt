@@ -2097,8 +2097,6 @@ struct tcp::acceptor final : concepts::implements<concepts::cancellable, concept
     std::exception_ptr error;
     constexpr static bool await_ready() {return false;}
 
-    void async_accept(boost::async::detail::completion_handler<system::error_code> h);
-
     template<typename Promise>
     bool await_suspend(std::coroutine_handle<Promise> h)
     {
@@ -2133,8 +2131,6 @@ struct tcp::acceptor final : concepts::implements<concepts::cancellable, concept
     std::optional<std::tuple<system::error_code>> result;
     std::exception_ptr error;
     constexpr static bool await_ready() {return false;}
-
-    void async_accept(boost::async::detail::completion_handler<system::error_code> h);
 
     template<typename Promise>
     bool await_suspend(std::coroutine_handle<Promise> h)
