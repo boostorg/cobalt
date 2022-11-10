@@ -8,6 +8,8 @@
 #ifndef BOOST_ASYNC_SRC_HPP
 #define BOOST_ASYNC_SRC_HPP
 
+#include <boost/async/impl/channel.ipp>
+#include <boost/async/impl/concurrent_channel.ipp>
 #include <boost/async/impl/this_thread.ipp>
 #include <boost/async/io/timer/impl/deadline_timer.ipp>
 #include <boost/async/io/timer/impl/high_resolution_timer.ipp>

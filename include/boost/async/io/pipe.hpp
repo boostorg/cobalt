@@ -289,7 +289,7 @@ struct readable_pipe final : concepts::implements<concepts::cancellable, concept
  * @e Distinct @e objects: Safe.@n
  * @e Shared @e objects: Unsafe.
  */
-struct writable_pipe final  : concepts::implements<concepts::cancellable, concepts::closable, concepts::write_stream>
+struct writable_pipe final : concepts::implements<concepts::cancellable, concepts::closable, concepts::write_stream>
 {
   /// The underlying asio implementation type.
   typedef asio::basic_writable_pipe<asio::io_context::executor_type> implementation_type;
