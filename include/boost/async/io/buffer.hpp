@@ -47,7 +47,7 @@ using multi_buffer = beast::basic_multi_buffer<container::pmr::polymorphic_alloc
 
 using streambuf = boost::asio::basic_streambuf<container::pmr::polymorphic_allocator<char>>;
 
-using any_const_buffer_range = any_range<const_buffer, boost::forward_traversal_tag>;
+using any_const_buffer_range = any_range<const_buffer, boost::bidirectional_traversal_tag>;
 
 }
 

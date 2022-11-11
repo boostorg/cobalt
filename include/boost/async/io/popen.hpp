@@ -9,6 +9,8 @@
 #define BOOST_ASYNC_IO_POPEN_HPP
 
 #include <boost/process/v2/popen.hpp>
+#include <boost/process/v2/start_dir.hpp>
+#include <boost/process/v2/environment.hpp>
 
 namespace boost::async::io
 {

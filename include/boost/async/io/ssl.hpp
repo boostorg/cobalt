@@ -37,8 +37,8 @@ namespace boost::async::io
  * AsyncReadStream, AsyncWriteStream, Stream, SyncReadStream, SyncWriteStream.
  */
 template <typename Stream>
-struct ssl :
-    concepts::implements<concepts::cancellable, concepts::closable, concepts::stream>,
+struct ssl final :
+    concepts::implements<concepts::stream>,
     asio::ssl::stream_base
 {
   /// The underlying asio implementation type.
@@ -67,7 +67,7 @@ struct ssl :
    */
   template <typename Arg>
   ssl(Arg&& arg, asio::ssl::context& ctx)
-    : next_layer_(BOOST_ASIO_MOVE_CAST(Arg)(arg)), impl_(next_layer_, ctx)
+    : next_layer_(BOOST_ASIO_MOVE_CAST(Arg)(arg)), impl_(next_layer_.implementation(), ctx)
   {
   }
 
@@ -84,7 +84,7 @@ struct ssl :
   template <typename Arg>
   ssl(Arg&& arg, native_handle_type handle)
     : next_layer_(BOOST_ASIO_MOVE_CAST(Arg)(arg)),
-      impl_(next_layer_, handle)
+      impl_(next_layer_.implementation(), handle)
   {
   }
 
@@ -692,8 +692,10 @@ struct ssl :
    */
   void async_shutdown(boost::async::detail::completion_handler<system::error_code> h);
 
-  void async_write_some(const_buffer     buffer, concepts::write_handler h) override;
-  void async_write_some(prepared_buffers buffer, concepts::write_handler h) override;
+
+  void async_write_some(any_const_buffer_range buffer, concepts::write_handler h) override;
+  void async_write_some(const_buffer           buffer, concepts::write_handler h) override;
+  void async_write_some(prepared_buffers       buffer, concepts::write_handler h) override;
   void async_read_some(asio::mutable_buffer buffer,                     concepts::read_handler h) override;
   void async_read_some(static_buffer_base::mutable_buffers_type buffer, concepts::read_handler h) override;
   void async_read_some(multi_buffer::mutable_buffers_type buffer,       concepts::read_handler h) override;
@@ -703,7 +705,7 @@ struct ssl :
 
  private:
   Stream next_layer_;
-  implementation_type impl_{next_layer_};
+  implementation_type impl_{next_layer_.implementation()};
 };
 
 }

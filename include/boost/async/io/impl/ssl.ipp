@@ -41,9 +41,9 @@ void ssl<Stream>::async_shutdown(boost::async::detail::completion_handler<system
 {
   return impl_.async_shutdown(std::move(h));
 }
-
-template<typename Stream> void ssl<Stream>::async_write_some(const_buffer        buffer, concepts::write_handler h) { return impl_.async_write_some(buffer, std::move(h)); }
-template<typename Stream> void ssl<Stream>::async_write_some(prepared_buffers    buffer, concepts::write_handler h) { return impl_.async_write_some(buffer, std::move(h)); }
+template<typename Stream> void ssl<Stream>:: async_write_some(any_const_buffer_range buffer, concepts::write_handler h) { return impl_.async_write_some(buffer, std::move(h)); }
+template<typename Stream> void ssl<Stream>::async_write_some(const_buffer            buffer, concepts::write_handler h) { return impl_.async_write_some(buffer, std::move(h)); }
+template<typename Stream> void ssl<Stream>::async_write_some(prepared_buffers        buffer, concepts::write_handler h) { return impl_.async_write_some(buffer, std::move(h)); }
 template<typename Stream> void ssl<Stream>::async_read_some(asio::mutable_buffer                     buffer, concepts::read_handler h) { return impl_.async_read_some(buffer, std::move(h));}
 template<typename Stream> void ssl<Stream>::async_read_some(static_buffer_base::mutable_buffers_type buffer, concepts::read_handler h) { return impl_.async_read_some(buffer, std::move(h));}
 template<typename Stream> void ssl<Stream>::async_read_some(multi_buffer::mutable_buffers_type       buffer, concepts::read_handler h) { return impl_.async_read_some(buffer, std::move(h));}

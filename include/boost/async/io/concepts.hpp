@@ -897,6 +897,342 @@ struct socket : asio::socket_base
 };
 
 
+
+struct read_message_stream : virtual execution_context
+{
+ protected:
+  template<typename Buffer>
+  struct read_op_
+  {
+    read_message_stream * impl;
+    Buffer &buffer;
+    std::optional<std::tuple<system::error_code, std::size_t>> result;
+    std::exception_ptr error;
+
+    constexpr static bool await_ready() {return false;}
+
+    template<typename Promise>
+    bool await_suspend(std::coroutine_handle<Promise> h)
+    {
+      try
+      {
+        impl->read_some(buffer, {h, result});
+        return true;
+      }
+      catch(...)
+      {
+        error = std::current_exception();
+        return false;
+      }
+    }
+
+    std::size_t await_resume()
+    {
+      if (error)
+        std::rethrow_exception(std::exchange(error, nullptr));
+
+      if (std::get<0>(*result))
+        throw system::system_error(std::get<0>(*result));
+
+      return std::get<1>(*result);
+    }
+  };
+
+  template<typename Buffer>
+  struct read_op_ec_
+  {
+    read_message_stream * impl;
+    Buffer &buffer;
+    system::error_code & ec;
+    std::optional<std::tuple<system::error_code, std::size_t>> result;
+    std::exception_ptr error;
+
+    constexpr static bool await_ready() {return false;}
+
+    template<typename Promise>
+    bool await_suspend(std::coroutine_handle<Promise> h)
+    {
+      try
+      {
+        impl->read_some(buffer, ec, {h, result});
+        return true;
+      }
+      catch(...)
+      {
+        error = std::current_exception();
+        return false;
+      }
+    }
+
+    std::size_t await_resume()
+    {
+      if (error)
+        std::rethrow_exception(std::exchange(error, nullptr));
+      ec = std::get<0>(*result);
+      return std::get<1>(*result);
+    }
+  };
+
+ public:
+
+  virtual void async_read(flat_static_buffer_base &buffer,    read_handler rh) = 0;
+  virtual void async_read(static_buffer_base &buffer,         read_handler rh) = 0;
+  virtual void async_read(flat_buffer &buffer,                read_handler rh) = 0;
+  virtual void async_read(multi_buffer &buffer,               read_handler rh) = 0;
+  virtual void async_read(asio::dynamic_string_buffer<char,  std::char_traits<char>, std::allocator<char>> &buffer, read_handler rh) = 0;
+  virtual void async_read(asio::dynamic_vector_buffer<unsigned char, std::allocator<unsigned char>> &buffer,        read_handler rh) = 0;
+  virtual void async_read(streambuf &buffer,                  read_handler rh) = 0;
+
+  template<typename Buffer>
+  [[nodiscard]] read_op_<Buffer> read_some(Buffer &buffer)
+  {
+    return read_op_<Buffer>{this, buffer};
+  }
+  template<typename Buffer>
+  [[nodiscard]] read_op_ec_<Buffer> read_some(Buffer &buffer, system::error_code & ec)
+  {
+    return read_op_ec_<Buffer>{this, buffer, ec};
+  };
+};
+
+template<typename C, typename T, typename A>
+struct read_message_stream::read_op_<std::basic_string<C, T, A>>
+{
+  read_message_stream * impl;
+  asio::dynamic_string_buffer<C, T, A> buffer;
+  std::optional<std::tuple<system::error_code, std::size_t>> result;
+  std::exception_ptr error;
+
+  constexpr static bool await_ready() {return false;}
+
+  template<typename Promise>
+  bool await_suspend(std::coroutine_handle<Promise> h)
+  {
+    try
+    {
+      impl->read_some(buffer, {h, result});
+      return true;
+    }
+    catch(...)
+    {
+      error = std::current_exception();
+      return false;
+    }
+  }
+
+  std::size_t await_resume()
+  {
+    if (error)
+      std::rethrow_exception(std::exchange(error, nullptr));
+
+    if (std::get<0>(*result))
+      throw system::system_error(std::get<0>(*result));
+
+    return std::get<1>(*result);
+  }
+};
+
+template<typename C, typename T, typename A>
+struct read_message_stream::read_op_ec_<std::basic_string<C, T, A>>
+{
+  read_message_stream * impl;
+  asio::dynamic_string_buffer<C, T, A> buffer;
+  system::error_code & ec;
+  std::optional<std::tuple<system::error_code, std::size_t>> result;
+  std::exception_ptr error;
+
+  constexpr static bool await_ready() {return false;}
+
+  template<typename Promise>
+  bool await_suspend(std::coroutine_handle<Promise> h)
+  {
+    try
+    {
+      impl->read_some(buffer, ec, {h, result});
+      return true;
+    }
+    catch(...)
+    {
+      error = std::current_exception();
+      return false;
+    }
+  }
+
+  std::size_t await_resume()
+  {
+    if (error)
+      std::rethrow_exception(std::exchange(error, nullptr));
+    ec = std::get<0>(*result);
+    return std::get<1>(*result);
+  }
+};
+
+
+template<typename T, typename A>
+struct read_message_stream::read_op_<std::vector<T, A>>
+{
+  read_message_stream * impl;
+  asio::dynamic_vector_buffer<T, A> buffer;
+  std::optional<std::tuple<system::error_code, std::size_t>> result;
+  std::exception_ptr error;
+
+  constexpr static bool await_ready() {return false;}
+
+  template<typename Promise>
+  bool await_suspend(std::coroutine_handle<Promise> h)
+  {
+    try
+    {
+      impl->read_some(buffer, {h, result});
+      return true;
+    }
+    catch(...)
+    {
+      error = std::current_exception();
+      return false;
+    }
+  }
+
+  std::size_t await_resume()
+  {
+    if (error)
+      std::rethrow_exception(std::exchange(error, nullptr));
+
+    if (std::get<0>(*result))
+      throw system::system_error(std::get<0>(*result));
+
+    return std::get<1>(*result);
+  }
+};
+
+template<typename T, typename A>
+struct read_message_stream::read_op_ec_<std::vector<T, A>>
+{
+  read_message_stream * impl;
+  asio::dynamic_vector_buffer<T, A> buffer;
+  system::error_code & ec;
+  std::optional<std::tuple<system::error_code, std::size_t>> result;
+  std::exception_ptr error;
+
+  constexpr static bool await_ready() {return false;}
+
+  template<typename Promise>
+  bool await_suspend(std::coroutine_handle<Promise> h)
+  {
+    try
+    {
+      impl->read_some(buffer, ec, {h, result});
+      return true;
+    }
+    catch(...)
+    {
+      error = std::current_exception();
+      return false;
+    }
+  }
+
+  std::size_t await_resume()
+  {
+    if (error)
+      std::rethrow_exception(std::exchange(error, nullptr));
+    ec = std::get<0>(*result);
+    return std::get<1>(*result);
+  }
+};
+
+struct write_message_stream : virtual execution_context
+{
+ protected:
+
+  struct write_some_op_
+  {
+    write_message_stream * impl;
+    asio::const_buffer buffer;
+    std::optional<std::tuple<system::error_code, std::size_t>> result;
+    std::exception_ptr error;
+
+    constexpr static bool await_ready() {return false;}
+
+    template<typename Promise>
+    bool await_suspend(std::coroutine_handle<Promise> h)
+    {
+      try
+      {
+        impl->async_write(buffer, {h, result});
+        return true;
+      }
+      catch(...)
+      {
+        error = std::current_exception();
+        return false;
+      }
+    }
+
+    std::size_t await_resume()
+    {
+      if (error)
+        std::rethrow_exception(std::exchange(error, nullptr));
+
+      if (std::get<0>(*result))
+        throw system::system_error(std::get<0>(*result));
+
+      return std::get<1>(*result);
+    }
+  };
+
+  struct write_some_op_ec_
+  {
+    write_message_stream * impl;
+    asio::const_buffer buffer;
+    system::error_code & ec;
+    std::optional<std::tuple<system::error_code,std::size_t>> result;
+    std::exception_ptr error;
+
+    constexpr static bool await_ready() {return false;}
+
+    template<typename Promise>
+    bool await_suspend(std::coroutine_handle<Promise> h)
+    {
+      try
+      {
+        impl->async_write(buffer, {h, result});
+        return true;
+      }
+      catch(...)
+      {
+        error = std::current_exception();
+        return false;
+      }
+    }
+
+    std::size_t await_resume()
+    {
+      if (error)
+        std::rethrow_exception(std::exchange(error, nullptr));
+      ec = std::get<0>(*result);
+
+      return std::get<1>(*result);
+    }
+  };
+ public:
+
+  [[nodiscard]] write_some_op_    write(asio::const_buffer buffer)
+  {
+    return write_some_op_{this, buffer};
+  }
+  [[nodiscard]] write_some_op_ec_ write(asio::const_buffer buffer, system::error_code & ec)
+  {
+    return  write_some_op_ec_{this, buffer, ec};
+  }
+
+  virtual void async_write(any_const_buffer_range buffer, write_handler h) = 0;
+  virtual void async_write(const_buffer           buffer, write_handler h) = 0;
+  virtual void async_write(prepared_buffers       buffer, write_handler h) = 0;
+};
+
+struct message_stream : read_message_stream, write_message_stream {};
+
+
 template<typename ... Args>
 struct implements : virtual Args ...
 {
