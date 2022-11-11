@@ -10,19 +10,23 @@
 
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/streambuf.hpp>
+#include <boost/beast/core/buffers_prefix.hpp>
+#include <boost/beast/core/buffers_suffix.hpp>
+#include <boost/beast/core/detail/buffers_ref.hpp>
 #include <boost/beast/core/flat_buffer.hpp>
 #include <boost/beast/core/flat_static_buffer.hpp>
 #include <boost/beast/core/multi_buffer.hpp>
 #include <boost/beast/core/static_buffer.hpp>
+#include <boost/beast/http/chunk_encode.hpp>
 
 #include <boost/container/pmr/polymorphic_allocator.hpp>
 
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/detail/consuming_buffers.hpp>
+#include <boost/range/any_range.hpp>
 
 namespace boost::async::io
 {
-
 
 using prepared_buffers =
     asio::detail::prepared_buffers<
@@ -42,6 +46,8 @@ using flat_buffer  = beast::basic_flat_buffer <container::pmr::polymorphic_alloc
 using multi_buffer = beast::basic_multi_buffer<container::pmr::polymorphic_allocator<char>>;
 
 using streambuf = boost::asio::basic_streambuf<container::pmr::polymorphic_allocator<char>>;
+
+using any_const_buffer_range = any_range<const_buffer, boost::forward_traversal_tag>;
 
 }
 

@@ -63,8 +63,9 @@ uint64_t stream_file::seek(int64_t offset, asio::file_base::seek_basis whence)  
 uint64_t stream_file::seek(int64_t offset, asio::file_base::seek_basis whence, boost::system::error_code& ec) { return impl_.seek(offset, whence, ec); }
 
 
-void stream_file::async_write_some(asio::const_buffer buffer, concepts::write_handler h) { return impl_.async_write_some(buffer, std::move(h)); }
-void stream_file::async_write_some(prepared_buffers   buffer, concepts::write_handler h) { return impl_.async_write_some(buffer, std::move(h)); }
+void stream_file::async_write_some(asio::const_buffer buffer,     concepts::write_handler h) { return impl_.async_write_some(buffer, std::move(h)); }
+void stream_file::async_write_some(prepared_buffers   buffer,     concepts::write_handler h) { return impl_.async_write_some(buffer, std::move(h)); }
+void stream_file::async_write_some(any_const_buffer_range buffer, concepts::write_handler h) { return impl_.async_write_some(buffer, std::move(h));}
 
 
 void stream_file::async_read_some(asio::mutable_buffer buffer,                     concepts::write_handler h) { return impl_.async_read_some(buffer, std::move(h)); }

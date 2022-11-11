@@ -661,6 +661,7 @@ struct stream_file final : concepts::implements<concepts::cancellable, concepts:
    */
   void async_write_some(asio::const_buffer, concepts::write_handler h) override;
   void async_write_some(prepared_buffers,   concepts::write_handler h) override;
+  void async_write_some(any_const_buffer_range buffer, concepts::write_handler h) override;
 
   /// Start an asynchronous read.
   /**

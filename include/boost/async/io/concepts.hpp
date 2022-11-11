@@ -8,11 +8,13 @@
 #ifndef BOOST_ASYNC_IO_CONCEPTS_HPP
 #define BOOST_ASYNC_IO_CONCEPTS_HPP
 
-#include <boost/system/error_code.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/socket_base.hpp>
 #include <boost/async/io/buffer.hpp>
+#include <boost/async/io/concepts.hpp>
 #include <boost/async/detail/handler.hpp>
+#include <boost/beast/core/stream_traits.hpp>
+#include <boost/system/error_code.hpp>
 
 namespace boost::async::io::concepts
 {
@@ -120,6 +122,8 @@ struct read_stream : virtual execution_context
   };
 
  public:
+  void async_read_some(beast::detail::BufferSequence<asio::mutable_buffer> buffer, read_handler h);
+
   virtual void async_read_some(asio::mutable_buffer buffer,                     read_handler h) = 0;
   virtual void async_read_some(static_buffer_base::mutable_buffers_type buffer, read_handler h) = 0;
   virtual void async_read_some(multi_buffer::mutable_buffers_type buffer,       read_handler h) = 0;
@@ -219,6 +223,7 @@ struct write_stream : virtual execution_context
   {
     return  write_some_op_ec_{this, buffer, ec};
   }
+  virtual void async_write_some(any_const_buffer_range buffer, write_handler h) = 0;
   virtual void async_write_some(const_buffer     buffer, write_handler h) = 0;
   virtual void async_write_some(prepared_buffers buffer, write_handler h) = 0;
 };

@@ -99,6 +99,12 @@ void writable_pipe::async_write_some(prepared_buffers buffer, concepts::write_ha
   impl_.async_write_some(buffer, std::move(h));
 }
 
+void writable_pipe::async_write_some(any_const_buffer_range buffer, concepts::write_handler h)
+{
+  impl_.async_write_some(buffer, std::move(h));
+}
+
+
 void connect_pipe(readable_pipe& read_end, writable_pipe& write_end)
 {
   asio::connect_pipe(read_end.implementation(), write_end.implementation());

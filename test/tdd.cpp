@@ -7,6 +7,8 @@
 
 
 #include <boost/asio.hpp>
+#include <boost/async/io/concepts.hpp>
+#include <boost/beast/core/stream_traits.hpp>
 #include <boost/container/pmr/memory_resource.hpp>
 #include <boost/container/pmr/global_resource.hpp>
 #include <boost/container/pmr/polymorphic_allocator.hpp>

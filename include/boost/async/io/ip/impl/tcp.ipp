@@ -151,17 +151,19 @@ void tcp::socket::bind(const endpoint_type& endpoint)                           
 BOOST_ASIO_SYNC_OP_VOID tcp::socket::bind(const endpoint_type& endpoint, boost::system::error_code& ec) { return impl_.bind(endpoint, ec); }
 
 
-void tcp::socket::async_wait(waitable_device::wait_type w, boost::async::detail::completion_handler<system::error_code> h) { return impl_.async_wait(w, std::move(h)); }
-void tcp::socket::async_connect(const endpoint_type& peer_endpoint, boost::async::detail::completion_handler<system::error_code> h){return impl_.async_connect(peer_endpoint, std::move(h));}
-void tcp::socket::async_send(      const_buffer buffer, concepts::write_handler h)                           {return impl_.async_send(      buffer,        std::move(h));}
-void tcp::socket::async_send(      const_buffer buffer, message_flags flags, concepts::write_handler h)      {return impl_.async_send(      buffer, flags, std::move(h));}
-void tcp::socket::async_receive( mutable_buffer buffer, concepts::read_handler h)                            {return impl_.async_receive(   buffer,        std::move(h));}
-void tcp::socket::async_receive( mutable_buffer buffer, message_flags flags, concepts::read_handler h)       {return impl_.async_receive(   buffer, flags, std::move(h));}
-void tcp::socket::async_write_some(const_buffer buffer, concepts::write_handler h)                           {return impl_.async_write_some(buffer,        std::move(h));}
-void tcp::socket::async_write_some(prepared_buffers buffer, concepts::write_handler h)                       {return impl_.async_write_some(buffer,        std::move(h));}
-void tcp::socket::async_read_some(asio::mutable_buffer buffer,                     concepts::read_handler h) {return impl_.async_read_some( buffer,        std::move(h));}
-void tcp::socket::async_read_some(static_buffer_base::mutable_buffers_type buffer, concepts::read_handler h) {return impl_.async_read_some( buffer,        std::move(h));}
-void tcp::socket::async_read_some(multi_buffer::mutable_buffers_type buffer,       concepts::read_handler h) {return impl_.async_read_some( buffer,        std::move(h));}
+void tcp::socket::async_wait(waitable_device::wait_type w, boost::async::detail::completion_handler<system::error_code> h) { impl_.async_wait(w, std::move(h)); }
+void tcp::socket::async_connect(const endpoint_type& peer_endpoint, boost::async::detail::completion_handler<system::error_code> h) { impl_.async_connect(peer_endpoint, std::move(h));}
+void tcp::socket::async_send(      const_buffer buffer, concepts::write_handler h)                           { impl_.async_send(      buffer,        std::move(h));}
+void tcp::socket::async_send(      const_buffer buffer, message_flags flags, concepts::write_handler h)      { impl_.async_send(      buffer, flags, std::move(h));}
+void tcp::socket::async_receive( mutable_buffer buffer, concepts::read_handler h)                            { impl_.async_receive(   buffer,        std::move(h));}
+void tcp::socket::async_receive( mutable_buffer buffer, message_flags flags, concepts::read_handler h)       { impl_.async_receive(   buffer, flags, std::move(h));}
+void tcp::socket::async_write_some(const_buffer buffer, concepts::write_handler h)                           { impl_.async_write_some(buffer,        std::move(h));}
+void tcp::socket::async_write_some(prepared_buffers buffer, concepts::write_handler h)                       { impl_.async_write_some(buffer,        std::move(h));}
+void tcp::socket::async_write_some(any_const_buffer_range buffer, concepts::write_handler h)                 { impl_.async_write_some(buffer,        std::move(h));}
+
+void tcp::socket::async_read_some(asio::mutable_buffer buffer,                     concepts::read_handler h) { impl_.async_read_some( buffer,        std::move(h));}
+void tcp::socket::async_read_some(static_buffer_base::mutable_buffers_type buffer, concepts::read_handler h) { impl_.async_read_some( buffer,        std::move(h));}
+void tcp::socket::async_read_some(multi_buffer::mutable_buffers_type buffer,       concepts::read_handler h) { impl_.async_read_some( buffer,        std::move(h));}
 
 
 

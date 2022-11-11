@@ -446,6 +446,7 @@ struct serial_port final
    */
   void async_write_some(asio::const_buffer buffer, concepts::write_handler h) final;
   void async_write_some(prepared_buffers, concepts::write_handler h) final;
+  void async_write_some(any_const_buffer_range buffer, concepts::write_handler h) final;
 
   /// Start an asynchronous read.
   /**

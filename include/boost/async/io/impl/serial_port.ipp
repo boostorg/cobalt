@@ -107,6 +107,12 @@ void serial_port::async_write_some(prepared_buffers buffer, concepts::write_hand
 {
   impl_.async_write_some(buffer, std::move(h));
 }
+
+void serial_port::async_write_some(any_const_buffer_range buffer, concepts::write_handler h)
+{
+  impl_.async_write_some(buffer, std::move(h));
+}
+
 void serial_port::async_read_some(asio::mutable_buffer buffer,                     concepts::write_handler h)
 {
   impl_.async_read_some(buffer, std::move(h));

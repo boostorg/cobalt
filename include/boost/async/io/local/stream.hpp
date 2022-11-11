@@ -1435,6 +1435,7 @@ struct stream::socket final : concepts::implements<concepts::cancellable, concep
    */
   void async_write_some(const_buffer     buffer, concepts::write_handler h) override;
   void async_write_some(prepared_buffers buffer, concepts::write_handler h) override;
+  void async_write_some(any_const_buffer_range buffer, concepts::write_handler h) override;
 
 
   /// Start an asynchronous read.
