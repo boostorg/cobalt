@@ -31,5 +31,7 @@
 #include <boost/async/io/impl/ssl.ipp>
 #include <boost/async/io/local/impl/datagram.ipp>
 #include <boost/async/io/local/impl/stream.ipp>
+#include <boost/async/impl/process.ipp>
+#include <boost/async/io/impl/popen.ipp>
 
 #endif //BOOST_ASYNC_SRC_HPP
