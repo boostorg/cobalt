@@ -5,7 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/async.hpp>
+#include "boost/async/promise.hpp"
 #include <boost/async/with.hpp>
 
 #include "doctest.h"
@@ -52,12 +52,12 @@ auto tag_invoke(const boost::async::with_exit_tag & wet , finalizer_test & ft)
     return ft.exit(wet.e);
 }
 
-auto ft_test(finalizer_test & ft) -> boost::async::async<void>
+auto ft_test(finalizer_test & ft) -> boost::async::promise<void>
 {
     co_return ;
 }
 
-auto ft_test2(finalizer_test & ft) -> boost::async::async<void> { throw std::runtime_error("foobar") ; }
+auto ft_test2(finalizer_test & ft) -> boost::async::promise<void> { throw std::runtime_error("foobar") ; }
 
 CO_TEST_CASE("finalizer")
 {
@@ -74,7 +74,7 @@ CO_TEST_CASE("finalizer")
 
     finalizer_test f2{co_await asio::this_coro::executor};
 
-    auto ft2 = +[](finalizer_test & ft) -> boost::async::async<void> { throw std::runtime_error("foobar") ; };
+    auto ft2 = +[](finalizer_test & ft) -> boost::async::promise<void> { throw std::runtime_error("foobar") ; };
 
     try
     {

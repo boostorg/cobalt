@@ -3,7 +3,7 @@
 
 TIP: All of the coros discussed in section of the document are lazy.
 
-It is common for other languages or libraries to distinguish generators and tasks and to sub-categorize them into sync and async.
+It is common for other languages or libraries to distinguish generators and tasks and to sub-categorize them into sync and promise.
 This forces particular patterns on the user, which this library will try to avoid, hence the model is one unified type:
 
 [source,cpp]

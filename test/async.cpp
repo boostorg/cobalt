@@ -5,7 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/async.hpp>
+#include "boost/async/promise.hpp"
 #include <boost/async/main.hpp>
 
 #include "doctest.h"
@@ -19,18 +19,18 @@
 
 TEST_SUITE_BEGIN("async");
 
-boost::async::async<void> test0()
+boost::async::promise<void> test0()
 {
     co_return;
 }
-boost::async::async<double> test2(int i)
+boost::async::promise<double> test2(int i)
 {
     co_await test0();
     co_return i;
 }
 
 
-boost::async::async<int> test1(boost::asio::any_io_executor exec)
+boost::async::promise<int> test1(boost::asio::any_io_executor exec)
 {
     co_await test2(42);
     co_await test2(42);

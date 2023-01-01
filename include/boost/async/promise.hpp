@@ -25,7 +25,7 @@ namespace boost::async
 {
 
 template<typename Return>
-struct async;
+struct promise;
 
 namespace detail
 {
@@ -218,9 +218,9 @@ struct async_promise
     using enable_awaitables<async_promise<Return>>::await_transform;
     using enable_async_operation_interpreted::await_transform;
 
-    [[nodiscard]] async<Return> get_return_object()
+    [[nodiscard]] promise<Return> get_return_object()
     {
-        return async<Return>{this};
+        return promise<Return>{this};
     }
 
     mutable asio::cancellation_signal signal;
@@ -280,15 +280,15 @@ struct async_promise
 }
 
 template<typename Return>
-struct [[nodiscard]] async
+struct [[nodiscard]] promise
 {
     using promise_type = detail::async_promise<Return>;
 
-    async(const async &) = delete;
-    async& operator=(const async &) = delete;
+    promise(const promise &) = delete;
+    promise& operator=(const promise &) = delete;
 
-    async(async &&lhs) noexcept = default;
-    async& operator=(async &&) noexcept = default;
+    promise(promise &&lhs) noexcept = default;
+    promise& operator=(promise &&) noexcept = default;
 
     auto operator co_await () {return receiver_.get_awaitable();}
 
@@ -300,7 +300,7 @@ struct [[nodiscard]] async
     template<typename>
     friend struct detail::async_promise;
 
-    async(detail::async_promise<Return> * promise) : receiver_(promise->receiver, promise->signal)
+    promise(detail::async_promise<Return> * promise) : receiver_(promise->receiver, promise->signal)
     {
     }
 
@@ -314,7 +314,7 @@ namespace detail
 struct async_initiate
 {
     template<typename Handler, typename T>
-    void operator()(Handler && h, async<T> a)
+    void operator()(Handler && h, promise<T> a)
     {
         auto & rec = a.receiver_;
         if (rec.done)
@@ -356,7 +356,7 @@ struct async_initiate
     }
 
     template<typename Handler>
-    void operator()(Handler && h, async<void> a)
+    void operator()(Handler && h, promise<void> a)
     {
         auto & rec = a.receiver_;
         if (a.receiver_.done)
@@ -407,7 +407,7 @@ struct async_initiate
 }
 
 template<typename T, typename CompletionToken>
-auto spawn(async<T> && t,
+auto spawn(promise<T> && t,
            CompletionToken&& token)
 {
     using signature = std::conditional_t<std::is_void_v<T>, void(std::exception_ptr), void(std::exception_ptr, T)>;
@@ -419,7 +419,7 @@ auto spawn(async<T> && t,
 template<typename ExecutionContext, typename T, typename CompletionToken>
     requires (std::is_convertible<ExecutionContext&, asio::execution_context&>::value)
 auto spawn(ExecutionContext context,
-           async<T> && t,
+           promise<T> && t,
            CompletionToken&& token BOOST_ASIO_DEFAULT_COMPLETION_TOKEN(typename ExecutionContext::executor_type))
 {
     return spawn(std::move(t), asio::bind_executor(context.get_executor(), std::forward<CompletionToken>(token)));
@@ -428,7 +428,7 @@ auto spawn(ExecutionContext context,
 template<typename Executor, typename T, typename CompletionToken>
     requires (asio::is_executor<Executor>::value || asio::execution::is_executor<Executor>::value)
 auto spawn(Executor executor,
-           async<T> && t,
+           promise<T> && t,
            CompletionToken&& token BOOST_ASIO_DEFAULT_COMPLETION_TOKEN(Executor))
 {
     return spawn(std::move(t), asio::bind_executor(executor, std::forward<CompletionToken>(token)));
