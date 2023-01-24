@@ -40,7 +40,7 @@ struct value_holder
 
     T get_result()
     {
-        return *std::exchange(result, std::nullopt);
+        return std::move(*result);
     }
 
     void return_value(T && ret)
@@ -72,6 +72,12 @@ struct forward_cancellation
     }
 };
 
+inline std::exception_ptr moved_from_exception()
+{
+    static auto ep = std::make_exception_ptr(std::logic_error("async::promise was moved from"));
+    return ep;
+}
+
 template<typename T>
 struct async_receiver : value_holder<T>
 {
@@ -81,7 +87,6 @@ struct async_receiver : value_holder<T>
         exception = std::current_exception();
         set_done();
     }
-
 
     bool done = false;
     std::coroutine_handle<void> awaited_from{nullptr};
@@ -96,7 +101,11 @@ struct async_receiver : value_holder<T>
         : exception(std::move(lhs.exception)), done(lhs.done), awaited_from(lhs.awaited_from),
           reference(lhs.reference), cancel_signal(lhs.cancel_signal)
     {
-        reference = this;
+      if (!lhs.done)
+        lhs.exception = moved_from_exception();
+      lhs.done = true;
+
+      reference = this;
     }
 
     ~async_receiver()
@@ -295,6 +304,24 @@ struct [[nodiscard]] promise
     // Ignore the returns value
     void operator +() const && {}
 
+
+    void cancel(asio::cancellation_type ct = asio::cancellation_type::all)
+    {
+      if (!receiver_.done)
+        receiver_.cancel_signal.emit(ct);
+    }
+
+    bool ready() const  { return receiver_.done; }
+
+    Return get()
+    {
+      if (!ready())
+        boost::throw_exception(std::logic_error("promise not ready"));
+
+      if (receiver_.exception)
+          std::rethrow_exception(receiver_.exception);
+      return receiver_.get_result();
+    }
 
   private:
     template<typename>
