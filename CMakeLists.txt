@@ -25,7 +25,7 @@ option(BOOST_ASYNC_BUILD_INLINE "Configure as if part of the boost source tree" 
 
 
 if(BOOST_ASYNC_IS_ROOT)
-    include(CTest)
+    #include(CTest)
 endif()
 if(NOT BOOST_SUPERPROJECT_VERSION)
     option(BOOST_ASYNC_INSTALL "Install boost::async files" ON)

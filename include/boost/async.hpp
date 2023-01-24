@@ -8,13 +8,13 @@
 #ifndef BOOST_ASYNC_HPP
 #define BOOST_ASYNC_HPP
 
-#include "boost/async/promise.hpp"
-#include <boost/async/channel.hpp>
-#include <boost/async/io.hpp>
 #include <boost/async/main.hpp>
+#include <boost/async/op.hpp>
+#include <boost/async/promise.hpp>
 #include <boost/async/this_coro.hpp>
 #include <boost/async/this_thread.hpp>
 #include <boost/async/thread.hpp>
 #include <boost/async/with.hpp>
+
 #endif //BOOST_ASYNC_HPP
 

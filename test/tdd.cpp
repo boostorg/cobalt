@@ -8,7 +8,7 @@
 
 #include <boost/asio.hpp>
 
-#include <boost/async/async.hpp>
+#include <boost/async/promise.hpp>
 #include <boost/async/main.hpp>
 #include <boost/async/op.hpp>
 

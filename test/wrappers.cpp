@@ -19,7 +19,7 @@ int main()
     auto p = boost::async::detail::post_coroutine(ctx.get_executor(),
                                               boost::asio::bind_allocator(
                                               boost::container::pmr::polymorphic_allocator<void>(&res),
-                                              [&]{ran = true; throw 42;}
+                                              [&]{ran = true;}
                                               )
                                           );
     assert(p);
