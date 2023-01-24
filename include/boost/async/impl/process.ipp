@@ -73,7 +73,7 @@ bool process::running()                                 { return impl_.running()
 bool process::running(system::error_code & ec) noexcept { return impl_.running(ec); };
 
 bool process::is_open() const { return impl_.is_open(); }
-void process::async_wait(detail::completion_handler<system::error_code, boost::process::v2::native_exit_code_type> h)
+void process::async_wait(completion_handler<system::error_code, boost::process::v2::native_exit_code_type> h)
 {
   impl_.async_wait(std::move(h));
 }

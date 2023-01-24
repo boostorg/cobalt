@@ -1030,7 +1030,7 @@ struct stream::socket final : concepts::implements<concepts::cancellable, concep
    */
   BOOST_ASIO_SYNC_OP_VOID bind(const endpoint_type& endpoint, boost::system::error_code& ec);
 
-  void async_connect(const endpoint_type& peer_endpoint, boost::async::detail::completion_handler<system::error_code> h);
+  void async_connect(const endpoint_type& peer_endpoint, boost::async::completion_handler<system::error_code> h);
  private:
   struct connect_op_
   {
@@ -1494,7 +1494,7 @@ struct stream::socket final : concepts::implements<concepts::cancellable, concep
    void async_read_some(static_buffer_base::mutable_buffers_type buffer, concepts::read_handler h) override;
    void async_read_some(multi_buffer::mutable_buffers_type buffer,       concepts::read_handler h) override;
 
-  void async_wait(waitable_device::wait_type wt, boost::async::detail::completion_handler<system::error_code> h) override;
+  void async_wait(waitable_device::wait_type wt, boost::async::completion_handler<system::error_code> h) override;
 
   /// Get the underlying asio implementation.
   implementation_type & implementation() {return impl_;}
@@ -2037,9 +2037,9 @@ struct stream::acceptor final : concepts::implements<concepts::cancellable, conc
    *
    * @li @c cancellation_type::total
    */
-  void async_wait(waitable_device::wait_type w, boost::async::detail::completion_handler<system::error_code> h) override;
+  void async_wait(waitable_device::wait_type w, boost::async::completion_handler<system::error_code> h) override;
 
-  void async_accept(socket & sock, boost::async::detail::completion_handler<system::error_code> h);
+  void async_accept(socket & sock, boost::async::completion_handler<system::error_code> h);
 
  private:
   struct accept_op_
@@ -2133,7 +2133,7 @@ struct stream::acceptor final : concepts::implements<concepts::cancellable, conc
   [[nodiscard]] accept_op_    accept(socket & peer)                          { return accept_op_   {this, peer};}
   [[nodiscard]] accept_op_ec_ accept(socket & peer, system::error_code & ec) { return accept_op_ec_{this, peer, ec}; }
 
-  void async_accept(socket & sock , endpoint_type& peer_endpoint, boost::async::detail::completion_handler<system::error_code> h);
+  void async_accept(socket & sock , endpoint_type& peer_endpoint, boost::async::completion_handler<system::error_code> h);
 
  private:
   struct accept_ep_op_
@@ -2268,7 +2268,7 @@ struct stream::acceptor final : concepts::implements<concepts::cancellable, conc
     return accept_ep_op_ec_{this, peer, peer_endpoint, ec};
   }
 
-  void async_accept(boost::async::detail::completion_handler<system::error_code, socket::implementation_type> h);
+  void async_accept(boost::async::completion_handler<system::error_code, socket::implementation_type> h);
  private:
   struct accept_socket_op_
   {
@@ -2394,7 +2394,7 @@ struct stream::acceptor final : concepts::implements<concepts::cancellable, conc
   [[nodiscard]] accept_socket_op_ec_ accept(boost::system::error_code& ec) { return {this, ec}; }
 
   void async_accept(endpoint_type& peer_endpoint,
-                    boost::async::detail::completion_handler<system::error_code, socket::implementation_type> h);
+                    boost::async::completion_handler<system::error_code, socket::implementation_type> h);
 
  private:
   struct accept_socket_ep_op_

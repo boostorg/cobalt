@@ -73,7 +73,7 @@ template<typename Stream>
 void websocket<Stream>::async_handshake(
     beast::string_view host,
     beast::string_view target,
-    boost::async::detail::completion_handler<system::error_code> h)
+    boost::async::completion_handler<system::error_code> h)
 {
   impl_.async_handshake(host, target, std::move(h));
 }
@@ -81,22 +81,22 @@ void websocket<Stream>::async_handshake(
 template<typename Stream>
 void websocket<Stream>::async_handshake(response_type& res,
     string_view host,
-    string_view target,boost::async::detail::completion_handler<system::error_code> h)
+    string_view target,boost::async::completion_handler<system::error_code> h)
 {
   impl_.async_handshake(res, host, target, std::move(h));
 }
 
-template<typename Stream> void websocket<Stream>::async_accept(boost::async::detail::completion_handler<system::error_code> h)                                               {impl_.async_accept(std::move(h));}
-template<typename Stream> void websocket<Stream>::async_accept(const const_buffer & buffers, boost::async::detail::completion_handler<system::error_code> h)                 {impl_.async_accept(buffers, std::move(h));}
-template<typename Stream> void websocket<Stream>::async_accept(const http::request<http::buffer_body> &msg,  boost::async::detail::completion_handler<system::error_code> h) {impl_.async_accept(msg, std::move(h));}
-template<typename Stream> void websocket<Stream>::async_accept(const http::request<http::empty_body>  &msg,  boost::async::detail::completion_handler<system::error_code> h) {impl_.async_accept(msg, std::move(h));}
-template<typename Stream> void websocket<Stream>::async_accept(const http::request<http::file_body>   &msg,  boost::async::detail::completion_handler<system::error_code> h) {impl_.async_accept(msg, std::move(h));}
-template<typename Stream> void websocket<Stream>::async_accept(const http::request<http::string_body> &msg,  boost::async::detail::completion_handler<system::error_code> h) {impl_.async_accept(msg, std::move(h));}
-template<typename Stream> void websocket<Stream>::async_accept(const http::request<http::vector_body> &msg,  boost::async::detail::completion_handler<system::error_code> h) {impl_.async_accept(msg, std::move(h));}
+template<typename Stream> void websocket<Stream>::async_accept(boost::async::completion_handler<system::error_code> h)                                               {impl_.async_accept(std::move(h));}
+template<typename Stream> void websocket<Stream>::async_accept(const const_buffer & buffers, boost::async::completion_handler<system::error_code> h)                 {impl_.async_accept(buffers, std::move(h));}
+template<typename Stream> void websocket<Stream>::async_accept(const http::request<http::buffer_body> &msg,  boost::async::completion_handler<system::error_code> h) {impl_.async_accept(msg, std::move(h));}
+template<typename Stream> void websocket<Stream>::async_accept(const http::request<http::empty_body>  &msg,  boost::async::completion_handler<system::error_code> h) {impl_.async_accept(msg, std::move(h));}
+template<typename Stream> void websocket<Stream>::async_accept(const http::request<http::file_body>   &msg,  boost::async::completion_handler<system::error_code> h) {impl_.async_accept(msg, std::move(h));}
+template<typename Stream> void websocket<Stream>::async_accept(const http::request<http::string_body> &msg,  boost::async::completion_handler<system::error_code> h) {impl_.async_accept(msg, std::move(h));}
+template<typename Stream> void websocket<Stream>::async_accept(const http::request<http::vector_body> &msg,  boost::async::completion_handler<system::error_code> h) {impl_.async_accept(msg, std::move(h));}
 
-template<typename Stream> void websocket<Stream>::async_close(beast::websocket::close_reason const& cr,   boost::async::detail::completion_handler<system::error_code> h) {impl_.async_close(cr, std::move(h));}
-template<typename Stream> void websocket<Stream>::async_ping( beast::websocket::ping_data const& payload, boost::async::detail::completion_handler<system::error_code> h) {impl_.async_ping(payload, std::move(h));}
-template<typename Stream> void websocket<Stream>::async_pong( beast::websocket::ping_data const& payload, boost::async::detail::completion_handler<system::error_code> h) {impl_.async_pong(payload, std::move(h));}
+template<typename Stream> void websocket<Stream>::async_close(beast::websocket::close_reason const& cr,   boost::async::completion_handler<system::error_code> h) {impl_.async_close(cr, std::move(h));}
+template<typename Stream> void websocket<Stream>::async_ping( beast::websocket::ping_data const& payload, boost::async::completion_handler<system::error_code> h) {impl_.async_ping(payload, std::move(h));}
+template<typename Stream> void websocket<Stream>::async_pong( beast::websocket::ping_data const& payload, boost::async::completion_handler<system::error_code> h) {impl_.async_pong(payload, std::move(h));}
 template<typename Stream> void websocket<Stream>::async_read(flat_static_buffer_base &buffer,    concepts::read_handler rh) {impl_.async_read(buffer, std::move(rh));}
 template<typename Stream> void websocket<Stream>::async_read(static_buffer_base &buffer,         concepts::read_handler rh) {impl_.async_read(buffer, std::move(rh));}
 template<typename Stream> void websocket<Stream>::async_read(flat_buffer &buffer,                concepts::read_handler rh) {impl_.async_read(buffer, std::move(rh));}

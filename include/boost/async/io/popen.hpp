@@ -129,7 +129,7 @@ struct popen : concepts::implements<concepts::stream>
     std::exception_ptr error;
     constexpr static bool await_ready() {return false;}
 
-    void async_accept(boost::async::detail::completion_handler<system::error_code> h);
+    void async_accept(boost::async::completion_handler<system::error_code> h);
 
     template<typename Promise>
     bool await_suspend(std::coroutine_handle<Promise> h)
@@ -165,7 +165,7 @@ struct popen : concepts::implements<concepts::stream>
     std::exception_ptr error;
     constexpr static bool await_ready() {return false;}
 
-    void async_accept(boost::async::detail::completion_handler<system::error_code> h);
+    void async_accept(boost::async::completion_handler<system::error_code> h);
 
     template<typename Promise>
     bool await_suspend(std::coroutine_handle<Promise> h)
@@ -224,7 +224,7 @@ struct popen : concepts::implements<concepts::stream>
   bool is_open() const;
 
   /// Asynchronously wait for the process to exit and deliver the portable exit-code in the completion handler.
-  void async_wait(boost::async::detail::completion_handler<system::error_code, boost::process::v2::native_exit_code_type> h);
+  void async_wait(boost::async::completion_handler<system::error_code, boost::process::v2::native_exit_code_type> h);
 
 
   /// Get the underlying asio implementation.

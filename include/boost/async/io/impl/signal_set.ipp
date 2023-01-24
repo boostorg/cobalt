@@ -61,12 +61,12 @@ void signal_set::cancel()                              {impl_.cancel(); }
 void signal_set::cancel(boost::system::error_code& ec) {impl_.cancel(); }
 
 
-void signal_set::wait_op_::await_resume_impl(boost::async::detail::completion_handler<system::error_code, int> h)
+void signal_set::wait_op_::await_resume_impl(boost::async::completion_handler<system::error_code, int> h)
 {
   return this->impl.async_wait(std::move(h));
 }
 
-void signal_set::wait_op_ec_::await_resume_impl(boost::async::detail::completion_handler<int> h)
+void signal_set::wait_op_ec_::await_resume_impl(boost::async::completion_handler<int> h)
 {
   return this->impl.async_wait(asio::redirect_error(std::move(h), ec));
 }

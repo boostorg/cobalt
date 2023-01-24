@@ -19,8 +19,8 @@
 namespace boost::async::io::concepts
 {
 
-using write_handler = boost::async::detail::completion_handler<system::error_code, std::size_t>;
-using read_handler  = boost::async::detail::completion_handler<system::error_code, std::size_t>;
+using write_handler = boost::async::completion_handler<system::error_code, std::size_t>;
+using read_handler  = boost::async::completion_handler<system::error_code, std::size_t>;
 
 struct closable
 {
@@ -302,7 +302,7 @@ struct timer : virtual execution_context
   };
  public:
 
-  virtual void async_wait(boost::async::detail::completion_handler<system::error_code> h) = 0;
+  virtual void async_wait(boost::async::completion_handler<system::error_code> h) = 0;
   virtual bool expired() const = 0;
 
   [[nodiscard]] wait_op_    wait()                        {return wait_op_{this}; }
@@ -572,7 +572,7 @@ struct waitable_device : virtual execution_context
   };
  public:
 
-  virtual void async_wait(wait_type wt, boost::async::detail::completion_handler<system::error_code> h) = 0;
+  virtual void async_wait(wait_type wt, boost::async::completion_handler<system::error_code> h) = 0;
   [[nodiscard]] wait_op_    wait(wait_type wt)
   {
     return wait_op_{this, wt};

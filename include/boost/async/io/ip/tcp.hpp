@@ -1077,7 +1077,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
    */
   BOOST_ASIO_SYNC_OP_VOID bind(const endpoint_type& endpoint, boost::system::error_code& ec);
 
-  void async_connect(const endpoint_type& peer_endpoint, boost::async::detail::completion_handler<system::error_code> h);
+  void async_connect(const endpoint_type& peer_endpoint, boost::async::completion_handler<system::error_code> h);
  private:
   struct connect_op_
   {
@@ -1541,7 +1541,7 @@ struct tcp::socket final : concepts::implements<concepts::cancellable, concepts:
   void async_read_some(static_buffer_base::mutable_buffers_type buffer, concepts::read_handler h) override;
   void async_read_some(multi_buffer::mutable_buffers_type buffer,       concepts::read_handler h) override;
 
-  void async_wait(waitable_device::wait_type wt, boost::async::detail::completion_handler<system::error_code> h) override;
+  void async_wait(waitable_device::wait_type wt, boost::async::completion_handler<system::error_code> h) override;
 
   /// Get the underlying asio implementation.
   implementation_type & implementation() {return impl_;}
@@ -2084,9 +2084,9 @@ struct tcp::acceptor final : concepts::implements<concepts::cancellable, concept
    *
    * @li @c cancellation_type::total
    */
-  void async_wait(waitable_device::wait_type w, boost::async::detail::completion_handler<system::error_code> h) override;
+  void async_wait(waitable_device::wait_type w, boost::async::completion_handler<system::error_code> h) override;
 
-  void async_accept(socket & sock, boost::async::detail::completion_handler<system::error_code> h);
+  void async_accept(socket & sock, boost::async::completion_handler<system::error_code> h);
 
  private:
   struct accept_op_
@@ -2180,7 +2180,7 @@ struct tcp::acceptor final : concepts::implements<concepts::cancellable, concept
   [[nodiscard]] accept_op_    accept(socket & peer)                          { return accept_op_   {this, peer};}
   [[nodiscard]] accept_op_ec_ accept(socket & peer, system::error_code & ec) { return accept_op_ec_{this, peer, ec}; }
 
-  void async_accept(socket & sock , endpoint_type& peer_endpoint, boost::async::detail::completion_handler<system::error_code> h);
+  void async_accept(socket & sock , endpoint_type& peer_endpoint, boost::async::completion_handler<system::error_code> h);
 
  private:
   struct accept_ep_op_
@@ -2315,7 +2315,7 @@ struct tcp::acceptor final : concepts::implements<concepts::cancellable, concept
     return accept_ep_op_ec_{this, peer, peer_endpoint, ec};
   }
 
-  void async_accept(boost::async::detail::completion_handler<system::error_code, socket::implementation_type> h);
+  void async_accept(boost::async::completion_handler<system::error_code, socket::implementation_type> h);
  private:
   struct accept_socket_op_
   {
@@ -2441,7 +2441,7 @@ struct tcp::acceptor final : concepts::implements<concepts::cancellable, concept
   [[nodiscard]] accept_socket_op_ec_ accept(boost::system::error_code& ec) { return {this, ec}; }
 
   void async_accept(endpoint_type& peer_endpoint,
-                    boost::async::detail::completion_handler<system::error_code, socket::implementation_type> h);
+                    boost::async::completion_handler<system::error_code, socket::implementation_type> h);
 
  private:
   struct accept_socket_ep_op_
@@ -3368,7 +3368,7 @@ struct tcp::resolver : concepts::implements<concepts::cancellable, concepts::clo
    */
   void async_resolve(asio::string_view host,
                      asio::string_view service,
-                     boost::async::detail::completion_handler<system::error_code, results_type> h);
+                     boost::async::completion_handler<system::error_code, results_type> h);
 
   /// Asynchronously perform forward resolution of a query to a list of entries.
   /**
@@ -3426,7 +3426,7 @@ struct tcp::resolver : concepts::implements<concepts::cancellable, concepts::clo
   void async_resolve(asio::string_view host,
                      asio::string_view  service,
                      resolver_base::flags resolve_flags,
-                     boost::async::detail::completion_handler<system::error_code, results_type> h);
+                     boost::async::completion_handler<system::error_code, results_type> h);
 
   /// Asynchronously perform forward resolution of a query to a list of entries.
   /**
@@ -3481,7 +3481,7 @@ struct tcp::resolver : concepts::implements<concepts::cancellable, concepts::clo
    */
   void async_resolve(const protocol_type& protocol,
                      asio::string_view host, asio::string_view service,
-                     boost::async::detail::completion_handler<system::error_code, results_type> h);
+                     boost::async::completion_handler<system::error_code, results_type> h);
   /// Asynchronously perform forward resolution of a query to a list of entries.
   /**
    * This function is used to resolve host and service names into a list of
@@ -3542,7 +3542,7 @@ struct tcp::resolver : concepts::implements<concepts::cancellable, concepts::clo
                      asio::string_view host,
                      asio::string_view service,
                      resolver_base::flags resolve_flags,
-                     boost::async::detail::completion_handler<system::error_code, results_type> h);
+                     boost::async::completion_handler<system::error_code, results_type> h);
 
  private:
   struct resolve_ep_op_
@@ -3678,7 +3678,7 @@ struct tcp::resolver : concepts::implements<concepts::cancellable, concepts::clo
    * @code void(boost::system::error_code, results_type) @endcode
    */
   void async_resolve(const endpoint_type& e,
-                     boost::async::detail::completion_handler<system::error_code, results_type> h);
+                     boost::async::completion_handler<system::error_code, results_type> h);
 
   /// Get the underlying asio implementation.
   implementation_type & implementation() {return impl_;}

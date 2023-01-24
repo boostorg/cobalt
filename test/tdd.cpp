@@ -7,76 +7,78 @@
 
 
 #include <boost/asio.hpp>
-#include <boost/async/io/concepts.hpp>
-#include <boost/beast/core/stream_traits.hpp>
-#include <boost/container/pmr/memory_resource.hpp>
-#include <boost/container/pmr/global_resource.hpp>
-#include <boost/container/pmr/polymorphic_allocator.hpp>
-#include <boost/container/pmr/unsynchronized_pool_resource.hpp>
+
+#include <boost/async/async.hpp>
+#include <boost/async/main.hpp>
+#include <boost/async/op.hpp>
 
 using namespace boost;
 
-struct async_tester
+template<typename Timer>
+struct wait_op : async::enable_op<wait_op<Timer>>
 {
-  async_tester(asio::any_io_executor exec) : inp{exec, STDIN_FILENO} {}
+  Timer & tim;
 
-  asio::posix::stream_descriptor inp;
+  wait_op(Timer & tim) : tim(tim) {}
 
-  using executor_type = asio::any_io_executor;
-
-  void async_read_some(
-      asio::mutable_buffer buf,
-      asio::any_completion_handler<void(system::error_code, std::size_t)> h)
+  bool ready(system::error_code & ) { return tim.expiry() < Timer::clock_type::now();}
+  void initiate(async::completion_handler<system::error_code> complete)
   {
-    inp.async_read_some(buf, std::move(h));
+    tim.async_wait(std::move(complete));
   }
 };
 
-/*
-do_allocate: 288 8
-asdasd
-do_allocate: 0x612000000040 288 8
-do_allocate: 288 8
-12345678901234567890
-do_allocate: 0x6120000001c0 288 8
-do_allocate: 288 8
- */
-
-auto res = boost::container::pmr::get_default_resource();
-
-struct memory_res : boost::container::pmr::memory_resource
+template<typename Timer>
+struct wait_ec_op
 {
-  memory_res() = default;
-  void* do_allocate(std::size_t bytes, std::size_t alignment)
+  Timer & tim;
+  system::error_code &ec;
+
+  bool ready() { return tim.expires() < Timer::clock_type::now();}
+  void initiate(async::completion_handler<> complete)
   {
-    printf("do_allocate: %lu %lu\n", bytes, alignment);
-    return res->allocate(bytes, alignment);
-  }
-  void do_deallocate(void* p, std::size_t bytes, std::size_t alignment)
-  {
-    printf("do_allocate: %p %lu %lu\n", p, bytes, alignment);
-    return res->deallocate(p, bytes, alignment);
-  }
-  bool do_is_equal(const memory_resource& other) const BOOST_NOEXCEPT
-  {
-    return res->is_equal(other);
+    tim.async_wait(asio::redirect_error(std::move(complete), ec));
   }
 };
 
-template<typename CompletionToken>
-void test(async_tester & at, asio::mutable_buffer mb, CompletionToken && token)
+template<typename Socket>
+struct read_op
 {
-  asio::async_initiate<CompletionToken, void(system::error_code, std::size_t)>(
-      [](auto h, async_tester & at, asio::mutable_buffer mb)
-      {
-        at.async_read_some(mb, std::move(h));
-      }, token, at, mb);
-}
+  Socket & sock;
 
-int main(int, char**)
+  asio::mutable_buffer buffer;
+
+  void initiate(async::completion_handler<system::error_code> complete)
+  {
+    sock.async_read_some(std::move(complete));
+  }
+};
+
+template<typename Channel, typename ... Args>
+struct channel_receive_op
 {
-  boost::asio::detail::prepared_buffers<boost::asio::const_buffer, 64ul> pb;
-  printf("SIZE %d\n", pb.max_buffers);
+  Channel & chan;
 
-  return 0;
+  void ready(async::handler<system::error_code> complete)
+  {
+    return chan.try_receive(std::move(complete));
+  }
+  void initiate(async::completion_handler<system::error_code> complete)
+  {
+    chan.async_receive(std::move(complete));
+  }
+};
+
+
+async::main co_main(int argc, char * argv[])
+{
+  // co_await (foo{}, 42);
+  asio::steady_timer  tim{co_await asio::this_coro::executor};
+  co_await tim.async_wait(asio::deferred);
+  using wait_type = decltype(wait_op{tim});
+  static_assert(async::detail::awaitable<wait_type>);
+
+  co_await wait_op{tim};
+
+  co_return 0;
 }

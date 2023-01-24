@@ -190,7 +190,7 @@ struct concurrent_channel
   }
 
   bool   try_receive(std::optional<std::tuple<system::error_code, T>> &  result);
-  void async_receive(boost::async::detail::completion_handler<system::error_code, T> h);
+  void async_receive(boost::async::completion_handler<system::error_code, T> h);
 
  protected:
 
@@ -270,7 +270,7 @@ struct concurrent_channel
   [[nodiscard]] receive_op_ec_ receive(system::error_code &ec) {return {this, ec};}
 
   bool   try_send(T && value);
-  void async_send(T && value, boost::async::detail::completion_handler<system::error_code> h);
+  void async_send(T && value, boost::async::completion_handler<system::error_code> h);
 
  private:
 
@@ -368,7 +368,7 @@ bool concurrent_channel<T>::  try_receive(std::optional<std::tuple<system::error
 }
 
 template<typename T>
-void concurrent_channel<T>::async_receive(boost::async::detail::completion_handler<system::error_code, T> h)
+void concurrent_channel<T>::async_receive(boost::async::completion_handler<system::error_code, T> h)
 {
   impl_.async_receive(std::move(h));
 }
@@ -380,7 +380,7 @@ bool concurrent_channel<T>::  try_send(T && value)
 }
 
 template<typename T>
-void concurrent_channel<T>::async_send(T && value, boost::async::detail::completion_handler<system::error_code> h)
+void concurrent_channel<T>::async_send(T && value, boost::async::completion_handler<system::error_code> h)
 {
   impl_.async_send(system::error_code(), std::move(value), std::move(h));
 }
@@ -498,7 +498,7 @@ struct concurrent_channel<void>
   }
 
   bool   try_receive(std::optional<std::tuple<system::error_code>> &  result);
-  void async_receive(boost::async::detail::completion_handler<system::error_code> h);
+  void async_receive(boost::async::completion_handler<system::error_code> h);
 
  protected:
 
@@ -574,7 +574,7 @@ struct concurrent_channel<void>
   [[nodiscard]] receive_op_ec_ receive(system::error_code &ec) {return {this, ec};}
 
   bool   try_send();
-  void async_send(boost::async::detail::completion_handler<system::error_code> h);
+  void async_send(boost::async::completion_handler<system::error_code> h);
 
  private:
 

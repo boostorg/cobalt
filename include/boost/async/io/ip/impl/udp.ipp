@@ -151,8 +151,8 @@ void udp::socket::bind(const endpoint_type& endpoint)                           
 BOOST_ASIO_SYNC_OP_VOID udp::socket::bind(const endpoint_type& endpoint, boost::system::error_code& ec) { return impl_.bind(endpoint, ec); }
 
 
-void udp::socket::async_wait(waitable_device::wait_type w, boost::async::detail::completion_handler<system::error_code> h) { return impl_.async_wait(w, std::move(h)); }
-void udp::socket::async_connect(const endpoint_type& peer_endpoint, boost::async::detail::completion_handler<system::error_code> h){return impl_.async_connect(peer_endpoint, std::move(h));}
+void udp::socket::async_wait(waitable_device::wait_type w, boost::async::completion_handler<system::error_code> h) { return impl_.async_wait(w, std::move(h)); }
+void udp::socket::async_connect(const endpoint_type& peer_endpoint, boost::async::completion_handler<system::error_code> h){return impl_.async_connect(peer_endpoint, std::move(h));}
 void udp::socket::async_send(      const_buffer buffer, concepts::write_handler h)                           {return impl_.async_send(      buffer,        std::move(h));}
 void udp::socket::async_send(      const_buffer buffer, message_flags flags, concepts::write_handler h)      {return impl_.async_send(      buffer, flags, std::move(h));}
 void udp::socket::async_receive( mutable_buffer buffer, concepts::read_handler h)                            {return impl_.async_receive(   buffer,        std::move(h));}
@@ -176,21 +176,21 @@ auto udp::resolver::get_executor() noexcept  -> executor_type { return impl_.get
 void udp::resolver::cancel() { impl_.cancel(); }
 
 void udp::resolver::async_resolve(asio::string_view host, asio::string_view service,
-                   boost::async::detail::completion_handler<system::error_code, results_type> h)
+                   boost::async::completion_handler<system::error_code, results_type> h)
 {
   impl_.async_resolve(host, service, std::move(h));
 }
 
 void udp::resolver::async_resolve(asio::string_view host, asio::string_view  service,
                    resolver_base::flags resolve_flags,
-                   boost::async::detail::completion_handler<system::error_code, results_type> h)
+                   boost::async::completion_handler<system::error_code, results_type> h)
 {
   impl_.async_resolve(host, service, resolve_flags, std::move(h));
 }
 
 void udp::resolver::async_resolve(const protocol_type& protocol,
                    asio::string_view host, asio::string_view service,
-                   boost::async::detail::completion_handler<system::error_code, results_type> h)
+                   boost::async::completion_handler<system::error_code, results_type> h)
 {
   impl_.async_resolve(protocol, host, service, std::move(h));
 }
@@ -199,12 +199,12 @@ void udp::resolver::async_resolve(const protocol_type& protocol,
                    asio::string_view host,
                    asio::string_view service,
                    resolver_base::flags resolve_flags,
-                   boost::async::detail::completion_handler<system::error_code, results_type> h)
+                   boost::async::completion_handler<system::error_code, results_type> h)
 {
   impl_.async_resolve(protocol, host, service, resolve_flags, std::move(h));
 }
 void udp::resolver::async_resolve(const endpoint_type& e,
-                   boost::async::detail::completion_handler<system::error_code, results_type> h)
+                   boost::async::completion_handler<system::error_code, results_type> h)
 {
   impl_.async_resolve(e, std::move(h));
 }

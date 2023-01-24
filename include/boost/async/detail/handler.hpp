@@ -14,9 +14,12 @@
 #include <boost/container/pmr/memory_resource.hpp>
 #include <optional>
 
-namespace boost::async::detail
+namespace boost::async
 {
-    
+
+namespace detail
+{
+
 struct completion_handler_base
 {
   using cancellation_slot_type = asio::cancellation_slot;
@@ -97,30 +100,33 @@ struct completion_handler_wrapper
 
 };
 
+}
+
+
 template<typename ... Args>
-struct completion_handler : completion_handler_base
+struct handler
 {
-    std::unique_ptr<void, coro_deleter<void>> self;
-    std::optional<std::tuple<Args...>> &result;
+  void operator()(Args ... args)
+  {
+    result.emplace(static_cast<Args>(args)...);
+  }
+  handler(std::optional<std::tuple<Args...>> &result) : result(result) {}
+ private:
+  std::optional<std::tuple<Args...>> &result;
+};
 
-    void operator()(Args ... args)
-    {
-        if (notify_suspended_impl)
-            notify_suspended_impl(self.get());
+template<typename ... Args>
+handler(std::optional<std::tuple<Args...>> &result) -> handler<Args...>;
 
-        result.emplace(std::move(args)...);
-        auto p = this->self.release();
-        std::coroutine_handle<void>::from_address(p).resume();
-    }
-
-    void  (*notify_suspended_impl)(void*) = nullptr;
-
+template<typename ... Args>
+struct completion_handler : detail::completion_handler_base
+{
     completion_handler(completion_handler && ) = default;
 
     template<typename Promise>
     completion_handler(std::coroutine_handle<Promise> h, std::optional<std::tuple<Args...>> &result)
             : completion_handler_base(h),
-              self(h.address(), coro_deleter<void>{h}), result(result)
+              self(h.address(), detail::coro_deleter<void>{h}), result(result)
 
     {
         if constexpr (requires (Promise & p) {p.notify_suspended();})
@@ -128,17 +134,36 @@ struct completion_handler : completion_handler_base
     }
 
     template<typename Handler>
-    completion_handler(completion_handler_wrapper<Handler, Args...> w)
+    completion_handler(detail::completion_handler_wrapper<Handler, Args...> w)
             : completion_handler(w.promise, w.promise.promise().res)
     {}
 
     template<std::invocable<Args...> CompletionHandler>
     completion_handler(CompletionHandler && ch)
-      : completion_handler(completion_handler_wrapper<std::decay_t<CompletionHandler>, Args...>::run(std::forward<CompletionHandler>(ch)))
+      : completion_handler(detail::completion_handler_wrapper<std::decay_t<CompletionHandler>, Args...>::run(std::forward<CompletionHandler>(ch)))
     {
 
     }
+    void operator()(Args ... args)
+    {
+        if (notify_suspended_impl)
+            notify_suspended_impl(self.get());
+
+        result.emplace(std::move(args)...);
+        BOOST_ASSERT(this->self != nullptr);
+        auto p = this->self.release();
+        std::coroutine_handle<void>::from_address(p).resume();
+    }
+    using result_type = std::optional<std::tuple<Args...>>;
+ private:
+    std::unique_ptr<void, detail::coro_deleter<void>> self;
+    std::optional<std::tuple<Args...>> &result;
+
+
+    void  (*notify_suspended_impl)(void*) = nullptr;
 };
+
+
 
 inline void interpret_result(std::tuple<> && args)
 {
@@ -200,6 +225,7 @@ auto interpret_result(std::tuple<system::error_code, Arg> && args)
         throw system::system_error(std::get<0>(args));
     return std::get<1>(std::move(args));
 }
+
 
 }
 

@@ -62,7 +62,7 @@ bool deadline_timer::expired() const
   return expires_from_now().total_nanoseconds() < 0ll;
 }
 
-void deadline_timer::async_wait(boost::async::detail::completion_handler<system::error_code> h)
+void deadline_timer::async_wait(boost::async::completion_handler<system::error_code> h)
 {
   impl_.async_wait(std::move(h));
 }

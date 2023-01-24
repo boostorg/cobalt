@@ -151,8 +151,8 @@ void icmp::socket::bind(const endpoint_type& endpoint)                          
 BOOST_ASIO_SYNC_OP_VOID icmp::socket::bind(const endpoint_type& endpoint, boost::system::error_code& ec) { return impl_.bind(endpoint, ec); }
 
 
-void icmp::socket::async_wait(waitable_device::wait_type w, boost::async::detail::completion_handler<system::error_code> h) { return impl_.async_wait(w, std::move(h)); }
-void icmp::socket::async_connect(const endpoint_type& peer_endpoint, boost::async::detail::completion_handler<system::error_code> h){return impl_.async_connect(peer_endpoint, std::move(h));}
+void icmp::socket::async_wait(waitable_device::wait_type w, boost::async::completion_handler<system::error_code> h) { return impl_.async_wait(w, std::move(h)); }
+void icmp::socket::async_connect(const endpoint_type& peer_endpoint, boost::async::completion_handler<system::error_code> h){return impl_.async_connect(peer_endpoint, std::move(h));}
 void icmp::socket::async_send(      const_buffer buffer, concepts::write_handler h)                           {return impl_.async_send(      buffer,        std::move(h));}
 void icmp::socket::async_send(      const_buffer buffer, message_flags flags, concepts::write_handler h)      {return impl_.async_send(      buffer, flags, std::move(h));}
 void icmp::socket::async_receive( mutable_buffer buffer, concepts::read_handler h)                            {return impl_.async_receive(   buffer,        std::move(h));}
@@ -176,21 +176,21 @@ auto icmp::resolver::get_executor() noexcept  -> executor_type { return impl_.ge
 void icmp::resolver::cancel() { impl_.cancel(); }
 
 void icmp::resolver::async_resolve(asio::string_view host, asio::string_view service,
-                   boost::async::detail::completion_handler<system::error_code, results_type> h)
+                   boost::async::completion_handler<system::error_code, results_type> h)
 {
   impl_.async_resolve(host, service, std::move(h));
 }
 
 void icmp::resolver::async_resolve(asio::string_view host, asio::string_view  service,
                    resolver_base::flags resolve_flags,
-                   boost::async::detail::completion_handler<system::error_code, results_type> h)
+                   boost::async::completion_handler<system::error_code, results_type> h)
 {
   impl_.async_resolve(host, service, resolve_flags, std::move(h));
 }
 
 void icmp::resolver::async_resolve(const protocol_type& protocol,
                    asio::string_view host, asio::string_view service,
-                   boost::async::detail::completion_handler<system::error_code, results_type> h)
+                   boost::async::completion_handler<system::error_code, results_type> h)
 {
   impl_.async_resolve(protocol, host, service, std::move(h));
 }
@@ -199,12 +199,12 @@ void icmp::resolver::async_resolve(const protocol_type& protocol,
                    asio::string_view host,
                    asio::string_view service,
                    resolver_base::flags resolve_flags,
-                   boost::async::detail::completion_handler<system::error_code, results_type> h)
+                   boost::async::completion_handler<system::error_code, results_type> h)
 {
   impl_.async_resolve(protocol, host, service, resolve_flags, std::move(h));
 }
 void icmp::resolver::async_resolve(const endpoint_type& e,
-                   boost::async::detail::completion_handler<system::error_code, results_type> h)
+                   boost::async::completion_handler<system::error_code, results_type> h)
 {
   impl_.async_resolve(e, std::move(h));
 }

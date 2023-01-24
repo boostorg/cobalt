@@ -11,4 +11,4 @@ target_link_libraries(main       Boost::container Boost::filesystem Boost::atomi
 target_link_libraries(unit_tests Boost::container Boost::filesystem Boost::atomic uring OpenSSL::SSL)
 
 add_executable(tdd tdd.cpp)
-target_link_libraries(tdd Boost::container)
+target_link_libraries(tdd Boost::container Boost::async uring OpenSSL::SSL)

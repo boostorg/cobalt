@@ -982,7 +982,7 @@ struct websocket final :
   void async_handshake(
       beast::string_view host,
       beast::string_view target,
-      boost::async::detail::completion_handler<system::error_code> h);
+      boost::async::completion_handler<system::error_code> h);
 
   /** Perform the WebSocket handshake asynchronously in the client role.
 
@@ -1061,7 +1061,7 @@ struct websocket final :
   void async_handshake(
       response_type& res,
       string_view host,
-      string_view target,boost::async::detail::completion_handler<system::error_code> h);
+      string_view target,boost::async::completion_handler<system::error_code> h);
 
   //--------------------------------------------------------------------------
   //
@@ -1579,7 +1579,7 @@ struct websocket final :
       @see
       @li <a href="https://tools.ietf.org/html/rfc6455#section-4.2">Websocket Opening Handshake Server Requirements (RFC6455)</a>
   */
-  void async_accept(boost::async::detail::completion_handler<system::error_code> h);
+  void async_accept(boost::async::completion_handler<system::error_code> h);
 
   /** Perform the WebSocket handshake asynchronously in the server role.
 
@@ -1638,7 +1638,7 @@ struct websocket final :
       @see
       @li <a href="https://tools.ietf.org/html/rfc6455#section-4.2">Websocket Opening Handshake Server Requirements (RFC6455)</a>
   */
-  void async_accept(const const_buffer & buffers, boost::async::detail::completion_handler<system::error_code> h);
+  void async_accept(const const_buffer & buffers, boost::async::completion_handler<system::error_code> h);
 
   /** Perform the WebSocket handshake asynchronously in the server role.
 
@@ -1687,11 +1687,11 @@ struct websocket final :
       @see
       @li <a href="https://tools.ietf.org/html/rfc6455#section-4.2">Websocket Opening Handshake Server Requirements (RFC6455)</a>
   */
-  void async_accept(const http::request<http::buffer_body> &msg,  boost::async::detail::completion_handler<system::error_code> h);
-  void async_accept(const http::request<http::empty_body>  &msg,  boost::async::detail::completion_handler<system::error_code> h);
-  void async_accept(const http::request<http::file_body>   &msg,  boost::async::detail::completion_handler<system::error_code> h);
-  void async_accept(const http::request<http::string_body> &msg,  boost::async::detail::completion_handler<system::error_code> h);
-  void async_accept(const http::request<http::vector_body> &msg,  boost::async::detail::completion_handler<system::error_code> h);
+  void async_accept(const http::request<http::buffer_body> &msg,  boost::async::completion_handler<system::error_code> h);
+  void async_accept(const http::request<http::empty_body>  &msg,  boost::async::completion_handler<system::error_code> h);
+  void async_accept(const http::request<http::file_body>   &msg,  boost::async::completion_handler<system::error_code> h);
+  void async_accept(const http::request<http::string_body> &msg,  boost::async::completion_handler<system::error_code> h);
+  void async_accept(const http::request<http::vector_body> &msg,  boost::async::completion_handler<system::error_code> h);
 
   //--------------------------------------------------------------------------
   //
@@ -1907,7 +1907,7 @@ struct websocket final :
   */
   void async_close(
       beast::websocket::close_reason const& cr,
-      boost::async::detail::completion_handler<system::error_code> h);
+      boost::async::completion_handler<system::error_code> h);
 
   //--------------------------------------------------------------------------
   //
@@ -2090,7 +2090,7 @@ struct websocket final :
   */
   void async_ping(
       beast::websocket::ping_data const& payload,
-      boost::async::detail::completion_handler<system::error_code> h);
+      boost::async::completion_handler<system::error_code> h);
 
 
  private:
@@ -2282,7 +2282,7 @@ struct websocket final :
   */
   void async_pong(
       beast::websocket::ping_data const& payload,
-      boost::async::detail::completion_handler<system::error_code> h);
+      boost::async::completion_handler<system::error_code> h);
 
 
   /** Read a complete message asynchronously.

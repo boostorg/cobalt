@@ -389,7 +389,7 @@ struct deadline_timer final : concepts::implements<concepts::timer>
    *
    * @li @c cancellation_type::total
    */
-  void async_wait(boost::async::detail::completion_handler<system::error_code> h) final;
+  void async_wait(boost::async::completion_handler<system::error_code> h) final;
 
   /// Check if the timer is already expired
   bool expired() const final;

@@ -26,18 +26,18 @@ template<typename Stream>                    void ssl<Stream>::set_verify_depth(
 template<typename Stream> BOOST_ASIO_SYNC_OP_VOID ssl<Stream>::set_verify_depth(int depth, boost::system::error_code& ec) { return impl_.set_verify_depth(depth, ec);}
 
 template<typename Stream>
-void ssl<Stream>::async_handshake(handshake_type type, boost::async::detail::completion_handler<system::error_code> h)
+void ssl<Stream>::async_handshake(handshake_type type, boost::async::completion_handler<system::error_code> h)
 {
   return impl_.async_handshake(type, std::move(h));
 }
 template<typename Stream>
-void ssl<Stream>::async_handshake(handshake_type type, asio::const_buffer buffer, boost::async::detail::completion_handler<system::error_code, std::size_t> h)
+void ssl<Stream>::async_handshake(handshake_type type, asio::const_buffer buffer, boost::async::completion_handler<system::error_code, std::size_t> h)
 {
   return impl_.async_handshake(type, buffer, std::move(h));
 }
 
 template<typename Stream>
-void ssl<Stream>::async_shutdown(boost::async::detail::completion_handler<system::error_code> h)
+void ssl<Stream>::async_shutdown(boost::async::completion_handler<system::error_code> h)
 {
   return impl_.async_shutdown(std::move(h));
 }

@@ -354,7 +354,7 @@ struct signal_set final : concepts::implements<concepts::cancellable>
 
     constexpr static bool await_ready() {return false;}
 
-    void await_resume_impl(boost::async::detail::completion_handler<system::error_code, int> h);
+    void await_resume_impl(boost::async::completion_handler<system::error_code, int> h);
 
     template<typename Promise>
     bool await_suspend(std::coroutine_handle<Promise> h)
@@ -389,7 +389,7 @@ struct signal_set final : concepts::implements<concepts::cancellable>
     std::exception_ptr error;
 
     constexpr static bool await_ready() {return false;}
-    void await_resume_impl(boost::async::detail::completion_handler<int> h);
+    void await_resume_impl(boost::async::completion_handler<int> h);
 
     template<typename Promise>
     bool await_suspend(std::coroutine_handle<Promise> h)

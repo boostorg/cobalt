@@ -66,7 +66,7 @@ bool high_resolution_timer::expired() const
   return expires_from_now().count() < 0;
 }
 
-void high_resolution_timer::async_wait(boost::async::detail::completion_handler<system::error_code> h)
+void high_resolution_timer::async_wait(boost::async::completion_handler<system::error_code> h)
 {
   impl_.async_wait(std::move(h));
 }

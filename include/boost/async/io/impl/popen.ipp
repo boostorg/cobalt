@@ -68,7 +68,7 @@ bool popen::running()                                 { return impl_.running(); 
 bool popen::running(system::error_code & ec) noexcept { return impl_.running(ec); };
 
 bool popen::is_open() const { return impl_.is_open(); }
-void popen::async_wait(boost::async::detail::completion_handler<system::error_code, boost::process::v2::native_exit_code_type> h)
+void popen::async_wait(boost::async::completion_handler<system::error_code, boost::process::v2::native_exit_code_type> h)
 {
   impl_.async_wait(std::move(h));
 }

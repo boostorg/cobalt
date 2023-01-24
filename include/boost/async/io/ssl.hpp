@@ -524,7 +524,7 @@ struct ssl final :
    * @c async_write_some operations.
    */
   void async_handshake(handshake_type type,
-                       boost::async::detail::completion_handler<system::error_code> h);
+                       boost::async::completion_handler<system::error_code> h);
   /// Start an asynchronous SSL handshake.
   /**
    * This function is used to asynchronously perform an SSL handshake on the
@@ -568,7 +568,7 @@ struct ssl final :
    * @c async_write_some operations.
    */
   void async_handshake(handshake_type type, asio::const_buffer buffer,
-                       boost::async::detail::completion_handler<system::error_code, std::size_t> h);
+                       boost::async::completion_handler<system::error_code, std::size_t> h);
 
 
  private:
@@ -690,7 +690,7 @@ struct ssl final :
    * if they are also supported by the @c Stream type's @c async_read_some and
    * @c async_write_some operations.
    */
-  void async_shutdown(boost::async::detail::completion_handler<system::error_code> h);
+  void async_shutdown(boost::async::completion_handler<system::error_code> h);
 
 
   void async_write_some(any_const_buffer_range buffer, concepts::write_handler h) override;

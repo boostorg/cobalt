@@ -19,7 +19,7 @@ struct dummy_promise
 static_assert(boost::asio::detail::has_executor_type<dummy_promise>::value);
 
 
-void test(boost::async::detail::completion_handler<> ch)
+void test(boost::async::completion_handler<> ch)
 {
   boost::asio::post(std::move(ch));
 }
@@ -27,7 +27,7 @@ void test(boost::async::detail::completion_handler<> ch)
 TEST_CASE("testing")
 {
   int res = 0;
-  boost::async::detail::completion_handler<int> ch{[&](int i ){ res = i;}};
+  boost::async::completion_handler<int> ch{[&](int i ){ res = i;}};
 
   CHECK(res == 0);
   ch(42);

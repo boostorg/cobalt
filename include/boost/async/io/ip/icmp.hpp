@@ -1071,7 +1071,7 @@ struct icmp::socket final : concepts::implements<concepts::cancellable, concepts
    */
   BOOST_ASIO_SYNC_OP_VOID bind(const endpoint_type& endpoint, boost::system::error_code& ec);
 
-  void async_connect(const endpoint_type& peer_endpoint, boost::async::detail::completion_handler<system::error_code> h);
+  void async_connect(const endpoint_type& peer_endpoint, boost::async::completion_handler<system::error_code> h);
  private:
   struct connect_op_
   {
@@ -1784,7 +1784,7 @@ struct icmp::socket final : concepts::implements<concepts::cancellable, concepts
   void async_receive_from(asio::mutable_buffer buffers, endpoint_type& sender_endpoint,                                   concepts::read_handler h);
   void async_receive_from(asio::mutable_buffer buffers, endpoint_type& sender_endpoint, socket_base::message_flags flags, concepts::read_handler h);
 
-  void async_wait(waitable_device::wait_type wt, boost::async::detail::completion_handler<system::error_code> h) override;
+  void async_wait(waitable_device::wait_type wt, boost::async::completion_handler<system::error_code> h) override;
 
   /// Get the underlying asio implementation.
   implementation_type & implementation() {return impl_;}
@@ -2579,7 +2579,7 @@ struct icmp::resolver : concepts::implements<concepts::cancellable, concepts::cl
    */
   void async_resolve(asio::string_view host,
                      asio::string_view service,
-                     boost::async::detail::completion_handler<system::error_code, results_type> h);
+                     boost::async::completion_handler<system::error_code, results_type> h);
 
   /// Asynchronously perform forward resolution of a query to a list of entries.
   /**
@@ -2637,7 +2637,7 @@ struct icmp::resolver : concepts::implements<concepts::cancellable, concepts::cl
   void async_resolve(asio::string_view host,
                      asio::string_view  service,
                      resolver_base::flags resolve_flags,
-                     boost::async::detail::completion_handler<system::error_code, results_type> h);
+                     boost::async::completion_handler<system::error_code, results_type> h);
 
   /// Asynchronously perform forward resolution of a query to a list of entries.
   /**
@@ -2692,7 +2692,7 @@ struct icmp::resolver : concepts::implements<concepts::cancellable, concepts::cl
    */
   void async_resolve(const protocol_type& protocol,
                      asio::string_view host, asio::string_view service,
-                     boost::async::detail::completion_handler<system::error_code, results_type> h);
+                     boost::async::completion_handler<system::error_code, results_type> h);
   /// Asynchronously perform forward resolution of a query to a list of entries.
   /**
    * This function is used to resolve host and service names into a list of
@@ -2753,7 +2753,7 @@ struct icmp::resolver : concepts::implements<concepts::cancellable, concepts::cl
                      asio::string_view host,
                      asio::string_view service,
                      resolver_base::flags resolve_flags,
-                     boost::async::detail::completion_handler<system::error_code, results_type> h);
+                     boost::async::completion_handler<system::error_code, results_type> h);
 
  private:
   struct resolve_ep_op_
@@ -2889,7 +2889,7 @@ struct icmp::resolver : concepts::implements<concepts::cancellable, concepts::cl
    * @code void(boost::system::error_code, results_type) @endcode
    */
   void async_resolve(const endpoint_type& e,
-                     boost::async::detail::completion_handler<system::error_code, results_type> h);
+                     boost::async::completion_handler<system::error_code, results_type> h);
 
   /// Get the underlying asio implementation.
   implementation_type & implementation() {return impl_;}

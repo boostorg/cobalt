@@ -14,20 +14,47 @@
 namespace boost::async
 {
 
-struct timer_wait_op
+namespace detail
 {
-  struct base
-  {
-    virtual bool await_ready(void * p) const = 0;
-    virtual void await_suspend(void * p, completion_handler<void(system::error_code)> h) const = 0;
-  };
 
-  void * impl;
-  const base & methods;
-  std::optional<std::tuple<system::error_code>> result;
+template<typename Class, typename Handler>
+constexpr auto deduce_initiate_handler(void (Class::* const)(Handler)) -> typename std::decay_t<Handler>::result_type;
+
+template<typename Class, typename Handler>
+constexpr auto deduce_initiate_handler(void (Class::* const)(Handler) const) -> typename std::decay_t<Handler>::result_type;
+
+
+template<typename Op>
+struct deferred_op
+{
+  Op op;
   std::exception_ptr error;
+  using result_type = decltype(deduce_initiate_handler(&Op::initiate));
+  result_type result;
 
-  bool await_ready() const {return methods.await_ready(impl);}
+  constexpr static bool await_ready()
+    requires (not requires {&Op::ready;})
+  {return false;}
+
+  bool await_ready() requires requires {{op.ready(result)};}
+  {
+    op.ready(result);
+    return result.has_value();
+  }
+
+  bool await_ready()
+    requires std::is_same_v<typename result_type::value_type, std::tuple<system::error_code>>
+      && requires (system::error_code & ec) {{op.ready(ec)} -> std::convertible_to<bool>;}
+  {
+    system::error_code ec;
+    if (op.ready(ec))
+    {
+      result.emplace(ec);
+      return true;
+    }
+    else
+      return false;
+  }
 
 
   template<typename Promise>
@@ -35,7 +62,7 @@ struct timer_wait_op
   {
     try
     {
-      methods.await_resume(impl, {h, result});
+      op.initiate({h, result});
       return true;
     }
     catch(...)
@@ -45,13 +72,34 @@ struct timer_wait_op
     }
   }
 
-  void await_resume()
+  auto await_resume()
   {
     if (error)
       std::rethrow_exception(std::exchange(error, nullptr));
+    return interpret_result(*std::move(result));
+  }
+};
 
-    if (std::get<0>(*result))
-      throw system::system_error(std::get<0>(*result));
+}
+
+
+template<typename T, auto = &T::initiate>
+auto operator co_await(T && t) -> detail::deferred_op<std::decay_t<T>>
+{
+  return detail::deferred_op<T>{std::forward<T>(t)};
+}
+
+template<typename T>
+struct enable_op
+{
+  auto operator co_await() && -> detail::deferred_op<std::decay_t<T>>
+  {
+    return detail::deferred_op<T>{std::move(*static_cast<T*>(this))};
+  }
+
+  auto operator co_await() & -> detail::deferred_op<std::decay_t<T>>
+  {
+    return detail::deferred_op<T>{*static_cast<T*>(this)};
   }
 };
 

@@ -150,8 +150,8 @@ void datagram::socket::bind(const endpoint_type& endpoint)                      
 BOOST_ASIO_SYNC_OP_VOID datagram::socket::bind(const endpoint_type& endpoint, boost::system::error_code& ec) { return impl_.bind(endpoint, ec); }
 
 
-void datagram::socket::async_wait(waitable_device::wait_type w, boost::async::detail::completion_handler<system::error_code> h) { return impl_.async_wait(w, std::move(h)); }
-void datagram::socket::async_connect(const endpoint_type& peer_endpoint, boost::async::detail::completion_handler<system::error_code> h){return impl_.async_connect(peer_endpoint, std::move(h));}
+void datagram::socket::async_wait(waitable_device::wait_type w, boost::async::completion_handler<system::error_code> h) { return impl_.async_wait(w, std::move(h)); }
+void datagram::socket::async_connect(const endpoint_type& peer_endpoint, boost::async::completion_handler<system::error_code> h){return impl_.async_connect(peer_endpoint, std::move(h));}
 void datagram::socket::async_send(      const_buffer buffer, concepts::write_handler h)                           {return impl_.async_send(      buffer,        std::move(h));}
 void datagram::socket::async_send(      const_buffer buffer, message_flags flags, concepts::write_handler h)      {return impl_.async_send(      buffer, flags, std::move(h));}
 void datagram::socket::async_receive( mutable_buffer buffer, concepts::read_handler h)                            {return impl_.async_receive(   buffer,        std::move(h));}

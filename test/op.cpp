@@ -5,10 +5,72 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include "test.hpp"
+#include <boost/async/op.hpp>
+#include <boost/asio.hpp>
 #include "doctest.h"
+#include "test.hpp"
 
-TEST_CASE("op")
+using namespace boost;
+
+
+template<typename Timer>
+struct test_wait_op : async::enable_op<test_wait_op<Timer>>
+{
+  Timer & tim;
+
+  test_wait_op(Timer & tim) : tim(tim) {}
+
+  bool ready(system::error_code & ) { return tim.expiry() < Timer::clock_type::now(); }
+  void initiate(async::completion_handler<system::error_code> complete)
+  {
+    tim.async_wait(std::move(complete));
+  }
+};
+
+template<typename Timer>
+struct test_wait_op_2 : async::enable_op<test_wait_op_2<Timer>>
+{
+  Timer & tim;
+
+  test_wait_op_2(Timer & tim) : tim(tim) {}
+
+  void ready(async::handler<system::error_code> h)
+  {
+    if (tim.expiry() < Timer::clock_type::now())
+      h(system::error_code(asio::error::operation_aborted));
+  }
+  void initiate(async::completion_handler<system::error_code> complete)
+  {
+    tim.async_wait(std::move(complete));
+  }
+};
+
+
+struct post_op : async::enable_op<post_op>
+{
+  asio::any_io_executor exec;
+
+  post_op(asio::any_io_executor exec) : exec(exec) {}
+
+  void initiate(async::completion_handler<> complete)
+  {
+    asio::post(std::move(complete));
+  }
+};
+
+
+CO_TEST_CASE("op")
 {
 
+  asio::steady_timer tim{co_await asio::this_coro::executor, std::chrono::milliseconds(10)};
+
+  co_await test_wait_op{tim};
+  co_await test_wait_op{tim};
+
+  tim.expires_after(std::chrono::milliseconds(10));
+
+  co_await test_wait_op_2{tim};
+  CHECK_THROWS(co_await test_wait_op_2{tim});
+
+  co_await post_op(co_await asio::this_coro::executor);
 }

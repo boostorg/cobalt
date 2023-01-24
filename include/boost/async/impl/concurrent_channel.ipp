@@ -18,7 +18,7 @@ bool concurrent_channel<void>::  try_receive(std::optional<std::tuple<system::er
   return impl_.try_receive([&](system::error_code ec) { result.emplace(ec);});
 }
 
-void concurrent_channel<void>::async_receive(boost::async::detail::completion_handler<system::error_code> h)
+void concurrent_channel<void>::async_receive(boost::async::completion_handler<system::error_code> h)
 {
   impl_.async_receive(std::move(h));
 }
@@ -28,7 +28,7 @@ bool concurrent_channel<void>::  try_send()
   return impl_.try_send(system::error_code());
 }
 
-void concurrent_channel<void>::async_send(boost::async::detail::completion_handler<system::error_code> h)
+void concurrent_channel<void>::async_send(boost::async::completion_handler<system::error_code> h)
 {
   impl_.async_send(system::error_code(), std::move(h));
 }

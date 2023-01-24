@@ -22,7 +22,7 @@ namespace boost::async::io
 namespace detail
 {
 
-using write_at_handler = boost::async::detail::completion_handler<system::error_code, std::size_t>;
+using write_at_handler = boost::async::completion_handler<system::error_code, std::size_t>;
 
 
 void write_at_impl(concepts::random_access_write_device & pipe, std::uint64_t offset, const_buffer buffer, detail::write_at_handler rh);

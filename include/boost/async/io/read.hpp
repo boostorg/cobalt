@@ -22,7 +22,7 @@ namespace boost::async::io
 namespace detail
 {
 
-using read_handler = boost::async::detail::completion_handler<system::error_code, std::size_t>;
+using read_handler = boost::async::completion_handler<system::error_code, std::size_t>;
 
 void read_impl(concepts::read_stream & stream, mutable_buffer buffer, detail::read_handler rh);
 void read_impl(concepts::read_stream & stream, mutable_buffer buffer, detail::completion_condition cond, detail::read_handler rh);

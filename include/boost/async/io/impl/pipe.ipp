@@ -89,7 +89,7 @@ void writable_pipe::cancel(boost::system::error_code &ec) {impl_.cancel(ec);}
 
 void writable_pipe::async_write_some(
     asio::const_buffer buffer,
-    boost::async::detail::completion_handler<system::error_code, std::size_t> h)
+    boost::async::completion_handler<system::error_code, std::size_t> h)
 {
   impl_.async_write_some(buffer, std::move(h));
 }
