@@ -21,6 +21,8 @@
 namespace boost::async
 {
 
+template<typename T>
+struct channel_reader;
 
 template<typename T>
 struct channel
@@ -43,9 +45,32 @@ struct channel
       write_queue_.front().awaited_from.reset();
 
   }
+  bool is_open() const {return !is_closed_;}
+  void close()
+  {
+    is_closed_ = true;
+    while (!read_queue_.empty())
+    {
+      auto & op = read_queue_.front();
+      op.unlink();
+      op.cancelled = true;
+      op.cancel_slot.clear();
+      asio::post(executor_, [&op]{std::coroutine_handle<void>::from_address(op.awaited_from.release()).resume(); });
+    }
+    while (!write_queue_.empty())
+    {
+      auto & op = write_queue_.front();
+      op.unlink();
+      op.cancelled = true;
+      op.cancel_slot.clear();
+      asio::post(executor_, [&op]{std::coroutine_handle<void>::from_address(op.awaited_from.release()).resume(); });
+    }
+  }
+
  private:
   boost::circular_buffer<T, container::pmr::polymorphic_allocator<T>> buffer_;
   executor_type executor_;
+  bool is_closed_{false};
 
   struct read_op : intrusive::list_base_hook<intrusive::link_mode<intrusive::auto_unlink> >
   {
@@ -253,10 +278,33 @@ struct channel<void>
       write_queue_.front().awaited_from.reset();
 
   }
+  bool is_open() const {return !is_closed_;}
+  void close()
+  {
+    is_closed_ = true;
+    while (!read_queue_.empty())
+    {
+      auto & op = read_queue_.front();
+      op.unlink();
+      op.cancelled = true;
+      op.cancel_slot.clear();
+      asio::post(executor_, [&op]{std::coroutine_handle<void>::from_address(op.awaited_from.release()).resume(); });
+    }
+    while (!write_queue_.empty())
+    {
+      auto & op = write_queue_.front();
+      op.unlink();
+      op.cancelled = true;
+      op.cancel_slot.clear();
+      asio::post(executor_, [&op]{std::coroutine_handle<void>::from_address(op.awaited_from.release()).resume(); });
+    }
+  }
+
  private:
   std::size_t limit_;
   std::size_t n_{0u};
   executor_type executor_;
+  bool is_closed_{false};
 
   struct read_op : intrusive::list_base_hook<intrusive::link_mode<intrusive::auto_unlink> >
   {
@@ -425,6 +473,23 @@ struct channel<void>
   write_op write(const boost::source_location & loc = BOOST_CURRENT_LOCATION)  {return write_op{{}, this, loc}; }
 };
 
+template<typename T>
+struct channel_reader
+{
+  channel_reader(channel<T> & chan,
+                 const boost::source_location & loc = BOOST_CURRENT_LOCATION) : chan_(chan), loc_(loc) {}
+
+  auto operator co_await () -> typename channel<T>::read_op
+  {
+    return chan_->read(loc_);
+  }
+
+  explicit operator bool () const {return chan_->is_open();}
+
+ private:
+  channel<T> * chan_;
+  boost::source_location loc_;
+};
 
 }
 
