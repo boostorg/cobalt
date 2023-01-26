@@ -73,4 +73,5 @@ CO_TEST_CASE("op")
   CHECK_THROWS(co_await test_wait_op_2{tim});
 
   co_await post_op(co_await asio::this_coro::executor);
+  co_await tim.async_wait(async::use_op);
 }

@@ -9,7 +9,7 @@
 #define BOOST_ASYNC_OP_HPP
 
 #include <boost/asio/io_context.hpp>
-#include "boost/async/detail/handler.hpp"
+#include <boost/async/detail/handler.hpp>
 
 namespace boost::async
 {
@@ -25,7 +25,7 @@ constexpr auto deduce_initiate_handler(void (Class::* const)(Handler) const) -> 
 
 
 template<typename Op>
-struct deferred_op
+struct [[nodiscard]] deferred_op
 {
   Op op;
   std::exception_ptr error;
@@ -100,6 +100,77 @@ struct enable_op
   auto operator co_await() & -> detail::deferred_op<std::decay_t<T>>
   {
     return detail::deferred_op<T>{*static_cast<T*>(this)};
+  }
+};
+
+struct use_op_t
+{
+  /// Default constructor.
+  constexpr use_op_t()
+  {
+  }
+
+  /// Adapts an executor to add the @c deferred_t completion token as the
+  /// default.
+  template <typename InnerExecutor>
+  struct executor_with_default : InnerExecutor
+  {
+    /// Specify @c deferred_t as the default completion token type.
+    typedef use_op_t default_completion_token_type;
+
+    /// Construct the adapted executor from the inner executor type.
+    template <typename InnerExecutor1>
+    executor_with_default(const InnerExecutor1& ex,
+                          typename std::enable_if<
+                              std::conditional<
+                              !std::is_same<InnerExecutor1, executor_with_default>::value,
+                                  std::is_convertible<InnerExecutor1, InnerExecutor>,
+                          std::false_type
+          >::type::value>::type = 0) noexcept
+            : InnerExecutor(ex)
+    {
+    }
+  };
+};
+
+constexpr use_op_t use_op{};
+
+}
+
+namespace boost::asio
+{
+
+template<typename ... Args>
+struct async_result<boost::async::use_op_t, void(Args...)>
+{
+  template <typename Initiation, typename... InitArgs>
+  struct op_impl
+  {
+    Initiation initiation;
+    std::tuple<InitArgs...> args;
+
+    void initiate(async::completion_handler<Args...> complete)
+    {
+      std::apply(
+          [&](InitArgs && ... args)
+          {
+            std::move(initiation)(std::move(complete), std::forward<InitArgs>(args)...);
+          }, std::move(args));
+    }
+  };
+
+  template <typename Initiation, typename... InitArgs>
+  static auto initiate(Initiation && initiation,
+                       boost::async::use_op_t,
+                       InitArgs &&... args)
+      -> boost::async::detail::deferred_op<op_impl<Initiation, InitArgs...>>
+  {
+    return
+        boost::async::detail::deferred_op<op_impl<Initiation, InitArgs...>>
+        {
+          std::forward<Initiation>(initiation),
+          {std::forward<InitArgs>(args)...}
+        };
   }
 };
 

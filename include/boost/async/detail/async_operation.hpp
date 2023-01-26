@@ -73,12 +73,14 @@ struct awaitable_async_operation_interpreted<void(Args...), Op>
 {
     Op op;
     std::optional<std::tuple<Args...>> result;
-    constexpr static bool await_ready() { return false; }
+    bool await_ready() { return result.has_value(); }
 
     auto await_resume()
     {
         return interpret_result(std::move(*result));
     }
+
+    explicit operator bool() const {return !result;}
 
     template<typename Promise>
     inline void await_suspend( std::coroutine_handle<Promise> h) noexcept
