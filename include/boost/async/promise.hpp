@@ -16,9 +16,11 @@
 #include <boost/asio/cancellation_state.hpp>
 
 #include <boost/async/this_coro.hpp>
-#include "boost/async/detail/concepts.hpp"
+ #include <boost/async/detail/concepts.hpp>
+#include <boost/async/detail/async_operation.hpp>
+#include <boost/async/detail/exception.hpp>
+#include <boost/async/detail/forward_cancellation.hpp>
 #include <boost/async/detail/wrapper.hpp>
-#include "boost/async/detail/async_operation.hpp"
 #include <boost/container/pmr/monotonic_buffer_resource.hpp>
 
 namespace boost::async
@@ -31,166 +33,147 @@ namespace detail
 {
 
 template<typename T>
-struct async_receiver;
+struct promise_receiver;
 
 template<typename T>
-struct value_holder
+struct promise_value_holder
 {
-    std::optional<T> result;
+  std::optional<T> result;
 
-    T get_result()
-    {
-        return std::move(*result);
-    }
+  T get_result()
+  {
+    return std::move(*result);
+  }
 
-    void return_value(T && ret)
-    {
-        result = std::move(ret);
-        static_cast<async_receiver<T>*>(this)->set_done();
-    }
+  void return_value(T && ret)
+  {
+    result = std::move(ret);
+    static_cast<promise_receiver<T>*>(this)->set_done();
+  }
 
 };
 
 template<>
-struct value_holder<void>
+struct promise_value_holder<void>
 {
-    void get_result() { }
+  void get_result() { }
 
-    inline void return_void();
+  inline void return_void();
 };
 
 
-struct forward_cancellation
-{
-    asio::cancellation_signal &cancel_signal;
-
-    forward_cancellation(asio::cancellation_signal &cancel_signal) : cancel_signal(cancel_signal) {}
-
-    void operator()(asio::cancellation_type ct) const
-    {
-        cancel_signal.emit(ct);
-    }
-};
-
-inline std::exception_ptr moved_from_exception()
-{
-    static auto ep = std::make_exception_ptr(std::logic_error("async::promise was moved from"));
-    return ep;
-}
 
 template<typename T>
-struct async_receiver : value_holder<T>
+struct promise_receiver : promise_value_holder<T>
 {
-    std::exception_ptr exception;
-    void unhandled_exception()
+  std::exception_ptr exception;
+  void unhandled_exception()
+  {
+    exception = std::current_exception();
+    set_done();
+  }
+
+  bool done = false;
+  std::coroutine_handle<void> awaited_from{nullptr};
+
+  void set_done()
+  {
+    done = true;
+  }
+
+  promise_receiver() = default;
+  promise_receiver(promise_receiver && lhs)
+      : exception(std::move(lhs.exception)), done(lhs.done), awaited_from(lhs.awaited_from),
+        reference(lhs.reference), cancel_signal(lhs.cancel_signal)
+  {
+    if (!lhs.done)
+      lhs.exception = moved_from_exception();
+    lhs.done = true;
+
+    reference = this;
+  }
+
+  ~promise_receiver()
+  {
+    if (!done && reference == this)
+      reference = nullptr;
+  }
+
+  promise_receiver(promise_receiver * (&reference), asio::cancellation_signal & cancel_signal)
+      : reference(reference), cancel_signal(cancel_signal)
+  {
+    reference = this;
+  }
+
+  struct awaitable
+  {
+    promise_receiver * self;
+
+    awaitable(promise_receiver * self) : self(self)
     {
-        exception = std::current_exception();
-        set_done();
     }
 
-    bool done = false;
-    std::coroutine_handle<void> awaited_from{nullptr};
-
-    void set_done()
+    awaitable(awaitable && aw) : self(aw.self)
     {
-        done = true;
     }
 
-    async_receiver() = default;
-    async_receiver(async_receiver && lhs)
-        : exception(std::move(lhs.exception)), done(lhs.done), awaited_from(lhs.awaited_from),
-          reference(lhs.reference), cancel_signal(lhs.cancel_signal)
+    ~awaitable ()
     {
-      if (!lhs.done)
-        lhs.exception = moved_from_exception();
-      lhs.done = true;
-
-      reference = this;
     }
 
-    ~async_receiver()
+    alignas(sizeof(void*)) char buffer[1024];
+    container::pmr::monotonic_buffer_resource resource{buffer, sizeof(buffer)};
+
+    // the race is fine -> if we miss it, we'll get it in resume.
+    bool await_ready() const { return self->done; }
+
+    template<typename Promise>
+    bool await_suspend(std::coroutine_handle<Promise> h)
     {
-      if (!done && reference == this)
-        reference = nullptr;
+      if (self->done) // ok, so we're actually done already, so noop
+        return false;
+
+      if constexpr (requires (Promise p) {p.get_cancellation_slot();})
+        if (auto sl = h.promise().get_cancellation_slot(); sl.is_connected())
+          sl.template emplace<forward_cancellation>(self->cancel_signal);
+
+
+      if constexpr (requires (Promise p) {p.get_executor();})
+        self->awaited_from = detail::dispatch_coroutine(
+            h.promise().get_executor(),
+            asio::bind_allocator(
+                container::pmr::polymorphic_allocator<void>(&resource),
+                [h]() mutable { h.resume(); })
+        );
+      else
+        self->awaited_from = h;
+
+      return true;
     }
 
-    async_receiver(async_receiver * (&reference), asio::cancellation_signal & cancel_signal)
-        : reference(reference), cancel_signal(cancel_signal)
+    T await_resume()
     {
-        reference = this;
+      if (self->exception)
+        std::rethrow_exception(self->exception);
+      return self->get_result();
     }
+  };
 
-    struct awaitable
-    {
-        async_receiver * self;
+  promise_receiver  * (&reference);
+  asio::cancellation_signal & cancel_signal;
 
-        awaitable(async_receiver * self) : self(self)
-        {
-        }
-
-        awaitable(awaitable && aw) : self(aw.self)
-        {
-        }
-
-        ~awaitable ()
-        {
-        }
-
-        alignas(sizeof(void*)) char buffer[1024];
-        container::pmr::monotonic_buffer_resource resource{buffer, sizeof(buffer)};
-
-        // the race is fine -> if we miss it, we'll get it in resume.
-        bool await_ready() const { return self->done; }
-
-        template<typename Promise>
-        bool await_suspend(std::coroutine_handle<Promise> h)
-        {
-            if (self->done) // ok, so we're actually done already, so noop
-                return false;
-
-            if constexpr (requires (Promise p) {p.get_cancellation_slot();})
-                if (auto sl = h.promise().get_cancellation_slot(); sl.is_connected())
-                    sl.template emplace<forward_cancellation>(self->cancel_signal);
-
-
-            if constexpr (requires (Promise p) {p.get_executor();})
-                self->awaited_from = detail::dispatch_coroutine(
-                        h.promise().get_executor(),
-                        asio::bind_allocator(
-                                container::pmr::polymorphic_allocator<void>(&resource),
-                                [h]() mutable { h.resume(); })
-                );
-            else
-                self->awaited_from = h;
-
-            return true;
-        }
-
-        T await_resume()
-        {
-            if (self->exception)
-                std::rethrow_exception(self->exception);
-            return self->get_result();
-        }
-    };
-
-    async_receiver  * (&reference);
-    asio::cancellation_signal & cancel_signal;
-
-    awaitable get_awaitable() {return awaitable{this};}
+  awaitable get_awaitable() {return awaitable{this};}
 };
 
-
-inline void value_holder<void>::return_void()
+inline void promise_value_holder<void>::return_void()
 {
-    static_cast<async_receiver<void>*>(this)->set_done();
+  static_cast<promise_receiver<void>*>(this)->set_done();
 }
-
 
 template<typename Return>
 struct async_promise_result
 {
-    async_receiver<Return>* receiver{nullptr};
+    promise_receiver<Return>* receiver{nullptr};
     void return_value(Return && ret)
     {
         if(receiver)
@@ -202,7 +185,7 @@ struct async_promise_result
 template<>
 struct async_promise_result<void>
 {
-    async_receiver<void>* receiver{nullptr};
+    promise_receiver<void>* receiver{nullptr};
     void return_void()
     {
         if(receiver)
@@ -305,6 +288,7 @@ struct [[nodiscard]] promise
     void operator +() const && {}
 
 
+
     void cancel(asio::cancellation_type ct = asio::cancellation_type::all)
     {
       if (!receiver_.done)
@@ -312,6 +296,7 @@ struct [[nodiscard]] promise
     }
 
     bool ready() const  { return receiver_.done; }
+    explicit operator bool () const {return ready();}
 
     Return get()
     {
@@ -331,7 +316,7 @@ struct [[nodiscard]] promise
     {
     }
 
-    detail::async_receiver<Return> receiver_;
+    detail::promise_receiver<Return> receiver_;
     friend struct detail::async_initiate;
 };
 
@@ -348,7 +333,7 @@ struct async_initiate
             return asio::post(asio::append(h, rec.exception, rec.get_result()));
 
         auto alloc = asio::get_associated_allocator(h, container::pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()});
-        auto recs = std::allocate_shared<detail::async_receiver<T>>(
+        auto recs = std::allocate_shared<detail::promise_receiver<T>>(
                                 alloc, std::move(rec));
 
         if (recs->done)
@@ -390,7 +375,7 @@ struct async_initiate
             return asio::post(asio::append(h, a.receiver_.exception));
 
         auto alloc = asio::get_associated_allocator(h, container::pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()});
-        auto recs = std::allocate_shared<detail::async_receiver<void>>(
+        auto recs = std::allocate_shared<detail::promise_receiver<void>>(
                                 alloc, std::move(a.receiver_));
 
         if (recs->done)

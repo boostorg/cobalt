@@ -5,14 +5,11 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-
-#include <boost/asio.hpp>
-
+#include <boost/async/select.hpp>
 #include <boost/async/promise.hpp>
 #include <boost/async/op.hpp>
-#include <boost/async/select.hpp>
 
-#include <list>
+#include <boost/asio.hpp>
 
 #include "doctest.h"
 #include "test.hpp"

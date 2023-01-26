@@ -9,6 +9,7 @@
 #define BOOST_ASYNC_SELECT_HPP
 
 #include <boost/async/promise.hpp>
+#include <boost/async/detail/await_result_helper.hpp>
 #include <boost/container/pmr/vector.hpp>
 #include <boost/variant2/variant.hpp>
 
@@ -17,19 +18,6 @@ namespace boost::async
 
 namespace detail
 {
-
-template<typename T>
-auto co_await_result_helper() -> decltype(std::declval<T>().await_resume());
-
-template<typename T>
-auto co_await_result_helper() -> decltype(std::declval<T>().operator co_await().await_resume());
-
-template<typename T>
-auto co_await_result_helper() -> decltype(operator co_await(std::declval<T>()).await_resume());
-
-template<typename T>
-using co_await_result_t = decltype(co_await_result_helper<T>());
-
 
 template<asio::cancellation_type Ct, typename ... Args>
 struct select_impl
