@@ -20,6 +20,13 @@ inline std::exception_ptr moved_from_exception()
   return ep;
 }
 
+inline std::exception_ptr detached_exception()
+{
+  static auto ep = std::make_exception_ptr(std::runtime_error("detached "));
+  return ep;
+}
+
+
 
 }
 

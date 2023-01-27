@@ -6,10 +6,10 @@
 //
 
 #include <boost/async/channel.hpp>
+#include <boost/async/promise.hpp>
 
 #include "test.hpp"
 #include "doctest.h"
-#include "boost/async/promise.hpp"
 
 namespace async = boost::async;
 

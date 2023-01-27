@@ -137,7 +137,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 
       if constexpr (requires (Promise p) {p.get_cancellation_slot();})
         if (auto sl = h.promise().get_cancellation_slot(); sl.is_connected())
-          sl.template emplace<forward_cancellation>(self->cancel_signal);
+          sl.template emplace<forward_cancellation_with_interrupt>(self->cancel_signal, self);
 
 
       if constexpr (requires (Promise p) {p.get_executor();})
@@ -165,6 +165,18 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
       return self->get_result();
     }
   };
+
+  void interrupt_await()
+  {
+    exception = detached_exception();
+    awaited_from.resume();
+  }
+
+  void rethrow_if()
+  {
+    if (exception)
+      std::rethrow_exception(exception);
+  }
 };
 
 template<typename Yield, typename Push>
@@ -267,6 +279,15 @@ struct generator_promise
       return generator_receiver<Yield, Push>::terminator();
   }
 
+  void interrupt_await()
+  {
+    if (this->receiver)
+    {
+      this->receiver->exception = detached_exception();
+      this->receiver->awaited_from.resume();
+    }
+  }
+
   friend struct async_initiate;
 };
 
@@ -367,9 +388,7 @@ struct [[nodiscard]] generator : detail::generator_base<Yield, Push>
   {
     if (!ready())
       boost::throw_exception(std::logic_error("generator not ready"));
-
-    if (receiver_.exception)
-      std::rethrow_exception(receiver_.exception);
+    receiver_.rethrow_if();
     return receiver_.get_result();
   }
   ~generator() { cancel(); }

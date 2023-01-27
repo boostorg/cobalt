@@ -96,7 +96,17 @@ struct select_impl
 
             for (auto & r : rf.cancel)
               if (r)
+              {
+                std::array<bool, sizeof...(Args)> lval_ref{std::is_lvalue_reference_v<Args>...};
+                if (lval_ref[&r - &rf.cancel[0]])
+                {
+                  if (r)
+                    r->emit(interrupt_await);
+                  if (!r)
+                    continue;
+                }
                 std::exchange(r, nullptr)->emit(Ct);
+              }
 
             h.destroy();
             if (--rf.outstanding == 0u)
@@ -149,7 +159,7 @@ struct select_impl
   template<std::size_t ... Idx>
   void await_suspend_impl(std::index_sequence<Idx...>)
   {
-    (await_suspend_impl_step(std::integral_constant<std::size_t, Idx>{}),  ...);
+    (await_suspend_impl_step(std::integral_constant<std::size_t, Idx>{}), ...);
   }
 
   template<typename Promise>
@@ -273,6 +283,11 @@ struct ranged_select_impl
             auto & rf = h.promise().ref;
             std::coroutine_handle<void> res = std::noop_coroutine();
 
+            if constexpr(std::is_lvalue_reference_v<PromiseRange>)
+              for (auto & r : rf.cancel)
+                if (r)
+                  r->emit(interrupt_await);
+
             for (auto & r : rf.cancel)
               if (r)
                 std::exchange(r, nullptr)->emit(Ct);
@@ -309,7 +324,7 @@ struct ranged_select_impl
 
   };
 
-  stub await_suspend(std::size_t idx)
+  stub await_suspend_impl(std::size_t idx)
   try {
     if constexpr (std::is_same_v<void, inner_result_type>)
     {
@@ -346,7 +361,7 @@ struct ranged_select_impl
     }
     awaited_from.reset(h.address());
     for (std::size_t i = 0u; i < std::size(range); i++)
-      await_suspend(i);
+      await_suspend_impl(i);
   }
 
   result_type await_resume()
@@ -380,14 +395,14 @@ struct ranged_select_impl
 
 }
 
-template<asio::cancellation_type Ct = asio::cancellation_type::total, detail::awaitable ... Promise>
+template<asio::cancellation_type Ct = asio::cancellation_type::all, detail::awaitable ... Promise>
 auto select(Promise && ... p) -> detail::select_impl<Ct, Promise ...>
 {
   return detail::select_impl<Ct, Promise ...>{std::forward<Promise>(p)...};
 }
 
 
-template<asio::cancellation_type Ct = asio::cancellation_type::total, typename PromiseRange>
+template<asio::cancellation_type Ct = asio::cancellation_type::all, typename PromiseRange>
   requires detail::awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>>
 auto select(PromiseRange && p)
 {

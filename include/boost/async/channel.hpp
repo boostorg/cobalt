@@ -150,8 +150,8 @@ struct channel
         chn->buffer_.pop_front();
         return value;
       }
-
     }
+    operator bool() const {return chn && chn->is_open();}
   };
 
   struct write_op : intrusive::list_base_hook<intrusive::link_mode<intrusive::auto_unlink> >
@@ -234,6 +234,7 @@ struct channel
           chn->buffer_.push_back(*variant2::get<1>(ref));
       }
     }
+    operator bool() const {return chn && chn->is_open();}
   };
 
   boost::intrusive::list<read_op,  intrusive::constant_time_size<false> > read_queue_;

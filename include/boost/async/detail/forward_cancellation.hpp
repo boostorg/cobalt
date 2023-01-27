@@ -8,6 +8,7 @@
 #ifndef BOOST_ASYNC_DETAIL_FORWARD_CANCELLATION_HPP
 #define BOOST_ASYNC_DETAIL_FORWARD_CANCELLATION_HPP
 
+#include <boost/async/cancellation.hpp>
 #include <boost/asio/cancellation_signal.hpp>
 
 namespace boost::async::detail
@@ -18,10 +19,43 @@ struct forward_cancellation
   asio::cancellation_signal &cancel_signal;
 
   forward_cancellation(asio::cancellation_signal &cancel_signal) : cancel_signal(cancel_signal) {}
-
   void operator()(asio::cancellation_type ct) const
   {
     cancel_signal.emit(ct);
+  }
+};
+
+struct forward_cancellation_with_interrupt
+{
+  asio::cancellation_signal &cancel_signal;
+  void *promise = nullptr;
+  void (*interrupt_await_)(void*) = nullptr;
+
+  template<typename Promise, void(Promise::*Pointer)()>
+  struct helper
+  {
+    static void function(void * ptr)
+    {
+      (static_cast<Promise*>(ptr)->*Pointer)();
+    }
+  };
+
+  forward_cancellation_with_interrupt(asio::cancellation_signal &cancel_signal) : cancel_signal(cancel_signal) {}
+
+  template<typename Promise>
+  forward_cancellation_with_interrupt(asio::cancellation_signal &cancel_signal,
+                                      Promise * promise)
+      : cancel_signal(cancel_signal), promise(promise),
+        interrupt_await_(helper<Promise, &Promise::interrupt_await>::function) {}
+
+  void operator()(asio::cancellation_type ct) const
+  {
+    if (ct == interrupt_await && promise)
+    {
+      interrupt_await_(promise);
+    }
+    else
+      cancel_signal.emit(ct);
   }
 };
 

@@ -8,7 +8,7 @@ target_link_libraries(wrappers Boost::container Boost::filesystem Boost::atomic 
 
 add_executable(main main.cpp)
 add_executable(unit_tests doctest.cpp async.cpp with.cpp thread.cpp op.cpp handler.cpp select.cpp
-                channel.cpp generator.cpp)
+                          channel.cpp generator.cpp)
 
 target_link_libraries(main       Boost::container Boost::filesystem Boost::atomic uring OpenSSL::SSL)
 target_link_libraries(unit_tests Boost::container Boost::filesystem Boost::atomic uring OpenSSL::SSL)

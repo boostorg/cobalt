@@ -8,19 +8,19 @@
 #ifndef BOOST_ASYNC_ASYNC_HPP
 #define BOOST_ASYNC_ASYNC_HPP
 
-#include <boost/asio/any_io_executor.hpp>
-#include <boost/asio/append.hpp>
-#include <boost/asio/bind_allocator.hpp>
-#include <boost/asio/bind_executor.hpp>
-#include <boost/asio/cancellation_signal.hpp>
-#include <boost/asio/cancellation_state.hpp>
-
 #include <boost/async/this_coro.hpp>
- #include <boost/async/detail/concepts.hpp>
+#include <boost/async/cancellation.hpp>
+#include <boost/async/detail/concepts.hpp>
 #include <boost/async/detail/async_operation.hpp>
 #include <boost/async/detail/exception.hpp>
 #include <boost/async/detail/forward_cancellation.hpp>
 #include <boost/async/detail/wrapper.hpp>
+
+#include <boost/asio/any_io_executor.hpp>
+#include <boost/asio/append.hpp>
+#include <boost/asio/bind_allocator.hpp>
+#include <boost/asio/bind_executor.hpp>
+
 #include <boost/container/pmr/monotonic_buffer_resource.hpp>
 
 namespace boost::async
@@ -39,9 +39,11 @@ template<typename T>
 struct promise_value_holder
 {
   std::optional<T> result;
+  bool result_taken = false;
 
   T get_result()
   {
+    result_taken = true;
     return std::move(*result);
   }
 
@@ -56,7 +58,8 @@ struct promise_value_holder
 template<>
 struct promise_value_holder<void>
 {
-  void get_result() { }
+  bool result_taken = false;
+  void get_result() { result_taken = true; }
 
   inline void return_void();
 };
@@ -67,6 +70,16 @@ template<typename T>
 struct promise_receiver : promise_value_holder<T>
 {
   std::exception_ptr exception;
+  void rethrow_if()
+  {
+    if (exception && !done) // detached error
+      std::rethrow_exception(std::exchange(exception, nullptr));
+    else if (exception)
+    {
+      this->result_taken = true;
+      std::rethrow_exception(exception);
+    }
+  }
   void unhandled_exception()
   {
     exception = std::current_exception();
@@ -135,7 +148,7 @@ struct promise_receiver : promise_value_holder<T>
 
       if constexpr (requires (Promise p) {p.get_cancellation_slot();})
         if (auto sl = h.promise().get_cancellation_slot(); sl.is_connected())
-          sl.template emplace<forward_cancellation>(self->cancel_signal);
+          sl.template emplace<forward_cancellation_with_interrupt>(self->cancel_signal, self);
 
 
       if constexpr (requires (Promise p) {p.get_executor();})
@@ -153,8 +166,7 @@ struct promise_receiver : promise_value_holder<T>
 
     T await_resume()
     {
-      if (self->exception)
-        std::rethrow_exception(self->exception);
+      self->rethrow_if();
       return self->get_result();
     }
   };
@@ -163,6 +175,13 @@ struct promise_receiver : promise_value_holder<T>
   asio::cancellation_signal & cancel_signal;
 
   awaitable get_awaitable() {return awaitable{this};}
+
+
+  void interrupt_await()
+  {
+    exception = detached_exception();
+    awaited_from.resume();
+  }
 };
 
 inline void promise_value_holder<void>::return_void()
@@ -265,6 +284,7 @@ struct async_promise
         else
           throw ;
     }
+
     friend struct async_initiate;
 };
 
@@ -287,24 +307,24 @@ struct [[nodiscard]] promise
     // Ignore the returns value
     void operator +() const && {}
 
-
-
-    void cancel(asio::cancellation_type ct = asio::cancellation_type::all)
+    void cancel(asio::cancellation_type ct = asio::cancellation_type{0b111u})
     {
       if (!receiver_.done)
         receiver_.cancel_signal.emit(ct);
     }
 
     bool ready() const  { return receiver_.done; }
-    explicit operator bool () const {return ready();}
+    explicit operator bool () const
+    {
+      return !receiver_.done || !receiver_.result_taken;
+    }
 
     Return get()
     {
       if (!ready())
         boost::throw_exception(std::logic_error("promise not ready"));
 
-      if (receiver_.exception)
-          std::rethrow_exception(receiver_.exception);
+      receiver_.rethrow_if();
       return receiver_.get_result();
     }
 

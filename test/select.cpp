@@ -36,9 +36,12 @@ CO_TEST_CASE("variadic")
   auto c = co_await select(d1, d2, dummy(exec, std::chrono::milliseconds(100000)));
   CHECK(c.index() == 1u);
   CHECK(boost::variant2::get<1>(c) == 50);
-  CHECK( d1.ready());
+  CHECK(d1);
+  CHECK(!d1.ready());
   CHECK( d2.ready());
-  CHECK_THROWS(co_await d1);
+  CHECK(100 == co_await d1);
+  CHECK(!d1);
+  CHECK( d1.ready());
   co_await d2;
 }
 
@@ -54,10 +57,16 @@ CO_TEST_CASE("list")
   auto c = co_await select(vec);
   CHECK(c.first == 1u);
   CHECK(c.second == 50);
+  CHECK(!vec[0].ready());
+  CHECK( vec[1].ready());
+  CHECK(co_await vec[0]);
   CHECK( vec[0].ready());
   CHECK( vec[1].ready());
-  CHECK_THROWS(co_await vec[0]);
-  co_await vec[1];
+  vec[2].cancel();
+  CHECK( vec[2]);
+  CHECK_THROWS(co_await vec[2]);
+  CHECK_THROWS(co_await vec[2]);
+  CHECK(!vec[2]);
 }
 
 TEST_SUITE_END();
