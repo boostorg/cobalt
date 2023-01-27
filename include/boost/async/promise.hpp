@@ -305,7 +305,7 @@ struct [[nodiscard]] promise
     auto operator co_await () {return receiver_.get_awaitable();}
 
     // Ignore the returns value
-    void operator +() const && {}
+    void operator +() && {detach();}
 
     void cancel(asio::cancellation_type ct = asio::cancellation_type{0b111u})
     {
@@ -328,15 +328,25 @@ struct [[nodiscard]] promise
       return receiver_.get_result();
     }
 
+    bool attached() const {return attached_;}
+    void detach() {attached_ = false;}
+    void attach() {attached_ = false;}
+
+    ~promise()
+    {
+      if (attached_)
+        cancel();
+    }
   private:
     template<typename>
     friend struct detail::async_promise;
 
-    promise(detail::async_promise<Return> * promise) : receiver_(promise->receiver, promise->signal)
+    promise(detail::async_promise<Return> * promise) : receiver_(promise->receiver, promise->signal), attached_{true}
     {
     }
 
     detail::promise_receiver<Return> receiver_;
+    bool attached_;
     friend struct detail::async_initiate;
 };
 
