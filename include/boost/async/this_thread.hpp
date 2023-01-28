@@ -10,55 +10,18 @@
 
 #include <boost/container/pmr/memory_resource.hpp>
 #include <boost/container/pmr/polymorphic_allocator.hpp>
-#include <boost/asio/executor.hpp>
 #include <boost/asio/io_context.hpp>
-#include <optional>
 
 namespace boost::async::this_thread
 {
+container::pmr::memory_resource* get_default_resource() noexcept;
+container::pmr::memory_resource* set_default_resource(container::pmr::memory_resource* r) noexcept;
+container::pmr::polymorphic_allocator<void> get_allocator();
 
+typename asio::io_context::executor_type & get_executor(
+    const boost::source_location & loc = BOOST_CURRENT_LOCATION);
 
-namespace detail
-{
-extern thread_local container::pmr::memory_resource * default_coro_memory_resource;
-extern thread_local std::optional<asio::io_context::executor_type> executor;
-}
-
-
-
-inline container::pmr::memory_resource* get_default_resource() noexcept
-{
-  return detail::default_coro_memory_resource;
-}
-
-inline container::pmr::memory_resource* set_default_resource(container::pmr::memory_resource* r) noexcept
-{
-  auto pre = get_default_resource();
-  detail::default_coro_memory_resource = r;
-  return pre;
-}
-
-inline container::pmr::polymorphic_allocator<void> get_allocator()
-{
-  return container::pmr::polymorphic_allocator<void>(get_default_resource());
-}
-
-inline typename asio::io_context::executor_type & get_executor()
-{
-  if (!detail::executor)
-    throw asio::bad_executor();
-  return *detail::executor;
-}
-
-inline void set_executor(asio::io_context::executor_type exec) noexcept
-{
-  detail::executor = std::move(exec);
-}
-
-inline void reset_executor() noexcept
-{
-  detail::executor.reset();
-}
+void set_executor(asio::io_context::executor_type exec) noexcept;
 
 
 }

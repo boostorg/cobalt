@@ -94,7 +94,6 @@ TEST_CASE(__VA_ARGS__)                                                          
     auto p = std::coroutine_handle<boost::async::test_case_promise>::from_promise(*tc.promise);                        \
     boost::asio::post(ctx.get_executor(), [p]{p.resume();});                                                           \
     ctx.run();                                                                                                         \
-    boost::async::this_thread::reset_executor();                                                                       \
 }                                                                                                                      \
 static ::boost::async::test_case Function()
 

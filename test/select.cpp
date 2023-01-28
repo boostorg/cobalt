@@ -6,6 +6,7 @@
 //
 
 #include <boost/async/select.hpp>
+#include <boost/async/generator.hpp>
 #include <boost/async/promise.hpp>
 #include <boost/async/op.hpp>
 
@@ -25,6 +26,13 @@ async::promise<std::size_t> dummy(asio::any_io_executor exec,
   co_return ms.count();
 }
 
+async::generator<int> gen(asio::any_io_executor exec)
+{
+  asio::steady_timer tim{exec, std::chrono::milliseconds(50000)};
+  co_await tim.async_wait(asio::deferred);
+  co_return 123;
+}
+
 TEST_SUITE_BEGIN("select");
 
 CO_TEST_CASE("variadic")
@@ -32,7 +40,8 @@ CO_TEST_CASE("variadic")
   auto exec = co_await asio::this_coro::executor;
   auto d1 = dummy(exec, std::chrono::milliseconds(100));
   auto d2 = dummy(exec, std::chrono::milliseconds( 50));
-  auto c = co_await select(d1, d2, dummy(exec, std::chrono::milliseconds(100000)));
+  auto g = gen(exec);
+  auto c = co_await select(d1, d2, dummy(exec, std::chrono::milliseconds(100000)), g);
   CHECK(c.index() == 1u);
   CHECK(boost::variant2::get<1>(c) == 50);
   CHECK(d1);
@@ -42,6 +51,9 @@ CO_TEST_CASE("variadic")
   CHECK(!d1);
   CHECK( d1.ready());
   co_await d2;
+
+  g.cancel();
+  CHECK_THROWS(co_await g);
 }
 
 

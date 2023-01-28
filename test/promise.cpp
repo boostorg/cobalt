@@ -86,7 +86,6 @@ TEST_CASE("unwind")
   asio::io_context ctx;
   boost::async::this_thread::set_executor(ctx.get_executor());
   +should_unwind(ctx);
-  boost::async::this_thread::reset_executor();
 
 }
 
@@ -152,8 +151,6 @@ TEST_CASE("cancel-void")
 
 
   ctx.run();
-
-  async::this_thread::reset_executor();
 }
 
 async::promise<void> delay_v(asio::io_context &ctx, std::size_t ms)
@@ -185,8 +182,6 @@ TEST_CASE("cancel-int")
 
 
   ctx.run();
-
-  async::this_thread::reset_executor();
 }
 
 
@@ -204,8 +199,6 @@ TEST_CASE("throw-cpl")
 
 
   CHECK_THROWS(ctx.run());
-
-  async::this_thread::reset_executor();
 }
 
 TEST_CASE("throw-cpl-delay")
@@ -222,8 +215,6 @@ TEST_CASE("throw-cpl-delay")
 
 
   CHECK_THROWS(ctx.run());
-
-  async::this_thread::reset_executor();
 }
 
 TEST_SUITE_END();

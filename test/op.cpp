@@ -94,7 +94,6 @@ TEST_CASE("op-throw")
 
   CHECK_THROWS(ctx.run());
 
-  async::this_thread::reset_executor();
 }
 
 
@@ -119,7 +118,6 @@ TEST_CASE("exception")                                                          
     auto p = std::coroutine_handle<boost::async::test_case_promise>::from_promise(*tc.promise);                        \
     boost::asio::post(ctx.get_executor(), [p]{p.resume();});                                                           \
     CHECK_THROWS(ctx.run());                                                                                          \
-    boost::async::this_thread::reset_executor();                                                                       \
 }
 
 

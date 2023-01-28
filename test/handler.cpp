@@ -24,6 +24,8 @@ void test(boost::async::completion_handler<> ch)
   boost::asio::post(std::move(ch));
 }
 
+TEST_SUITE_BEGIN("handler");
+
 TEST_CASE("testing")
 {
   boost::asio::io_context ctx;
@@ -34,6 +36,6 @@ TEST_CASE("testing")
   CHECK(res == 0);
   ch(42);
   CHECK(res == 42);
-
-  boost::async::this_thread::reset_executor();
 }
+
+TEST_SUITE_END();
