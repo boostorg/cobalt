@@ -32,7 +32,6 @@ CO_TEST_CASE("variadic")
   auto exec = co_await asio::this_coro::executor;
   auto d1 = dummy(exec, std::chrono::milliseconds(100));
   auto d2 = dummy(exec, std::chrono::milliseconds( 50));
-
   auto c = co_await select(d1, d2, dummy(exec, std::chrono::milliseconds(100000)));
   CHECK(c.index() == 1u);
   CHECK(boost::variant2::get<1>(c) == 50);

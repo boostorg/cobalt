@@ -347,7 +347,6 @@ struct ranged_select_impl
   template<typename Promise>
   void await_suspend(std::coroutine_handle<Promise> h)
   {
-
     auto sl = asio::get_associated_cancellation_slot(h);
     if (sl.is_connected())
     {
@@ -411,6 +410,9 @@ template<asio::cancellation_type Ct = asio::cancellation_type::all, typename Pro
   requires detail::awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>>
 auto select(PromiseRange && p)
 {
+  if (std::empty(p))
+    throw_exception(std::invalid_argument("empty range selected"));
+
   return detail::ranged_select_impl<Ct, PromiseRange>{std::forward<PromiseRange>(p)};
 }
 

@@ -46,10 +46,7 @@ struct thread_promise : signal_helper_2,
                         enable_async_operation,
                         enable_await_allocator<thread_promise>
 {
-  thread_promise() : promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>(
-      signal_helper_2::signal.slot(), asio::enable_total_cancellation())
-  {
-  }
+  thread_promise();
 
   std::suspend_always initial_suspend() {return {};}
   std::suspend_never    final_suspend() noexcept { return {};}
@@ -59,27 +56,7 @@ struct thread_promise : signal_helper_2,
   {
   }
 
-  void run()
-  {
-    boost::async::this_thread::set_default_resource(&resource);
-    auto st = std::move(state);
-
-    if (st->signal.slot().is_connected())
-        st->signal.slot().assign([this](asio::cancellation_type tp){signal.emit(tp);});
-
-    exec.emplace(st->ctx.get_executor());
-    boost::async::this_thread::set_executor(st->ctx.get_executor());
-
-
-    asio::post(st->ctx.get_executor(),
-               [this]
-               {
-                  std::coroutine_handle<thread_promise>::from_promise(*this).resume();
-               });
-
-    st->ctx.run();
-  }
-
+  void run();
 
   using executor_type = typename asio::io_context::executor_type;
   executor_type get_executor() const {return exec->get_executor();}
@@ -120,9 +97,7 @@ struct thread_promise : signal_helper_2,
     return exec_helper{get_executor()};
   }
 
-  inline boost::async::thread get_return_object();
-
-
+  boost::async::thread get_return_object();
 
   struct state_t
   {
@@ -177,11 +152,6 @@ struct thread
   friend struct detail::thread_promise;;
 };
 
-boost::async::thread detail::thread_promise::get_return_object()
-{
-  auto st = state;
-  return boost::async::thread{std::thread{[this]{run();}}, std::move(st)};
-}
 
 }
 

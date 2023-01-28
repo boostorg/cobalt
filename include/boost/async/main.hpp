@@ -5,11 +5,9 @@
 #ifndef BOOST_ASYNC_MAIN_HPP
 #define BOOST_ASYNC_MAIN_HPP
 
-#include <boost/asio/io_context.hpp>
-#include <boost/asio/post.hpp>
-#include <boost/asio/signal_set.hpp>
 
 #include <coroutine>
+#include <boost/asio/io_context.hpp>
 #include <boost/container/pmr/memory_resource.hpp>
 #include <boost/container/pmr/monotonic_buffer_resource.hpp>
 #include <boost/container/pmr/unsynchronized_pool_resource.hpp>
@@ -19,6 +17,13 @@
 #include "boost/async/detail/async_operation.hpp"
 #include <boost/async/this_coro.hpp>
 
+namespace boost::asio
+{
+
+template<typename Executor>
+class basic_signal_set;
+
+}
 
 namespace boost::async
 {
@@ -86,13 +91,7 @@ struct main_promise : signal_helper,
     }
 
     std::suspend_always initial_suspend() {return {};}
-    auto final_suspend() noexcept
-    {
-        system::error_code ec;
-        if (signal_set)
-            signal_set->cancel(ec);
-        return std::suspend_never(); // enable_yielding_tasks::final_suspend();
-    }
+    auto final_suspend() noexcept -> std::suspend_never;
 
     void unhandled_exception() { throw ; }
     void return_value(int res = 0)
@@ -102,45 +101,24 @@ struct main_promise : signal_helper,
     }
 
     friend auto ::co_main (int argc, char * argv[]) -> boost::async::main;
-
+    static int run_main( ::boost::async::main mn);
 
     friend int main(int argc, char * argv[])
     {
-        container::pmr::unsynchronized_pool_resource root_resource;
-        auto pre = boost::async::this_thread::set_default_resource(&root_resource);
-        char buffer[8096];
-        container::pmr::monotonic_buffer_resource main_res{buffer, 8096, &root_resource};
-        my_resource = &main_res;
-
-        asio::io_context ctx;
-        boost::async::this_thread::set_executor(ctx.get_executor());
-        ::boost::async::main mn = co_main(argc, argv);
-        int res ;
-        mn.promise->result = &res;
-        mn.promise->exec.emplace(ctx.get_executor());
-        auto p = std::coroutine_handle<detail::main_promise>::from_promise(*mn.promise);
-        asio::signal_set ss{ctx, SIGINT, SIGTERM};
-        mn.promise->signal_set = &ss;
-        struct work
+      container::pmr::unsynchronized_pool_resource root_resource;
+      struct reset_res
+      {
+        void operator()(container::pmr::memory_resource * res)
         {
-            asio::signal_set & ss;
-            asio::cancellation_signal & signal;
-            void operator()(system::error_code ec, int sig) const
-            {
-                if (sig == SIGINT)
-                    signal.emit(asio::cancellation_type::total);
-                if (sig == SIGTERM)
-                    signal.emit(asio::cancellation_type::terminal);
-                if (!ec)
-                    ss.async_wait(*this);
-            }
-        };
-
-        ss.async_wait(work{ss, mn.promise->signal});
-        asio::post(ctx.get_executor(), [p]{p.resume();});
-
-        ctx.run();
-        return res;
+          this_thread::set_default_resource(res);
+        }
+      };
+      std::unique_ptr<container::pmr::memory_resource, reset_res> pr{
+        boost::async::this_thread::set_default_resource(&root_resource)};
+      char buffer[8096];
+      container::pmr::monotonic_buffer_resource main_res{buffer, 8096, &root_resource};
+      my_resource = &main_res;
+      return run_main(co_main(argc, argv));
     }
 
     using executor_type = typename asio::io_context::executor_type;
@@ -185,7 +163,7 @@ struct main_promise : signal_helper,
   private:
     int * result;
     std::optional<asio::executor_work_guard<executor_type>> exec;
-    asio::signal_set * signal_set;
+    asio::basic_signal_set<asio::io_context::executor_type> * signal_set;
     ::boost::async::main get_return_object()
     {
         return ::boost::async::main{this};
