@@ -28,6 +28,7 @@ struct select_impl
 
 
   select_impl(Args && ... p) : args(static_cast<Args&&>(p)...) {std::fill(cancel.begin(), cancel.end(), nullptr);}
+  select_impl(select_impl && lhs) : args(std::move(lhs.args)) {std::fill(cancel.begin(), cancel.end(), nullptr);}
 
   template<std::size_t ... Idx>
   bool await_ready_impl(std::index_sequence<Idx...>)
@@ -222,6 +223,10 @@ struct ranged_select_impl
                                          std::size_t, std::pair<std::size_t, inner_result_type>>;
 
   ranged_select_impl(PromiseRange && p) : range(static_cast<PromiseRange&&>(p))
+  {
+    std::fill(cancel.begin(), cancel.end(), nullptr);
+  }
+  ranged_select_impl(ranged_select_impl && lhs) : range(static_cast<PromiseRange&&>(lhs.range))
   {
     std::fill(cancel.begin(), cancel.end(), nullptr);
   }
