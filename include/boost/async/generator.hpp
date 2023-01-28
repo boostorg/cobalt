@@ -52,8 +52,12 @@ struct generator_receiver_base
 template<typename Yield>
 struct generator_receiver_base<Yield, void>
 {
+  bool pushed_value{false};
+
   auto get_awaitable()
   {
+    pushed_value = true;
+
     using impl = generator_receiver<Yield, void>;
     return typename impl::awaitable{static_cast<impl*>(this)};
   }
@@ -76,11 +80,14 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
   : exception(std::move(lhs.exception)), done(lhs.done), awaited_from(lhs.awaited_from),
   reference(lhs.reference), cancel_signal(lhs.cancel_signal)
   {
-    if (!lhs.done)
+    if (!lhs.done && !lhs.exception)
+    {
+      reference = this;
       lhs.exception = moved_from_exception();
+    }
     lhs.done = true;
 
-    reference = this;
+
   }
 
   ~generator_receiver()
@@ -126,7 +133,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
     // the race is fine -> if we miss it, we'll get it in resume.
     bool await_ready() const
     {
-      return self->ready();
+       return self->ready() && !self->pushed_value;
     }
 
     template<typename Promise>
@@ -288,6 +295,16 @@ struct generator_promise
     }
   }
 
+  ~generator_promise()
+  {
+    if (this->receiver)
+    {
+      if (!this->receiver->done && !this->receiver->exception)
+        this->receiver->exception = detail::completed_unexpected();
+      this->receiver->done = true;
+    }
+  }
+
   friend struct async_initiate;
 };
 
@@ -295,8 +312,7 @@ template<typename Yield, typename Push>
 struct generator_yield_awaitable
 {
   generator_receiver<Yield, Push> * self;
-  std::optional<Push> value;
-  constexpr bool await_ready() { return value; }
+  constexpr bool await_ready() { return self->pushed_value && !self->result; }
 
   std::coroutine_handle<void> await_suspend(std::coroutine_handle<generator_promise<Yield, Push>> h)
   {
@@ -309,7 +325,7 @@ struct generator_yield_awaitable
 
   Push await_resume()
   {
-    return std::move(value);
+    return *std::exchange(self->pushed_value, std::nullopt);
   }
 };
 
@@ -317,8 +333,7 @@ template<typename Yield>
 struct generator_yield_awaitable<Yield, void>
 {
   generator_receiver<Yield, void> * self;
-  bool value;
-  constexpr bool await_ready() { return value; }
+  constexpr bool await_ready() { return self->pushed_value; }
 
   auto await_suspend(std::coroutine_handle<generator_promise<Yield, void>> h)
   {
@@ -331,7 +346,7 @@ struct generator_yield_awaitable<Yield, void>
 
   void await_resume()
   {
-    value = false;
+    self->pushed_value = false;
   }
 };
 

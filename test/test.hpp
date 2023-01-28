@@ -6,7 +6,6 @@
 #define BOOST_ASYNC_TEST_HPP
 
 #include <coroutine>
-
 #include <boost/async/main.hpp>
 
 namespace boost::async
@@ -91,10 +90,11 @@ TEST_CASE(__VA_ARGS__)                                                          
     boost::asio::io_context ctx;                                                                                       \
     auto tc = Function();                                                                                              \
     boost::async::this_thread::set_executor(ctx.get_executor());                                                       \
-    tc.promise->exec = boost::asio::require(ctx.get_executor(), boost::asio::execution::outstanding_work.tracked);            \
+    tc.promise->exec = boost::asio::require(ctx.get_executor(), boost::asio::execution::outstanding_work.tracked);     \
     auto p = std::coroutine_handle<boost::async::test_case_promise>::from_promise(*tc.promise);                        \
     boost::asio::post(ctx.get_executor(), [p]{p.resume();});                                                           \
     ctx.run();                                                                                                         \
+    boost::async::this_thread::reset_executor();                                                                       \
 }                                                                                                                      \
 static ::boost::async::test_case Function()
 

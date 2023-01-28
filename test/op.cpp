@@ -6,12 +6,14 @@
 //
 
 #include <boost/async/op.hpp>
+#include <boost/async/promise.hpp>
 #include <boost/asio.hpp>
 #include "doctest.h"
 #include "test.hpp"
 
 using namespace boost;
 
+TEST_SUITE_BEGIN("op");
 
 template<typename Timer>
 struct test_wait_op : async::enable_op<test_wait_op<Timer>>
@@ -75,3 +77,50 @@ CO_TEST_CASE("op")
   co_await post_op(co_await asio::this_coro::executor);
   co_await tim.async_wait(async::use_op);
 }
+
+TEST_CASE("op-throw")
+{
+  auto throw_ = []<typename Token>(Token && tk)
+  {
+    throw std::runtime_error("test-exception");
+    return boost::asio::post(std::forward<Token>(tk));
+  };
+
+  auto val = [&]() -> async::promise<void> {co_await throw_;};
+
+  asio::io_context ctx;
+  async::this_thread::set_executor(ctx.get_executor());
+  spawn(ctx, val(), asio::detached);
+
+  CHECK_THROWS(ctx.run());
+
+  async::this_thread::reset_executor();
+}
+
+
+async::test_case test_case_exception()
+{
+
+  auto throw_ = []<typename Token>(Token && tk)
+  {
+    throw std::runtime_error("test-exception");
+    return boost::asio::post(std::forward<Token>(tk));
+  };
+
+  co_await throw_;
+}
+
+TEST_CASE("exception")                                                                                                 \
+{                                                                                                                      \
+    boost::asio::io_context ctx;                                                                                       \
+    auto tc = test_case_exception();                                                                                              \
+    boost::async::this_thread::set_executor(ctx.get_executor());                                                       \
+    tc.promise->exec = boost::asio::require(ctx.get_executor(), boost::asio::execution::outstanding_work.tracked);     \
+    auto p = std::coroutine_handle<boost::async::test_case_promise>::from_promise(*tc.promise);                        \
+    boost::asio::post(ctx.get_executor(), [p]{p.resume();});                                                           \
+    CHECK_THROWS(ctx.run());                                                                                          \
+    boost::async::this_thread::reset_executor();                                                                       \
+}
+
+
+TEST_SUITE_END();

@@ -126,11 +126,9 @@ struct completion_handler : detail::completion_handler_base
     template<typename Promise>
     completion_handler(std::coroutine_handle<Promise> h, std::optional<std::tuple<Args...>> &result)
             : completion_handler_base(h),
-              self(h.address(), detail::coro_deleter<void>{h}), result(result)
+              self(h.address()), result(result)
 
     {
-        if constexpr (requires (Promise & p) {p.notify_suspended();})
-            notify_suspended_impl = +[](void * p) {std::coroutine_handle<Promise>::from_address(p).promise().notify_suspended(); };
     }
 
     template<typename Handler>
@@ -146,9 +144,6 @@ struct completion_handler : detail::completion_handler_base
     }
     void operator()(Args ... args)
     {
-        if (notify_suspended_impl)
-            notify_suspended_impl(self.get());
-
         result.emplace(std::move(args)...);
         BOOST_ASSERT(this->self != nullptr);
         auto p = this->self.release();
@@ -158,9 +153,6 @@ struct completion_handler : detail::completion_handler_base
  private:
     std::unique_ptr<void, detail::coro_deleter<void>> self;
     std::optional<std::tuple<Args...>> &result;
-
-
-    void  (*notify_suspended_impl)(void*) = nullptr;
 };
 
 

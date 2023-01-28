@@ -19,9 +19,29 @@ boost::async::thread thr()
   co_await tim.async_wait(boost::asio::deferred);
 }
 
-TEST_CASE("thread")
+TEST_SUITE_BEGIN("thread");
+
+TEST_CASE("run")
 {
   auto t = thr();
 
   t.join();
 }
+
+
+boost::async::thread thr_stop()
+{
+  boost::asio::steady_timer tim{co_await boost::asio::this_coro::executor, std::chrono::milliseconds(100)};
+
+  auto exec = co_await boost::asio::this_coro::executor;
+  exec.context().stop();
+  co_await tim.async_wait(boost::asio::deferred);
+}
+
+TEST_CASE("stop")
+{
+  auto t = thr_stop();
+  t.join();
+}
+
+TEST_SUITE_END();

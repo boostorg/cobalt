@@ -96,14 +96,17 @@ struct promise_receiver : promise_value_holder<T>
 
   promise_receiver() = default;
   promise_receiver(promise_receiver && lhs)
-      : exception(std::move(lhs.exception)), done(lhs.done), awaited_from(lhs.awaited_from),
+      : promise_value_holder<T>(std::move(lhs)),
+        exception(std::move(lhs.exception)), done(lhs.done), awaited_from(lhs.awaited_from),
         reference(lhs.reference), cancel_signal(lhs.cancel_signal)
   {
-    if (!lhs.done)
+    if (!done && !exception)
+    {
+      reference = this;
       lhs.exception = moved_from_exception();
-    lhs.done = true;
+    }
 
-    reference = this;
+    lhs.done = true;
   }
 
   ~promise_receiver()
@@ -285,6 +288,17 @@ struct async_promise
           throw ;
     }
 
+    ~async_promise()
+    {
+      if (this->receiver)
+      {
+        if (!this->receiver->done && !this->receiver->exception)
+          this->receiver->exception = completed_unexpected();
+        this->receiver->set_done();
+      }
+
+    }
+
     friend struct async_initiate;
 };
 
@@ -360,15 +374,11 @@ struct async_initiate
     {
         auto & rec = a.receiver_;
         if (rec.done)
-            return asio::post(asio::append(h, rec.exception, rec.get_result()));
+          return asio::post(asio::append(h, rec.exception, rec.exception ? T() : rec.get_result()));
 
         auto alloc = asio::get_associated_allocator(h, container::pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()});
         auto recs = std::allocate_shared<detail::promise_receiver<T>>(
                                 alloc, std::move(rec));
-
-        if (recs->done)
-            return asio::post(asio::append(h, rec.exception, recs->get_result()));
-
 
         auto sl = asio::get_associated_cancellation_slot(h);
         if (sl.is_connected())
@@ -395,6 +405,7 @@ struct async_initiate
                     )
                 )
             );
+        a.detach();
     }
 
     template<typename Handler>
@@ -435,6 +446,7 @@ struct async_initiate
                         )
                     )
                 );
+        a.detach();
     }
 
 
@@ -449,18 +461,23 @@ struct async_initiate
 }
 
 template<typename T, typename CompletionToken>
-auto spawn(promise<T> && t,
-           CompletionToken&& token)
+auto spawn(promise<T> && t, CompletionToken&& token)
 {
-    using signature = std::conditional_t<std::is_void_v<T>, void(std::exception_ptr), void(std::exception_ptr, T)>;
-    return asio::async_initiate<CompletionToken, signature>(
+    return asio::async_initiate<CompletionToken, void(std::exception_ptr, T)>(
             detail::async_initiate{}, token, std::move(t));
+}
+
+template<typename CompletionToken>
+auto spawn(promise<void> && t, CompletionToken&& token)
+{
+  return asio::async_initiate<CompletionToken, void(std::exception_ptr)>(
+      detail::async_initiate{}, token, std::move(t));
 }
 
 
 template<typename ExecutionContext, typename T, typename CompletionToken>
     requires (std::is_convertible<ExecutionContext&, asio::execution_context&>::value)
-auto spawn(ExecutionContext context,
+auto spawn(ExecutionContext & context,
            promise<T> && t,
            CompletionToken&& token BOOST_ASIO_DEFAULT_COMPLETION_TOKEN(typename ExecutionContext::executor_type))
 {

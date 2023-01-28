@@ -43,7 +43,6 @@ inline container::pmr::polymorphic_allocator<void> get_allocator()
   return container::pmr::polymorphic_allocator<void>(get_default_resource());
 }
 
-
 inline typename asio::io_context::executor_type & get_executor()
 {
   if (!detail::executor)
@@ -55,6 +54,12 @@ inline void set_executor(asio::io_context::executor_type exec) noexcept
 {
   detail::executor = std::move(exec);
 }
+
+inline void reset_executor() noexcept
+{
+  detail::executor.reset();
+}
+
 
 }
 

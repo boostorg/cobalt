@@ -75,7 +75,7 @@ struct awaitable_async_operation_interpreted<void(Args...), Op>
     std::optional<std::tuple<Args...>> result;
     bool await_ready() { return result.has_value(); }
 
-    auto await_resume()
+    [[nodiscard]] auto await_resume()
     {
         return interpret_result(std::move(*result));
     }

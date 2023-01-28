@@ -105,18 +105,9 @@ struct coro_deleter<void>
 {
     coro_deleter() = default;
 
-    template<typename Promise>
-    coro_deleter(std::coroutine_handle<Promise> h)
-        : deleter(+[](void * h) {std::coroutine_handle<Promise>::from_address(h).destroy();})
-    {}
-    void(*deleter)(void*) = nullptr;
-
     void operator()(void* c)
     {
-        if (deleter)
-            deleter(c);
-        else
-            std::coroutine_handle<void>::from_address(c).destroy();
+        std::coroutine_handle<void>::from_address(c).destroy();
     }
 };
 

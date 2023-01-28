@@ -5,11 +5,16 @@
 
 #include <boost/async/detail/wrapper.hpp>
 
+#include <boost/asio/detached.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/bind_allocator.hpp>
 #include <boost/container/pmr/monotonic_buffer_resource.hpp>
 
-int main()
+#include "doctest.h"
+
+TEST_SUITE_BEGIN("wrappers");
+
+TEST_CASE("regular")
 {
     boost::asio::io_context ctx;
     bool ran = false;
@@ -22,12 +27,20 @@ int main()
                                               [&]{ran = true;}
                                               )
                                           );
-    assert(p);
-    assert(!ran);
+    CHECK(p);
+    CHECK(!ran);
     p.resume();
-    assert(!ran);
+    CHECK(!ran);
     ctx.run();
-    assert(ran);
-
-    return 0;
+    CHECK(ran);
 }
+
+TEST_CASE("expire")
+{
+
+  boost::asio::io_context ct2;
+  auto h = boost::async::detail::post_coroutine(ct2.get_executor(), boost::asio::detached);
+  h.destroy();
+}
+
+TEST_SUITE_END();

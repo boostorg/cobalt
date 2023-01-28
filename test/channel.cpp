@@ -97,19 +97,17 @@ CO_TEST_CASE("int")
 {
   async::channel<int> chn{2u, co_await async::this_coro::executor};
 
-
-
   std::vector<int> seq;
-  auto r = do_read(chn, seq);
   auto w = do_write(chn, seq);
+  auto r = do_read(chn, seq);
 
   co_await r;
   co_await w;
   REQUIRE(seq.size() == 16);
-  CHECK(seq[0] == 10);
-  CHECK(seq[1] == 0);
-  CHECK(seq[2] == 1);
-  CHECK(seq[3] == 2);
+  CHECK(seq[0] == 0);
+  CHECK(seq[1] == 1);
+  CHECK(seq[2] == 2);
+  CHECK(seq[3] == 10);
   CHECK(seq[4] == 11);
   CHECK(seq[5] == 12);
   CHECK(seq[6] == 3);

@@ -32,12 +32,47 @@ CO_TEST_CASE("generator-int")
 {
   auto g = gen();
 
-  int i = 0;
+  int i = 1;
   while (g)
     CHECK(i ++ == co_await g);
 
 
   CHECK(i == 11);
+
+  co_return ;
+}
+
+async::generator<int, int> gen_push()
+{
+  asio::steady_timer  tim{async::this_thread::get_executor()};
+  int val = 1u;
+  for (int i = 0; i <10; i ++)
+  {
+    auto v = co_yield val;
+    CHECK(v == val);
+    val += v;
+  }
+
+
+  co_return val;
+}
+
+
+CO_TEST_CASE("generator-push")
+{
+  auto g = gen_push();
+
+  int i = 1;
+  while (g)
+  {
+    auto nw = co_await g(i);
+    i *= 2;
+    CHECK(i == nw);
+  }
+
+
+
+  CHECK(i == 1024);
 
   co_return ;
 }

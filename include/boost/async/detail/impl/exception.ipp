@@ -26,6 +26,11 @@ std::exception_ptr detached_exception()
   return ep;
 }
 
+std::exception_ptr completed_unexpected()
+{
+  static auto ep = std::make_exception_ptr(std::runtime_error("unexpected exit"));
+  return ep;
+}
 
 }
 

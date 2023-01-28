@@ -26,6 +26,8 @@ void test(boost::async::completion_handler<> ch)
 
 TEST_CASE("testing")
 {
+  boost::asio::io_context ctx;
+  boost::async::this_thread::set_executor(ctx.get_executor());
   int res = 0;
   boost::async::completion_handler<int> ch{[&](int i ){ res = i;}};
 
@@ -33,4 +35,5 @@ TEST_CASE("testing")
   ch(42);
   CHECK(res == 42);
 
+  boost::async::this_thread::reset_executor();
 }

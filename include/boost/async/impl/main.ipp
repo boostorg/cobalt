@@ -30,7 +30,7 @@ int main_promise::run_main(::boost::async::main mn)
 {
   asio::io_context ctx;
   boost::async::this_thread::set_executor(ctx.get_executor());
-  int res ;
+  int res = -1;
   mn.promise->result = &res;
   mn.promise->exec.emplace(ctx.get_executor());
   auto p = std::coroutine_handle<detail::main_promise>::from_promise(*mn.promise);
