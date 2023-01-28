@@ -46,7 +46,7 @@ struct completion_handler_base
   template<typename Promise>
   completion_handler_base(std::coroutine_handle<Promise> h)
           : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
-            executor(asio::get_associated_executor(h.promise(), this_thread::get_executor())),
+            executor(asio::get_associated_executor(h.promise())),
             allocator(asio::get_associated_allocator(h.promise(), this_thread::get_allocator())) {}
 };
 

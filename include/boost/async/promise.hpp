@@ -9,7 +9,6 @@
 #define BOOST_ASYNC_ASYNC_HPP
 
 #include <boost/async/this_coro.hpp>
-#include <boost/async/cancellation.hpp>
 #include <boost/async/detail/concepts.hpp>
 #include <boost/async/detail/async_operation.hpp>
 #include <boost/async/detail/exception.hpp>
