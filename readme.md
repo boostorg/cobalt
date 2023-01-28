@@ -96,7 +96,7 @@ async::promise<void> my_task();
 
 async::main co_main()
 {
-    // warns
+    // warns & cancels the task
     my_task();
     // ok
     +my_task();
@@ -106,82 +106,3 @@ async::main co_main()
 ```
 
 An async:promise can also be used with `spawn` to turn it into an asio operation.
-
-
-## Wrappers
-
-The wrappers around the io-objects follow this pattern:
-
-no sync-io, the async_ prefix is dropped. All those function return ops that can be awaited. Furthmore, that is an overload taking a reference to an `error_code`, that avoids throwing exceptions.
-
-They additionally implement abstract interfaces such as `read_stream`:
-
-```cpp
-struct execution_context
-{
-  /// The type of the executor associated with the object.
-  using executor_type = asio::io_context::executor_type;
-  /// Get the executor associated with the object.
-  virtual executor_type get_executor() = 0;
-  virtual ~execution_context() = default;
-};
-
-
-struct read_stream : virtual execution_context
-{
-
-// the three following functions are for async_read_until
-  virtual void async_read_some(asio::mutable_buffer buffer,                     read_handler h) = 0;
-  virtual void async_read_some(static_buffer_base::mutable_buffers_type buffer, read_handler h) = 0;
-  virtual void async_read_some(multi_buffer::mutable_buffers_type buffer,       read_handler h) = 0;
-
-  [[nodiscard]] auto read_some(asio::mutable_buffer buffer);
-  [[nodiscard]] auto read_some(asio::mutable_buffer buffer, system::error_code & ec);
-};
-```
-
-This allows the following usage:
-
-```cpp
-// can be any readable stream, a pipe, a tcp socket, a ssl<tcp-socket> etc.
-async::promise<void> read_my_thingy(async_read_stream & rs);
-
-async::main co_main(int argc, char ** argv)
-{
-    // redable & writable pipes!
-    auto [rp, wp] = async::connect_pipe(co_await async::this_coro::executor);
-
-    read_my_thingy(rp);
-
-    co_return 0;
-}
-```
-
-Additionally, the algorithms of asio are supported for a fixed set of buffers:
-
-
-```cpp
-auto read_until(concepts::read_stream & stream, mutable_buffer              buffer);
-auto read_until(concepts::read_stream & stream, flat_static_buffer_base    &buffer);
-auto read_until(concepts::read_stream & stream, static_buffer_base         &buffer);
-auto read_until(concepts::read_stream & stream, flat_buffer                &buffer);
-auto read_until(concepts::read_stream & stream, multi_buffer               &buffer);
-auto read_until(concepts::read_stream & stream, std::string                &buffer);
-auto read_until(concepts::read_stream & stream, std::vector<unsigned char> &buffer);
-auto read_until(concepts::read_stream & stream, streambuf                  &buffer);
-```
-
-With equivalent overloads matching all overloads in asio.
-
-```cpp
-async::main co_main(int argc, char ** argv)
-{
-    // redable & writable pipes!
-    auto [rp, wp] = async::io::connect_pipe(co_await async::this_coro::executor);
-
-    std::string line;
-    async::io::read_until(rp, line, '\n');
-
-    co_return 0;
-}
-```

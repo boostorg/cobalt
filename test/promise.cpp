@@ -96,8 +96,8 @@ async::promise<int> return_(std::size_t ms)
 
 async::promise<std::size_t> delay_r(asio::io_context &ctx, std::size_t ms)
 {
-  asio::steady_timer tim(ctx, std::chrono::milliseconds{ms});
-  co_await tim.async_wait(asio::deferred);
+   auto tim = async::use_op.as_default_on(asio::steady_timer(ctx, std::chrono::milliseconds{ms}));
+  co_await tim.async_wait();
   co_return ms;
 }
 

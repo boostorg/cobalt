@@ -118,6 +118,11 @@ struct use_op_t
     /// Specify @c deferred_t as the default completion token type.
     typedef use_op_t default_completion_token_type;
 
+    executor_with_default(const InnerExecutor& ex) BOOST_ASIO_NOEXCEPT
+        : InnerExecutor(ex)
+    {
+    }
+
     /// Construct the adapted executor from the inner executor type.
     template <typename InnerExecutor1>
     executor_with_default(const InnerExecutor1& ex,
@@ -127,10 +132,30 @@ struct use_op_t
                                   std::is_convertible<InnerExecutor1, InnerExecutor>,
                           std::false_type
           >::type::value>::type = 0) noexcept
-            : InnerExecutor(ex)
+      : InnerExecutor(ex)
     {
     }
   };
+
+  /// Type alias to adapt an I/O object to use @c deferred_t as its
+  /// default completion token type.
+  template <typename T>
+  using as_default_on_t = typename T::template rebind_executor<
+        executor_with_default<typename T::executor_type> >::other;
+
+  /// Function helper to adapt an I/O object to use @c deferred_t as its
+  /// default completion token type.
+  template <typename T>
+  static typename std::decay_t<T>::template rebind_executor<
+      executor_with_default<typename std::decay_t<T>::executor_type>
+    >::other
+  as_default_on(T && object)
+  {
+    return typename std::decay_t<T>::template rebind_executor<
+        executor_with_default<typename std::decay_t<T>::executor_type>
+      >::other(std::forward<T>(object));
+  }
+
 };
 
 constexpr use_op_t use_op{};
