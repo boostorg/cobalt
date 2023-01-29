@@ -10,7 +10,9 @@
 
 #include <boost/async/main.hpp>
 #include <boost/async/op.hpp>
+#include <boost/async/generator.hpp>
 #include <boost/async/promise.hpp>
+#include <boost/async/select.hpp>
 #include <boost/async/this_coro.hpp>
 #include <boost/async/this_thread.hpp>
 #include <boost/async/thread.hpp>

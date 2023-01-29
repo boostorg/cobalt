@@ -230,18 +230,17 @@ struct ranged_select_impl
   {
     std::fill(cancel.begin(), cancel.end(), nullptr);
   }
-
   bool await_ready()
   {
     std::size_t idx;
     for (auto & r : range)
       if (r.ready())
       {
-          if constexpr (std::is_void_v<result_type>)
-            this->result.emplace(idx);
-          else
-            this->result.emplace(idx, r.get());
-          return true;
+        if constexpr (std::is_void_v<inner_result_type>)
+          this->result.emplace(idx);
+        else
+          this->result.emplace(idx, r.get());
+        return true;
       }
 
     return false;
@@ -318,7 +317,12 @@ struct ranged_select_impl
       void return_value(T && t)
       {
         if (!ref.result)
-          ref.result.emplace(idx, std::forward<T>(t));
+        {
+          if constexpr (std::is_same_v<void, inner_result_type>)
+            ref.result.emplace(idx);
+          else
+            ref.result.emplace(idx, std::forward<T>(t));
+        }
 
         ref.cancel[idx] = nullptr;
 
@@ -333,11 +337,11 @@ struct ranged_select_impl
   try {
     if constexpr (std::is_same_v<void, inner_result_type>)
     {
-      co_await std::move(range[idx]);
+      co_await std::move(*std::next(range.begin(), idx));
       co_return variant2::monostate{};
     }
     else
-      co_return co_await std::move(range[idx]);
+      co_return co_await std::move(*std::next(range.begin(), idx));
   }
   catch (...)
   {

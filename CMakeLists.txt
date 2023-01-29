@@ -89,5 +89,5 @@ endif()
 
 
 if(BOOST_ASYNC_BUILD_EXAMPLES)
-#    add_subdirectory(example)
+    add_subdirectory(example)
 endif()
