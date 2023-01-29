@@ -57,9 +57,11 @@ struct this_thread_service : asio::detail::execution_context_service_base<this_t
   {
   }
 
+
   void shutdown() override
   {
-    detail::executor.reset();
+    if (detail::executor && (&detail::executor->context() == &this->context()))
+      detail::executor.reset();
   }
 };
 

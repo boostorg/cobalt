@@ -101,7 +101,7 @@ struct thread_promise : signal_helper_2,
 
   struct state_t
   {
-    asio::io_context ctx;
+    asio::io_context ctx{1u};
     asio::cancellation_signal signal;
   };
  private:

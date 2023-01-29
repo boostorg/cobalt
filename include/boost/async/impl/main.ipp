@@ -28,7 +28,7 @@ auto main_promise::final_suspend() noexcept -> std::suspend_never
 
 int main_promise::run_main(::boost::async::main mn)
 {
-  asio::io_context ctx;
+  asio::io_context ctx{1u};
   boost::async::this_thread::set_executor(ctx.get_executor());
   int res = -1;
   mn.promise->result = &res;
