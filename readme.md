@@ -1,8 +1,8 @@
 # boost.promise
 
-*proof of concept*.
+*first draft*.
 
-This library provides a set of easy to use.
+This library provides a set of easy to use coroutine primitives & utilities.
 
 The assumptions are:
 
