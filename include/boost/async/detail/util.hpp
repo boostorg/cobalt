@@ -95,7 +95,7 @@ struct coro_deleter
     coro_deleter() = default;
     void operator()(Promise * c)
     {
-        std::coroutine_handle<Promise>::from_address(c).destroy();
+        std::coroutine_handle<Promise>::from_promise(*c).destroy();
     }
 };
 

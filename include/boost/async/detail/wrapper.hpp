@@ -111,10 +111,8 @@ struct dispatch_coroutine_promise : partial_promise<Allocator>
             constexpr bool await_ready() noexcept { return false; }
             auto await_suspend(std::coroutine_handle<void> h) noexcept
             {
-
                 auto c = std::move(cpl);
                 h.destroy();
-                auto exec = asio::get_associated_executor(c);
                 asio::dispatch(std::move(c));
             }
 

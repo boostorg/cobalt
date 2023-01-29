@@ -109,15 +109,9 @@ async::test_case test_case_exception()
   co_await throw_;
 }
 
-TEST_CASE("exception")                                                                                                 \
-{                                                                                                                      \
-    boost::asio::io_context ctx;                                                                                       \
-    auto tc = test_case_exception();                                                                                              \
-    boost::async::this_thread::set_executor(ctx.get_executor());                                                       \
-    tc.promise->exec = boost::asio::require(ctx.get_executor(), boost::asio::execution::outstanding_work.tracked);     \
-    auto p = std::coroutine_handle<boost::async::test_case_promise>::from_promise(*tc.promise);                        \
-    boost::asio::post(ctx.get_executor(), [p]{p.resume();});                                                           \
-    CHECK_THROWS(ctx.run());                                                                                          \
+TEST_CASE("exception")
+{
+    CHECK_THROWS(run(test_case_exception()));
 }
 
 

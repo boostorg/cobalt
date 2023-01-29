@@ -10,6 +10,7 @@
 
 #include <boost/async/detail/impl/exception.ipp>
 #include <boost/async/impl/main.ipp>
+#include <boost/async/impl/test.ipp>
 #include <boost/async/impl/this_thread.ipp>
 #include <boost/async/impl/thread.ipp>
 
