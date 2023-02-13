@@ -32,6 +32,12 @@ std::exception_ptr completed_unexpected()
   return ep;
 }
 
+std::exception_ptr wait_not_ready()
+{
+  static auto ep = std::make_exception_ptr(std::runtime_error("wait_not_ready"));
+  return ep;
+}
+
 }
 
 #endif //BOOST_ASYNC_DETAIL_IMPL_EXCEPTION_IPP

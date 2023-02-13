@@ -5,12 +5,13 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_ASYNC_SELECT_HPP
-#define BOOST_ASYNC_SELECT_HPP
+#ifndef BOOST_ASYNC_WAIT_HPP
+#define BOOST_ASYNC_WAIT_HPP
 
 #include <boost/async/promise.hpp>
 #include <boost/async/detail/await_result_helper.hpp>
 #include <boost/container/pmr/vector.hpp>
+#include <boost/system/result.hpp>
 #include <boost/variant2/variant.hpp>
 
 namespace boost::async
@@ -20,15 +21,13 @@ namespace detail
 {
 
 template<asio::cancellation_type Ct, typename ... Args>
-struct select_impl
+struct wait_impl
 {
-  template<typename Arg>
-  using result_helper = std::conditional_t<std::is_void_v<Arg>, variant2::monostate, Arg>;
-  using result_type = variant2::variant<result_helper<co_await_result_t<Args>>...>;
+  using result_type = std::tuple<system::result<co_await_result_t<Args>, std::exception_ptr>...>;
 
 
-  select_impl(Args && ... p) : args(static_cast<Args&&>(p)...) {std::fill(cancel.begin(), cancel.end(), nullptr);}
-  select_impl(select_impl && lhs) : args(std::move(lhs.args)) {std::fill(cancel.begin(), cancel.end(), nullptr);}
+  wait_impl(Args && ... p) : args(static_cast<Args&&>(p)...) {std::fill(cancel.begin(), cancel.end(), nullptr);}
+  wait_impl(wait_impl && lhs) : args(std::move(lhs.args)) {std::fill(cancel.begin(), cancel.end(), nullptr);}
 
   template<std::size_t ... Idx>
   bool await_ready_impl(std::index_sequence<Idx...>)
@@ -39,14 +38,23 @@ struct select_impl
           if constexpr (requires {std::get<Idx>(args).ready(); std::get<Idx>(args).get();})
             if (std::get<Idx>(args).ready())
             {
-              if constexpr (std::is_void_v<decltype(std::get<Idx>(args).get())>)
-                this->result.emplace(variant2::in_place_index<Idx>);
-              else
-                this->result.emplace(variant2::in_place_index<Idx>, std::get<Idx>(args).get());
+              try
+              {
+                if constexpr (std::is_void_v<decltype(std::get<Idx>(args).get())>)
+                  std::get<Idx>(this->result) = system::result<void, std::exception_ptr>{};
+                else
+                  std::get<Idx>(this->result) = std::get<Idx>(args).get();
+              }
+              catch(...)
+              {
+                std::get<Idx>(this->result) = std::tuple_element_t<Idx, result_type>(std::current_exception());
+              }
+
+              outstanding--;
               return true;
             }
           return false;
-        }()) || ... );
+        }()) && ... );
   };
 
   bool await_ready()
@@ -59,7 +67,7 @@ struct select_impl
   {
     struct promise_type
     {
-      select_impl & ref;
+      wait_impl & ref;
       using cancellation_slot_type = asio::cancellation_slot;
 
       asio::cancellation_signal cancel;
@@ -68,14 +76,14 @@ struct select_impl
         return cancel.slot();
       }
 
-      void* operator new(std::size_t n, select_impl & ref, std::size_t )
+      void* operator new(std::size_t n, wait_impl & ref, std::size_t )
       {
         return ref.memory_resource.allocate(n);
       }
 
       void operator delete(void *, std::size_t) {}
 
-      promise_type(select_impl & ref, std::integral_constant<std::size_t, Idx> idx) : ref(ref)
+      promise_type(wait_impl & ref, std::integral_constant<std::size_t, Idx> idx) : ref(ref)
       {
         ref.cancel[idx] = &cancel;
       }
@@ -95,20 +103,6 @@ struct select_impl
             auto & rf = h.promise().ref;
             std::coroutine_handle<void> res = std::noop_coroutine();
 
-            for (auto & r : rf.cancel)
-              if (r)
-              {
-                std::array<bool, sizeof...(Args)> lval_ref{std::is_lvalue_reference_v<Args>...};
-                if (lval_ref[&r - &rf.cancel[0]])
-                {
-                  if (r)
-                    r->emit(interrupt_await);
-                  if (!r)
-                    continue;
-                }
-                std::exchange(r, nullptr)->emit(Ct);
-              }
-
             h.destroy();
             if (--rf.outstanding == 0u)
               res = std::coroutine_handle<void>::from_address(rf.awaited_from.release());
@@ -122,29 +116,31 @@ struct select_impl
 
       void unhandled_exception()
       {
-        if (!ref.exception && !ref.result)
-          ref.exception = std::current_exception();
+        std::get<Idx>(ref.result) = std::current_exception();
+      }
+
+      void return_value(variant2::monostate &&)
+      {
+        std::get<Idx>(ref.result) = system::result<void, std::exception_ptr>{};
+        ref.cancel[Idx] = nullptr;
       }
 
       template<typename T>
       void return_value(T && t)
       {
-        if (!ref.result)
-          ref.result.emplace(variant2::in_place_index<Idx>, std::forward<T>(t));
-
+        std::get<Idx>(ref.result) = std::forward<T>(t);
         ref.cancel[Idx] = nullptr;
-
       }
 
       stub get_return_object() {return {};}
     };
 
   };
-
   template<std::size_t Idx>
   stub<Idx> await_suspend_impl_step(std::integral_constant<std::size_t, Idx>)
-  try {
-    if constexpr (std::is_same_v<variant2::variant_alternative_t<Idx, result_type>, variant2::monostate>)
+  try
+  {
+    if constexpr (std::is_same_v<typename std::tuple_element_t<Idx, result_type>::value_type, void>)
     {
       co_await std::move(std::get<Idx>(args));
       co_return variant2::monostate{};
@@ -190,12 +186,9 @@ struct select_impl
   auto await_resume()
   {
     if (cancellation_slot.is_connected())
-        cancellation_slot.clear();
+      cancellation_slot.clear();
 
-    if (exception)
-      std::rethrow_exception(exception);
-
-    return std::move(result.value());
+    return std::move(result);
   }
 
  private:
@@ -206,54 +199,65 @@ struct select_impl
   asio::cancellation_slot cancellation_slot;
   std::unique_ptr<void, detail::coro_deleter<void>> awaited_from;
 
-  std::optional<result_type> result;
-  std::exception_ptr exception;
+  result_type result{wait_not_ready<Args>()...};
 
-  char memory_buffer[((1200 + sizeof(co_await_result_t<Args>)) + ...)];
+  char memory_buffer[((1200 + sizeof(std::conditional_t<std::is_void_v<co_await_result_t<Args>>, variant2::monostate, co_await_result_t<Args>>)) + ...)];
   container::pmr::monotonic_buffer_resource memory_resource{memory_buffer, sizeof(memory_buffer)};
 };
 
 
 template<asio::cancellation_type Ct, typename PromiseRange>
-struct ranged_select_impl
+struct ranged_wait_impl
 {
-  using inner_result_type = co_await_result_t<std::decay_t<decltype(*std::begin(std::declval<PromiseRange>()))>>;
+  using result_type = system::result<
+      co_await_result_t<std::decay_t<decltype(*std::begin(std::declval<PromiseRange>()))>>,
+      std::exception_ptr>;
 
-  using result_type = std::conditional_t<std::is_void_v<inner_result_type>,
-                                         std::size_t, std::pair<std::size_t, inner_result_type>>;
-
-  ranged_select_impl(PromiseRange && p) : range(static_cast<PromiseRange&&>(p))
+  ranged_wait_impl(PromiseRange && p) : range(static_cast<PromiseRange&&>(p))
   {
+    result.resize(std::size(range), result_type(detail::wait_not_ready()));
+    was_ready.resize(std::size(range), false);
     std::fill(cancel.begin(), cancel.end(), nullptr);
   }
-  ranged_select_impl(ranged_select_impl && lhs) : range(static_cast<PromiseRange&&>(lhs.range))
+  ranged_wait_impl(ranged_wait_impl && lhs)
+    : range(static_cast<PromiseRange&&>(lhs.range)), result(std::move(lhs.result)), was_ready(std::move(lhs.was_ready))
   {
     std::fill(cancel.begin(), cancel.end(), nullptr);
   }
   bool await_ready()
   {
-    std::size_t idx = 0;
-    for (auto & r : range)
+    bool all_ready = true;
+    for (std::size_t idx = 0u; idx < std::size(range); idx++)
     {
+      auto & r = range[idx];
       if (r.ready())
       {
-        if constexpr (std::is_void_v<inner_result_type>)
-          this->result.emplace(idx);
-        else
-          this->result.emplace(idx, r.get());
-        return true;
+        try
+        {
+          if constexpr (std::is_void_v<typename result_type::value_type>)
+            this->result[idx] = system::result<void, std::exception_ptr>{};
+          else
+            this->result[idx] = r.get();
+        }
+        catch(...)
+        {
+          this->result[idx] = result_type(std::current_exception());
+        }
+        was_ready[idx] = true;
+        this->outstanding--;
       }
-      idx++;
+      else
+        all_ready = false;
     }
-    return false;
+    return all_ready;
   };
 
   struct stub
   {
     struct promise_type
     {
-      ranged_select_impl & ref;
-      std::size_t idx{0u};
+      ranged_wait_impl & ref;
+      std::size_t idx;
       using cancellation_slot_type = asio::cancellation_slot;
 
       asio::cancellation_signal cancel;
@@ -262,14 +266,14 @@ struct ranged_select_impl
         return cancel.slot();
       }
 
-      void* operator new(std::size_t n, ranged_select_impl & ref, std::size_t )
+      void* operator new(std::size_t n, ranged_wait_impl & ref, std::size_t )
       {
         return ref.memory_resource.allocate(n);
       }
 
       void operator delete(void *, std::size_t) {}
 
-      promise_type(ranged_select_impl & ref, std::size_t idx) : ref(ref), idx(idx)
+      promise_type(ranged_wait_impl & ref, std::size_t idx) : ref(ref), idx(idx)
       {
         ref.cancel[idx] = &cancel;
       }
@@ -289,15 +293,6 @@ struct ranged_select_impl
             auto & rf = h.promise().ref;
             std::coroutine_handle<void> res = std::noop_coroutine();
 
-            if constexpr(std::is_lvalue_reference_v<PromiseRange>)
-              for (auto & r : rf.cancel)
-                if (r)
-                  r->emit(interrupt_await);
-
-            for (auto & r : rf.cancel)
-              if (r)
-                std::exchange(r, nullptr)->emit(Ct);
-
             h.destroy();
             if (--rf.outstanding == 0u)
               res = std::coroutine_handle<void>::from_address(rf.awaited_from.release());
@@ -311,20 +306,16 @@ struct ranged_select_impl
 
       void unhandled_exception()
       {
-        if (!ref.exception && !ref.result)
-          ref.exception = std::current_exception();
+        ref.result[idx] = std::current_exception();
       }
 
       template<typename T>
       void return_value(T && t)
       {
-        if (!ref.result)
-        {
-          if constexpr (std::is_same_v<void, inner_result_type>)
-            ref.result.emplace(idx);
-          else
-            ref.result.emplace(idx, std::forward<T>(t));
-        }
+        if constexpr (std::is_same_v<void, typename result_type::value_type>)
+          ref.result[idx] = system::result<void, std::exception_ptr>();
+        else
+          ref.result[idx] = std::forward<T>(t);
 
         ref.cancel[idx] = nullptr;
 
@@ -336,8 +327,9 @@ struct ranged_select_impl
   };
 
   stub await_suspend_impl(std::size_t idx)
-  try {
-    if constexpr (std::is_same_v<void, inner_result_type>)
+  try
+  {
+    if constexpr (std::is_same_v<void, typename result_type::value_type>)
     {
       co_await std::move(*std::next(range.begin(), idx));
       co_return variant2::monostate{};
@@ -371,25 +363,24 @@ struct ranged_select_impl
     }
     awaited_from.reset(h.address());
     for (std::size_t i = 0u; i < std::size(range); i++)
-      await_suspend_impl(i);
+      if (!was_ready[i])
+        await_suspend_impl(i);
   }
 
-  result_type await_resume()
+  container::pmr::vector<result_type> await_resume()
   {
     if (cancellation_slot.is_connected())
       cancellation_slot.clear();
 
-    if (exception)
-      std::rethrow_exception(exception);
     if constexpr (!std::is_void_v<result_type>)
-      return std::move(result.value());
+      return std::move(result);
   }
 
  private:
   PromiseRange range;
   std::size_t outstanding{std::size(range)};
 
-  container::pmr::monotonic_buffer_resource memory_resource{((1200 + sizeof(result_type)) * std::size(range)),
+  container::pmr::monotonic_buffer_resource memory_resource{((1400 + sizeof(result_type)) * std::size(range)),
                                                             this_thread::get_default_resource()};
   container::pmr::vector<asio::cancellation_signal*> cancel{std::size(range),
                                                             nullptr,
@@ -397,29 +388,28 @@ struct ranged_select_impl
 
   asio::cancellation_slot cancellation_slot;
   std::unique_ptr<void, detail::coro_deleter<void>> awaited_from;
-
-  std::optional<result_type> result;
-  std::exception_ptr exception;
+  container::pmr::vector<bool> was_ready{cancel.get_allocator()};
+  container::pmr::vector<result_type> result{cancel.get_allocator()};
 };
 
 
 }
 
 template<asio::cancellation_type Ct = asio::cancellation_type::all, detail::awaitable ... Promise>
-auto select(Promise && ... p) -> detail::select_impl<Ct, Promise ...>
+auto wait(Promise && ... p) -> detail::wait_impl<Ct, Promise ...>
 {
-  return detail::select_impl<Ct, Promise ...>{std::forward<Promise>(p)...};
+  return detail::wait_impl<Ct, Promise ...>{std::forward<Promise>(p)...};
 }
 
 
 template<asio::cancellation_type Ct = asio::cancellation_type::all, typename PromiseRange>
-  requires detail::awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>>
-auto select(PromiseRange && p)
+requires detail::awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>>
+auto wait(PromiseRange && p)
 {
   if (std::empty(p))
-    throw_exception(std::invalid_argument("empty range selected"));
+    throw_exception(std::invalid_argument("empty range waited"));
 
-  return detail::ranged_select_impl<Ct, PromiseRange>{std::forward<PromiseRange>(p)};
+  return detail::ranged_wait_impl<Ct, PromiseRange>{std::forward<PromiseRange>(p)};
 }
 
 
@@ -427,4 +417,5 @@ auto select(PromiseRange && p)
 
 }
 
-#endif //BOOST_ASYNC_SELECT_HPP
+
+#endif //BOOST_ASYNC_WAIT_HPP

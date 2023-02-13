@@ -16,6 +16,10 @@ namespace boost::async::detail
 std::exception_ptr moved_from_exception();
 std::exception_ptr detached_exception();
 std::exception_ptr completed_unexpected();
+std::exception_ptr wait_not_ready();
+
+template<typename >
+std::exception_ptr wait_not_ready() { return wait_not_ready();}
 
 }
 
