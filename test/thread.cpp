@@ -10,6 +10,7 @@
 #include <boost/asio/steady_timer.hpp>
 
 #include "doctest.h"
+#include "test.hpp"
 
 boost::async::thread thr()
 {
@@ -43,5 +44,18 @@ TEST_CASE("stop")
   auto t = thr_stop();
   t.join();
 }
+
+CO_TEST_CASE("await-thread")
+{
+  co_await thr();
+
+  auto th = thr_stop();
+  boost::asio::steady_timer tim{co_await boost::asio::this_coro::executor, std::chrono::milliseconds(200)};
+  co_await tim.async_wait(boost::asio::deferred);
+  co_await th;
+  CHECK_THROWS(co_await th);
+
+}
+
 
 TEST_SUITE_END();

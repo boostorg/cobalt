@@ -30,15 +30,31 @@ void thread_promise::run()
   exec.emplace(st->ctx.get_executor());
   boost::async::this_thread::set_executor(st->ctx.get_executor());
 
-
   asio::post(st->ctx.get_executor(),
              [this]
              {
                std::coroutine_handle<thread_promise>::from_promise(*this).resume();
              });
+  try
+  {
+    st->ctx.run();
+    st->done = true;
+    if (st->waitor)
+      asio::post(*std::exchange(st->waitor, std::nullopt));
+  }
+  catch(...)
+  {
+    std::lock_guard<std::mutex> lock(st->mtx);
+    st->ep = std::current_exception();
+    st->done = true;
+    if (!st->waitor) // nobodies waiting, so unhandled exception
+      throw;
+    else
+      asio::post(*std::exchange(st->waitor, std::nullopt));
+  }
 
-  st->ctx.run();
 }
+
 
 boost::async::thread detail::thread_promise::get_return_object()
 {

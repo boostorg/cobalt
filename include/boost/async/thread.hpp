@@ -16,6 +16,7 @@
 
 #include "boost/async/detail/concepts.hpp"
 #include "boost/async/detail/async_operation.hpp"
+#include "boost/async/detail/forward_cancellation.hpp"
 #include <boost/async/this_coro.hpp>
 #include <boost/container/pmr/unsynchronized_pool_resource.hpp>
 
@@ -103,14 +104,80 @@ struct thread_promise : signal_helper_2,
   {
     asio::io_context ctx{1u};
     asio::cancellation_signal signal;
+    std::mutex mtx;
+    std::exception_ptr ep;
+    std::optional<completion_handler<>> waitor;
+    bool done = false;
   };
  private:
 
   std::shared_ptr<state_t> state = std::make_shared<state_t>();
   std::optional<asio::executor_work_guard<executor_type>> exec;
-
 };
 
+struct thread_awaitable
+{
+  bool await_ready() const
+  {
+    if (state_ == nullptr)
+      throw std::logic_error("Thread expired");
+    std::lock_guard<std::mutex> lock{state_->mtx};
+    return state_->done;
+  }
+
+  template<typename Promise>
+  bool await_suspend(std::coroutine_handle<Promise> h)
+  {
+    BOOST_ASSERT(state_);
+
+    std::lock_guard<std::mutex> lock{state_->mtx};
+    if (state_->done)
+      return false;
+
+    if constexpr (requires (Promise p) {p.get_cancellation_slot();})
+      if (auto sl = h.promise().get_cancellation_slot(); sl.is_connected())
+      {
+        if (thread_) // connect to cancel the thread
+          sl.assign(
+              [st = state_](asio::cancellation_type type)
+              {
+                std::lock_guard<std::mutex> lock{st->mtx};
+                asio::post(st->ctx,[st, type]{st->signal.emit(type);});
+              });
+        else
+          sl.assign(
+              [st = state_](asio::cancellation_type type)
+              {
+                std::lock_guard<std::mutex> lock{st->mtx};
+                if (type == interrupt_await)
+                  asio::post(*std::exchange(st->waitor, std::nullopt));
+                else
+                  asio::post(st->ctx,[st, type]{st->signal.emit(type);});
+              });
+      }
+
+    state_->waitor.emplace(h);
+    return true;
+  }
+
+  void await_resume()
+  {
+    if (thread_)
+      thread_-> join();
+    if (state_->ep)
+      std::rethrow_exception(state_->ep);
+  }
+
+  explicit thread_awaitable(std::shared_ptr<detail::thread_promise::state_t> state)
+        : state_(std::move(state)) {}
+
+  explicit thread_awaitable(std::thread thread,
+                            std::shared_ptr<detail::thread_promise::state_t> state)
+        : thread_(std::move(thread)), state_(std::move(state)) {}
+ private:
+  std::optional<std::thread> thread_;
+  std::shared_ptr<detail::thread_promise::state_t> state_;
+};
 
 }
 
@@ -130,6 +197,15 @@ struct thread
   {
     thread_.detach();
     state_ = nullptr;
+  }
+
+  auto operator co_await() &-> detail::thread_awaitable
+  {
+    return  detail::thread_awaitable{std::move(state_)};
+  }
+  auto operator co_await() && -> detail::thread_awaitable
+  {
+    return  detail::thread_awaitable{std::move(thread_), std::move(state_)};
   }
 
   ~thread()
