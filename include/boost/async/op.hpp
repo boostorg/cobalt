@@ -188,10 +188,10 @@ struct async_result<boost::async::use_op_t, void(Args...)>
   static auto initiate(Initiation && initiation,
                        boost::async::use_op_t,
                        InitArgs &&... args)
-      -> boost::async::detail::deferred_op<op_impl<Initiation, InitArgs...>>
+      -> boost::async::detail::deferred_op<op_impl<Initiation, std::decay_t<InitArgs>...>>
   {
     return
-        boost::async::detail::deferred_op<op_impl<Initiation, InitArgs...>>
+        boost::async::detail::deferred_op<op_impl<Initiation, std::decay_t<InitArgs>...>>
         {
           std::forward<Initiation>(initiation),
           {std::forward<InitArgs>(args)...}
