@@ -226,30 +226,36 @@ struct ranged_wait_impl
   }
   bool await_ready()
   {
-    bool all_ready = true;
-    for (std::size_t idx = 0u; idx < std::size(range); idx++)
+    if constexpr (requires {std::begin(range)->ready(); std::begin(range)->get();})
     {
-      auto & r = range[idx];
-      if (r.ready())
+      bool all_ready = true;
+      for (std::size_t idx = 0u; idx < std::size(range); idx++)
       {
-        try
+        auto & r = range[idx];
+        if (r.ready())
         {
-          if constexpr (std::is_void_v<typename result_type::value_type>)
-            this->result[idx] = system::result<void, std::exception_ptr>{};
-          else
-            this->result[idx] = r.get();
+          try
+          {
+            if constexpr (std::is_void_v<typename result_type::value_type>)
+              this->result[idx] = system::result<void, std::exception_ptr>{};
+            else
+              this->result[idx] = r.get();
+          }
+          catch(...)
+          {
+            this->result[idx] = result_type(std::current_exception());
+          }
+          was_ready[idx] = true;
+          this->outstanding--;
         }
-        catch(...)
-        {
-          this->result[idx] = result_type(std::current_exception());
-        }
-        was_ready[idx] = true;
-        this->outstanding--;
+        else
+          all_ready = false;
       }
-      else
-        all_ready = false;
+      return all_ready;
     }
-    return all_ready;
+    else
+      return false;
+
   };
 
   struct stub

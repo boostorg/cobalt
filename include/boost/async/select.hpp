@@ -232,18 +232,24 @@ struct ranged_select_impl
   }
   bool await_ready()
   {
-    std::size_t idx = 0;
-    for (auto & r : range)
+    if constexpr (requires {std::begin(range)->ready(); std::begin(range)->get();})
     {
-      if (r.ready())
+      std::size_t idx = 0;
+      for (auto & r : range)
       {
-        if constexpr (std::is_void_v<inner_result_type>)
-          this->result.emplace(idx);
-        else
-          this->result.emplace(idx, r.get());
-        return true;
+        if (r.ready())
+        {
+          if constexpr (std::is_void_v<inner_result_type>)
+          {
+            r.get();
+            this->result.emplace(idx);
+          }
+          else
+            this->result.emplace(idx, r.get());
+          return true;
+        }
+        idx++;
       }
-      idx++;
     }
     return false;
   };
