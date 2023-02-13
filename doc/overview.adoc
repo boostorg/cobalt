@@ -1,7 +1,6 @@
-Overview
---------
+== Overview
 
-This library provides a set of easy to use coroutine utilities that are kept very simple by a few constraints.
+This library provides a set of easy to use coroutine utilities that are kept very simple by a encorcing a few constraints.
 
 Those are:
 

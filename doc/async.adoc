@@ -5,10 +5,14 @@ Version 0.1, 29.01.2023
 
 The goal of this library is to provide a unified C++20 basic_coro primitive that introduces as little types as possible and integrates with asio.
 
-include::overview.adoc[]
-include::tutorial.adoc[]
 
-include::stackless.adoc
+include::overview.adoc[]
+include::generators.adoc[]
+
+
+== Technical Background
+
+include::stackless.adoc[]
 
 
 

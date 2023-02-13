@@ -18,12 +18,10 @@ The assumptions are:
 async::main co_main(int argc, char ** argv)
 {
     // wrapper around asio::steady_timer
-    async::io::steady_timer tim{co_await async::this_coro::executor};
+    asio::steady_timer tim{co_await async::this_coro::executor};
     dt.expires_after(std::chrono::milliseconds(100));
 
-    // forward to asio::steady_timer::async_wait
-    co_await tim.wait();
-
+    co_await tim.async_wait(async::use_op);
     co_return 0;
 }
 ```
@@ -35,9 +33,9 @@ It also hooks up signals, so that things like `Ctrl+C` get forwarded as cancella
 ```cpp
 async::thread example_thread(int ms)
 {
-    async::io::steady_timer tim{co_await async::this_coro::executor};
+    asio::steady_timer tim{co_await async::this_coro::executor};
     dt.expires_after(std::chrono::milliseconds(100));
-    co_await tim.wait();
+    co_await tim.async_wait(async::use_op);
 }
 ```
 

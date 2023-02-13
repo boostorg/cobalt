@@ -7,7 +7,7 @@ endif()
 
 project(boost_async VERSION "${BOOST_ASYNC_VERSION}" LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
-add_definitions(-DBOOST_ASIO_HAS_IO_URING=1 -DBOOST_FILESYSTEM_NO_DEPRECATED=1)
+add_definitions(-DBOOST_FILESYSTEM_NO_DEPRECATED=1)
 
 set(BOOST_ASYNC_IS_ROOT OFF)
 
@@ -22,6 +22,13 @@ else()
 endif()
 
 option(BOOST_ASYNC_BUILD_INLINE "Configure as if part of the boost source tree" ${BOOST_ASYNC_SHOULD_BE_INLINE})
+
+file(GLOB_RECURSE ADOC_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.adoc)
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/doc/index.html
+                   COMMAND asciidoctor ${CMAKE_CURRENT_SOURCE_DIR}/doc/async.adoc --require asciidoctor-diagram -o ${CMAKE_CURRENT_BINARY_DIR}/doc/index.html
+                   DEPENDS ${ADOC_FILES})
+
+add_custom_target(doc DEPENDS  ${CMAKE_CURRENT_BINARY_DIR}/doc/index.html)
 
 
 if(BOOST_ASYNC_IS_ROOT)
@@ -51,7 +58,7 @@ endif()
 
 if (NOT BOOST_ASYNC_BUILD_INLINE)
     find_package(Threads REQUIRED)
-    find_package(Boost REQUIRED atomic container filesystem system json url)
+    find_package(Boost REQUIRED container filesystem system json url)
     include_directories(include)
 endif()
 

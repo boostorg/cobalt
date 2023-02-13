@@ -1,0 +1,50 @@
+== Generators
+
+Generators are coroutines that can only be resumed but yield values to the caller.
+
+[source,cpp]
+----
+async::generator<int> example()
+{
+    printf("In coro 1\n");
+    co_yield 2;    
+    printf("In coro 3\n");
+    co_return 4;
+}
+
+async::main co_main(int argc, char * argv[])
+{
+    printf("In main 0\n");
+    auto f = example(); // call and let it run until the first co_yield
+    printf("In main %d\n", co_await f);
+    printf("In main %d\n", co_await f);
+    return 0;
+}
+----
+
+Which will generate the following output
+
+ In main 0
+ In coro 1
+ In main 2
+ In coro 3
+ In main 4
+
+[mermaid]
+----
+sequenceDiagram
+    participant main;
+    Note left of main: "In main 0"
+    main->>+example: example()
+    Note right of example: "In coro 1"
+    example-->>main: co_yield 2
+    Note left of main: "In main 2"
+    main-->>+example: co_await f
+    Note right of example: "In coro 3"
+    example->>main: co_return 3
+    Note left of main: "In main 4"
+----
+
+
+Notably, async provides a `co_main` entry point to make creating asynchronous applications easy.
+
