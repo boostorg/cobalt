@@ -58,7 +58,7 @@ endif()
 
 if (NOT BOOST_ASYNC_BUILD_INLINE)
     find_package(Threads REQUIRED)
-    find_package(Boost REQUIRED container filesystem system json url)
+    find_package(Boost REQUIRED container filesystem system json)
     include_directories(include)
 endif()
 
@@ -70,7 +70,7 @@ endif()
 add_library(boost_async src/src.cpp)
 target_include_directories(boost_async PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(boost_async PUBLIC
-        Boost::container Boost::url Boost::system Boost::json
+        Boost::container Boost::system Boost::json
         OpenSSL::SSL OpenSSL::Crypto Threads::Threads)
 target_compile_definitions(boost_async PUBLIC BOOST_ASYNC_SEPARATE_COMPILATION=1 BOOST_FILESYSTEM_NO_DEPRECATED=1)
 add_library(Boost::async ALIAS boost_async)
