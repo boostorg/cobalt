@@ -225,9 +225,8 @@ struct ranged_wait_impl
     std::fill(cancel.begin(), cancel.end(), nullptr);
   }
   ranged_wait_impl(ranged_wait_impl && lhs)
-      : range(static_cast<PromiseRange&&>(lhs.range)), result(std::move(lhs.result)), was_ready(std::move(lhs.was_ready))
+      : ranged_wait_impl(static_cast<PromiseRange&&>(lhs.range))
   {
-    std::fill(cancel.begin(), cancel.end(), nullptr);
   }
   bool await_ready()
   {

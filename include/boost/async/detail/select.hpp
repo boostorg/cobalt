@@ -232,9 +232,8 @@ struct ranged_select_impl
   {
     std::fill(cancel.begin(), cancel.end(), nullptr);
   }
-  ranged_select_impl(ranged_select_impl && lhs) : range(static_cast<PromiseRange&&>(lhs.range))
+  ranged_select_impl(ranged_select_impl && lhs) : ranged_select_impl(static_cast<PromiseRange&&>(lhs.range))
   {
-    std::fill(cancel.begin(), cancel.end(), nullptr);
   }
   bool await_ready()
   {

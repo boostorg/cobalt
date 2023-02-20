@@ -84,6 +84,7 @@ CO_TEST_CASE("list")
   vec.push_back(wdummy(exec, std::chrono::milliseconds::max()));
 
   auto res = co_await wait(vec);
+  REQUIRE(res.size() == 4);
   CHECK( res[0].has_value());
   CHECK(!res[0].has_error());
   CHECK( res[0].value() == 100);
