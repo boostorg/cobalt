@@ -45,20 +45,20 @@ async::generator<tcp_socket> listen(boost::asio::any_io_executor exec)
     co_yield co_await acceptor.async_accept();
 }
 
-async::main co_main(int argc, char ** argv)
+async::promise<void> run_server(async::wait_group & workers)
 {
-  std::list<async::promise<void>> workers;
-
+  auto l = listen(co_await async::this_coro::executor);
   while (true)
   {
     if (workers.size() == 10u)
-    {
-      auto idx = co_await async::select(workers);
-      workers.erase(std::next(workers.begin(), idx));
-    }
+      co_await workers.wait_one();
     else
-      workers.push_back(echo(co_await listen(co_await async::this_coro::executor)));
+      workers.push_back(echo(co_await l));
   }
+}
 
+async::main co_main(int argc, char ** argv)
+{
+  co_await async::with(async::wait_group(), &run_server);
   co_return 0u;
 }

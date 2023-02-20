@@ -72,5 +72,21 @@ void set_executor(asio::io_context::executor_type exec) noexcept
 }
 }
 
+namespace boost::async::detail
+{
+
+asio::io_context::executor_type
+extract_executor(asio::any_io_executor exec)
+{
+  auto t = exec.target<asio::io_context::executor_type>();
+  if (t == nullptr)
+    throw_exception(asio::bad_executor());
+
+  return *t;
+}
+
+
+}
+
 
 #endif //BOOST_ASYNC_THIS_THREAD_IPP

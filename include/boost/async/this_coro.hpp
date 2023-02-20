@@ -5,14 +5,15 @@
 #ifndef BOOST_ASYNC_THIS_CORO_HPP
 #define BOOST_ASYNC_THIS_CORO_HPP
 
+#include <boost/async/this_thread.hpp>
+#include <boost/async/detail/this_thread.hpp>
+
 #include <boost/asio/associated_allocator.hpp>
 #include <boost/asio/associated_cancellation_slot.hpp>
 #include <boost/asio/associated_executor.hpp>
 #include <boost/asio/dispatch.hpp>
 #include <boost/asio/this_coro.hpp>
 #include <boost/asio/cancellation_state.hpp>
-
-#include <boost/async/this_thread.hpp>
 
 #include <coroutine>
 #include <optional>
@@ -249,9 +250,10 @@ struct promise_memory_resource_base
     using allocator_type = container::pmr::polymorphic_allocator<void>;
     allocator_type get_allocator() const {return allocator_type{resource};}
 
-    void * operator new(const std::size_t size)
+    template<typename ... Args>
+    void * operator new(const std::size_t size, Args & ... args)
     {
-        auto res = this_thread::get_default_resource();
+        auto res = detail::get_memory_resource_from_args(args...);
         const auto p = res->allocate(size + sizeof(container::pmr::memory_resource *), alignof(container::pmr::memory_resource *));
         auto pp = static_cast<container::pmr::memory_resource**>(p);
         *pp = res;

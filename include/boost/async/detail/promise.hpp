@@ -12,6 +12,7 @@
 #include <boost/async/detail/exception.hpp>
 #include <boost/async/detail/forward_cancellation.hpp>
 #include <boost/async/detail/wrapper.hpp>
+#include <boost/async/detail/this_thread.hpp>
 
 #include <boost/asio/cancellation_signal.hpp>
 
@@ -251,7 +252,39 @@ struct async_promise
   executor_type get_executor() const {return exec;}
 
   using allocator_type = container::pmr::polymorphic_allocator<void>;
-  allocator_type get_allocator() const {return container::pmr::polymorphic_allocator<void>{this_thread::get_default_resource()};}
+  allocator_type get_allocator() const {return alloc;}
+  container::pmr::polymorphic_allocator<void> alloc{this_thread::get_default_resource()};
+
+  template<typename ... Args>
+  async_promise(Args & ...args)
+      : exec{detail::get_executor_from_args(args...)}
+      , alloc{detail::get_memory_resource_from_args(args...)}
+  {}
+
+  auto await_transform(this_coro::executor_t) const
+  {
+    struct exec_helper
+    {
+      executor_type value;
+
+      constexpr static bool await_ready() noexcept
+      {
+        return true;
+      }
+
+      constexpr static void await_suspend(std::coroutine_handle<>) noexcept
+      {
+      }
+
+      executor_type await_resume() const noexcept
+      {
+        return value;
+      }
+    };
+
+    return exec_helper{get_executor()};
+  }
+
 
   std::suspend_never initial_suspend()        {return {};}
   auto final_suspend() noexcept

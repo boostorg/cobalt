@@ -11,10 +11,12 @@
 #include <boost/async/detail/async_operation.hpp>
 #include <boost/async/detail/concepts.hpp>
 #include <boost/async/detail/exception.hpp>
+#include <boost/async/detail/forward_cancellation.hpp>
+#include <boost/async/detail/this_thread.hpp>
+#include <boost/async/detail/wrapper.hpp>
+
 #include <boost/container/pmr/monotonic_buffer_resource.hpp>
 #include <boost/asio/bind_allocator.hpp>
-#include <boost/async/detail/forward_cancellation.hpp>
-#include <boost/async/detail/wrapper.hpp>
 
 
 namespace boost::async
@@ -88,8 +90,6 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
       lhs.exception = moved_from_exception();
     }
     lhs.done = true;
-
-
   }
 
   ~generator_receiver()
@@ -220,7 +220,39 @@ struct generator_promise
   executor_type get_executor() const {return exec;}
 
   using allocator_type = container::pmr::polymorphic_allocator<void>;
-  allocator_type get_allocator() const {return container::pmr::polymorphic_allocator<void>{this_thread::get_default_resource()};}
+  allocator_type get_allocator() const {return alloc;}
+  container::pmr::polymorphic_allocator<void> alloc{this_thread::get_default_resource()};
+
+  template<typename ... Args>
+  generator_promise(Args & ...args)
+    : exec{detail::get_executor_from_args(args...)}
+   , alloc{detail::get_memory_resource_from_args(args...)}
+  {}
+
+  auto await_transform(this_coro::executor_t) const
+  {
+    struct exec_helper
+    {
+      executor_type value;
+
+      constexpr static bool await_ready() noexcept
+      {
+        return true;
+      }
+
+      constexpr static void await_suspend(std::coroutine_handle<>) noexcept
+      {
+      }
+
+      executor_type await_resume() const noexcept
+      {
+        return value;
+      }
+    };
+
+    return exec_helper{get_executor()};
+  }
+
 
   std::suspend_never initial_suspend()        {return {};}
   auto final_suspend() noexcept

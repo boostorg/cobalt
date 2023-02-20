@@ -95,6 +95,21 @@ async::promise<int> return_(std::size_t ms)
   co_return 1234u;
 }
 
+async::promise<int> return_(std::size_t ms, asio::executor_arg_t,
+                            asio::io_context::executor_type )
+{
+  co_return 1234u;
+}
+
+async::promise<std::size_t> delay_r(asio::io_context &ctx, std::size_t ms,
+                                    asio::executor_arg_t, asio::any_io_executor )
+{
+  auto tim = async::use_op.as_default_on(asio::steady_timer(ctx, std::chrono::milliseconds{ms}));
+  co_await tim.async_wait();
+  co_return ms;
+}
+
+
 async::promise<std::size_t> delay_r(asio::io_context &ctx, std::size_t ms)
 {
    auto tim = async::use_op.as_default_on(asio::steady_timer(ctx, std::chrono::milliseconds{ms}));
@@ -132,9 +147,7 @@ TEST_CASE("cancel-void")
   async::this_thread::set_executor(ctx.get_executor());
   asio::cancellation_signal signal;
 
-
-
-  spawn(ctx, delay_r(ctx, 10000u), asio::bind_cancellation_slot(
+  spawn(ctx, delay_r(ctx, 10000u, asio::executor_arg, ctx.get_executor()), asio::bind_cancellation_slot(
       signal.slot(),
       [](std::exception_ptr ep, std::size_t n)
       {
@@ -143,7 +156,7 @@ TEST_CASE("cancel-void")
 
   asio::post([&]{signal.emit(asio::cancellation_type::all);});
 
-  spawn(ctx, return_(1234u),
+  spawn(ctx, return_(1234u, asio::executor_arg, ctx.get_executor()),
         [](std::exception_ptr ep, std::size_t n)
         {
           CHECK(ep == nullptr);
