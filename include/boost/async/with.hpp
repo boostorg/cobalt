@@ -10,69 +10,97 @@
 
 #include <exception>
 #include <utility>
-#include "boost/async/detail/util.hpp"
+#include <boost/async/detail/util.hpp>
+#include <boost/async/detail/with.hpp>
+
 
 namespace boost::async
 {
 
-struct with_enter_tag {};
-struct with_exit_tag { std::exception_ptr e; };
+struct with_exit_tag { };
 
-namespace detail
+// tag_invoke(with_exit_tag, value, std::exception_ptr)
+
+
+/// default tag_invoke for any thing with an `await_exit` method
+template<typename T>
+    requires (requires (T &t) {{t.await_exit()}  -> detail::awaitable<detail::with_impl::promise_type>; })
+auto tag_invoke(const boost::async::with_exit_tag & wet , T & t, std::exception_ptr)
 {
-
-template<std::size_t ... Idx>
-struct with_impl
-{
-    template<typename ... Args>
-    static auto with(Args && ... args)
-       -> decltype(get_last_variadic(args...)(get_variadic<Idx>(args...)...))
-    {
-        std::exception_ptr e;
-        co_await tag_invoke(with_enter_tag{}, get_variadic<Idx>(args...)...);
-        try
-        {
-            co_await get_last_variadic(args...)(get_variadic<Idx>(args...)...);
-            co_await tag_invoke(with_exit_tag{e}, get_variadic<Idx>(args...)...);
-        }
-        catch (...)
-        {
-            e = std::current_exception();
-        }
-
-        try
-        {
-            co_await tag_invoke(with_exit_tag{e}, get_variadic<Idx>(args...)...);
-        }
-        catch (...)
-        {
-            if (!e)
-                e = std::current_exception();
-        }
-        if (e)
-            std::rethrow_exception(e);
-    }
-};
+    return t.await_exit();
+}
 
 template<typename T>
-struct get_with_impl;
-
-template<std::size_t ... Idx>
-struct get_with_impl<std::index_sequence<Idx...>>
+requires (requires (T &t) {{t.await_exit(std::exception_ptr())}  -> detail::awaitable<detail::with_impl::promise_type>; })
+auto tag_invoke(const boost::async::with_exit_tag & wet , T & t, std::exception_ptr e)
 {
-    using type = with_impl<Idx...>;
-};
-
+    return t.await_exit(e);
 }
 
-
-template<typename ... Args>
-auto with(Args &&... args)
+template<typename Arg, typename Func>
+    requires (requires (Func func, Arg & arg)
+    {
+        {std::move(func)(arg)} -> detail::awaitable<detail::with_impl::promise_type>;
+    })
+auto with(Arg arg, Func func) -> detail::with_impl
 {
-    using impl = typename detail::get_with_impl<std::make_index_sequence<sizeof...(Args) - 1>>::type;
-    return impl::with(args...);
+    std::exception_ptr e;
+    try
+    {
+        co_await std::move(func)(arg);
+        co_await tag_invoke(with_exit_tag{}, arg, {});
+    }
+    catch (...)
+    {
+        e = std::current_exception();
+    }
+
+    try
+    {
+        co_await tag_invoke(with_exit_tag{}, arg, e);
+    }
+    catch (...)
+    {
+        if (!e)
+            e = std::current_exception();
+    }
+    if (e)
+        std::rethrow_exception(e);
+}
+
+
+template<typename Arg, typename Func>
+    requires (requires (Func func, Arg & arg)
+    {
+        {std::move(func)(arg)} -> std::convertible_to<void>;
+    })
+auto with(Arg arg, Func func) -> detail::with_impl
+{
+    std::exception_ptr e;
+    try
+    {
+        std::move(func)(arg);
+        co_await tag_invoke(with_exit_tag{}, arg, {});
+    }
+    catch (...)
+    {
+        e = std::current_exception();
+    }
+
+    try
+    {
+        co_await tag_invoke(with_exit_tag{}, arg, e);
+    }
+    catch (...)
+    {
+        if (!e)
+            e = std::current_exception();
+    }
+    if (e)
+        std::rethrow_exception(e);
 }
 
 }
+
 
 #endif //BOOST_ASYNC_WITH_HPP

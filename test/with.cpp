@@ -8,6 +8,7 @@
 #include "boost/async/promise.hpp"
 #include <boost/async/with.hpp>
 #include <boost/asio/any_io_executor.hpp>
+#include <boost/asio/this_coro.hpp>
 
 #include "doctest.h"
 #include "test.hpp"
@@ -25,14 +26,8 @@ struct finalizer_test
         return exec;
     }
 
-    bool enter_called = false, exit_called = false;
+    bool exit_called = false;
     std::exception_ptr e;
-
-    auto enter()
-    {
-        enter_called = true;
-        return asio::post(exec, asio::deferred);
-    }
 
     auto exit(std::exception_ptr ee)
     {
@@ -40,55 +35,51 @@ struct finalizer_test
         e = ee;
         return asio::post(exec, asio::deferred);
     }
+
+    ~finalizer_test()
+    {
+        CHECK(e != nullptr);
+    }
 };
 
-auto tag_invoke(const boost::async::with_enter_tag & , finalizer_test & ft)
+auto tag_invoke(const boost::async::with_exit_tag & wet , finalizer_test * ft,
+                std::exception_ptr e)
 {
-    return ft.enter();
+
+    return ft->exit(e);
 }
 
-auto tag_invoke(const boost::async::with_exit_tag & wet , finalizer_test & ft)
+CO_TEST_CASE("sync")
 {
+    finalizer_test ft{co_await boost::async::this_coro::executor};
 
-    return ft.exit(wet.e);
+    CHECK_THROWS(
+        co_await boost::async::with (
+            &ft,
+            [](finalizer_test * ft)
+            {
+                throw 42;
+            }));
+
+
+    CHECK(ft.e != nullptr);
 }
 
-auto ft_test(finalizer_test & ft) -> boost::async::promise<void>
+CO_TEST_CASE("async")
 {
-    co_return ;
-}
+    finalizer_test ft{co_await boost::async::this_coro::executor};
 
-auto ft_test2(finalizer_test & ft) -> boost::async::promise<void> { throw std::runtime_error("foobar") ; }
-
-CO_TEST_CASE("finalizer")
-{
-    co_await
-            boost::async::with(finalizer_test{co_await asio::this_coro::executor}, &ft_test);
-
-    finalizer_test f1{co_await asio::this_coro::executor};
-    co_await boost::async::with(f1, ft_test);
-    CHECK(f1.enter_called);
-    CHECK(f1.exit_called);
-
-    CHECK(f1.e == nullptr);
+    CHECK_THROWS(
+            co_await boost::async::with (
+                    &ft,
+                    [](finalizer_test * ft) -> boost::async::promise<void>
+                    {
+                        throw 42;
+                        co_return;
+                    }));
 
 
-    finalizer_test f2{co_await asio::this_coro::executor};
-
-    auto ft2 = +[](finalizer_test & ft) -> boost::async::promise<void> { throw std::runtime_error("foobar") ; };
-
-    try
-    {
-        co_await boost::async::with(f2, &ft_test2);
-    }
-    catch (std::runtime_error & re)
-    {
-        CHECK(re.what() == std::string("foobar"));
-    }
-    CHECK(f2.enter_called);
-    CHECK(f2.exit_called);
-    CHECK(f2.e != nullptr);
-
+    CHECK(ft.e != nullptr);
 }
 
 
