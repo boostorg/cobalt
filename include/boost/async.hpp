@@ -13,6 +13,7 @@
 #include <boost/async/generator.hpp>
 #include <boost/async/promise.hpp>
 #include <boost/async/select.hpp>
+#include <boost/async/spawn.hpp>
 #include <boost/async/this_coro.hpp>
 #include <boost/async/this_thread.hpp>
 #include <boost/async/thread.hpp>

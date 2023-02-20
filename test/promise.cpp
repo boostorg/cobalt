@@ -8,6 +8,7 @@
 #include <boost/async/promise.hpp>
 #include <boost/async/main.hpp>
 #include <boost/async/op.hpp>
+#include <boost/async/spawn.hpp>
 
 #include "doctest.h"
 #include "test.hpp"

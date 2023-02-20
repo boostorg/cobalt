@@ -6,6 +6,7 @@
 //
 
 #include <boost/async/op.hpp>
+#include <boost/async/spawn.hpp>
 #include <boost/async/promise.hpp>
 #include <boost/asio.hpp>
 #include "doctest.h"

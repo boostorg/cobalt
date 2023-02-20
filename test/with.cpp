@@ -7,6 +7,7 @@
 
 #include "boost/async/promise.hpp"
 #include <boost/async/with.hpp>
+#include <boost/asio/any_io_executor.hpp>
 
 #include "doctest.h"
 #include "test.hpp"

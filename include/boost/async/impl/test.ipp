@@ -28,6 +28,11 @@ void run(test_case&& tc)
   ctx.run();
 }
 
+test_case detail::test_case_promise::get_return_object()
+{
+  return async::test_case{this};
+}
+
 }
 
 #endif //BOOST_ASYNC_IMPL_TEST_IPP
