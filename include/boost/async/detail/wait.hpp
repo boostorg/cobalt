@@ -236,9 +236,10 @@ struct ranged_wait_impl
     if constexpr (requires {std::begin(range)->ready(); std::begin(range)->get();})
     {
       bool all_ready = true;
-      for (std::size_t idx = 0u; idx < std::size(range); idx++)
+
+      std::size_t idx = 0u;
+      for (auto & r : range)
       {
-        auto & r = range[idx];
         if (r.ready())
         {
           try
@@ -257,6 +258,7 @@ struct ranged_wait_impl
         }
         else
           all_ready = false;
+        idx++;
       }
       return all_ready;
     }
