@@ -231,6 +231,8 @@ struct ranged_wait_impl
   }
   bool await_ready()
   {
+    if (std::empty(range))
+        return true;
     if constexpr (requires {std::begin(range)->ready(); std::begin(range)->get();})
     {
       bool all_ready = true;

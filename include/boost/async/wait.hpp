@@ -26,9 +26,6 @@ template<asio::cancellation_type Ct = asio::cancellation_type::all, typename Pro
   requires detail::awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>>
 auto wait(PromiseRange && p)
 {
-  if (std::empty(p))
-    throw_exception(std::invalid_argument("empty range waited"));
-
   return detail::ranged_wait_impl<Ct, PromiseRange>{std::forward<PromiseRange>(p)};
 }
 
