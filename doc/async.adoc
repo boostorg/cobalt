@@ -12,7 +12,8 @@ include::generators.adoc[]
 
 == Technical Background
 
-include::stackless.adoc[]
+include::background/stackless.adoc[]
+include::background/lazy_eager.adoc[]
 
 
 
