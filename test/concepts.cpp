@@ -3,7 +3,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/async/detail/concepts.hpp>
+#include <boost/async/concepts.hpp>
 
 struct foo
 {
@@ -30,18 +30,18 @@ struct special_aw
 foo_aw operator co_await(foo);
 
 
-static_assert(boost::async::detail::awaitable_type<std::suspend_never>);
-static_assert(boost::async::detail::awaitable_type<foo_aw>);
-static_assert(!boost::async::detail::awaitable_type<foo>);
+static_assert(boost::async::awaitable_type<std::suspend_never>);
+static_assert(boost::async::awaitable_type<foo_aw>);
+static_assert(!boost::async::awaitable_type<foo>);
 
-static_assert(boost::async::detail::awaitable<std::suspend_never>);
-static_assert(boost::async::detail::awaitable<foo_aw>);
-static_assert(boost::async::detail::awaitable<foo>);
+static_assert(boost::async::awaitable<std::suspend_never>);
+static_assert(boost::async::awaitable<foo_aw>);
+static_assert(boost::async::awaitable<foo>);
 
-static_assert(boost::async::detail::awaitable<std::suspend_never, int>);
-static_assert(boost::async::detail::awaitable<foo_aw, int>);
-static_assert(boost::async::detail::awaitable<foo, int>);
+static_assert(boost::async::awaitable<std::suspend_never, int>);
+static_assert(boost::async::awaitable<foo_aw, int>);
+static_assert(boost::async::awaitable<foo, int>);
 
-static_assert(!boost::async::detail::awaitable<special_aw, int>);
-static_assert(!boost::async::detail::awaitable<special_aw>);
-static_assert(boost::async::detail::awaitable<special_aw, my_promise>);
+static_assert(!boost::async::awaitable<special_aw, int>);
+static_assert(!boost::async::awaitable<special_aw>);
+static_assert(boost::async::awaitable<special_aw, my_promise>);

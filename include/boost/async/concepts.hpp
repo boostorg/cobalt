@@ -11,11 +11,8 @@
 #include <boost/asio/is_executor.hpp>
 #include <boost/asio/execution/executor.hpp>
 
-namespace boost::async::detail
+namespace boost::async
 {
-
-template<typename T>
-struct synchronous_awaitable : std::false_type {};
 
 template<typename Awaitable, typename Promise = void>
 concept awaitable_type = requires (Awaitable aw, std::coroutine_handle<Promise> h)
@@ -24,17 +21,6 @@ concept awaitable_type = requires (Awaitable aw, std::coroutine_handle<Promise> 
     {aw.await_suspend(h)};
     {aw.await_resume()};
 };
-
-template<typename Awaitable, typename Promise = void>
-concept immediate_awaitable_type =
-        awaitable_type<Awaitable, Promise> &&
-        (
-            synchronous_awaitable<Awaitable>::value ||
-            requires (Awaitable aw) {{
-                std::bool_constant<std::declval<Awaitable>().await_ready()>{}
-            } -> std::convertible_to<std::true_type>;}
-        );
-
 
 template<typename Awaitable, typename Promise = void>
 concept awaitable =

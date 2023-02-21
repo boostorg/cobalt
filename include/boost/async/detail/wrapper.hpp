@@ -6,7 +6,7 @@
 #define BOOST_ASYNC_WRAPPER_HPP
 
 #include <boost/async/this_coro.hpp>
-#include <boost/async/detail/concepts.hpp>
+#include <boost/async/concepts.hpp>
 #include <boost/async/detail/util.hpp>
 
 #include <boost/asio/bind_executor.hpp>

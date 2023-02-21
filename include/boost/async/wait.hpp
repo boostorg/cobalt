@@ -8,14 +8,14 @@
 #ifndef BOOST_ASYNC_WAIT_HPP
 #define BOOST_ASYNC_WAIT_HPP
 
-#include <boost/async/detail/concepts.hpp>
+#include <boost/async/concepts.hpp>
 #include <boost/async/detail/wait.hpp>
 
 namespace boost::async
 {
 
 
-template<asio::cancellation_type Ct = asio::cancellation_type::all, detail::awaitable ... Promise>
+template<asio::cancellation_type Ct = asio::cancellation_type::all, awaitable ... Promise>
 auto wait(Promise && ... p) -> detail::wait_impl<Ct, Promise ...>
 {
   return detail::wait_impl<Ct, Promise ...>{std::forward<Promise>(p)...};
@@ -23,7 +23,7 @@ auto wait(Promise && ... p) -> detail::wait_impl<Ct, Promise ...>
 
 
 template<asio::cancellation_type Ct = asio::cancellation_type::all, typename PromiseRange>
-  requires detail::awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>>
+  requires awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>>
 auto wait(PromiseRange && p)
 {
   return detail::ranged_wait_impl<Ct, PromiseRange>{std::forward<PromiseRange>(p)};

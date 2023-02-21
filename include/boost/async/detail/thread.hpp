@@ -10,7 +10,7 @@
 
 #include <boost/async/detail/async_operation.hpp>
 #include <boost/async/detail/forward_cancellation.hpp>
-#include <boost/async/detail/concepts.hpp>
+#include <boost/async/concepts.hpp>
 #include <boost/async/this_coro.hpp>
 
 #include <boost/asio/cancellation_signal.hpp>

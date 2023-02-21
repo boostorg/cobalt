@@ -9,7 +9,7 @@
 #define BOOST_ASYNC_DETAIL_TEST_HPP
 
 #include <boost/async/detail/async_operation.hpp>
-#include <boost/async/detail/concepts.hpp>
+#include <boost/async/concepts.hpp>
 
 namespace boost::async { struct test_case;}
 
@@ -18,7 +18,7 @@ namespace boost::async::detail
 
 struct test_case_promise : promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>,
                            promise_throw_if_cancelled_base,
-                           async::detail::enable_awaitables<test_case_promise>,
+                           async::enable_awaitables<test_case_promise>,
                            async::detail::enable_async_operation
 {
   using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;

@@ -5,7 +5,7 @@
 #ifndef BOOST_ASYNC_MAIN_HPP
 #define BOOST_ASYNC_MAIN_HPP
 
-#include <boost/async/detail/concepts.hpp>
+#include <boost/async/concepts.hpp>
 #include <boost/async/detail/async_operation.hpp>
 #include <boost/async/this_coro.hpp>
 

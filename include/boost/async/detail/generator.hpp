@@ -9,7 +9,7 @@
 #define BOOST_ASYNC_DETAIL_GENERATOR_HPP
 
 #include <boost/async/detail/async_operation.hpp>
-#include <boost/async/detail/concepts.hpp>
+#include <boost/async/concepts.hpp>
 #include <boost/async/detail/exception.hpp>
 #include <boost/async/detail/forward_cancellation.hpp>
 #include <boost/async/detail/this_thread.hpp>

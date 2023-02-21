@@ -8,13 +8,13 @@
 #ifndef BOOST_ASYNC_SELECT_HPP
 #define BOOST_ASYNC_SELECT_HPP
 
-#include <boost/async/detail/concepts.hpp>
+#include <boost/async/concepts.hpp>
 #include <boost/async/detail/select.hpp>
 
 namespace boost::async
 {
 
-template<asio::cancellation_type Ct = asio::cancellation_type::all, detail::awaitable ... Promise>
+template<asio::cancellation_type Ct = asio::cancellation_type::all, awaitable ... Promise>
 auto select(Promise && ... p) -> detail::select_impl<Ct, Promise ...>
 {
   return detail::select_impl<Ct, Promise ...>{std::forward<Promise>(p)...};
@@ -22,7 +22,7 @@ auto select(Promise && ... p) -> detail::select_impl<Ct, Promise ...>
 
 
 template<asio::cancellation_type Ct = asio::cancellation_type::all, typename PromiseRange>
-  requires detail::awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>>
+  requires awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>>
 auto select(PromiseRange && p)
 {
   if (std::empty(p))

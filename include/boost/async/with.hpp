@@ -24,14 +24,14 @@ struct with_exit_tag { };
 
 /// default tag_invoke for any thing with an `await_exit` method
 template<typename T>
-    requires (requires (T &t) {{t.await_exit()}  -> detail::awaitable<detail::with_impl::promise_type>; })
+    requires (requires (T &t) {{t.await_exit()}  -> awaitable<detail::with_impl::promise_type>; })
 auto tag_invoke(const boost::async::with_exit_tag & wet , T & t, std::exception_ptr)
 {
     return t.await_exit();
 }
 
 template<typename T>
-requires (requires (T &t) {{t.await_exit(std::exception_ptr())}  -> detail::awaitable<detail::with_impl::promise_type>; })
+requires (requires (T &t) {{t.await_exit(std::exception_ptr())}  -> awaitable<detail::with_impl::promise_type>; })
 auto tag_invoke(const boost::async::with_exit_tag & wet , T & t, std::exception_ptr e)
 {
     return t.await_exit(e);
@@ -40,7 +40,7 @@ auto tag_invoke(const boost::async::with_exit_tag & wet , T & t, std::exception_
 template<typename Arg, typename Func>
     requires (requires (Func func, Arg & arg)
     {
-        {std::move(func)(arg)} -> detail::awaitable<detail::with_impl::promise_type>;
+        {std::move(func)(arg)} -> awaitable<detail::with_impl::promise_type>;
     })
 auto with(Arg arg, Func func) -> detail::with_impl
 {
