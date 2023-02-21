@@ -1,6 +1,4 @@
-# boost.promise
-
-*first draft*.
+# boost.async
 
 This library provides a set of easy to use coroutine primitives & utilities.
 
@@ -26,7 +24,7 @@ async::main co_main(int argc, char ** argv)
 }
 ```
 
-That is, `main` runs on a single threaded `io_context`, you can however add more threads. Threads can be cancelled or stopped (as in calling io_context::stop) on destruction.
+That is, [`main`](doc/reference/main.adoc) runs on a single threaded `io_context`, you can however add more threads. Threads can be cancelled or stopped (as in calling io_context::stop) on destruction.
 
 It also hooks up signals, so that things like `Ctrl+C` get forwarded as cancellations automatically
 
@@ -50,9 +48,9 @@ int main(int argc, char ** argv)
 }
 ```
 
-## Async promise
+## Promises
 
-The core primitive for creating your own functions is `async::promise<T>`.
+The core primitive for creating your own functions is [`async::promise<T>`](doc/reference/promise.adoc).
 It is eager, i.e. it starts execution immediately, before you `co_await`.
 
 ```cpp
@@ -106,7 +104,7 @@ An async:promise can also be used with `spawn` to turn it into an asio operation
 
 ## Generator
 
-A generator is a coroutine that produces a series of values instead of one, but otherwise similar to `promise`.
+A [`generator`](doc/reference/generator.adoc) is a coroutine that produces a series of values instead of one, but otherwise similar to `promise`.
 
 ```cpp
 async::generator<int> test()
@@ -224,7 +222,7 @@ async::main co_main(int argc, char ** argv)
 
 ## select
 
-Select let's you await multiple awaitables at once. 
+[`select`](doc/reference/select.adoc) let's you await multiple awaitables at once. 
 
 ```cpp
 async::promise<void> delay(int ms)
@@ -243,6 +241,6 @@ async::main co_main(int argc, char ** argv)
 ```
 
 `async` has a special cancellation_type, `interrupt_await`, that can stop the select without cancelling. 
-It is supported by `channel`, `promise` & `generator`. 
+It is supported by [`channel`](doc/reference/channel.adoc), [`promise`](doc/reference/promise.adoc) & [`generator`](doc/reference/generator.adoc). 
 
 ## 

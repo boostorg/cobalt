@@ -5,6 +5,8 @@
 #ifndef BOOST_ASYNC_ASYNC_OPERATION_HPP
 #define BOOST_ASYNC_ASYNC_OPERATION_HPP
 
+#include <boost/async/detail/handler.hpp>
+
 #include <boost/asio/associated_allocator.hpp>
 #include <boost/asio/associated_cancellation_slot.hpp>
 #include <boost/asio/associated_executor.hpp>
@@ -14,7 +16,6 @@
 
 #include <coroutine>
 
-#include "boost/async/detail/handler.hpp"
 
 namespace boost::async::detail
 {

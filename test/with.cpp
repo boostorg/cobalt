@@ -5,7 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include "boost/async/promise.hpp"
+#include <boost/async/promise.hpp>
 #include <boost/async/with.hpp>
 #include <boost/asio/any_io_executor.hpp>
 #include <boost/asio/this_coro.hpp>

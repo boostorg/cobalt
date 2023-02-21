@@ -5,9 +5,10 @@
 #ifndef BOOST_ASYNC_DETAIL_WITH_HPP
 #define BOOST_ASYNC_DETAIL_WITH_HPP
 
-#include <boost/asio/cancellation_signal.hpp>
 #include <boost/async/detail/async_operation.hpp>
 #include <boost/async/detail/concepts.hpp>
+
+#include <boost/asio/cancellation_signal.hpp>
 
 namespace boost::async::detail
 {

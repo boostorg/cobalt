@@ -3,7 +3,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include "boost/async/detail/util.hpp"
+#include <boost/async/detail/util.hpp>
 
 static_assert(boost::async::detail::variadic_first<int, double, int>() == 1u);
 static_assert(boost::async::detail::variadic_first<const int &, int, double>() == -1);

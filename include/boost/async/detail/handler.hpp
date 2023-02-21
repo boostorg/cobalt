@@ -5,10 +5,10 @@
 #ifndef BOOST_ASYNC_HANDLER_HPP
 #define BOOST_ASYNC_HANDLER_HPP
 
-#include <boost/asio/io_context.hpp>
-
 #include <boost/async/this_coro.hpp>
 #include <boost/async/detail/util.hpp>
+
+#include <boost/asio/io_context.hpp>
 
 #include <memory>
 #include <boost/container/pmr/memory_resource.hpp>

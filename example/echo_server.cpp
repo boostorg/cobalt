@@ -6,6 +6,7 @@
 //
 
 #include <boost/async.hpp>
+#include <boost/async/main.hpp>
 
 #include <boost/asio/detached.hpp>
 #include <boost/asio/io_context.hpp>

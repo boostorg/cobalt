@@ -5,15 +5,14 @@
 #ifndef BOOST_ASYNC_WRAPPER_HPP
 #define BOOST_ASYNC_WRAPPER_HPP
 
+#include <boost/async/this_coro.hpp>
+#include <boost/async/detail/concepts.hpp>
+#include <boost/async/detail/util.hpp>
 
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/executor.hpp>
 #include <boost/asio/dispatch.hpp>
 #include <boost/asio/post.hpp>
-
-#include <boost/async/this_coro.hpp>
-#include "concepts.hpp"
-#include "util.hpp"
 
 #include <coroutine>
 #include <utility>

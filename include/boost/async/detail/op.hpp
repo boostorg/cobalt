@@ -8,8 +8,9 @@
 #ifndef BOOST_ASYNC_DETAIL_OP_HPP
 #define BOOST_ASYNC_DETAIL_OP_HPP
 
-#include <boost/asio/io_context.hpp>
 #include <boost/async/detail/handler.hpp>
+
+#include <boost/asio/io_context.hpp>
 
 namespace boost::async::detail
 {
