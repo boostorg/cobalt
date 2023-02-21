@@ -9,7 +9,7 @@
 #define BOOST_ASYNC_CHANNEL_HPP
 
 #include <boost/async/this_thread.hpp>
-#include <boost/async/with.hpp>
+#include <boost/async/detail/util.hpp>
 
 #include <boost/intrusive/list.hpp>
 #include <boost/asio/cancellation_signal.hpp>

@@ -8,6 +8,9 @@
 #ifndef BOOST_ASYNC_DETAIL_TEST_HPP
 #define BOOST_ASYNC_DETAIL_TEST_HPP
 
+#include <boost/async/detail/async_operation.hpp>
+#include <boost/async/detail/concepts.hpp>
+
 namespace boost::async { struct test_case;}
 
 namespace boost::async::detail
