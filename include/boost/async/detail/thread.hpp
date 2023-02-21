@@ -42,7 +42,8 @@ struct thread_promise : signal_helper_2,
                         promise_throw_if_cancelled_base,
                         enable_awaitables<thread_promise>,
                         enable_async_operation,
-                        enable_await_allocator<thread_promise>
+                        enable_await_allocator<thread_promise>,
+                        enable_await_executor<thread_promise>
 {
   thread_promise();
 
@@ -70,30 +71,7 @@ struct thread_promise : signal_helper_2,
   using enable_awaitables<thread_promise>::await_transform;
   using enable_async_operation::await_transform;
   using enable_await_allocator<thread_promise>::await_transform;
-
-  auto await_transform(this_coro::executor_t) const
-  {
-    struct exec_helper
-    {
-      executor_type value;
-
-      constexpr static bool await_ready() noexcept
-      {
-        return true;
-      }
-
-      constexpr static void await_suspend(std::coroutine_handle<>) noexcept
-      {
-      }
-
-      executor_type await_resume() const noexcept
-      {
-        return value;
-      }
-    };
-
-    return exec_helper{get_executor()};
-  }
+  using enable_await_executor<thread_promise>::await_transform;
 
   boost::async::thread get_return_object();
 

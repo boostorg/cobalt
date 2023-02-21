@@ -329,6 +329,29 @@ struct enable_await_allocator
     }
 };
 
+template<typename Promise>
+struct enable_await_executor
+{
+  auto await_transform(this_coro::executor_t)
+  {
+    struct awaitable
+    {
+      using executor_type = typename Promise::executor_type;
+
+      executor_type exec;
+      constexpr static bool await_ready() { return true; }
+
+      bool await_suspend( std::coroutine_handle<void> h) { return false; }
+      executor_type await_resume()
+      {
+        return exec;
+      }
+    };
+
+    return awaitable{static_cast<Promise*>(this)->get_executor()};
+  }
+};
+
 }
 
 #endif //BOOST_ASYNC_THIS_CORO_HPP

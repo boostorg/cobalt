@@ -194,14 +194,16 @@ struct generator_promise
       promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>,
       promise_throw_if_cancelled_base,
       enable_awaitables<generator_promise<Yield, Push>>,
-      enable_await_allocator<container::pmr::polymorphic_allocator<void>>,
+      enable_await_allocator<generator_promise<Yield, Push>>,
+      enable_await_executor< generator_promise<Yield, Push>>,
       enable_async_operation_interpreted
 {
-  using enable_await_allocator<container::pmr::polymorphic_allocator<void>>::await_transform;
   using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
   using promise_throw_if_cancelled_base::await_transform;
   using enable_awaitables<generator_promise<Yield, Push>>::await_transform;
   using enable_async_operation_interpreted::await_transform;
+  using enable_await_allocator<generator_promise<Yield, Push>>::await_transform;
+  using enable_await_executor<generator_promise<Yield, Push>>::await_transform;
 
   [[nodiscard]] generator<Yield, Push> get_return_object()
   {
@@ -229,32 +231,7 @@ struct generator_promise
    , alloc{detail::get_memory_resource_from_args(args...)}
   {}
 
-  auto await_transform(this_coro::executor_t) const
-  {
-    struct exec_helper
-    {
-      executor_type value;
-
-      constexpr static bool await_ready() noexcept
-      {
-        return true;
-      }
-
-      constexpr static void await_suspend(std::coroutine_handle<>) noexcept
-      {
-      }
-
-      executor_type await_resume() const noexcept
-      {
-        return value;
-      }
-    };
-
-    return exec_helper{get_executor()};
-  }
-
-
-  std::suspend_never initial_suspend()        {return {};}
+  std::suspend_never initial_suspend() {return {};}
   auto final_suspend() noexcept
   {
     struct final_awaitable

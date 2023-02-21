@@ -225,14 +225,16 @@ struct async_promise
       promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>,
       promise_throw_if_cancelled_base,
       enable_awaitables<async_promise<Return>>,
-      enable_await_allocator<container::pmr::polymorphic_allocator<void>>,
+      enable_await_allocator<async_promise<Return>>,
+      enable_await_executor<async_promise<Return>>,
       enable_async_operation_interpreted,
       async_promise_result<Return>
 {
-  using enable_await_allocator<container::pmr::polymorphic_allocator<void>>::await_transform;
   using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
   using promise_throw_if_cancelled_base::await_transform;
   using enable_awaitables<async_promise<Return>>::await_transform;
+  using enable_await_allocator<async_promise<Return>>::await_transform;
+  using enable_await_executor<async_promise<Return>>::await_transform;
   using enable_async_operation_interpreted::await_transform;
 
   [[nodiscard]] promise<Return> get_return_object()
@@ -260,31 +262,6 @@ struct async_promise
       : exec{detail::get_executor_from_args(args...)}
       , alloc{detail::get_memory_resource_from_args(args...)}
   {}
-
-  auto await_transform(this_coro::executor_t) const
-  {
-    struct exec_helper
-    {
-      executor_type value;
-
-      constexpr static bool await_ready() noexcept
-      {
-        return true;
-      }
-
-      constexpr static void await_suspend(std::coroutine_handle<>) noexcept
-      {
-      }
-
-      executor_type await_resume() const noexcept
-      {
-        return value;
-      }
-    };
-
-    return exec_helper{get_executor()};
-  }
-
 
   std::suspend_never initial_suspend()        {return {};}
   auto final_suspend() noexcept
