@@ -1121,7 +1121,7 @@ It will be assigned to the <code>thread_local</code> to the  <code>async::this_t
 <div class="sect3">
 <h4 id="executor_3">Executor</h4>
 <div id="promise-executor" class="paragraph">
-<p>The executor is taken from the <code>thread_local</code> <a href="#get_executor">[get_executor]</a> function, unless a <code>asio::executor_arg</code> is used
+<p>The executor is taken from the <code>thread_local</code> <a href="#this_thread">get_executor</a> function, unless a <code>asio::executor_arg</code> is used
 in any position followed by the executor argument.</p>
 </div>
 <div class="listingblock">
@@ -1133,7 +1133,7 @@ in any position followed by the executor argument.</p>
 <div class="sect3">
 <h4 id="memory_resource_3">Memory Resource</h4>
 <div id="promise-allocator" class="paragraph">
-<p>The memory resource is taken from the <code>thread_local</code> <a href="#get_default_resource">[get_default_resource]</a> function,
+<p>The memory resource is taken from the <code>thread_local</code> <a href="#this_thread">get_default_resource</a> function,
 unless a <code>std::allocator_arg</code> is used in any position followed by a <code>polymorphic_allocator</code> argument.</p>
 </div>
 <div class="listingblock">
@@ -1313,7 +1313,7 @@ In main 4</pre>
 <div class="sect3">
 <h4 id="executor_4">Executor</h4>
 <div id="generator-executor" class="paragraph">
-<p>The executor is taken from the <code>thread_local</code> <a href="#get_executor">[get_executor]</a> function, unless a <code>asio::executor_arg</code> is used
+<p>The executor is taken from the <code>thread_local</code> <a href="#this_thread">get_executor</a> function, unless a <code>asio::executor_arg</code> is used
 in any position followed by the executor argument.</p>
 </div>
 <div class="listingblock">
@@ -1325,7 +1325,7 @@ in any position followed by the executor argument.</p>
 <div class="sect3">
 <h4 id="generator-allocator">Memory Resource</h4>
 <div class="paragraph">
-<p>The memory resource is taken from the <code>thread_local</code> <a href="#get_default_resource">[get_default_resource]</a> function,
+<p>The memory resource is taken from the <code>thread_local</code> <a href="#this_thread">get_default_resource</a> function,
 unless a <code>std::allocator_arg</code> is used in any position followed by a <code>polymorphic_allocator</code> argument.</p>
 </div>
 <div class="listingblock">
