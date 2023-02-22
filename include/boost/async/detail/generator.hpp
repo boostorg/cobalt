@@ -221,14 +221,10 @@ struct generator_promise
   executor_type exec{boost::async::this_thread::get_executor()};
   executor_type get_executor() const {return exec;}
 
-  using allocator_type = container::pmr::polymorphic_allocator<void>;
-  allocator_type get_allocator() const {return alloc;}
-  container::pmr::polymorphic_allocator<void> alloc{this_thread::get_default_resource()};
-
   template<typename ... Args>
   generator_promise(Args & ...args)
-    : exec{detail::get_executor_from_args(args...)}
-   , alloc{detail::get_memory_resource_from_args(args...)}
+    : promise_memory_resource_base(detail::get_memory_resource_from_args(args...)),
+      exec{detail::get_executor_from_args(args...)}
   {}
 
   std::suspend_never initial_suspend() {return {};}
