@@ -10,6 +10,7 @@
 
 #include <boost/async/detail/await_result_helper.hpp>
 #include <boost/async/detail/exception.hpp>
+#include <boost/async/detail/forward_cancellation.hpp>
 #include <boost/async/detail/util.hpp>
 #include <boost/async/this_thread.hpp>
 
@@ -21,7 +22,7 @@
 #include <boost/variant2/variant.hpp>
 
 #include <coroutine>
-
+#include "forward_cancellation.hpp"
 namespace boost::async::detail
 {
 
@@ -174,15 +175,21 @@ struct wait_impl
       struct do_cancel
       {
         std::array<asio::cancellation_signal*, sizeof...(Args)> &cancel;
-        do_cancel(std::array<asio::cancellation_signal*, sizeof...(Args)> &cancel) : cancel(cancel) {}
+        std::unique_ptr<void, detail::coro_deleter<void>> &awaited_from;
+        do_cancel(std::array<asio::cancellation_signal*, sizeof...(Args)> &cancel,
+                  std::unique_ptr<void, detail::coro_deleter<void>> &awaited_from)
+               : cancel(cancel), awaited_from(awaited_from) {}
         void operator()(asio::cancellation_type ct)
         {
+          if (ct == interrupt_await && awaited_from)
+            return std::coroutine_handle<void>::from_address(awaited_from.release()).resume();
+
           for (auto & cs : cancel)
             if (cs) cs->emit(ct);
         }
       };
 
-      sl.template emplace<do_cancel>(cancel);
+      sl.template emplace<do_cancel>(cancel, awaited_from);
     }
     awaited_from.reset(h.address());
     await_suspend_impl(std::make_index_sequence<sizeof...(Args)>{});
@@ -365,15 +372,20 @@ struct ranged_wait_impl
       struct do_cancel
       {
         container::pmr::vector<asio::cancellation_signal*> &cancel;
-        do_cancel(container::pmr::vector<asio::cancellation_signal*> &cancel) : cancel(cancel) {}
+        std::unique_ptr<void, detail::coro_deleter<void>> &awaited_from;
+        do_cancel(container::pmr::vector<asio::cancellation_signal*> &cancel,
+                  std::unique_ptr<void, detail::coro_deleter<void>> &awaited_from)
+                  : cancel(cancel), awaited_from(awaited_from) {}
         void operator()(asio::cancellation_type ct)
         {
+          if (ct == interrupt_await && awaited_from)
+            return std::coroutine_handle<void>::from_address(awaited_from.release()).resume();
           for (auto & cs : cancel)
             if (cs) cs->emit(ct);
         }
       };
 
-      sl.template emplace<do_cancel>(cancel);
+      sl.template emplace<do_cancel>(cancel, awaited_from);
     }
     awaited_from.reset(h.address());
     for (std::size_t i = 0u; i < std::size(range); i++)
