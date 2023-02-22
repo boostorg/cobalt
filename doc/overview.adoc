@@ -11,8 +11,8 @@ Those are:
 It takes a collection of concepts from other languages and ports them to use C++ coroutines.
 
  - easy asynchronous base functions, such as an async main & threads
- - <<promise>> & <<generator>> types
+ - <<promise, promise>> & <<generator, generator>> types
  - operation wrappers
  - an async finalizer
- - <<select>>
- - <<channel>>
+ - <<select, select>>
+ - <<channel, channel>>
