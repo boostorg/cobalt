@@ -196,12 +196,12 @@ struct generator_promise
       enable_awaitables<generator_promise<Yield, Push>>,
       enable_await_allocator<generator_promise<Yield, Push>>,
       enable_await_executor< generator_promise<Yield, Push>>,
-      enable_async_operation_interpreted
+      enable_async_operation
 {
   using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
   using promise_throw_if_cancelled_base::await_transform;
   using enable_awaitables<generator_promise<Yield, Push>>::await_transform;
-  using enable_async_operation_interpreted::await_transform;
+  using enable_async_operation::await_transform;
   using enable_await_allocator<generator_promise<Yield, Push>>::await_transform;
   using enable_await_executor<generator_promise<Yield, Push>>::await_transform;
 

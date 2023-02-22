@@ -24,8 +24,6 @@
 #include <utility>
 #include <boost/asio/bind_allocator.hpp>
 
-
-
 namespace boost::async
 {
 
@@ -227,7 +225,7 @@ struct async_promise
       enable_awaitables<async_promise<Return>>,
       enable_await_allocator<async_promise<Return>>,
       enable_await_executor<async_promise<Return>>,
-      enable_async_operation_interpreted,
+      enable_async_operation,
       async_promise_result<Return>
 {
   using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
@@ -235,7 +233,7 @@ struct async_promise
   using enable_awaitables<async_promise<Return>>::await_transform;
   using enable_await_allocator<async_promise<Return>>::await_transform;
   using enable_await_executor<async_promise<Return>>::await_transform;
-  using enable_async_operation_interpreted::await_transform;
+  using enable_async_operation::await_transform;
 
   [[nodiscard]] promise<Return> get_return_object()
   {

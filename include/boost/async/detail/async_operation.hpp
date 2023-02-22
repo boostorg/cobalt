@@ -49,7 +49,7 @@ struct awaitable_async_operation<void(Args...), Op>
         }
     }
 
-    auto await_resume()
+    [[nodiscard]] auto await_resume()
     {
         return interpret_result(std::move(result.value()));
     }
@@ -62,51 +62,6 @@ struct enable_async_operation
     {
         using signature_type = typename decltype(std::forward<Op>(op)(asio::detail::completion_signature_probe{}))::type;
         return awaitable_async_operation<signature_type, Op>{std::forward<Op>(op)};
-    }
-};
-
-
-template<typename Signature, typename Op>
-struct awaitable_async_operation_interpreted;
-
-template<typename ... Args, typename Op>
-struct awaitable_async_operation_interpreted<void(Args...), Op>
-{
-    Op op;
-    std::optional<std::tuple<Args...>> result;
-    bool await_ready() { return result.has_value(); }
-
-    [[nodiscard]] auto await_resume()
-    {
-        return interpret_result(std::move(*result));
-    }
-
-    explicit operator bool() const {return !result;}
-
-    template<typename Promise>
-    inline void await_suspend( std::coroutine_handle<Promise> h) noexcept
-    {
-        auto exec = asio::get_associated_executor(h.promise());
-        try
-        {
-            using completion = completion_handler<Args...>;
-            static_cast<Op>(op)(completion{h, result});
-        }
-        catch(...)
-        {
-            asio::post(exec, [e = std::current_exception()]{std::rethrow_exception(e);});
-        }
-    }
-};
-
-
-struct enable_async_operation_interpreted
-{
-    template<async_operation Op>
-    auto await_transform(Op && op)
-    {
-        using signature_type = typename decltype(std::forward<Op>(op)(asio::detail::completion_signature_probe{}))::type;
-        return awaitable_async_operation_interpreted<signature_type, Op>{std::forward<Op>(op)};
     }
 };
 
