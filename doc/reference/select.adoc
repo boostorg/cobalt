@@ -42,4 +42,4 @@ async::promise<void> do_wait()
 <1> Wait for the first task to complete
 <2> Wait for the other task to complete
 
-This is supported by <<promise>>, <<generator>> and <<wait>>.
+This is supported by <<promise, promise>>, <<generator, generator>> and <<wait, wait>>.

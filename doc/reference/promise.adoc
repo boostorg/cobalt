@@ -36,7 +36,7 @@ async::main co_main(int argc, char *argv[])
 === Executor
 [#promise-executor]
 
-The executor is taken from the `thread_local` <<get_executor>> function, unless a `asio::executor_arg` is used
+The executor is taken from the `thread_local` <<this_thread, get_executor>> function, unless a `asio::executor_arg` is used
 in any position followed by the executor argument.
 
 [source, cpp]
@@ -47,7 +47,7 @@ async::promise<int> my_gen(asio::executor_arg_t, asio::io_context::executor_type
 === Memory Resource
 [#promise-allocator]
 
-The memory resource is taken from the `thread_local` <<get_default_resource>> function,
+The memory resource is taken from the `thread_local` <<this_thread, get_default_resource>> function,
 unless a `std::allocator_arg` is used in any position followed by a `polymorphic_allocator` argument.
 
 [source, cpp]
