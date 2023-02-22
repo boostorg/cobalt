@@ -689,6 +689,10 @@ pre.rouge {
 <li><a href="#memory_resource_3">Memory Resource</a></li>
 <li><a href="#promise-outline">Outline</a></li>
 <li><a href="#promise-promise">Promise</a></li>
+</ul>
+</li>
+<li><a href="#generator">async/generator.hpp</a>
+<ul class="sectlevel3">
 <li><a href="#executor_4">Executor</a></li>
 <li><a href="#generator-allocator">Memory Resource</a></li>
 <li><a href="#generator-outline">Outline</a></li>
@@ -724,7 +728,8 @@ pre.rouge {
 <li><a href="#example">Example</a></li>
 </ul>
 </li>
-<li><a href="#with">async/with.hpp</a>
+<li><a href="#with">async/with.hpp</a></li>
+<li><a href="#select">async/select.hpp</a>
 <ul class="sectlevel3">
 <li><a href="#interrupt_await">Interrupt Wait</a></li>
 </ul>
@@ -788,7 +793,7 @@ pre.rouge {
 <p>easy asynchronous base functions, such as an async main &amp; threads</p>
 </li>
 <li>
-<p><a href="#promise">async/promise.hpp</a> &amp; <a href="#generator">[generator]</a> types</p>
+<p><a href="#promise">promise</a> &amp; <a href="#generator">generator</a> types</p>
 </li>
 <li>
 <p>operation wrappers</p>
@@ -797,10 +802,10 @@ pre.rouge {
 <p>an async finalizer</p>
 </li>
 <li>
-<p><a href="#select">[select]</a></p>
+<p><a href="#select">select</a></p>
 </li>
 <li>
-<p><a href="#channel">async/channel.hpp</a></p>
+<p><a href="#channel">channel</a></p>
 </li>
 </ul>
 </div>
@@ -1215,11 +1220,14 @@ unless a <code>std::allocator_arg</code> is used in any position followed by a <
 <p><a href="#enable_await_allocator">Await Allocator</a></p>
 </li>
 <li>
-<p><a href="#enable_await_executor">Await Executor</a>
-== async/generator.hpp</p>
+<p><a href="#enable_await_executor">Await Executor</a></p>
 </li>
 </ul>
 </div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="generator">async/generator.hpp</h3>
 <div class="paragraph">
 <p>A generator is an eager coroutine that can not only be resumed but yield values to the caller.</p>
 </div>
@@ -1300,7 +1308,6 @@ In main 2
 Pushed 2
 In coro 3
 In main 4</pre>
-</div>
 </div>
 </div>
 <div class="sect3">
@@ -1947,11 +1954,13 @@ that returns an <a href="#awaitable">Awaitable</a>,
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Implement an orderly shutdown.
-== async/select.hpp</td>
+<td>Implement an orderly shutdown.</td>
 </tr>
 </table>
 </div>
+</div>
+<div class="sect2">
+<h3 id="select">async/select.hpp</h3>
 <div class="paragraph">
 <p>The <code>select</code> function can be used to <code>co_await</code> one <a href="#awaitable">Awaitable</a>s out of a set of them.</p>
 </div>
@@ -2016,7 +2025,7 @@ of cancel the not completed <a href="#awaitable">Awaitable</a>s. If supported, t
 </table>
 </div>
 <div class="paragraph">
-<p>This is supported by <a href="#promise">async/promise.hpp</a>, <a href="#generator">[generator]</a> and <a href="#wait">async/wait.hpp</a>.</p>
+<p>This is supported by <a href="#promise">async/promise.hpp</a>, <a href="#generator">async/generator.hpp</a> and <a href="#wait">async/wait.hpp</a>.</p>
 </div>
 </div>
 </div>
