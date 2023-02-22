@@ -1,5 +1,5 @@
-Stackless
-~~~~~~~~~
+[#stackless]
+== Stackless
 
 C++20 coroutines are stackless, meaning they don't have their own stack.
 

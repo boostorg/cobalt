@@ -1,0 +1,74 @@
+[#op]
+== Operation
+
+Operations are a more advanced implementation of the <<async_operation>> feature.
+
+asio does not support immediate completion of operations due to concerns about starvation.
+This library makes it exceedingly easy to create asynchronous operations with an early completion condition.
+
+We can for example create a `wait_op` that does nothing if the timer is already expired.
+
+[source,cpp]
+----
+template<typename Timer>
+struct wait_op : async::enable_op<wait_op> // <1>
+{
+  asio::steady_timer & tim;
+
+  wait_op(asio::steady_timer & tim) : tim(tim) {}
+
+  bool ready(system::error_code & ) // <2>
+  {
+    return tim.expiry() < std::chrono::steady_clock::now();
+  }
+  void initiate(async::completion_handler<system::error_code> complete) // <3>
+  {
+    tim.async_wait(std::move(complete));
+  }
+};
+----
+<1> Inherit `enable_op` for ADL purposes, so `await_transform` picks it up
+<2> Check if the operation is ready - called from `await_ready`
+<3> Initiate the async operation if it's not ready.
+
+Alternatively, the `ready` function can take a `handler` argument like this:
+
+[source,cpp]
+----
+  void ready(async::handler<system::error_code> h)
+  {
+    if (tim.expiry() < std::chrono::steady_clock::now())
+      h(system::error_code(asio::error::operation_aborted));
+  }
+----
+
+This can be useful to deliver error or other operations that have more complex completion signatures,
+e.g. for channels.
+
+[#use_op]
+=== use_op
+
+The `use_op` token is an alternative to using `asio::deferred` when interacting with asio, that's easier to compile.
+
+It also supports `defaults_on` so that async_ops can be awaited without the token:
+
+[source,cpp]
+----
+auto tim = async::use_op.as_default_on(asio::steady_timer{co_await async::this_coro::executor});
+co_await tim.async_wait();
+----
+
+Depending on the completion signature the `co_await` statement may throw.
+
+[cols="1,1,1"]
+|===
+| Signature | Return type | Exception
+
+| `void()`                         | `void`             | `noexcept`
+| `void(T)`                        | `T`                | `noexcept`
+| `void(T...)`                     | `std::tuple<T...>` | `noexcept`
+| `void(system::error_code, T)`    | `T`                | `system::system_error`
+| `void(system::error_code, T...)` | `std::tuple<T...>` | `system::system_error`
+| `void(std::exception_ptr, T)`    | `T`                | _any exception_
+| `void(std::exception_ptr, T...)` | `std::tuple<T...>` | _any exception_
+|===

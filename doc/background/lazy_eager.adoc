@@ -1,5 +1,5 @@
-Lazy & eager
-~~~~~~~~~~~~
+[#lazy] [#eager]
+== Lazy & eager
 
 Coroutines are lazy if they only start execution of it's code after it gets resumed, while an eager one will execute right-away until it's first suspension point (i.e. a `co_await`, `co_yield` or `co_return` statement.)
 

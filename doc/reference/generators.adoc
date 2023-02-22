@@ -1,0 +1,152 @@
+[#generator]
+== Generator
+
+A generator is an eager coroutine that can not only be resumed but yield values to the caller.
+
+[source,cpp]
+----
+async::generator<int> example()
+{
+  printf("In coro 1\n");
+  co_yield 2;
+  printf("In coro 3\n");
+  co_return 4;
+}
+
+async::main co_main(int argc, char * argv[])
+{
+  printf("In main 0\n");
+  auto f = example(); // call and let it run until the first co_yield
+  printf("In main %d\n", co_await f);
+  return 0;
+}
+----
+
+Which will generate the following output
+
+ In main 0
+ In coro 1
+ In main 2
+ In coro 3
+ In main 4
+
+[mermaid]
+----
+sequenceDiagram
+    participant main;
+    Note left of main: "In main 0"
+    main->>+example: example()
+    Note right of example: "In coro 1"
+    example-->>main: co_yield 2
+    Note left of main: "In main 2"
+    main-->>+example: co_await f
+    Note right of example: "In coro 3"
+    example->>main: co_return 3
+    Note left of main: "In main 4"
+----
+
+Values can be pushed into the generator, when `Push` is set to non-void:
+
+
+[source,cpp]
+----
+async::generator<int, int> example()
+{
+  printf("In coro 1\n");
+  int i =  co_yield 2;
+  printf("In coro %d\n");
+  co_return 4;
+}
+
+async::main co_main(int argc, char * argv[])
+{
+  printf("In main 0\n");
+  auto f = example(); // call and let it run until the first co_yield
+  printf("In main %d\n", co_await f(3)); // <1>
+  return 0;
+}
+----
+<1> The pushed value gets passed through `operator()` to the result of `co_yield`.
+
+Which will generate the following output
+
+ In main 0
+ In coro 1
+ In main 2
+ Pushed 2
+ In coro 3
+ In main 4
+
+=== Executor
+[#generator-executor]
+
+The executor is taken from the `thread_local` <<get_executor>> function, unless a `asio::executor_arg` is used
+in any position followed by the executor argument.
+
+[source, cpp]
+----
+async::generator<int> my_gen(asio::executor_arg_t, asio::io_context::executor_type exec_to_use);
+----
+
+[#generator-allocator]
+=== Memory Resource
+
+The memory resource is taken from the `thread_local` <<get_default_resource>> function,
+unless a `std::allocator_arg` is used in any position followed by a `polymorphic_allocator` argument.
+
+[source, cpp]
+----
+async::generator<int> my_gen(std::allocator_arg_t, container::pmr::polymorphic_allocator<void> alloc);
+----
+
+[#generator-outline]
+=== Outline
+
+[source,cpp]
+----
+template<typename Yield, typename Push = void>
+struct [[nodiscard]] generator
+{
+  // Movable
+  generator(generator &&lhs) noexcept = default;
+  generator& operator=(generator &&) noexcept = default;
+
+  // True until it co_returns & is co_awaited after <1>
+  explicit operator bool() const;
+
+  // Cancel the generator. <3>
+  void cancel(asio::cancellation_type ct = asio::cancellation_type::all);
+
+  // Check if a value is available
+  bool ready() const;
+
+  // Get the return value. Throws if not `ready`.
+  Yield get();
+  // Cancel & detach the generator.
+  ~generator();
+
+  // Present when `Push` != `void`
+  auto operator()(      Push && push);
+  auto operator()(const Push &  push);
+
+  // Present when `Push` == `void`, i.e. can `co_await` the generator directly.
+  auto operator co_await (); // <2>
+}
+----
+<1> This allows code like `while (gen) co_await gen:`
+<2> Supports <<interrupt_await>>
+<3> A cancelled generator maybe be resumable
+
+[#generator-promise]
+=== Promise
+
+The thread promise has the following properties.
+
+- <<promise_memory_resource_base>>
+- <<promise_cancellation_base>>
+- <<promise_throw_if_cancelled_base>>
+- <<enable_awaitables>>
+- <<enable_async_operation>>
+- <<enable_await_allocator>>
+- <<enable_await_executor>>
+

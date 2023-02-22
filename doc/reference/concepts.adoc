@@ -1,0 +1,30 @@
+[#concepts]
+== Concepts
+
+[#awaitable]
+=== Awaitable
+
+An awaitable is an expression that can be used with `co_await`.
+
+[source,cpp]
+----
+template<typename Awaitable, typename Promise = void>
+concept awaitable_type = requires (Awaitable aw, std::coroutine_handle<Promise> h)
+{
+    {aw.await_ready()} -> std::convertible_to<bool>;
+    {aw.await_suspend(h)};
+    {aw.await_resume()};
+};
+
+template<typename Awaitable, typename Promise = void>
+concept awaitable =
+        awaitable_type<Awaitable, Promise>
+    || requires (Awaitable && aw) { {std::forward<Awaitable>(aw).operator co_await()} -> awaitable_type<Promise>;}
+    || requires (Awaitable && aw) { {operator co_await(std::forward<Awaitable>(aw))} -> awaitable_type<Promise>;};
+----
+
+[#enable_awaitables]
+=== Enable awaitables
+
+Inheriting `enable_awaitables` will enable a coroutine to co_await anything through `await_transform`
+that would be `co_await`-able in the absence of any `await_transform`.

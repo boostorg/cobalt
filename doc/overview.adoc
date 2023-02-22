@@ -1,4 +1,4 @@
-== Overview
+= Overview
 
 This library provides a set of easy to use coroutine utilities that are kept very simple by a encorcing a few constraints.
 
@@ -11,8 +11,8 @@ Those are:
 It takes a collection of concepts from other languages and ports them to use C++ coroutines.
 
  - easy asynchronous base functions, such as an async main & threads
- - promise & generator types
+ - <<promise>> & <<generator>> types
  - operation wrappers
  - an async finalizer
- - select
- - channels
+ - <<select>>
+ - <<channel>>

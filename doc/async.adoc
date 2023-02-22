@@ -1,19 +1,34 @@
-Documentation boost.coro20
+Documentation boost.async
 ==========================
 Klemens Morgenstern <klemens.morgenstern@gmx.net>
 Version 0.1, 29.01.2023
+:source-highlighter: rouge
+:toc: left
+:toclevels: 4
+:idprefix:
+:docinfo: private-footer
+:source-highlighter: rouge
+:source-language: c++
+
+:leveloffset: +1
 
 The goal of this library is to provide a unified C++20 basic_coro primitive that introduces as little types as possible and integrates with asio.
 
 
 include::overview.adoc[]
-include::generators.adoc[]
 
+= Reference
 
-== Technical Background
+include::reference/main.adoc[]
+include::reference/thread.adoc[]
+include::reference/promise.adoc[]
+include::reference/generators.adoc[]
+include::reference/async_operation.adoc[]
+include::reference/op.adoc[]
+
+= Technical Background
 
 include::background/stackless.adoc[]
 include::background/lazy_eager.adoc[]
 
-
-
+:leveloffset: -1
