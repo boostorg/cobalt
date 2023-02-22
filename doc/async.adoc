@@ -2,7 +2,7 @@ Documentation boost.async
 ==========================
 Klemens Morgenstern <klemens.morgenstern@gmx.net>
 Version 0.1, 29.01.2023
-:source-highlighter: rouge
+:source-highlighter: highlight.js
 :toc: left
 :toclevels: 4
 :icons: font
