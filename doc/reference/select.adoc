@@ -1,0 +1,45 @@
+[#select]
+== async/select.hpp
+
+The `select` function can be used to `co_await` one <<awaitable>>s out of a set of them.
+
+It can be called as a variadic function with multiple <<awaitable>> or as on a range of <<awaitable>>s.
+
+[source,cpp]
+----
+async::promise<void> task1();
+async::promise<void> task2();
+
+async::promise<void> do_wait()
+{
+  co_await async::select(task1(), task2()); // <1>
+  std::vector<async::promise<void>> aws {task1(), task2()};
+  co_await async::select(aws); // <2>
+}
+----
+<1> Wait for a variadic set of <<awaitable>>s
+<2> wait for a vector of <<awaitable>>s
+
+[#interrupt_await]
+=== Interrupt Wait
+
+When arguments are passed as rvalue reference, the select will attempt to use `interrupt_await`
+of cancel the not completed <<awaitable>>s. If supported, the <<awaitable>> must complete immediately.
+
+This means that you can reuse select like this:
+
+[source,cpp]
+----
+
+async::promise<void> do_wait()
+{
+  auto t1 = task1();
+  auto t2 = task2();
+  co_await async::select(t1, t2); // <1>
+  co_await async::select(t1, t2); // <2>
+}
+----
+<1> Wait for the first task to complete
+<2> Wait for the other task to complete
+
+This is supported by <<promise>>, <<generator>> and <<wait>>.

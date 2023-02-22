@@ -1,5 +1,5 @@
 [#generator]
-== Generator
+== async/generator.hpp
 
 A generator is an eager coroutine that can not only be resumed but yield values to the caller.
 

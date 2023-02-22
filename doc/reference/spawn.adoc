@@ -1,0 +1,11 @@
+[#spawn]
+== async/spawn.hpp
+
+The `spawn` functions allow to use <<promise>> directly with asio:
+
+[source,cpp]
+----
+auto spawn(                            promise<T>    && t, CompletionToken&& token);
+auto spawn(ExecutionContext & context, promise<T>    && t, CompletionToken&& token);
+auto spawn(Executor executor,          promise<T>    && t, CompletionToken&& token);
+----

@@ -1,0 +1,53 @@
+[#with]
+== async/with.hpp
+
+The `with` facility provides a way to perform asynchronous tear-down of coroutines.
+That is it like an asynchronous destructor call.
+
+[source,cpp]
+----
+struct my_resource
+{
+  async::promise<void> exit(std::exception_ptr e);
+};
+
+async::promise<void> work(my_resource & res;
+
+async::promise<void> outer()
+{
+  co_await async::with(my_resource(), &work);
+}
+----
+
+The teardown can either be done by providing an `exit` member function or a `tag_invoke` function
+that returns an <<awaitable>>,
+.
+
+[source,cpp]
+----
+auto tag_invoke(const boost::async::with_exit_tag & wet , my_resource & ft, std::exception_ptr e);
+----
+
+The tag_invoke can be used to add teardown functionality to classes of other libraries. E.g.:
+
+[source,cpp]
+----
+using ws_stream = beast::websocket::stream<asio::ip::tcp::socket>>;
+async::promise<ws_stream> connect(urls::url); // <1>
+async::promise<void>   disconnect(ws_stream &ws); // <2>
+
+auto tag_invoke(const boost::async::with_exit_tag & wet , ws_stream & ws, std::exception_ptr e)
+{
+  return disconnect(ws);
+}
+
+async::promise<void> run_session(ws_stream & ws);
+
+async::main co_main(int argc, char * argv[])
+{
+  co_await async::with(co_await conenct(argv[1]), &run_session);
+  co_return 0;
+}
+----
+<1> Implement websocket connect & websocket initiation
+<2> Implement an orderly shutdown.

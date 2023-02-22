@@ -5,6 +5,7 @@ Version 0.1, 29.01.2023
 :source-highlighter: rouge
 :toc: left
 :toclevels: 4
+:icons: font
 :idprefix:
 :docinfo: private-footer
 :source-highlighter: rouge
@@ -23,8 +24,17 @@ include::reference/main.adoc[]
 include::reference/thread.adoc[]
 include::reference/promise.adoc[]
 include::reference/generators.adoc[]
-include::reference/async_operation.adoc[]
 include::reference/op.adoc[]
+include::reference/concepts.adoc[]
+include::reference/this_coro.adoc[]
+include::reference/this_thread.adoc[]
+include::reference/channel.adoc[]
+include::reference/with.adoc[]
+include::reference/select.adoc[]
+include::reference/wait.adoc[]
+include::reference/wait_group.adoc[]
+include::reference/test.adoc[]
+include::reference/spawn.adoc[]
 
 = Technical Background
 

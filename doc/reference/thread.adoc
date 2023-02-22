@@ -1,5 +1,5 @@
 [#thread]
-== thread
+== async/thread.hpp
 
 The thread type is another way to create an environment that is similar to `main`, but doesn't `signal_set`s.
 

@@ -1,0 +1,66 @@
+[#channel]
+== async/channel.hpp
+
+Channels can be used to exchange data between different coroutines
+on a single thread.
+
+=== Outline
+
+[source,cpp]
+----
+template<typename T>
+struct channel
+{
+  // create a channel with a buffer limit, executor & resource.
+  channel(std::size_t limit = 0u,
+          asio::io_context::executor_type executor = this_thread::get_executor(),
+          container::pmr::memory_resource * resource = this_thread::get_default_resource());
+  // movable
+  channel(channel && ) = default;
+
+  /// Access the underlying executor
+  using executor_type = asio::io_context::executor_type;
+  executor_type get_executor() {return executor_;}
+
+  // Closes the channel
+  ~channel();
+  // is the channel open?
+  bool is_open() const {return !is_closed_;}
+  // close the operation, will cancel all pending ops, too
+  void close();
+
+  // read a value to a channel
+  __read_op__  read();
+  // write a value to the channel
+  __write_op__ write(const T  && value);
+  __write_op__ write(const T  &  value);
+  __write_op__ write(      T &&  value);
+  __write_op__ write(      T  &  value);
+
+  // write a value to the channel if T is void
+  __write_op__ write();
+
+};
+----
+
+=== Example
+
+[source,cpp]
+----
+async::promise<void> producer(channel<int> & chan)
+{
+  for (int i = 0; i < 4; i++)
+    co_await chan.write(i);
+  chan.close();
+}
+
+async::main co_main(int argc, char * argv[])
+{
+  async::channel<int> c{co_await async::this_coro::executor};
+
+  while (c.is_open())
+    std::cout << co_await c.read() << std::endl;
+
+  co_return 0;
+}
+----

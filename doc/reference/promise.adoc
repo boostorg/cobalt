@@ -1,5 +1,5 @@
 [#promise]
-== Promise
+== async/promise.hpp
 
 A promise is an eager coroutine that can `co_await` and `co_return` values. That is, it cannot be resumed.
 
@@ -107,4 +107,3 @@ The thread promise has the following properties.
 - <<enable_async_operation>>
 - <<enable_await_allocator>>
 - <<enable_await_executor>>
-

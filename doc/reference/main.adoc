@@ -1,5 +1,5 @@
 [#main]
-== main
+== async/main.hpp
 
 The easiest way to get started with an async application is to use the `co_main` function with the following signature:
 

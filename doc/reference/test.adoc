@@ -1,0 +1,42 @@
+[#test_case]
+== async/test.hpp
+
+Another utility coroutine is the `test_case` coroutine. It can be used with multiple test frameworks to generate
+test-cases,
+
+In this project it's used with doctest:
+
+[source,cpp]
+----
+include::../../test/test.hpp[tag=test_case_macro]
+----
+
+So that we can write test-cases that run as a coroutine like this:
+
+[source,cpp]
+----
+CO_TEST_CASE("example")
+{
+  asio::steady_timer tim{co_await async::this_coro::executor};
+  CHECK_NOTHROW(co_await tim.async_wait(async::use_op));
+}
+----
+
+=== Executor
+[#test-executor]
+
+It will also create an `asio::io_context` to run on, which you can get through the `this_coro::executor`.
+It will be assigned to the `async::this_thread::get_executor()`.
+
+
+[#test-promise]
+=== Promise
+
+The test promise has the following properties.
+
+- <<promise_cancellation_base>>
+- <<promise_throw_if_cancelled_base>>
+- <<enable_awaitables>>
+- <<enable_async_operation>>
+- <<enable_await_executor>>
+

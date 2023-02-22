@@ -1,0 +1,20 @@
+[#this_thread]
+== async/this_thread.hpp
+
+Since everything is single threaded this library can provide an executor & default memory-resource per thread.
+
+[source,cpp]
+----
+container::pmr::memory_resource* get_default_resource() noexcept; // <1>
+container::pmr::memory_resource* set_default_resource(container::pmr::memory_resource* r) noexcept; // <2>
+container::pmr::polymorphic_allocator<void> get_allocator(); // <3>
+
+typename asio::io_context::executor_type & get_executor(); // <4>
+void set_executor(asio::io_context::executor_type exec) noexcept; // <5>
+----
+<1> Get the default resource - will be container::pmr::get_default_resource unless set
+<2> Set the default resource - returns the previously set one
+<3> Get an allocator wrapping (1)
+<4> Get the executor of the thread - throws if not set
+<5> Set the executor of the current thread.
+
