@@ -328,10 +328,15 @@ template<typename Yield, typename Push>
 struct generator_yield_awaitable
 {
   generator_receiver<Yield, Push> * self;
-  constexpr bool await_ready() { return self->pushed_value && !self->result; }
+  constexpr bool await_ready() { return self && self->pushed_value && !self->result; }
 
   std::coroutine_handle<void> await_suspend(std::coroutine_handle<generator_promise<Yield, Push>> h)
   {
+    if (self == nullptr) // we're a terminator, kill it
+    {
+        h.destroy();
+        return std::noop_coroutine();
+    }
     std::coroutine_handle<void> res = std::noop_coroutine();
     if (self->awaited_from.address() != nullptr)
       res = self->awaited_from;
@@ -349,10 +354,15 @@ template<typename Yield>
 struct generator_yield_awaitable<Yield, void>
 {
   generator_receiver<Yield, void> * self;
-  constexpr bool await_ready() { return self->pushed_value; }
+  constexpr bool await_ready() { return self && self->pushed_value; }
 
-  auto await_suspend(std::coroutine_handle<generator_promise<Yield, void>> h)
+  std::coroutine_handle<> await_suspend(std::coroutine_handle<generator_promise<Yield, void>> h)
   {
+    if (self == nullptr) // we're a terminator, kill it
+    {
+      h.destroy();
+      return std::noop_coroutine();
+    }
     std::coroutine_handle<void> res = std::noop_coroutine();
     if (self->awaited_from.address() != nullptr)
       res = self->awaited_from;
