@@ -32,7 +32,7 @@ struct [[nodiscard]] generator : detail::generator_base<Yield, Push>
 
   void cancel(asio::cancellation_type ct = asio::cancellation_type::all)
   {
-    if (!receiver_.done)
+    if (!receiver_.done && receiver_.reference == &receiver_)
       receiver_.cancel_signal.emit(ct);
   }
 

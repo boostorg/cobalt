@@ -92,6 +92,7 @@ struct thread_promise : signal_helper_2,
 
 struct thread_awaitable
 {
+  asio::cancellation_slot cl;
   bool await_ready() const
   {
     if (state_ == nullptr)
@@ -110,17 +111,17 @@ struct thread_awaitable
       return false;
 
     if constexpr (requires (Promise p) {p.get_cancellation_slot();})
-      if (auto sl = h.promise().get_cancellation_slot(); sl.is_connected())
+      if ((cl = h.promise().get_cancellation_slot()).is_connected())
       {
         if (thread_) // connect to cancel the thread
-          sl.assign(
+          cl.assign(
               [st = state_](asio::cancellation_type type)
               {
                 std::lock_guard<std::mutex> lock{st->mtx};
                 asio::post(st->ctx,[st, type]{st->signal.emit(type);});
               });
         else
-          sl.assign(
+            cl.assign(
               [st = state_](asio::cancellation_type type)
               {
                 std::lock_guard<std::mutex> lock{st->mtx};
@@ -137,6 +138,8 @@ struct thread_awaitable
 
   void await_resume()
   {
+    if (cl.is_connected())
+      cl.clear();
     if (thread_)
       thread_-> join();
     if (state_->ep)

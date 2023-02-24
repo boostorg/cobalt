@@ -19,6 +19,8 @@
 #include <boost/container/pmr/memory_resource.hpp>
 #include <boost/container/pmr/monotonic_buffer_resource.hpp>
 
+#include <boost/core/exchange.hpp>
+
 #include <coroutine>
 #include <optional>
 #include <utility>
@@ -126,6 +128,7 @@ struct promise_receiver : promise_value_holder<T>
   {
     promise_receiver * self;
     std::exception_ptr ex;
+    asio::cancellation_slot cl;
 
     awaitable(promise_receiver * self) : self(self)
     {
@@ -158,8 +161,8 @@ struct promise_receiver : promise_value_holder<T>
       }
 
       if constexpr (requires (Promise p) {p.get_cancellation_slot();})
-        if (auto sl = h.promise().get_cancellation_slot(); sl.is_connected())
-          sl.template emplace<forward_cancellation_with_interrupt>(self->cancel_signal, self);
+        if ((cl = h.promise().get_cancellation_slot()).is_connected())
+          cl.emplace<forward_cancellation_with_interrupt>(self->cancel_signal, self);
 
 
       if constexpr (requires (Promise p) {p.get_executor();})
@@ -177,6 +180,8 @@ struct promise_receiver : promise_value_holder<T>
 
     T await_resume()
     {
+      if (cl.is_connected())
+          cl.clear();
       if (ex)
         std::rethrow_exception(ex);
       self->rethrow_if();
@@ -193,7 +198,7 @@ struct promise_receiver : promise_value_holder<T>
   void interrupt_await()
   {
     exception = detached_exception();
-    awaited_from.resume();
+    boost::exchange(awaited_from, nullptr).resume();
   }
 };
 
@@ -281,7 +286,7 @@ struct async_promise
       {
         std::coroutine_handle<void> res = std::noop_coroutine();
         if (promise->receiver && promise->receiver->awaited_from.address() != nullptr)
-          res = promise->receiver->awaited_from;
+          res = boost::exchange(promise->receiver->awaited_from, nullptr);
 
         h.destroy();
         return res;

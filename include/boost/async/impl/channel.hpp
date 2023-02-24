@@ -71,8 +71,8 @@ template<typename Promise>
 std::coroutine_handle<void> channel<T>::read_op::await_suspend(std::coroutine_handle<Promise> h)
 {
   if constexpr (requires (Promise p) {p.get_cancellation_slot();})
-  if (auto sl = h.promise().get_cancellation_slot(); sl.is_connected())
-    (cancel_slot = sl).template emplace<cancel_impl>(this);
+  if ((cancel_slot = h.promise().get_cancellation_slot()).is_connected())
+    cancel_slot.emplace<cancel_impl>(this);
 
   awaited_from.reset(h.address());
   // currently nothing to read
@@ -140,8 +140,8 @@ template<typename Promise>
 std::coroutine_handle<void> channel<T>::write_op::await_suspend(std::coroutine_handle<Promise> h)
 {
   if constexpr (requires (Promise p) {p.get_cancellation_slot();})
-    if (auto sl = h.promise().get_cancellation_slot(); sl.is_connected())
-      (cancel_slot = sl).template emplace<cancel_impl>(this);
+    if ((cancel_slot = h.promise().get_cancellation_slot()).is_connected())
+      cancel_slot.emplace<cancel_impl>(this);
 
   awaited_from.reset(h.address());
   // currently nothing to read
@@ -207,8 +207,8 @@ template<typename Promise>
 std::coroutine_handle<void> channel<void>::read_op::await_suspend(std::coroutine_handle<Promise> h)
 {
   if constexpr (requires (Promise p) {p.get_cancellation_slot();})
-    if (auto sl = h.promise().get_cancellation_slot(); sl.is_connected())
-      (cancel_slot = sl).template emplace<cancel_impl>(this);
+    if ((cancel_slot = h.promise().get_cancellation_slot()).is_connected())
+      cancel_slot.emplace<cancel_impl>(this);
 
   awaited_from.reset(h.address());
   // currently nothing to read
@@ -246,8 +246,8 @@ template<typename Promise>
 std::coroutine_handle<void> channel<void>::write_op::await_suspend(std::coroutine_handle<Promise> h)
 {
   if constexpr (requires (Promise p) {p.get_cancellation_slot();})
-    if (auto sl = h.promise().get_cancellation_slot(); sl.is_connected())
-      (cancel_slot = sl).template emplace<cancel_impl>(this);
+    if ((cancel_slot = h.promise().get_cancellation_slot()).is_connected())
+      cancel_slot.emplace<cancel_impl>(this);
 
   awaited_from.reset(h.address());
   // currently nothing to read

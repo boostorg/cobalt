@@ -127,7 +127,7 @@ struct task_receiver : task_value_holder<T>
   struct awaitable
   {
     task_receiver * self;
-
+    asio::cancellation_slot cl;
     awaitable(task_receiver * self) : self(self)
     {
     }
@@ -153,8 +153,8 @@ struct task_receiver : task_value_holder<T>
         return h;
 
       if constexpr (requires (Promise p) {p.get_cancellation_slot();})
-        if (auto sl = h.promise().get_cancellation_slot(); sl.is_connected())
-          sl.template emplace<forward_cancellation_with_interrupt>(self->promise->signal, self);
+        if ((cl = h.promise().get_cancellation_slot()).is_connected())
+          cl.emplace<forward_cancellation_with_interrupt>(self->promise->signal, self);
 
 
       if constexpr (requires (Promise p) {p.get_executor();})
@@ -168,6 +168,8 @@ struct task_receiver : task_value_holder<T>
 
     T await_resume()
     {
+      if (cl.is_connected())
+        cl.clear();
       self->rethrow_if();
       return self->get_result();
     }
