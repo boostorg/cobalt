@@ -111,6 +111,16 @@ struct coro_deleter<void>
     }
 };
 
+template<>
+struct coro_deleter<std::noop_coroutine_promise>
+{
+    coro_deleter() = default;
+
+    void operator()(std::noop_coroutine_promise*)
+    {
+
+    }
+};
 
 }
 

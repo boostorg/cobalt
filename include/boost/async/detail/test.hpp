@@ -40,14 +40,14 @@ struct test_case_promise : promise_cancellation_base<asio::cancellation_slot, as
       test_case_promise * promise;
       bool await_ready() const noexcept
       {
-        return promise->awaited_from.address() != nullptr;
+        return promise->awaited_from.get() != nullptr;
       }
 
       auto await_suspend(std::coroutine_handle<test_case_promise> h) noexcept -> std::coroutine_handle<void>
       {
         std::coroutine_handle<void> res = std::noop_coroutine();
-        if (promise->awaited_from.address() != nullptr)
-          res = std::exchange(promise->awaited_from, nullptr);
+        if (promise->awaited_from.get() != nullptr)
+          res = std::coroutine_handle<void>::from_address(promise->awaited_from.release());
 
         h.destroy();
         return res;
@@ -71,14 +71,8 @@ struct test_case_promise : promise_cancellation_base<asio::cancellation_slot, as
   using allocator_type = container::pmr::polymorphic_allocator<void>;
   allocator_type get_allocator() const {return container::pmr::polymorphic_allocator<void>{this_thread::get_default_resource()};}
 
-  ~test_case_promise()
-  {
-    if (awaited_from != nullptr)
-      awaited_from.destroy();
-  }
-
   std::optional<typename asio::require_result<executor_type, asio::execution::outstanding_work_t ::tracked_t>::type> exec;
-  std::coroutine_handle<void> awaited_from{nullptr};
+  std::unique_ptr<void, detail::coro_deleter<>>  awaited_from{nullptr};
 };
 
 

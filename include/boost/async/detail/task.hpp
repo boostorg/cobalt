@@ -90,7 +90,7 @@ struct task_receiver : task_value_holder<T>
   }
 
   bool done = false;
-  std::coroutine_handle<void> awaited_from{nullptr};
+  std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
 
   void set_done()
   {
@@ -100,7 +100,7 @@ struct task_receiver : task_value_holder<T>
   task_receiver() = default;
   task_receiver(task_receiver && lhs)
       : task_value_holder<T>(std::move(lhs)),
-        exception(std::move(lhs.exception)), done(lhs.done), awaited_from(lhs.awaited_from),
+        exception(std::move(lhs.exception)), done(lhs.done), awaited_from(std::move(lhs.awaited_from)),
         promise(lhs.promise)
   {
     if (!done && !exception)
@@ -161,7 +161,7 @@ struct task_receiver : task_value_holder<T>
         self->promise->exec.emplace(h.promise().get_executor());
       else
         self->promise->exec.emplace(this_thread::get_executor());
-      self->awaited_from = h;
+      self->awaited_from.reset(h.address());
 
       return std::coroutine_handle<task_promise<T>>::from_promise(*self->promise);
     }
@@ -183,7 +183,7 @@ struct task_receiver : task_value_holder<T>
   void interrupt_await()
   {
     exception = detached_exception();
-    awaited_from.resume();
+    std::coroutine_handle<void>::from_address(awaited_from.release()).resume();
   }
 };
 
@@ -268,14 +268,14 @@ struct task_promise
       task_promise * promise;
       bool await_ready() const noexcept
       {
-        return promise->receiver && promise->receiver->awaited_from.address() == nullptr;
+        return promise->receiver && promise->receiver->awaited_from.get() == nullptr;
       }
 
       auto await_suspend(std::coroutine_handle<task_promise> h) noexcept -> std::coroutine_handle<void>
       {
         std::coroutine_handle<void> res = std::noop_coroutine();
-        if (promise->receiver && promise->receiver->awaited_from.address() != nullptr)
-          res = promise->receiver->awaited_from;
+        if (promise->receiver && promise->receiver->awaited_from.get() != nullptr)
+          res = std::coroutine_handle<void>::from_address(promise->receiver->awaited_from.release());
 
         h.destroy();
         return res;

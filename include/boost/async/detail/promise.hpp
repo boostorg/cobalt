@@ -90,7 +90,7 @@ struct promise_receiver : promise_value_holder<T>
   }
 
   bool done = false;
-  std::coroutine_handle<void> awaited_from{nullptr};
+  std::unique_ptr<void, detail::coro_deleter<>>  awaited_from{nullptr};
 
   void set_done()
   {
@@ -100,7 +100,7 @@ struct promise_receiver : promise_value_holder<T>
   promise_receiver() = default;
   promise_receiver(promise_receiver && lhs)
       : promise_value_holder<T>(std::move(lhs)),
-        exception(std::move(lhs.exception)), done(lhs.done), awaited_from(lhs.awaited_from),
+        exception(std::move(lhs.exception)), done(lhs.done), awaited_from(std::move(lhs.awaited_from)),
         reference(lhs.reference), cancel_signal(lhs.cancel_signal)
   {
     if (!done && !exception)
@@ -166,14 +166,14 @@ struct promise_receiver : promise_value_holder<T>
 
 
       if constexpr (requires (Promise p) {p.get_executor();})
-        self->awaited_from = detail::dispatch_coroutine(
+        self->awaited_from.reset(detail::dispatch_coroutine(
             h.promise().get_executor(),
             asio::bind_allocator(
                 container::pmr::polymorphic_allocator<void>(&resource),
                 [h]() mutable { h.resume(); })
-        );
+        ).address());
       else
-        self->awaited_from = h;
+        self->awaited_from.reset(h.address());
 
       return true;
     }
@@ -198,7 +198,7 @@ struct promise_receiver : promise_value_holder<T>
   void interrupt_await()
   {
     exception = detached_exception();
-    boost::exchange(awaited_from, nullptr).resume();
+    std::coroutine_handle<void>::from_address(awaited_from.release()).resume();
   }
 };
 
@@ -279,14 +279,14 @@ struct async_promise
       async_promise * promise;
       bool await_ready() const noexcept
       {
-        return promise->receiver && promise->receiver->awaited_from.address() == nullptr;
+        return promise->receiver && promise->receiver->awaited_from.get() == nullptr;
       }
 
       auto await_suspend(std::coroutine_handle<async_promise> h) noexcept -> std::coroutine_handle<void>
       {
         std::coroutine_handle<void> res = std::noop_coroutine();
-        if (promise->receiver && promise->receiver->awaited_from.address() != nullptr)
-          res = boost::exchange(promise->receiver->awaited_from, nullptr);
+        if (promise->receiver && promise->receiver->awaited_from.get() != nullptr)
+          res = std::coroutine_handle<void>::from_address(promise->receiver->awaited_from.release());
 
         h.destroy();
         return res;

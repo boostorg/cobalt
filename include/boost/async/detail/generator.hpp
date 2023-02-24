@@ -74,7 +74,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
   std::optional<Yield> result;
   Yield get_result() {return *std::exchange(result, std::nullopt);}
   bool done = false;
-  std::coroutine_handle<void> awaited_from{nullptr};
+  std::unique_ptr<void, detail::coro_deleter<>>  awaited_from{nullptr};
   std::unique_ptr<void, detail::coro_deleter<>> yield_from;
 
   bool ready() { return exception || result || done; }
@@ -158,14 +158,14 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 
 
       if constexpr (requires (Promise p) {p.get_executor();})
-        self->awaited_from = detail::dispatch_coroutine(
+        self->awaited_from.reset(detail::dispatch_coroutine(
             h.promise().get_executor(),
             asio::bind_allocator(
                 container::pmr::polymorphic_allocator<void>(&resource),
                 [h]() mutable { h.resume(); })
-        );
+        ).address());
       else
-        self->awaited_from = h;
+        self->awaited_from.reset(h.address());
 
       std::coroutine_handle<void> res = std::noop_coroutine();
       if (self->yield_from != nullptr)
@@ -190,7 +190,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
   void interrupt_await()
   {
     exception = detached_exception();
-    boost::exchange(awaited_from, nullptr).resume();
+    std::coroutine_handle<void>::from_address(awaited_from.release()).resume();
   }
 
   void rethrow_if()
@@ -247,14 +247,14 @@ struct generator_promise
       generator_promise * generator;
       bool await_ready() const noexcept
       {
-        return generator->receiver && generator->receiver->awaited_from.address() == nullptr;
+        return generator->receiver && generator->receiver->awaited_from.get() == nullptr;
       }
 
       auto await_suspend(std::coroutine_handle<generator_promise> h) noexcept -> std::coroutine_handle<void>
       {
         std::coroutine_handle<void> res = std::noop_coroutine();
-        if (generator->receiver && generator->receiver->awaited_from.address() != nullptr)
-          res = boost::exchange(generator->receiver->awaited_from, nullptr);
+        if (generator->receiver && generator->receiver->awaited_from.get() != nullptr)
+          res = std::coroutine_handle<void>::from_address(generator->receiver->awaited_from.release());
         if (generator->receiver)
             generator->receiver->done = true;
         h.destroy();
@@ -341,8 +341,8 @@ struct generator_yield_awaitable
         return std::noop_coroutine();
     }
     std::coroutine_handle<void> res = std::noop_coroutine();
-    if (self->awaited_from.address() != nullptr)
-      res = boost::exchange(self->awaited_from, nullptr);
+    if (self->awaited_from.get() != nullptr)
+      res = std::coroutine_handle<void>::from_address(self->awaited_from.release());
     self->yield_from.reset(h.address());
     return res;
   }
@@ -367,8 +367,8 @@ struct generator_yield_awaitable<Yield, void>
       return std::noop_coroutine();
     }
     std::coroutine_handle<void> res = std::noop_coroutine();
-    if (self->awaited_from.address() != nullptr)
-      res = boost::exchange(self->awaited_from, nullptr);
+    if (self->awaited_from.get() != nullptr)
+      res= std::coroutine_handle<void>::from_address(self->awaited_from.release());
     self->yield_from.reset(h.address());
     return res;
   }

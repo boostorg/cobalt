@@ -45,7 +45,7 @@ auto async_run(test_case&& tc, CompletionToken&& token)
       {
         auto exec = asio::get_associated_executor(h);
         tc.promise->exec = boost::asio::require(exec, boost::asio::execution::outstanding_work.tracked);
-        tc.promise->awaited_from = async::detail::dispatch_coroutine(std::move(h));
+        tc.promise->awaited_from.reset(async::detail::dispatch_coroutine(std::move(h)).address());
 
         asio::post(
             exec,

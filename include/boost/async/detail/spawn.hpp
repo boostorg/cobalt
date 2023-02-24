@@ -40,7 +40,7 @@ struct async_initiate
     auto p = recs.get();
 
     p->promise->exec.emplace(exec);
-    p->awaited_from = detail::post_coroutine(
+    p->awaited_from.reset(detail::post_coroutine(
         asio::bind_executor(
             asio::get_associated_executor(h, exec),
             asio::bind_allocator(
@@ -56,7 +56,7 @@ struct async_initiate
                 }
             )
         )
-    );
+    ).address());
       auto ch = std::coroutine_handle<detail::task_promise<T>>::from_promise(*p->promise);
       asio::dispatch(exec, [ch]{ch.resume();});
   }
@@ -81,7 +81,7 @@ struct async_initiate
     auto p = recs.get();
 
     p->promise->exec.emplace(exec);
-    p->awaited_from = detail::post_coroutine(
+    p->awaited_from.reset(detail::post_coroutine(
         asio::bind_executor(
             asio::get_associated_executor(h, exec),
             asio::bind_allocator(
@@ -95,7 +95,7 @@ struct async_initiate
                 }
             )
         )
-    );
+    ).address());
     auto ch = std::coroutine_handle<detail::task_promise<void>>::from_promise(*p->promise);
     asio::dispatch(exec, [ch]{ch.resume();});
   }

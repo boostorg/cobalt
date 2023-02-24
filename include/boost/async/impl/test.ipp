@@ -16,7 +16,7 @@ namespace boost::async
 
 std::coroutine_handle<detail::test_case_promise> test_case::await_suspend(std::coroutine_handle<void> h)
 {
-  promise->awaited_from = h;
+  promise->awaited_from.reset(h.address());
   return std::coroutine_handle<detail::test_case_promise>::from_promise(*promise);
 }
 
