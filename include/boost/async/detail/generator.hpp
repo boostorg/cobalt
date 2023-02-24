@@ -121,6 +121,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
   struct awaitable
   {
     generator_receiver *self;
+    std::exception_ptr ex;
     awaitable(generator_receiver * self) : self(self)
     {
     }
@@ -143,6 +144,12 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
     {
       if (self->done) // ok, so we're actually done already, so noop
         return std::noop_coroutine();
+
+      if (self->awaited_from != nullptr) // we're already being awaited, that's an error!
+      {
+          ex = already_awaited();
+          return h;
+      }
 
       if constexpr (requires (Promise p) {p.get_cancellation_slot();})
         if (auto sl = h.promise().get_cancellation_slot(); sl.is_connected())
@@ -167,6 +174,8 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 
     Yield await_resume()
     {
+      if (ex)
+        std::rethrow_exception(ex);
       if (self->exception)
         std::rethrow_exception(std::exchange(self->exception, nullptr));
       if (!self->result)

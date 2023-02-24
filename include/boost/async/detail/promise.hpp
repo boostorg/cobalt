@@ -125,6 +125,7 @@ struct promise_receiver : promise_value_holder<T>
   struct awaitable
   {
     promise_receiver * self;
+    std::exception_ptr ex;
 
     awaitable(promise_receiver * self) : self(self)
     {
@@ -150,6 +151,12 @@ struct promise_receiver : promise_value_holder<T>
       if (self->done) // ok, so we're actually done already, so noop
         return false;
 
+      if (self->awaited_from != nullptr) // we're already being awaited, that's an error!
+      {
+        ex = already_awaited();
+        return false;
+      }
+
       if constexpr (requires (Promise p) {p.get_cancellation_slot();})
         if (auto sl = h.promise().get_cancellation_slot(); sl.is_connected())
           sl.template emplace<forward_cancellation_with_interrupt>(self->cancel_signal, self);
@@ -170,6 +177,8 @@ struct promise_receiver : promise_value_holder<T>
 
     T await_resume()
     {
+      if (ex)
+        std::rethrow_exception(ex);
       self->rethrow_if();
       return self->get_result();
     }
