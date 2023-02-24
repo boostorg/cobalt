@@ -225,6 +225,12 @@ struct ranged_wait_impl
       co_await_result_t<std::decay_t<decltype(*std::begin(std::declval<PromiseRange>()))>>,
       std::exception_ptr>;
 
+  using result_vector = std::vector<
+          result_type,
+          typename std::allocator_traits<
+              asio::associated_allocator_t<std::decay_t<PromiseRange>>>::template rebind_alloc<result_type>
+          >;
+
   ranged_wait_impl(PromiseRange && p) : range(static_cast<PromiseRange&&>(p))
   {
     result.resize(std::size(range), result_type(detail::wait_not_ready()));
@@ -393,7 +399,7 @@ struct ranged_wait_impl
         await_suspend_impl(i);
   }
 
-  container::pmr::vector<result_type> await_resume()
+  result_vector await_resume()
   {
     if (cancellation_slot.is_connected())
       cancellation_slot.clear();
@@ -415,7 +421,7 @@ struct ranged_wait_impl
   asio::cancellation_slot cancellation_slot;
   std::unique_ptr<void, detail::coro_deleter<void>> awaited_from;
   container::pmr::vector<bool> was_ready{cancel.get_allocator()};
-  container::pmr::vector<result_type> result{cancel.get_allocator()};
+  result_vector result{asio::get_associated_allocator(range)};
 };
 
 
