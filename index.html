@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.17">
+<meta name="generator" content="Asciidoctor 2.0.18">
 <meta name="author" content="Klemens Morgenstern">
 <title>Documentation boost.async</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
@@ -85,10 +85,10 @@ code{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;
 ul,ol,dl{line-height:1.6;margin-bottom:1.25em;list-style-position:outside;font-family:inherit}
 ul,ol{margin-left:1.5em}
 ul li ul,ul li ol{margin-left:1.25em;margin-bottom:0}
-ul.square li ul,ul.circle li ul,ul.disc li ul{list-style:inherit}
-ul.square{list-style-type:square}
 ul.circle{list-style-type:circle}
 ul.disc{list-style-type:disc}
+ul.square{list-style-type:square}
+ul.circle ul:not([class]),ul.disc ul:not([class]),ul.square ul:not([class]){list-style:inherit}
 ol li ul,ol li ol{margin-left:1.25em;margin-bottom:0}
 dl dt{margin-bottom:.3125em;font-weight:bold}
 dl dd{margin-bottom:1.25em}
@@ -665,7 +665,7 @@ pre.rouge {
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#overview">Overview</a></li>
+<li><a href="#motivation">Motivation</a></li>
 <li><a href="#reference">Reference</a>
 <ul class="sectlevel2">
 <li><a href="#main">async/main.hpp</a>
@@ -697,6 +697,14 @@ pre.rouge {
 <li><a href="#generator-allocator">Memory Resource</a></li>
 <li><a href="#generator-outline">Outline</a></li>
 <li><a href="#generator-promise">Promise</a></li>
+</ul>
+</li>
+<li><a href="#task">async/task.hpp</a>
+<ul class="sectlevel3">
+<li><a href="#executor_5">Executor</a></li>
+<li><a href="#memory_resource_4">Memory Resource</a></li>
+<li><a href="#task-outline">Outline</a></li>
+<li><a href="#task-task">Promise</a></li>
 </ul>
 </li>
 <li><a href="#async_operation">async/op.hpp</a>
@@ -738,7 +746,7 @@ pre.rouge {
 <li><a href="#wait_group">async/wait_group.hpp</a></li>
 <li><a href="#test_case">async/test.hpp</a>
 <ul class="sectlevel3">
-<li><a href="#executor_5">Executor</a></li>
+<li><a href="#executor_6">Executor</a></li>
 <li><a href="#test-promise">Promise</a></li>
 </ul>
 </li>
@@ -763,29 +771,20 @@ pre.rouge {
 </div>
 </div>
 <div class="sect1">
-<h2 id="overview">Overview</h2>
+<h2 id="motivation">Motivation</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This library provides a set of easy to use coroutine utilities that are kept very simple by a encorcing a few constraints.</p>
+<p>Many languages provide a simple programming languages like node.js and python provide easy to use
+single-threaded concurrency frameworks.
+While more complex than simple synchronous code,
+single threaded asynchronicity avoids many of the pitfalls &amp; overhead of multi-threading.</p>
 </div>
 <div class="paragraph">
-<p>Those are:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>io_context</code> is the <code>execution_context</code> of choice.</p>
-</li>
-<li>
-<p>Every <code>asio::io_context</code> is single threaded</p>
-</li>
-<li>
-<p>Eager execution is the way to go</p>
-</li>
-</ul>
+<p>This library is meant to provide this to C++: simple single threaded asynchronicity
+akin to node.js and asyncio in python.</p>
 </div>
 <div class="paragraph">
-<p>It takes a collection of concepts from other languages and ports them to use C++ coroutines.</p>
+<p>It takes a collection of concepts from other languages and provides them based on  C++20 coroutines.</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1389,6 +1388,109 @@ unless a <code>std::allocator_arg</code> is used in any position followed by a <
 <h4 id="generator-promise">Promise</h4>
 <div class="paragraph">
 <p>The thread promise has the following properties.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#promise_memory_resource_base">Memory resource base</a></p>
+</li>
+<li>
+<p><a href="#promise_cancellation_base">Promise is cancellable</a></p>
+</li>
+<li>
+<p><a href="#promise_throw_if_cancelled_base">Throw is cancelled</a></p>
+</li>
+<li>
+<p><a href="#enable_awaitables">Enable awaitables</a></p>
+</li>
+<li>
+<p><a href="#enable_async_operation">Enable async operation</a></p>
+</li>
+<li>
+<p><a href="#enable_await_allocator">Await Allocator</a></p>
+</li>
+<li>
+<p><a href="#enable_await_executor">Await Executor</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="task">async/task.hpp</h3>
+<div class="paragraph">
+<p>A task is a lazy coroutine that can <code>co_await</code> and <code>co_return</code> values. That is, it cannot be resumed.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">task</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">delay</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">milliseconds</span> <span class="n">ms</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n">asio</span><span class="o">::</span><span class="n">steady_timer</span> <span class="n">tim</span><span class="p">{</span><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">executor</span><span class="p">,</span> <span class="n">ms</span><span class="p">};</span>
+  <span class="k">co_await</span> <span class="n">tim</span><span class="p">.</span><span class="n">async_wait</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">use_op</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="n">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="k">co_await</span> <span class="n">delay</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">milliseconds</span><span class="p">(</span><span class="mi">50</span><span class="p">));</span>
+  <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="executor_5">Executor</h4>
+<div id="task-executor" class="paragraph">
+<p>Since a <code>task</code> it lazy, it does not need to have an executor on construction.
+It rather attempts to take it from the caller or awaiter if present.
+Otherwise, it&#8217;ll default to the thread_local executor.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="memory_resource_4">Memory Resource</h4>
+<div id="task-allocator" class="paragraph">
+<p>The memory resource is taken from the <code>thread_local</code> <a href="#this_thread">get_default_resource</a> function,
+unless a <code>std::allocator_arg</code> is used in any position followed by a <code>polymorphic_allocator</code> argument.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">task</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">my_gen</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">allocator_arg_t</span><span class="p">,</span> <span class="n">container</span><span class="o">::</span><span class="n">pmr</span><span class="o">::</span><span class="n">polymorphic_allocator</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">alloc</span><span class="p">);</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="task-outline">Outline</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Return</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="p">[[</span><span class="n">nodiscard</span><span class="p">]]</span> <span class="n">task</span>
+<span class="p">{</span>
+  <span class="c1">// movable</span>
+  <span class="n">task</span><span class="p">(</span><span class="n">task</span> <span class="o">&amp;&amp;</span><span class="n">lhs</span><span class="p">)</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+  <span class="n">task</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">task</span> <span class="o">&amp;&amp;</span><span class="p">)</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+
+  <span class="c1">// enable `co_await` only for rvalues.</span>
+  <span class="k">auto</span> <span class="k">operator</span> <span class="k">co_await</span> <span class="p">()</span> <span class="o">**</span><span class="p">;</span>
+
+  <span class="o">~</span><span class="n">task</span><span class="p">();</span>
+<span class="p">};</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Tasks can be used synchronously from a sync function by calling <code>run(my_task())</code>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="task-task">Promise</h4>
+<div class="paragraph">
+<p>The task promise has the following properties.</p>
 </div>
 <div class="ulist">
 <ul>
@@ -2133,7 +2235,7 @@ static ::boost::async::test_case Function()
 </div>
 </div>
 <div class="sect3">
-<h4 id="executor_5">Executor</h4>
+<h4 id="executor_6">Executor</h4>
 <div id="test-executor" class="paragraph">
 <p>It will also create an <code>asio::io_context</code> to run on, which you can get through the <code>this_coro::executor</code>.
 It will be assigned to the <code>async::this_thread::get_executor()</code>.</p>
@@ -2168,13 +2270,13 @@ It will be assigned to the <code>async::this_thread::get_executor()</code>.</p>
 <div class="sect2">
 <h3 id="spawn">async/spawn.hpp</h3>
 <div class="paragraph">
-<p>The <code>spawn</code> functions allow to use <a href="#promise">async/promise.hpp</a> directly with asio:</p>
+<p>The <code>spawn</code> functions allow to use <a href="#task">task</a> directly with asio:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="k">auto</span> <span class="nf">spawn</span><span class="p">(</span>                            <span class="n">promise</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span>    <span class="o">&amp;&amp;</span> <span class="n">t</span><span class="p">,</span> <span class="n">CompletionToken</span><span class="o">&amp;&amp;</span> <span class="n">token</span><span class="p">);</span>
-<span class="k">auto</span> <span class="nf">spawn</span><span class="p">(</span><span class="n">ExecutionContext</span> <span class="o">&amp;</span> <span class="n">context</span><span class="p">,</span> <span class="n">promise</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span>    <span class="o">&amp;&amp;</span> <span class="n">t</span><span class="p">,</span> <span class="n">CompletionToken</span><span class="o">&amp;&amp;</span> <span class="n">token</span><span class="p">);</span>
-<span class="k">auto</span> <span class="nf">spawn</span><span class="p">(</span><span class="n">Executor</span> <span class="n">executor</span><span class="p">,</span>          <span class="n">promise</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span>    <span class="o">&amp;&amp;</span> <span class="n">t</span><span class="p">,</span> <span class="n">CompletionToken</span><span class="o">&amp;&amp;</span> <span class="n">token</span><span class="p">);</span></code></pre>
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">auto</span> <span class="nf">spawn</span><span class="p">(</span>                            <span class="n">task</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span>    <span class="o">&amp;&amp;</span> <span class="n">t</span><span class="p">,</span> <span class="n">CompletionToken</span><span class="o">&amp;&amp;</span> <span class="n">token</span><span class="p">);</span>
+<span class="k">auto</span> <span class="nf">spawn</span><span class="p">(</span><span class="n">asio</span><span class="o">::</span><span class="n">io_context</span> <span class="o">&amp;</span> <span class="n">context</span><span class="p">,</span> <span class="n">task</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span>    <span class="o">&amp;&amp;</span> <span class="n">t</span><span class="p">,</span> <span class="n">CompletionToken</span><span class="o">&amp;&amp;</span> <span class="n">token</span><span class="p">);</span>
+<span class="k">auto</span> <span class="nf">spawn</span><span class="p">(</span><span class="n">Executor</span> <span class="n">executor</span><span class="p">,</span>          <span class="n">task</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span>    <span class="o">&amp;&amp;</span> <span class="n">t</span><span class="p">,</span> <span class="n">CompletionToken</span><span class="o">&amp;&amp;</span> <span class="n">token</span><span class="p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -2370,7 +2472,7 @@ C++20 coroutines are stackless, i.e. they only allocate their own frame and use 
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2023-02-23 00:10:21 +0800
+Last updated 2023-02-24 13:16:32 +0800
 </div>
 </div>
 </body>
