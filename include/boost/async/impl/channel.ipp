@@ -51,11 +51,15 @@ void channel<void>::read_op::await_resume()
 
   if (cancelled)
     boost::throw_exception(system::system_error(asio::error::operation_aborted), loc);
-  else
+
+  if (!direct)
+    chn->n_--;
+  if (!chn->write_queue_.empty())
   {
-    if (!chn->write_queue_.empty())
+    auto &op = chn->write_queue_.front();
+    BOOST_ASSERT(chn->read_queue_.empty());
+    if (op.await_ready())
     {
-      auto & op = chn->write_queue_.front();
       op.unlink();
       BOOST_ASSERT(op.awaited_from);
       asio::post(
@@ -65,7 +69,6 @@ void channel<void>::read_op::await_resume()
             std::coroutine_handle<void>::from_address(h.release()).resume();
           });
     }
-    chn->n_--;
   }
 }
 
@@ -76,11 +79,15 @@ void channel<void>::write_op::await_resume()
     cancel_slot.clear();
   if (cancelled)
     boost::throw_exception(system::system_error(asio::error::operation_aborted), loc);
-  else
+  if (!direct)
+    chn->n_++;
+
+  if (!chn->read_queue_.empty())
   {
-    if (!chn->read_queue_.empty())
+    auto & op = chn->read_queue_.front();
+    BOOST_ASSERT(chn->write_queue_.empty());
+    if (op.await_ready())
     {
-      auto & op = chn->read_queue_.front();
       op.unlink();
       BOOST_ASSERT(op.awaited_from);
       asio::post(
@@ -90,8 +97,6 @@ void channel<void>::write_op::await_resume()
             std::coroutine_handle<void>::from_address(h.release()).resume();
           });
     }
-
-    chn->n_++;
   }
 }
 

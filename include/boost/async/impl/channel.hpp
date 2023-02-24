@@ -76,15 +76,27 @@ std::coroutine_handle<void> channel<T>::read_op::await_suspend(std::coroutine_ha
 
   awaited_from.reset(h.address());
   // currently nothing to read
-  chn->read_queue_.push_back(*this);
 
   if (chn->write_queue_.empty())
+  {
+    chn->read_queue_.push_back(*this);
     return std::noop_coroutine();
+  }
   else
   {
     auto & op = chn->write_queue_.front();
     op.unlink();
+    op.direct = true;
+    if (op.ref.index() == 0)
+      direct = std::move(*variant2::get<0>(op.ref));
+    else
+      direct = *variant2::get<1>(op.ref);
     BOOST_ASSERT(op.awaited_from);
+    asio::post(chn->executor_,
+               [h = std::move(awaited_from)]() mutable
+               {
+                 std::coroutine_handle<void>::from_address(h.release()).resume();
+               });
     return std::coroutine_handle<void>::from_address(op.awaited_from.release());
   }
 }
@@ -97,11 +109,17 @@ T channel<T>::read_op::await_resume()
 
   if (cancelled)
     boost::throw_exception(system::system_error(asio::error::operation_aborted), loc);
-  else
+
+  T value = direct ? std::move(*direct) : std::move(chn->buffer_.front());
+  if (!direct)
+    chn->buffer_.pop_front();
+
+  if (!chn->write_queue_.empty())
   {
-    if (!chn->write_queue_.empty())
+    auto &op = chn->write_queue_.front();
+    BOOST_ASSERT(chn->read_queue_.empty());
+    if (op.await_ready())
     {
-      auto & op = chn->write_queue_.front();
       op.unlink();
       BOOST_ASSERT(op.awaited_from);
       asio::post(
@@ -111,10 +129,9 @@ T channel<T>::read_op::await_resume()
             std::coroutine_handle<void>::from_address(h.release()).resume();
           });
     }
-    T value = std::move(chn->buffer_.front());
-    chn->buffer_.pop_front();
-    return value;
   }
+
+  return value;
 }
 
 template<typename T>
@@ -145,15 +162,28 @@ std::coroutine_handle<void> channel<T>::write_op::await_suspend(std::coroutine_h
 
   awaited_from.reset(h.address());
   // currently nothing to read
-  chn->write_queue_.push_back(*this);
-
   if (chn->read_queue_.empty())
+  {
+    chn->write_queue_.push_back(*this);
     return std::noop_coroutine();
+  }
   else
   {
     auto & op = chn->read_queue_.front();
     op.unlink();
+    if (ref.index() == 0)
+      op.direct = std::move(*variant2::get<0>(ref));
+    else
+      op.direct = *variant2::get<1>(ref);
+
     BOOST_ASSERT(op.awaited_from);
+    direct = true;
+    asio::post(chn->executor_,
+               [h = std::move(awaited_from)]() mutable
+               {
+                 std::coroutine_handle<void>::from_address(h.release()).resume();
+               });
+
     return std::coroutine_handle<void>::from_address(op.awaited_from.release());
   }
 }
@@ -165,11 +195,23 @@ void channel<T>::write_op::await_resume()
     cancel_slot.clear();
   if (cancelled)
     boost::throw_exception(system::system_error(asio::error::operation_aborted), loc);
-  else
+
+
+  if (!direct)
   {
-    if (!chn->read_queue_.empty())
+    BOOST_ASSERT(!chn->buffer_.full());
+    if (ref.index() == 0)
+      chn->buffer_.push_back(std::move(*variant2::get<0>(ref)));
+    else
+      chn->buffer_.push_back(*variant2::get<1>(ref));
+  }
+
+  if (!chn->read_queue_.empty())
+  {
+    auto & op = chn->read_queue_.front();
+    BOOST_ASSERT(chn->write_queue_.empty());
+    if (op.await_ready())
     {
-      auto & op = chn->read_queue_.front();
       op.unlink();
       BOOST_ASSERT(op.awaited_from);
       asio::post(
@@ -179,11 +221,9 @@ void channel<T>::write_op::await_resume()
             std::coroutine_handle<void>::from_address(h.release()).resume();
           });
     }
-    if (ref.index() == 0)
-      chn->buffer_.push_back(std::move(*variant2::get<0>(ref)));
-    else
-      chn->buffer_.push_back(*variant2::get<1>(ref));
   }
+
+
 }
 
 struct channel<void>::read_op::cancel_impl
@@ -203,28 +243,6 @@ struct channel<void>::read_op::cancel_impl
   }
 };
 
-template<typename Promise>
-std::coroutine_handle<void> channel<void>::read_op::await_suspend(std::coroutine_handle<Promise> h)
-{
-  if constexpr (requires (Promise p) {p.get_cancellation_slot();})
-    if ((cancel_slot = h.promise().get_cancellation_slot()).is_connected())
-      cancel_slot.emplace<cancel_impl>(this);
-
-  awaited_from.reset(h.address());
-  // currently nothing to read
-  chn->read_queue_.push_back(*this);
-
-  if (chn->write_queue_.empty())
-    return std::noop_coroutine();
-  else
-  {
-    auto & op = chn->write_queue_.front();
-    op.unlink();
-    BOOST_ASSERT(op.awaited_from);
-    return std::coroutine_handle<void>::from_address(op.awaited_from.release());
-  }
-}
-
 struct channel<void>::write_op::cancel_impl
 {
   write_op * op;
@@ -234,13 +252,45 @@ struct channel<void>::write_op::cancel_impl
     op->cancelled = true;
     op->unlink();
     asio::post(
-        op->chn->executor_,
-        [h = std::move(op->awaited_from)]() mutable
-        {
-          std::coroutine_handle<void>::from_address(h.release()).resume();
-        });
+          op->chn->executor_,
+          [h = std::move(op->awaited_from)]() mutable
+          {
+            std::coroutine_handle<void>::from_address(h.release()).resume();
+          });
   }
 };
+
+template<typename Promise>
+std::coroutine_handle<void> channel<void>::read_op::await_suspend(std::coroutine_handle<Promise> h)
+{
+  if constexpr (requires (Promise p) {p.get_cancellation_slot();})
+    if ((cancel_slot = h.promise().get_cancellation_slot()).is_connected())
+      cancel_slot.emplace<cancel_impl>(this);
+
+  awaited_from.reset(h.address());
+
+  // currently nothing to read
+  if (chn->write_queue_.empty())
+  {
+    chn->read_queue_.push_back(*this);
+    return std::noop_coroutine();
+  }
+  else // we're good, we can read, so we'll do that, but post our own completetion too.
+  {
+    auto & op = chn->write_queue_.front();
+    op.unlink();
+    op.direct = true;
+    BOOST_ASSERT(op.awaited_from);
+    direct = true;
+    asio::post(chn->executor_,
+      [h = std::move(awaited_from)]() mutable
+      {
+        std::coroutine_handle<void>::from_address(h.release()).resume();
+      });
+    return std::coroutine_handle<void>::from_address(op.awaited_from.release());
+  }
+}
+
 
 template<typename Promise>
 std::coroutine_handle<void> channel<void>::write_op::await_suspend(std::coroutine_handle<Promise> h)
@@ -251,15 +301,25 @@ std::coroutine_handle<void> channel<void>::write_op::await_suspend(std::coroutin
 
   awaited_from.reset(h.address());
   // currently nothing to read
-  chn->write_queue_.push_back(*this);
 
   if (chn->read_queue_.empty())
+  {
+    chn->write_queue_.push_back(*this);
     return std::noop_coroutine();
+  }
   else
   {
     auto & op = chn->read_queue_.front();
     op.unlink();
+    op.direct = true;
     BOOST_ASSERT(op.awaited_from);
+    direct = true;
+    asio::post(chn->executor_,
+               [h = std::move(awaited_from)]() mutable
+               {
+                 std::coroutine_handle<void>::from_address(h.release()).resume();
+               });
+
     return std::coroutine_handle<void>::from_address(op.awaited_from.release());
   }
 }

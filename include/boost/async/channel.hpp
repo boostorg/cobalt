@@ -18,6 +18,8 @@
 #include <boost/circular_buffer.hpp>
 #include <boost/variant2/variant.hpp>
 
+#include <optional>
+
 namespace boost::async
 {
 
@@ -50,6 +52,7 @@ struct channel
     channel * chn;
     boost::source_location loc;
     bool cancelled = false;
+    std::optional<T> direct;
     asio::cancellation_slot cancel_slot;
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
     struct cancel_impl;
@@ -65,7 +68,7 @@ struct channel
     channel * chn;
     variant2::variant<T*, const T*> ref;
     boost::source_location loc;
-    bool cancelled = false;
+    bool cancelled = false, direct = false;
     asio::cancellation_slot cancel_slot;
 
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
@@ -127,9 +130,8 @@ struct channel<void>
   {
     channel * chn;
     boost::source_location loc;
-    bool cancelled = false;
+    bool cancelled = false, direct = false;
     asio::cancellation_slot cancel_slot;
-
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
 
     struct cancel_impl;
@@ -144,9 +146,8 @@ struct channel<void>
   {
     channel * chn;
     boost::source_location loc;
-    bool cancelled = false;
+    bool cancelled = false, direct = false;
     asio::cancellation_slot cancel_slot;
-
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
 
     struct cancel_impl;
