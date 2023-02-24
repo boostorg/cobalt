@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_ASYNC_ASYNC_HPP
-#define BOOST_ASYNC_ASYNC_HPP
+#ifndef BOOST_ASYNC_PROMISE_HPP
+#define BOOST_ASYNC_PROMISE_HPP
 
 #include <boost/async/detail/promise.hpp>
 
@@ -81,4 +81,4 @@ struct [[nodiscard]] promise
 }
 
 
-#endif //BOOST_ASYNC_ASYNC_HPP
+#endif //BOOST_ASYNC_PROMISE_HPP

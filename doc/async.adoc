@@ -2,7 +2,7 @@ Documentation boost.async
 ==========================
 Klemens Morgenstern <klemens.morgenstern@gmx.net>
 Version 0.1, 29.01.2023
-:source-highlighter: highlight.js
+:source-highlighter: rouge
 :toc: left
 :toclevels: 4
 :icons: font
@@ -24,6 +24,7 @@ include::reference/main.adoc[]
 include::reference/thread.adoc[]
 include::reference/promise.adoc[]
 include::reference/generators.adoc[]
+include::reference/task.adoc[]
 include::reference/op.adoc[]
 include::reference/concepts.adoc[]
 include::reference/this_coro.adoc[]

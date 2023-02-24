@@ -6,23 +6,19 @@
 //
 
 #include <boost/async/promise.hpp>
-#include <boost/async/main.hpp>
 #include <boost/async/op.hpp>
-#include <boost/async/spawn.hpp>
 
 #include "doctest.h"
 #include "test.hpp"
 #include <boost/asio/detached.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/asio/awaitable.hpp>
-#include <boost/asio/co_spawn.hpp>
 
-#include <new>
 #include <boost/asio/bind_cancellation_slot.hpp>
 
 using namespace boost;
 
-TEST_SUITE_BEGIN("async");
+TEST_SUITE_BEGIN("promise");
 
 async::promise<void> test0()
 {
@@ -47,28 +43,6 @@ async::promise<int> test1(asio::any_io_executor exec)
     co_return 452;
 }
 
-TEST_CASE("test-1")
-{
-
-    bool done = false;
-
-    asio::io_context ctx;
-    asio::steady_timer tim{ctx};
-    async::this_thread::set_executor(ctx.get_executor());
-
-    async::spawn(
-          ctx.get_executor(),
-          test1(ctx.get_executor()),
-          [&](std::exception_ptr ex, int res)
-          {
-            CHECK(ex == nullptr);
-            CHECK(res == 452);
-            done = true;
-          });
-
-    ctx.run();
-    CHECK(done);
-}
 
 CO_TEST_CASE("async-1")
 {
@@ -141,31 +115,6 @@ CO_TEST_CASE("get")
 
 }
 
-TEST_CASE("cancel-void")
-{
-  asio::io_context ctx;
-  async::this_thread::set_executor(ctx.get_executor());
-  asio::cancellation_signal signal;
-
-  spawn(ctx, delay_r(ctx, 10000u, asio::executor_arg, ctx.get_executor()), asio::bind_cancellation_slot(
-      signal.slot(),
-      [](std::exception_ptr ep, std::size_t n)
-      {
-        CHECK(ep != nullptr);
-      }));
-
-  asio::post([&]{signal.emit(asio::cancellation_type::all);});
-
-  spawn(ctx, return_(1234u, asio::executor_arg, ctx.get_executor()),
-        [](std::exception_ptr ep, std::size_t n)
-        {
-          CHECK(ep == nullptr);
-          CHECK(n == 1234u);
-        });
-
-
-  ctx.run();
-}
 
 async::promise<void> delay_v(asio::io_context &ctx, std::size_t ms)
 {
@@ -174,61 +123,23 @@ async::promise<void> delay_v(asio::io_context &ctx, std::size_t ms)
 }
 
 
-TEST_CASE("cancel-int")
+CO_TEST_CASE("cancel-int")
 {
   asio::io_context ctx;
   async::this_thread::set_executor(ctx.get_executor());
   asio::cancellation_signal signal;
 
-  spawn(ctx, delay_v(ctx, 10000u), asio::bind_cancellation_slot(
-      signal.slot(),
-      [](std::exception_ptr ep)
-      {
-        CHECK(ep != nullptr);
-      }));
-
-  asio::post([&]{signal.emit(asio::cancellation_type::all);});
-  spawn(ctx, throw_(),
-          [](std::exception_ptr ep)
-          {
-            CHECK(ep != nullptr);
-          });
+  CHECK_THROWS(co_await throw_());
 
 
   ctx.run();
 }
 
 
-TEST_CASE("throw-cpl")
+
+CO_TEST_CASE("throw-cpl-delay")
 {
-  asio::io_context ctx;
-  async::this_thread::set_executor(ctx.get_executor());
-  asio::cancellation_signal signal;
-
-  spawn(ctx, throw_(),
-        [](std::exception_ptr ep)
-        {
-          std::rethrow_exception(ep);
-        });
-
-
-  CHECK_THROWS(ctx.run());
-}
-
-TEST_CASE("throw-cpl-delay")
-{
-  asio::io_context ctx;
-  async::this_thread::set_executor(ctx.get_executor());
-  asio::cancellation_signal signal;
-
-  spawn(ctx, throw_post(),
-        [](std::exception_ptr ep)
-        {
-          std::rethrow_exception(ep);
-        });
-
-
-  CHECK_THROWS(ctx.run());
+  CHECK_THROWS(co_await throw_post());
 }
 
 TEST_SUITE_END();

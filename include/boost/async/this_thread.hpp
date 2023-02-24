@@ -20,9 +20,8 @@ container::pmr::polymorphic_allocator<void> get_allocator();
 
 typename asio::io_context::executor_type & get_executor(
     const boost::source_location & loc = BOOST_CURRENT_LOCATION);
-
+bool has_executor();
 void set_executor(asio::io_context::executor_type exec) noexcept;
-
 
 }
 

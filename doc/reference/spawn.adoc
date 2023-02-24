@@ -1,12 +1,12 @@
 [#spawn]
 == async/spawn.hpp
 
-The `spawn` functions allow to use <<promise>> directly with asio:
+The `spawn` functions allow to use <<task, task>> directly with asio:
 
 [source,cpp]
 ----
-auto spawn(                            promise<T>    && t, CompletionToken&& token);
-auto spawn(ExecutionContext & context, promise<T>    && t, CompletionToken&& token);
-auto spawn(Executor executor,          promise<T>    && t, CompletionToken&& token);
+auto spawn(                            task<T>    && t, CompletionToken&& token);
+auto spawn(asio::io_context & context, task<T>    && t, CompletionToken&& token);
+auto spawn(Executor executor,          task<T>    && t, CompletionToken&& token);
 ----
 

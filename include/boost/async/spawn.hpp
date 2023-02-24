@@ -13,38 +13,39 @@
 namespace boost::async
 {
 
-
 template<typename T, typename CompletionToken>
-auto spawn(promise<T> && t, CompletionToken&& token)
+auto spawn(asio::io_context & context,
+           task<T> && t,
+           CompletionToken&& token)
 {
-  return asio::async_initiate<CompletionToken, void(std::exception_ptr, T)>(
-      detail::async_initiate{}, token, std::move(t));
+    return asio::async_initiate<CompletionToken, void(std::exception_ptr, T)>(
+            detail::async_initiate{}, token, std::move(t), context.get_executor());
+}
+
+template<std::derived_from<asio::io_context::executor_type> Executor, typename T, typename CompletionToken>
+auto spawn(Executor executor, task<T> && t,
+           CompletionToken&& token BOOST_ASIO_DEFAULT_COMPLETION_TOKEN(Executor))
+{
+    return asio::async_initiate<CompletionToken, void(std::exception_ptr, T)>(
+            detail::async_initiate{}, token, std::move(t), executor);
 }
 
 template<typename CompletionToken>
-auto spawn(promise<void> && t, CompletionToken&& token)
+auto spawn(asio::io_context & context,
+           task<void> && t,
+           CompletionToken&& token)
 {
-  return asio::async_initiate<CompletionToken, void(std::exception_ptr)>(
-      detail::async_initiate{}, token, std::move(t));
+    return asio::async_initiate<CompletionToken, void(std::exception_ptr)>(
+            detail::async_initiate{}, token, std::move(t), context.get_executor());
 }
 
-
-template<typename ExecutionContext, typename T, typename CompletionToken>
-requires (std::is_convertible<ExecutionContext&, asio::execution_context&>::value)
-auto spawn(ExecutionContext & context,
-promise<T> && t,
-    CompletionToken&& token BOOST_ASIO_DEFAULT_COMPLETION_TOKEN(typename ExecutionContext::executor_type))
-{
-return spawn(std::move(t), asio::bind_executor(context.get_executor(), std::forward<CompletionToken>(token)));
-}
-
-template<typename Executor, typename T, typename CompletionToken>
-requires (asio::is_executor<Executor>::value || asio::execution::is_executor<Executor>::value)
-auto spawn(Executor executor,
-           promise<T> && t,
+template<std::derived_from<asio::io_context::executor_type> Executor, typename CompletionToken>
+auto spawn(Executor executor, task<void> && t,
            CompletionToken&& token BOOST_ASIO_DEFAULT_COMPLETION_TOKEN(Executor))
 {
-  return spawn(std::move(t), asio::bind_executor(executor, std::forward<CompletionToken>(token)));
+    return asio::async_initiate<CompletionToken, void(std::exception_ptr)>(
+            detail::async_initiate{}, token, std::move(t), executor);
+
 }
 
 }

@@ -87,7 +87,7 @@ TEST_CASE("op-throw")
     return boost::asio::post(std::forward<Token>(tk));
   };
 
-  auto val = [&]() -> async::promise<void> {co_await throw_;};
+  auto val = [&]() -> async::task<void> {co_await throw_;};
 
   asio::io_context ctx;
   async::this_thread::set_executor(ctx.get_executor());

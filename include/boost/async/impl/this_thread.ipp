@@ -43,6 +43,11 @@ container::pmr::polymorphic_allocator<void> get_allocator()
   return container::pmr::polymorphic_allocator<void>{get_default_resource()};
 }
 
+bool has_executor()
+{
+  return detail::executor.has_value();
+}
+
 typename asio::io_context::executor_type & get_executor(const boost::source_location & loc)
 {
   if (!detail::executor)
