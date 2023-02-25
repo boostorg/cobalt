@@ -108,6 +108,30 @@ struct select_impl
         ref.cancel[idx] = &cancel;
       }
 
+      void reserve_completion()
+      {
+        BOOST_ASSERT(ref.reserved == std::numeric_limits<std::size_t>::max());
+        ref.cancel[Idx] = nullptr;
+        ref.reserved = Idx; //
+        constexpr std::array<bool, sizeof...(Args)> lval_ref{std::is_lvalue_reference_v<Args>...};
+        std::size_t idx = 0u;
+        for (auto & r : ref.cancel)
+        {
+          auto i = idx ++;
+          if (r)
+          {
+            if (lval_ref[i])
+            {
+              if (r)
+                r->emit(interrupt_await);
+              if (!r)
+                continue;
+            }
+            std::exchange(r, nullptr)->emit(Ct);
+          }
+        }
+      }
+
       constexpr static std::suspend_never initial_suspend() noexcept { return {}; }
       auto final_suspend() noexcept
       {
@@ -160,7 +184,9 @@ struct select_impl
       template<typename T>
       void return_value(T && t)
       {
-        if (!ref.result)
+        if (!ref.result &&
+            (ref.reserved == std::numeric_limits<std::size_t>::max())
+         || (ref.reserved == Idx))
           ref.result.emplace(variant2::in_place_index<Idx>, std::forward<T>(t));
 
         ref.cancel[Idx] = nullptr;
@@ -240,6 +266,7 @@ struct select_impl
   std::unique_ptr<void, detail::coro_deleter<void>> awaited_from;
 
   std::optional<result_type> result;
+  std::size_t reserved{std::numeric_limits<std::size_t>::max()};
   std::exception_ptr exception;
 
   char memory_buffer[((1200 + sizeof(co_await_result_t<Args>)) + ...)];
@@ -318,6 +345,23 @@ struct ranged_select_impl
         ref.cancel[idx] = &cancel;
       }
 
+      void reserve_completion()
+      {
+        BOOST_ASSERT(ref.reserved == std::numeric_limits<std::size_t>::max());
+        ref.cancel[idx] = nullptr;
+        ref.reserved = idx;
+
+        if constexpr(std::is_lvalue_reference_v<PromiseRange>)
+          for (auto & r : ref.cancel)
+            if (r)
+              r->emit(interrupt_await);
+
+        for (auto & r : ref.cancel)
+          if (r)
+            std::exchange(r, nullptr)->emit(Ct);
+
+      }
+
       constexpr static std::suspend_never initial_suspend() noexcept { return {}; }
       auto final_suspend() noexcept
       {
@@ -362,7 +406,10 @@ struct ranged_select_impl
       template<typename T>
       void return_value(T && t)
       {
-        if (!ref.result)
+
+        if (!ref.result &&
+            (ref.reserved == std::numeric_limits<std::size_t>::max())
+         || (ref.reserved == idx))
         {
           if constexpr (std::is_same_v<void, inner_result_type>)
             ref.result.emplace(idx);
@@ -433,6 +480,8 @@ struct ranged_select_impl
  private:
   PromiseRange range;
   std::size_t outstanding{std::size(range)};
+
+  std::size_t reserved{std::numeric_limits<std::size_t>::max()};
 
   container::pmr::monotonic_buffer_resource memory_resource{((1200 + sizeof(result_type) + sizeof(awaitable_type)) * std::size(range)),
                                                             this_thread::get_default_resource()};

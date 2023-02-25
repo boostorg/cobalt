@@ -14,7 +14,6 @@
 #include <boost/intrusive/list.hpp>
 #include <boost/asio/cancellation_signal.hpp>
 #include <boost/asio/cancellation_type.hpp>
-#include <boost/asio/post.hpp>
 #include <boost/circular_buffer.hpp>
 #include <boost/variant2/variant.hpp>
 
@@ -55,6 +54,15 @@ struct channel
     std::optional<T> direct;
     asio::cancellation_slot cancel_slot;
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
+    void (*reserve_completion)(void*);
+
+    void unlink()
+    {
+      intrusive::list_base_hook<intrusive::link_mode<intrusive::auto_unlink> >::unlink();
+      if (reserve_completion)
+          reserve_completion(awaited_from.get());
+    }
+
     struct cancel_impl;
     bool await_ready() { return !chn->buffer_.empty(); }
     template<typename Promise>
@@ -72,6 +80,14 @@ struct channel
     asio::cancellation_slot cancel_slot;
 
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
+    void (*reserve_completion)(void*);
+
+    void unlink()
+    {
+      intrusive::list_base_hook<intrusive::link_mode<intrusive::auto_unlink> >::unlink();
+      if (reserve_completion)
+        reserve_completion(awaited_from.get());
+    }
 
     struct cancel_impl;
 
@@ -133,6 +149,14 @@ struct channel<void>
     bool cancelled = false, direct = false;
     asio::cancellation_slot cancel_slot;
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
+    void (*reserve_completion)(void*);
+
+    void unlink()
+    {
+      intrusive::list_base_hook<intrusive::link_mode<intrusive::auto_unlink> >::unlink();
+      if (reserve_completion)
+        reserve_completion(awaited_from.get());
+    }
 
     struct cancel_impl;
     bool await_ready() { return (chn->n_ > 0); }
@@ -149,6 +173,14 @@ struct channel<void>
     bool cancelled = false, direct = false;
     asio::cancellation_slot cancel_slot;
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
+    void (*reserve_completion)(void*);
+
+    void unlink()
+    {
+      intrusive::list_base_hook<intrusive::link_mode<intrusive::auto_unlink> >::unlink();
+      if (reserve_completion)
+        reserve_completion(awaited_from.get());
+    }
 
     struct cancel_impl;
     bool await_ready() { return chn->n_ < chn->limit_; }

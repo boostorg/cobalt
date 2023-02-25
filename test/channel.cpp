@@ -12,7 +12,6 @@
 #include "doctest.h"
 
 namespace async = boost::async;
-#define L() fprintf(stderr, "Pos %s:%d\n", __FILE__, __LINE__);
 
 async::promise<void> do_write(async::channel<void> &chn, std::vector<int> & seq)
 {
