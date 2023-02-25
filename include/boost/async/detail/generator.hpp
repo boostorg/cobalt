@@ -18,6 +18,7 @@
 #include <boost/asio/bind_allocator.hpp>
 #include <boost/container/pmr/monotonic_buffer_resource.hpp>
 #include <boost/core/exchange.hpp>
+#include <boost/variant2/variant.hpp>
 
 namespace boost::async
 {
@@ -41,15 +42,25 @@ struct generator_receiver_base
   std::optional<Push> pushed_value;
   auto get_awaitable(const Push  & push)
   {
-    pushed_value.emplace(push);
     using impl = generator_receiver<Yield, Push>;
-    return typename impl::awaitable{static_cast<impl*>(this)};
+    if (pushed_value)
+      return typename impl::awaitable{static_cast<impl*>(this), &push};
+    else
+    {
+      pushed_value.emplace(push);
+      return typename impl::awaitable{static_cast<impl*>(this)};
+    }
   }
   auto get_awaitable(      Push && push)
   {
-    pushed_value.emplace(std::forward<Push>(push));
     using impl = generator_receiver<Yield, Push>;
-    return typename impl::awaitable{static_cast<impl*>(this)};
+    if (pushed_value)
+      return typename impl::awaitable{static_cast<impl*>(this), &push};
+    else
+    {
+      pushed_value.emplace(std::forward<Push>(push));
+      return typename impl::awaitable{static_cast<impl*>(this)};
+    }
   }
 };
 
@@ -60,10 +71,14 @@ struct generator_receiver_base<Yield, void>
 
   auto get_awaitable()
   {
-    pushed_value = true;
-
     using impl = generator_receiver<Yield, void>;
-    return typename impl::awaitable{static_cast<impl*>(this)};
+    if (pushed_value)
+      return typename impl::awaitable{static_cast<impl*>(this), static_cast<void*>(nullptr)};
+    else
+    {
+      pushed_value = true;
+      return typename impl::awaitable{static_cast<impl*>(this)};
+    }
   }
 };
 
@@ -123,7 +138,17 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
     generator_receiver *self;
     std::exception_ptr ex;
     asio::cancellation_slot cl;
+
+    variant2::variant<variant2::monostate, Push *, const Push *>  to_push;
+
     awaitable(generator_receiver * self) : self(self)
+    {
+    }
+
+    awaitable(generator_receiver * self, Push * to_push) : self(self), to_push(to_push)
+    {
+    }
+    awaitable(generator_receiver * self, const Push * to_push) : self(self), to_push(to_push)
     {
     }
 
@@ -137,7 +162,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
     // the race is fine -> if we miss it, we'll get it in resume.
     bool await_ready() const
     {
-       return self->ready() && !self->pushed_value;
+       return self->ready() && (to_push.index() == 0u);
     }
 
     template<typename Promise>
@@ -146,7 +171,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
       if (self->done) // ok, so we're actually done already, so noop
         return std::noop_coroutine();
 
-      if (self->awaited_from != nullptr) // we're already being awaited, that's an error!
+      if (self->awaited_from != nullptr) // generator already being awaited, that's an error!
       {
           ex = already_awaited();
           return h;
@@ -183,6 +208,20 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
         std::rethrow_exception(std::exchange(self->exception, nullptr));
       if (!self->result)
         boost::throw_exception(std::logic_error("async::generator returned"));
+
+      if (to_push.index() > 0u)
+      {
+        if constexpr (std::is_void_v<Push>)
+          self->pushed_value = true;
+        else
+        {
+          if (to_push.index() == 1)
+            self->pushed_value.emplace(std::move(*variant2::get<1>(to_push)));
+          else
+            self->pushed_value.emplace(std::move(*variant2::get<2>(to_push)));
+        }
+      }
+
       return self->get_result();
     }
   };

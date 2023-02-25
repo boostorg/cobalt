@@ -21,20 +21,27 @@ TEST_SUITE_BEGIN("generator");
 
 async::generator<int> gen()
 {
-  asio::steady_timer  tim{async::this_thread::get_executor()};
   for (int i = 0; i <10; i ++)
     co_yield i;
 
   co_return 10;
 }
 
+
+
 CO_TEST_CASE("generator-int")
 {
   auto g = gen();
+  int i = 0;
+  {
+    auto aw = g.operator co_await();
+    CHECK(aw.await_ready());
+    CHECK(i ++ == co_await std::move(aw));
+  }
 
-  int i = 1;
   while (g)
     CHECK(i ++ == co_await g);
+
 
 
   CHECK(i == 11);
@@ -44,9 +51,8 @@ CO_TEST_CASE("generator-int")
 
 async::generator<int, int> gen_push()
 {
-  asio::steady_timer  tim{async::this_thread::get_executor()};
   int val = 1u;
-  for (int i = 0; i <10; i ++)
+  for (int i = 0; i < 10; i++)
   {
     auto v = co_yield val;
     CHECK(v == val);
@@ -63,17 +69,61 @@ CO_TEST_CASE("generator-push")
   auto g = gen_push();
 
   int i = 1;
+  int nw = 1;
   while (g)
   {
-    auto nw = co_await g(i);
-    i *= 2;
+    nw = co_await g(nw);
     CHECK(i == nw);
+    i *= 2;
   }
 
+  CHECK(i == 2048);
+  co_return ;
+}
 
+async::generator<int> delay_gen(std::chrono::milliseconds tick)
+{
+  asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::steady_clock::now()};
+  for (int i = 0; i <10; i ++)
+  {
+    co_await tim.async_wait(asio::deferred);
+    tim.expires_at(tim.expires_at() + tick);
+    co_yield i;
+  }
+  co_return 10;
+}
 
-  CHECK(i == 1024);
+CO_TEST_CASE("generator-select")
+{
+  asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::milliseconds(5)};
+  auto g1 = delay_gen(std::chrono::milliseconds(20));
+  co_await tim.async_wait(asio::deferred);
+  auto g2 = delay_gen(std::chrono::milliseconds(10));
 
+  std::vector<std::size_t> seq{
+    0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1
+  };
+
+  std::vector<std::size_t> num{
+    0, 1, 2, 1, 3, 4, 2, 5, 6, 3, 7, 8, 4, 9, 10
+  };
+
+  auto itr = seq.begin();
+  auto ntr = num.begin();
+  while (g1 && g2)
+  {
+    auto r =  co_await select(g1, g2);
+    CHECK(r.index() == *itr++);
+
+    visit(
+        [&](int i)
+        {
+          CHECK(i == *ntr++);
+        }, r);
+  }
+  CHECK(!g2);
+  g1.cancel();
+  CHECK_THROWS(co_await g1);
   co_return ;
 }
 
