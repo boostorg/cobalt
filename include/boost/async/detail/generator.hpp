@@ -131,7 +131,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
     {
     }
 
-    awaitable(awaitable && aw) : self(aw.self), to_push(aw.to_push)
+    awaitable(const awaitable & aw) noexcept : self(aw.self), to_push(aw.to_push)
     {
     }
 

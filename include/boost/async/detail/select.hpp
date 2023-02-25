@@ -38,19 +38,12 @@ struct select_impl
   using result_helper = std::conditional_t<std::is_void_v<Arg>, variant2::monostate, Arg>;
   using result_type = variant2::variant<result_helper<co_await_result_t<Args>>...>;
 
-  template<std::size_t ... Idx>
-  auto get_awaitables_(std::index_sequence<Idx...>)
-  {
-    return std::make_tuple(detail::get_awaitable_type(std::get<Idx>(args))...);
-  }
 
-  select_impl(Args && ... p) : args(std::forward<Args>(p)...),
-                               awaitables(get_awaitables_(std::make_index_sequence<sizeof...(Args)>{}))
+  select_impl(Args && ... p) : args(std::forward<Args>(p)...)
   {
     std::fill(cancel.begin(), cancel.end(), nullptr);
   }
   select_impl(select_impl && lhs) : args(std::move(lhs.args))
-                                  , awaitables(get_awaitables_(std::make_index_sequence<sizeof...(Args)>{}))
   {
     std::fill(cancel.begin(), cancel.end(), nullptr);
   }
@@ -177,7 +170,9 @@ struct select_impl
 
       void unhandled_exception()
       {
-        if (!ref.exception && !ref.result)
+        if (!ref.exception && !ref.result &&
+           ((ref.reserved == std::numeric_limits<std::size_t>::max())
+         || (ref.reserved == Idx)))
           ref.exception = std::current_exception();
       }
 
@@ -185,8 +180,8 @@ struct select_impl
       void return_value(T && t)
       {
         if (!ref.result &&
-            (ref.reserved == std::numeric_limits<std::size_t>::max())
-         || (ref.reserved == Idx))
+           ((ref.reserved == std::numeric_limits<std::size_t>::max())
+         || (ref.reserved == Idx)))
           ref.result.emplace(variant2::in_place_index<Idx>, std::forward<T>(t));
 
         ref.cancel[Idx] = nullptr;
@@ -256,9 +251,24 @@ struct select_impl
     return std::move(result.value());
   }
 
- private:
+  template<std::size_t ... Idx>
+  auto get_awaitables_(std::index_sequence<Idx...>) -> std::tuple<detail::co_awaitable_type<Args>...>
+  {
+    return std::make_tuple(detail::get_awaitable_type(
+        std::forward<std::tuple_element_t<Idx, std::tuple<Args...>>>(std::get<Idx>(args))
+    )...);
+  }
+
+
+  private:
   std::tuple<Args...> args;
-  std::tuple<detail::co_awaitable_type<Args>...> awaitables;
+  std::tuple<detail::co_awaitable_type<Args>...> awaitables{
+    std::apply(
+      []<typename ... T>(T && ...t) -> std::tuple<detail::co_awaitable_type<Args>...>
+      {
+        return std::make_tuple(detail::get_awaitable_type(std::forward<T>(t))...);
+      },
+      std::move(args))};
 
   std::size_t outstanding{sizeof...(Args)};
   std::array<asio::cancellation_signal*, sizeof...(Args)> cancel;
@@ -399,7 +409,9 @@ struct ranged_select_impl
 
       void unhandled_exception()
       {
-        if (!ref.exception && !ref.result)
+        if (!ref.exception && !ref.result &&
+           ((ref.reserved == std::numeric_limits<std::size_t>::max())
+         || (ref.reserved == idx)))
           ref.exception = std::current_exception();
       }
 
@@ -408,8 +420,8 @@ struct ranged_select_impl
       {
 
         if (!ref.result &&
-            (ref.reserved == std::numeric_limits<std::size_t>::max())
-         || (ref.reserved == idx))
+           ((ref.reserved == std::numeric_limits<std::size_t>::max())
+         || (ref.reserved == idx)))
         {
           if constexpr (std::is_same_v<void, inner_result_type>)
             ref.result.emplace(idx);

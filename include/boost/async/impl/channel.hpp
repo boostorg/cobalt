@@ -75,10 +75,12 @@ std::coroutine_handle<void> channel<T>::read_op::await_suspend(std::coroutine_ha
   if ((cancel_slot = h.promise().get_cancellation_slot()).is_connected())
     cancel_slot.emplace<cancel_impl>(this);
 
+  if (awaited_from)
+    boost::throw_exception(std::runtime_error("already-awaited"), loc);
   awaited_from.reset(h.address());
   // currently nothing to read
   if constexpr (requires (Promise p) {p.reserve_completion();})
-    reserve_completion = +[](void * p){std::coroutine_handle<Promise>::from_address(p).reserve_completion();};
+    reserve_completion = +[](void * p){std::coroutine_handle<Promise>::from_address(p).promise().reserve_completion();};
 
   if (chn->write_queue_.empty())
   {
@@ -165,7 +167,7 @@ std::coroutine_handle<void> channel<T>::write_op::await_suspend(std::coroutine_h
 
   awaited_from.reset(h.address());
   if constexpr (requires (Promise p) {p.reserve_completion();})
-    reserve_completion = +[](void * p){std::coroutine_handle<Promise>::from_address(p).reserve_completion();};
+    reserve_completion = +[](void * p){std::coroutine_handle<Promise>::from_address(p).promise().reserve_completion();};
 
   // currently nothing to read
   if (chn->read_queue_.empty())
@@ -276,7 +278,7 @@ std::coroutine_handle<void> channel<void>::read_op::await_suspend(std::coroutine
   awaited_from.reset(h.address());
 
   if constexpr (requires (Promise p) {p.reserve_completion();})
-    reserve_completion = +[](void * p){std::coroutine_handle<Promise>::from_address(p).reserve_completion();};
+    reserve_completion = +[](void * p){std::coroutine_handle<Promise>::from_address(p).promise().reserve_completion();};
 
   // currently nothing to read
   if (chn->write_queue_.empty())
@@ -311,7 +313,7 @@ std::coroutine_handle<void> channel<void>::write_op::await_suspend(std::coroutin
   awaited_from.reset(h.address());
   // currently nothing to read
   if constexpr (requires (Promise p) {p.reserve_completion();})
-    reserve_completion = +[](void * p){std::coroutine_handle<Promise>::from_address(p).reserve_completion();};
+    reserve_completion = +[](void * p){std::coroutine_handle<Promise>::from_address(p).promise().reserve_completion();};
 
 
   if (chn->read_queue_.empty())
