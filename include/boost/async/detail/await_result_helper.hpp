@@ -13,17 +13,32 @@
 namespace boost::async::detail
 {
 
-template<typename T>
-auto co_await_result_helper() -> decltype(std::declval<T>().await_resume());
+template<awaitable_type T>
+auto co_await_result_helper() -> decltype(std::declval<T>());
 
 template<typename T>
-auto co_await_result_helper() -> decltype(std::declval<T>().operator co_await().await_resume());
+auto co_await_result_helper() -> decltype(std::declval<T>().operator co_await());
 
 template<typename T>
-auto co_await_result_helper() -> decltype(operator co_await(std::declval<T>()).await_resume());
+auto co_await_result_helper() -> decltype(operator co_await(std::declval<T>()));
 
 template<typename T>
-using co_await_result_t = decltype(co_await_result_helper<T>());
+using co_awaitable_type = decltype(co_await_result_helper<T>());
+
+template<typename T>
+using co_await_result_t = decltype(co_await_result_helper<T>().await_resume());
+
+template<awaitable_type T>
+T&& get_awaitable_type(T && t) { return std::forward<T>(t);}
+
+template<typename T>
+  requires (requires (T && t) {{operator co_await(std::forward<T>(t))} -> awaitable_type;} )
+decltype(auto) get_awaitable_type(T && t) { return operator co_await(std::forward<T>(t));}
+
+template<typename T>
+requires (requires (T && t) {{std::forward<T>(t).operator co_await()} -> awaitable_type;} )
+decltype(auto) get_awaitable_type(T && t)  { return std::forward<T>(t).operator co_await();}
+
 
 }
 

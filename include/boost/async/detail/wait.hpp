@@ -31,9 +31,22 @@ struct wait_impl
 {
   using result_type = std::tuple<system::result<co_await_result_t<Args>, std::exception_ptr>...>;
 
+  template<std::size_t ... Idx>
+  auto get_awaitables_(std::index_sequence<Idx...>)
+  {
+    return std::make_tuple(detail::get_awaitable_type(std::get<Idx>(args))...);
+  }
 
-  wait_impl(Args && ... p) : args(static_cast<Args&&>(p)...) {std::fill(cancel.begin(), cancel.end(), nullptr);}
-  wait_impl(wait_impl && lhs) : args(std::move(lhs.args)) {std::fill(cancel.begin(), cancel.end(), nullptr);}
+  wait_impl(Args && ... p) : args(std::forward<Args>(p)...),
+                             awaitables(get_awaitables_(std::make_index_sequence<sizeof...(Args)>{}))
+  {
+    std::fill(cancel.begin(), cancel.end(), nullptr);
+  }
+  wait_impl(wait_impl && lhs) : args(std::move(lhs.args))
+                              , awaitables(get_awaitables_(std::make_index_sequence<sizeof...(Args)>{}))
+  {
+    std::fill(cancel.begin(), cancel.end(), nullptr);
+  }
 
   template<std::size_t ... Idx>
   bool await_ready_impl(std::index_sequence<Idx...>)
@@ -41,24 +54,26 @@ struct wait_impl
     return ((
         [this]
         {
-          if constexpr (requires {std::get<Idx>(args).ready(); std::get<Idx>(args).get();})
-            if (std::get<Idx>(args).ready())
+          if (std::get<Idx>(awaitables).await_ready())
+          {
+            try
             {
-              try
+              if constexpr (std::is_void_v<decltype(std::get<Idx>(awaitables).await_resume())>)
               {
-                if constexpr (std::is_void_v<decltype(std::get<Idx>(args).get())>)
-                  std::get<Idx>(this->result) = system::result<void, std::exception_ptr>{};
-                else
-                  std::get<Idx>(this->result) = std::get<Idx>(args).get();
+                std::get<Idx>(awaitables).await_resume();
+                std::get<Idx>(this->result) = system::result<void, std::exception_ptr>{};
               }
-              catch(...)
-              {
-                std::get<Idx>(this->result) = std::tuple_element_t<Idx, result_type>(std::current_exception());
-              }
-
-              outstanding--;
-              return true;
+              else
+                std::get<Idx>(this->result) = std::get<Idx>(awaitables).await_resume();
             }
+            catch(std::exception & e)
+            {
+              std::get<Idx>(this->result) = std::tuple_element_t<Idx, result_type>(std::current_exception());
+            }
+
+            outstanding--;
+            return true;
+          }
           return false;
         }()) && ... );
   };
@@ -148,11 +163,11 @@ struct wait_impl
   {
     if constexpr (std::is_same_v<typename std::tuple_element_t<Idx, result_type>::value_type, void>)
     {
-      co_await std::move(std::get<Idx>(args));
+      co_await std::move(std::get<Idx>(awaitables));
       co_return variant2::monostate{};
     }
     else
-      co_return co_await std::move(std::get<Idx>(args));
+      co_return co_await std::move(std::get<Idx>(awaitables));
   }
   catch (...)
   {
@@ -205,6 +220,7 @@ struct wait_impl
 
  private:
   std::tuple<Args...> args;
+  std::tuple<detail::co_awaitable_type<Args>...> awaitables;
 
   std::size_t outstanding{sizeof...(Args)};
   std::array<asio::cancellation_signal*, sizeof...(Args)> cancel;
@@ -221,6 +237,9 @@ struct wait_impl
 template<asio::cancellation_type Ct, typename PromiseRange>
 struct ranged_wait_impl
 {
+  using awaitable_type =
+      co_awaitable_type<std::decay_t<decltype(*std::begin(std::declval<PromiseRange>()))>>;
+
   using result_type = system::result<
       co_await_result_t<std::decay_t<decltype(*std::begin(std::declval<PromiseRange>()))>>,
       std::exception_ptr>;
@@ -233,7 +252,16 @@ struct ranged_wait_impl
 
   ranged_wait_impl(PromiseRange && p) : range(static_cast<PromiseRange&&>(p))
   {
+    awaitables.reserve(std::size(range));
+    if constexpr (std::is_rvalue_reference_v<PromiseRange&&>)
+      for (auto && v : range)
+        awaitables.push_back(get_awaitable_type(std::move(v)));
+    else
+      for (auto && v : range)
+        awaitables.push_back(get_awaitable_type(v));
+
     result.resize(std::size(range), result_type(detail::wait_not_ready()));
+
     was_ready.resize(std::size(range), false);
     std::fill(cancel.begin(), cancel.end(), nullptr);
   }
@@ -243,40 +271,38 @@ struct ranged_wait_impl
   }
   bool await_ready()
   {
-    if (std::empty(range))
+    if (std::empty(awaitables))
         return true;
-    if constexpr (requires {std::begin(range)->ready(); std::begin(range)->get();})
+
+    bool all_ready = true;
+
+    std::size_t idx = 0u;
+    for (auto & r : awaitables)
     {
-      bool all_ready = true;
-
-      std::size_t idx = 0u;
-      for (auto & r : range)
+      if (r.await_ready())
       {
-        if (r.ready())
+        try
         {
-          try
+          if constexpr (std::is_void_v<typename result_type::value_type>)
           {
-            if constexpr (std::is_void_v<typename result_type::value_type>)
-              this->result[idx] = system::result<void, std::exception_ptr>{};
-            else
-              this->result[idx] = r.get();
+            r.await_resume();
+            this->result[idx] = system::result<void, std::exception_ptr>{};
           }
-          catch(...)
-          {
-            this->result[idx] = result_type(std::current_exception());
-          }
-          was_ready[idx] = true;
-          this->outstanding--;
+          else
+            this->result[idx] = r.await_resume();
         }
-        else
-          all_ready = false;
-        idx++;
+        catch(std::exception &e)
+        {
+          this->result[idx] = result_type(std::current_exception());
+        }
+        was_ready[idx] = true;
+        this->outstanding--;
       }
-      return all_ready;
+      else
+        all_ready = false;
+      idx++;
     }
-    else
-      return false;
-
+    return all_ready;
   };
 
   struct stub
@@ -358,11 +384,11 @@ struct ranged_wait_impl
   {
     if constexpr (std::is_same_v<void, typename result_type::value_type>)
     {
-      co_await std::move(*std::next(range.begin(), idx));
+      co_await std::move(awaitables[idx]);
       co_return variant2::monostate{};
     }
     else
-      co_return co_await std::move(*std::next(range.begin(), idx));
+      co_return co_await std::move(awaitables[idx]);
   }
   catch (...)
   {
@@ -412,11 +438,12 @@ struct ranged_wait_impl
   PromiseRange range;
   std::size_t outstanding{std::size(range)};
 
-  container::pmr::monotonic_buffer_resource memory_resource{((1400 + sizeof(result_type)) * std::size(range)),
+  container::pmr::monotonic_buffer_resource memory_resource{((1400 + sizeof(result_type) +
+                                                            sizeof(awaitable_type)) * std::size(range)),
                                                             this_thread::get_default_resource()};
+  container::pmr::vector<awaitable_type> awaitables{container::pmr::polymorphic_allocator<awaitable_type>(&memory_resource)};
   container::pmr::vector<asio::cancellation_signal*> cancel{std::size(range),
-                                                            nullptr,
-                                                            container::pmr::polymorphic_allocator<asio::cancellation_signal*>(&memory_resource)};
+                                                            nullptr, awaitables.get_allocator()};
 
   asio::cancellation_slot cancellation_slot;
   std::unique_ptr<void, detail::coro_deleter<void>> awaited_from;
