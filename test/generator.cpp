@@ -49,6 +49,15 @@ CO_TEST_CASE("generator-int")
   co_return ;
 }
 
+/*
+
+@startuml
+test --> gen_push: 1
+gen_push --> 2
+@enduml
+
+ */
+
 async::generator<int, int> gen_push()
 {
   int val = 1u;
@@ -72,7 +81,7 @@ CO_TEST_CASE("generator-push")
   int nw = 1;
   while (g)
   {
-    nw = co_await g(nw);
+    nw = co_await g(i);
     CHECK(i == nw);
     i *= 2;
   }
@@ -84,7 +93,7 @@ CO_TEST_CASE("generator-push")
 async::generator<int> delay_gen(std::chrono::milliseconds tick)
 {
   asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::steady_clock::now()};
-  for (int i = 0; i <10; i ++)
+  for (int i = 0; i < 10; i ++)
   {
     co_await tim.async_wait(asio::deferred);
     tim.expires_at(tim.expires_at() + tick);
@@ -101,11 +110,11 @@ CO_TEST_CASE("generator-select")
   auto g2 = delay_gen(std::chrono::milliseconds(10));
 
   std::vector<std::size_t> seq{
-    0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1
+    0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1
   };
 
   std::vector<std::size_t> num{
-    0, 1, 2, 1, 3, 4, 2, 5, 6, 3, 7, 8, 4, 9, 10
+    0, 0, 1, 1, 2, 3, 2, 4, 5, 3, 6, 7, 4, 8, 9, 10
   };
 
   auto itr = seq.begin();
@@ -113,8 +122,9 @@ CO_TEST_CASE("generator-select")
   while (g1 && g2)
   {
     auto r =  co_await select(g1, g2);
+    REQUIRE(itr != seq.end());
+    REQUIRE(ntr != num.end());
     CHECK(r.index() == *itr++);
-
     visit(
         [&](int i)
         {

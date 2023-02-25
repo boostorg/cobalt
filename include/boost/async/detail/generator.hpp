@@ -43,24 +43,12 @@ struct generator_receiver_base
   auto get_awaitable(const Push  & push)
   {
     using impl = generator_receiver<Yield, Push>;
-    if (pushed_value)
-      return typename impl::awaitable{static_cast<impl*>(this), &push};
-    else
-    {
-      pushed_value.emplace(push);
-      return typename impl::awaitable{static_cast<impl*>(this)};
-    }
+    return typename impl::awaitable{static_cast<impl*>(this), &push};
   }
   auto get_awaitable(      Push && push)
   {
     using impl = generator_receiver<Yield, Push>;
-    if (pushed_value)
-      return typename impl::awaitable{static_cast<impl*>(this), &push};
-    else
-    {
-      pushed_value.emplace(std::forward<Push>(push));
-      return typename impl::awaitable{static_cast<impl*>(this)};
-    }
+    return typename impl::awaitable{static_cast<impl*>(this), &push};
   }
 };
 
@@ -72,13 +60,7 @@ struct generator_receiver_base<Yield, void>
   auto get_awaitable()
   {
     using impl = generator_receiver<Yield, void>;
-    if (pushed_value)
-      return typename impl::awaitable{static_cast<impl*>(this), static_cast<void*>(nullptr)};
-    else
-    {
-      pushed_value = true;
-      return typename impl::awaitable{static_cast<impl*>(this)};
-    }
+    return typename impl::awaitable{static_cast<impl*>(this), static_cast<void*>(nullptr)};
   }
 };
 
@@ -89,15 +71,15 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
   std::optional<Yield> result;
   Yield get_result() {return *std::exchange(result, std::nullopt);}
   bool done = false;
-  std::unique_ptr<void, detail::coro_deleter<>>  awaited_from{nullptr};
-  std::unique_ptr<void, detail::coro_deleter<>> yield_from;
+  std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
+  std::unique_ptr<void, detail::coro_deleter<>> yield_from{nullptr};
 
   bool ready() { return exception || result || done; }
 
   generator_receiver() = default;
   generator_receiver(generator_receiver && lhs)
   : exception(std::move(lhs.exception)), done(lhs.done), awaited_from(lhs.awaited_from),
-  reference(lhs.reference), cancel_signal(lhs.cancel_signal)
+    reference(lhs.reference), cancel_signal(lhs.cancel_signal)
   {
     if (!lhs.done && !lhs.exception)
     {
@@ -139,11 +121,8 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
     std::exception_ptr ex;
     asio::cancellation_slot cl;
 
-    variant2::variant<variant2::monostate, Push *, const Push *>  to_push;
+    variant2::variant<variant2::monostate, Push *, const Push *> to_push;
 
-    awaitable(generator_receiver * self) : self(self)
-    {
-    }
 
     awaitable(generator_receiver * self, Push * to_push) : self(self), to_push(to_push)
     {
@@ -152,17 +131,16 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
     {
     }
 
-    awaitable(awaitable && aw) : self(aw.self)
+    awaitable(awaitable && aw) : self(aw.self), to_push(aw.to_push)
     {
     }
 
     alignas(sizeof(void*)) char buffer[1024];
     container::pmr::monotonic_buffer_resource resource{buffer, sizeof(buffer)};
 
-    // the race is fine -> if we miss it, we'll get it in resume.
     bool await_ready() const
     {
-       return self->ready() && (to_push.index() == 0u);
+       return self->ready();
     }
 
     template<typename Promise>
@@ -209,17 +187,28 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
       if (!self->result)
         boost::throw_exception(std::logic_error("async::generator returned"));
 
-      if (to_push.index() > 0u)
+      BOOST_ASSERT(to_push.index() > 0u);
+
+      if constexpr (std::is_void_v<Push>)
+        self->pushed_value = true;
+      else
       {
-        if constexpr (std::is_void_v<Push>)
-          self->pushed_value = true;
+        if (to_push.index() == 1)
+          self->pushed_value.emplace(std::move(*variant2::get<1>(to_push)));
         else
-        {
-          if (to_push.index() == 1)
-            self->pushed_value.emplace(std::move(*variant2::get<1>(to_push)));
-          else
-            self->pushed_value.emplace(std::move(*variant2::get<2>(to_push)));
-        }
+          self->pushed_value.emplace(std::move(*variant2::get<2>(to_push)));
+      }
+      to_push = variant2::monostate{};
+
+      // now we also want to resume the coroutine, so it starts work
+      if (self->yield_from != nullptr)
+      {
+        asio::post(
+            this_thread::get_executor(),
+            [h = std::exchange(self->yield_from, nullptr)]() mutable
+            {
+              std::coroutine_handle<void>::from_address(h.release()).resume();
+            });
       }
 
       return self->get_result();
@@ -349,7 +338,7 @@ struct generator_promise
     if (this->receiver)
     {
       this->receiver->exception = detached_exception();
-      this->receiver->awaited_from.resume();
+      std::coroutine_handle<void>::from_address(this->receiver->awaited_from.release()).resume();
     }
   }
 
@@ -388,6 +377,7 @@ struct generator_yield_awaitable
 
   Push await_resume()
   {
+    BOOST_ASSERT(self->pushed_value);
     return *std::exchange(self->pushed_value, std::nullopt);
   }
 };
@@ -414,6 +404,7 @@ struct generator_yield_awaitable<Yield, void>
 
   void await_resume()
   {
+    BOOST_ASSERT(self->pushed_value);
     self->pushed_value = false;
   }
 };
