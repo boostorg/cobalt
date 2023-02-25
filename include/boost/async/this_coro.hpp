@@ -30,6 +30,8 @@ using namespace asio::this_coro;
 struct allocator_t {};
 constexpr allocator_t allocator;
 
+enum class pro_active : bool {};
+
 }
 
 template<typename CancellationSlot = asio::cancellation_slot,

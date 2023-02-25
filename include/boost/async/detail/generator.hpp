@@ -74,6 +74,8 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
   std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
   std::unique_ptr<void, detail::coro_deleter<>> yield_from{nullptr};
 
+  bool pro_active = false;
+
   bool ready() { return exception || result || done; }
 
   generator_receiver() = default;
@@ -201,16 +203,13 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
       to_push = variant2::monostate{};
 
       // now we also want to resume the coroutine, so it starts work
-      if (self->yield_from != nullptr)
-      {
+      if (self->yield_from != nullptr && self->pro_active)
         asio::post(
             this_thread::get_executor(),
             [h = std::exchange(self->yield_from, nullptr)]() mutable
             {
               std::coroutine_handle<void>::from_address(h.release()).resume();
             });
-      }
-
       return self->get_result();
     }
   };
@@ -320,6 +319,24 @@ struct generator_promise
   }
 
   generator_receiver<Yield, Push>* receiver{nullptr};
+
+  auto await_transform(this_coro::pro_active val)
+  {
+    struct awaitable
+    {
+      generator_receiver<Yield, Push>* r;
+      bool pro_active ;
+      bool await_ready() {return true;}
+      void await_suspend(std::coroutine_handle<>) const {BOOST_ASSERT(!"Must not be called");}
+      void await_resume() const
+      {
+        if (r)
+          r->pro_active = this->pro_active;
+      }
+    };
+
+    return awaitable{receiver, static_cast<bool>(val)};
+  }
 
   template<typename Yield_>
   auto yield_value(Yield_ && ret)

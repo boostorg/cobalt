@@ -60,6 +60,7 @@ gen_push --> 2
 
 async::generator<int, int> gen_push()
 {
+  co_await async::this_coro::pro_active(true);
   int val = 1u;
   for (int i = 0; i < 10; i++)
   {
