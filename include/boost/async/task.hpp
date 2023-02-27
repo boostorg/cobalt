@@ -42,6 +42,85 @@ struct [[nodiscard]] task
 };
 
 
+struct use_task_t
+{
+  /// Default constructor.
+  constexpr use_task_t()
+  {
+  }
+
+  /// Adapts an executor to add the @c deferred_t completion token as the
+  /// default.
+  template <typename InnerExecutor>
+  struct executor_with_default : InnerExecutor
+  {
+    /// Specify @c deferred_t as the default completion token type.
+    typedef use_task_t default_completion_token_type;
+
+    executor_with_default(const InnerExecutor& ex) BOOST_ASIO_NOEXCEPT
+        : InnerExecutor(ex)
+    {
+    }
+
+    /// Construct the adapted executor from the inner executor type.
+    template <typename InnerExecutor1>
+    executor_with_default(const InnerExecutor1& ex,
+                          typename std::enable_if<
+                              std::conditional<
+                                  !std::is_same<InnerExecutor1, executor_with_default>::value,
+                                  std::is_convertible<InnerExecutor1, InnerExecutor>,
+                                  std::false_type
+                              >::type::value>::type = 0) noexcept
+        : InnerExecutor(ex)
+    {
+    }
+  };
+
+  /// Type alias to adapt an I/O object to use @c deferred_t as its
+  /// default completion token type.
+  template <typename T>
+  using as_default_on_t = typename T::template rebind_executor<
+      executor_with_default<typename T::executor_type> >::other;
+
+  /// Function helper to adapt an I/O object to use @c deferred_t as its
+  /// default completion token type.
+  template <typename T>
+  static typename std::decay_t<T>::template rebind_executor<
+      executor_with_default<typename std::decay_t<T>::executor_type>
+  >::other
+  as_default_on(T && object)
+  {
+    return typename std::decay_t<T>::template rebind_executor<
+        executor_with_default<typename std::decay_t<T>::executor_type>
+    >::other(std::forward<T>(object));
+  }
+
+};
+
+constexpr use_task_t use_task{};
+
+}
+
+
+namespace boost::asio
+{
+
+template<typename ... Args>
+struct async_result<boost::async::use_task_t, void(Args...)>
+{
+  template <typename Initiation, typename... InitArgs>
+  static auto initiate(Initiation initiation,
+                       boost::async::use_task_t,
+                       InitArgs ... args) ->
+             async::task<decltype(async::interpret_result(std::declval<std::tuple<Args...>>()))>
+
+  {
+    co_return co_await async_initiate<
+          const asio::deferred_t&, void(Args...)>(
+              std::move(initiation),
+              asio::deferred, std::move(args)...);
+  }
+};
 
 }
 

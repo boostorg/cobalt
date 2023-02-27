@@ -58,6 +58,8 @@ struct [[nodiscard]] task
 
 NOTE: Tasks can be used synchronously from a sync function by calling `run(my_task())`.
 
+
+
 [#task-task]
 === Promise
 
@@ -70,4 +72,11 @@ The task promise has the following properties.
 - <<enable_async_operation>>
 - <<enable_await_allocator>>
 - <<enable_await_executor>>
+
+[#use_task]
+=== use_task
+
+The `use_task` completion token can be used to create a task from an `async_` function.
+This is less efficient than <<use_op, use_op>> as it needs to allocate a coroutine frame,
+but has an obvious return type and support <<interrupt_await>>.
 

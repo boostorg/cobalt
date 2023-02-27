@@ -45,7 +45,7 @@ async::task<int> test1(asio::any_io_executor exec)
     co_await test2(42);
 
 
-    co_await asio::post(exec, asio::deferred);
+    co_await asio::post(exec, async::use_task);
     co_return 452;
 }
 }
