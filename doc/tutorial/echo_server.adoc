@@ -1,0 +1,78 @@
+== echo server
+
+Let's write an echo server. We'll be using the `use_op` token everywhere,
+so we're using a default completion token:
+
+.example/echo_server.cpp declarations
+[example]
+[source]
+----
+include::../../example/echo_server.cpp[tag=decls]
+----
+
+We're writing the echo function as a <<promise, promise>> coroutine.
+The promise is pretty much the default coroutine; it's an eager coroutine
+
+.example/echo_server.cpp echo function
+[example]
+[source]
+----
+include::../../example/echo_server.cpp[tag=echo]
+----
+<1> The operation is wrapped a `try-catch` block, because it should just stop & close the socket
+for any error (including cancellation).
+<2> The loop is infinite because it's either canceled server-side or the user closes the socket.
+Either way will lead to a logged exception.
+<3> Read as much as is available.
+<4> Write all the read bytes.
+
+Note that promise is eager. Calling `echo` will immediately execute code until the `async_ready_some`
+and then return control to the caller.
+
+Next, we also need an acceptor function. Since this is a tutorial, we're using a <<generator,generator>>.
+This is a coroutine that can be co_awaited multiple times, while it `co_yield` until `co_return`.
+
+.example/echo_server.cpp listen function
+[example]
+[source]
+----
+include::../../example/echo_server.cpp[tag=listen]
+----
+<1> Cancellation will also lead to an exception here
+<2> Asynchronously accept the connection
+<3> Yield it to the awaiting coroutine
+
+With those two functions we can now write the server:
+
+.example/echo_server.cpp run_server function
+[example]
+[source]
+----
+include::../../example/echo_server.cpp[tag=run_server]
+----
+<1> Constructor the listener (destruction will cause cancellation!)
+<2> When we have more than 10 workers, we wait for one to finish
+<3> Accept a new connection & launch it.
+
+The <<wait_group, wait_group>> is used to manage the running echo functions.
+This class will cancel & await the running `echo` coroutines.
+
+We do not need to do the same for the `listener`, because it will just stop on it's own, when `l` gets destroyed.
+The destructor of a generator will cancel it.
+
+Since the `promise` is eager, just calling it is enough to launch.
+We then put those promises into a <<wait_group, wait_group>> which will allow us to tear down all the workers on scope exit.
+
+
+
+.example/echo_server.cpp co_main function
+[example]
+[source]
+----
+include::../../example/echo_server.cpp[tag=main]
+----
+<1> Run `run_server` with an async scope.
+
+The <<with, with>> function shown above, will run a function with a resource such as <<wait_group, wait_group>>.
+On scope exit `with` will invoke & `co_await` an asynchronous teardown function.
+This will cause all connections to be properly shutdown before `co_main` exists.

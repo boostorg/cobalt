@@ -83,7 +83,6 @@ We can for example create a `wait_op` that does nothing if the timer is already 
 
 [source,cpp]
 ----
-template<typename Timer>
 struct wait_op : async::enable_op<wait_op> // <1>
 {
   asio::steady_timer & tim;

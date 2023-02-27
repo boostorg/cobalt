@@ -10,13 +10,18 @@ Version 0.1, 29.01.2023
 :docinfo: private-footer
 :source-highlighter: rouge
 :source-language: c++
+:example-caption: Example
 
 :leveloffset: +1
 
 The goal of this library is to provide a unified C++20 basic_coro primitive that introduces as little types as possible and integrates with asio.
 
-
 include::motivation.adoc[]
+
+= Tutorial
+
+include::tutorial/delay.adoc[]
+include::tutorial/echo_server.adoc[]
 
 = Reference
 
