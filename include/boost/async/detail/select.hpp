@@ -29,7 +29,7 @@ namespace boost::async::detail
 {
 
 typedef boost::error_info<struct select_index_tag, std::size_t> select_index;
-
+constexpr std::size_t magical_coro_frame_size = 1200;
 
 template<asio::cancellation_type Ct, typename ... Args>
 struct select_impl
@@ -279,8 +279,9 @@ struct select_impl
   std::size_t reserved{std::numeric_limits<std::size_t>::max()};
   std::exception_ptr exception;
 
-  char memory_buffer[((1200 + sizeof(co_await_result_t<Args>)) + ...)];
-  container::pmr::monotonic_buffer_resource memory_resource{memory_buffer, sizeof(memory_buffer)};
+  char memory_buffer[((magical_coro_frame_size + sizeof(co_await_result_t<Args>)) + ...)];
+  container::pmr::monotonic_buffer_resource memory_resource{memory_buffer, sizeof(memory_buffer),
+                                                            this_thread::get_default_resource()};
 };
 
 
@@ -495,7 +496,7 @@ struct ranged_select_impl
 
   std::size_t reserved{std::numeric_limits<std::size_t>::max()};
 
-  container::pmr::monotonic_buffer_resource memory_resource{((1200 + sizeof(result_type) + sizeof(awaitable_type)) * std::size(range)),
+  container::pmr::monotonic_buffer_resource memory_resource{((magical_coro_frame_size + sizeof(result_type) + sizeof(awaitable_type)) * std::size(range)),
                                                             this_thread::get_default_resource()};
   container::pmr::vector<awaitable_type> awaitables{container::pmr::polymorphic_allocator<asio::cancellation_signal*>(&memory_resource)};
   container::pmr::vector<asio::cancellation_signal*> cancel{std::size(range),
