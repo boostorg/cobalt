@@ -100,6 +100,9 @@ auto with_impl::await_suspend(std::coroutine_handle<Promise> h) -> std::coroutin
     if constexpr (requires (Promise p) {p.get_executor();})
         promise.exec = h.promise().get_executor();
 
+    if constexpr (requires (Promise p) {p.get_cancellation_slot();})
+        promise.slot_ = h.promise().get_cancellation_slot();
+
     promise.awaited_from = h;
     return std::coroutine_handle<promise_type>::from_promise(promise);
 }
