@@ -247,12 +247,12 @@ struct task_promise
   }
 
   using executor_type = asio::io_context::executor_type;
-  std::optional<executor_type> exec;
+  std::optional<asio::executor_work_guard<executor_type>> exec;
   executor_type get_executor() const
   {
       if (!exec)
           throw_exception(asio::bad_executor());
-      return *exec;
+      return exec->get_executor();
   }
 
   template<typename ... Args>

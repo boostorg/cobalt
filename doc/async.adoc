@@ -34,7 +34,6 @@ include::reference/with.adoc[]
 include::reference/select.adoc[]
 include::reference/wait.adoc[]
 include::reference/wait_group.adoc[]
-include::reference/test.adoc[]
 include::reference/spawn.adoc[]
 
 = Technical Background

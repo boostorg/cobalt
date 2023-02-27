@@ -54,7 +54,6 @@ CO_TEST_CASE("await-thread")
   co_await tim.async_wait(boost::asio::deferred);
   co_await th;
   CHECK_THROWS(co_await th);
-
 }
 
 

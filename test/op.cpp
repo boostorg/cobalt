@@ -98,7 +98,7 @@ TEST_CASE("op-throw")
 }
 
 
-async::test_case test_case_exception()
+async::task<void> test_case_exception()
 {
 
   auto throw_ = []<typename Token>(Token && tk)
