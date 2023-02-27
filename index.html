@@ -705,6 +705,7 @@ pre.rouge {
 <li><a href="#memory_resource_4">Memory Resource</a></li>
 <li><a href="#task-outline">Outline</a></li>
 <li><a href="#task-task">Promise</a></li>
+<li><a href="#use_task">use_task</a></li>
 </ul>
 </li>
 <li><a href="#async_operation">async/op.hpp</a>
@@ -744,12 +745,6 @@ pre.rouge {
 </li>
 <li><a href="#wait">async/wait.hpp</a></li>
 <li><a href="#wait_group">async/wait_group.hpp</a></li>
-<li><a href="#test_case">async/test.hpp</a>
-<ul class="sectlevel3">
-<li><a href="#executor_6">Executor</a></li>
-<li><a href="#test-promise">Promise</a></li>
-</ul>
-</li>
 <li><a href="#spawn">async/spawn.hpp</a></li>
 </ul>
 </li>
@@ -1518,6 +1513,14 @@ Tasks can be used synchronously from a sync function by calling <code>run(my_tas
 </ul>
 </div>
 </div>
+<div class="sect3">
+<h4 id="use_task">use_task</h4>
+<div class="paragraph">
+<p>The <code>use_task</code> completion token can be used to create a task from an <code>async_</code> function.
+This is less efficient than <a href="#use_op">use_op</a> as it needs to allocate a coroutine frame,
+but has an obvious return type and support <a href="#interrupt_await">Interrupt Wait</a>.</p>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="async_operation">async/op.hpp</h3>
@@ -2060,6 +2063,18 @@ that returns an <a href="#awaitable">Awaitable</a>,
 </tr>
 </table>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+It&#8217;s legal for the <code>tag_invoke</code> / <code>exit</code> functions to take the <code>exception_ptr</code> by reference and modify it.
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect2">
 <h3 id="select">async/select.hpp</h3>
@@ -2197,73 +2212,6 @@ It works out of the box with <a href="#with">async/with.hpp</a>, by having the m
   <span class="c1">// cancel all tasks</span>
   <span class="kt">void</span> <span class="n">cancel</span><span class="p">(</span><span class="n">asio</span><span class="o">::</span><span class="n">cancellation_type</span> <span class="n">ct</span> <span class="o">=</span> <span class="n">asio</span><span class="o">::</span><span class="n">cancellation_type</span><span class="o">::</span><span class="n">all</span><span class="p">);</span>
 <span class="p">};</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="test_case">async/test.hpp</h3>
-<div class="paragraph">
-<p>Another utility coroutine is the <code>test_case</code> coroutine. It can be used with multiple test frameworks to generate
-test-cases,</p>
-</div>
-<div class="paragraph">
-<p>In this project it&#8217;s used with doctest:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="cp">#define CO_TEST_CASE_IMPL(Function, ...)     \
-static ::boost::async::test_case Function(); \
-DOCTEST_TEST_CASE(__VA_ARGS__)               \
-{                                            \
-    run(Function());                         \
-}                                            \
-static ::boost::async::test_case Function()
-</span>
-<span class="cp">#define CO_TEST_CASE(...) CO_TEST_CASE_IMPL(DOCTEST_ANONYMOUS(CO_DOCTEST_ANON_FUNC_), __VA_ARGS__)</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>So that we can write test-cases that run as a coroutine like this:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="n">CO_TEST_CASE</span><span class="p">(</span><span class="s">"example"</span><span class="p">)</span>
-<span class="p">{</span>
-  <span class="n">asio</span><span class="o">::</span><span class="n">steady_timer</span> <span class="n">tim</span><span class="p">{</span><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">executor</span><span class="p">};</span>
-  <span class="n">CHECK_NOTHROW</span><span class="p">(</span><span class="k">co_await</span> <span class="n">tim</span><span class="p">.</span><span class="n">async_wait</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">use_op</span><span class="p">));</span>
-<span class="p">}</span></code></pre>
-</div>
-</div>
-<div class="sect3">
-<h4 id="executor_6">Executor</h4>
-<div id="test-executor" class="paragraph">
-<p>It will also create an <code>asio::io_context</code> to run on, which you can get through the <code>this_coro::executor</code>.
-It will be assigned to the <code>async::this_thread::get_executor()</code>.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="test-promise">Promise</h4>
-<div class="paragraph">
-<p>The test promise has the following properties.</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><a href="#promise_cancellation_base">Promise is cancellable</a></p>
-</li>
-<li>
-<p><a href="#promise_throw_if_cancelled_base">Throw is cancelled</a></p>
-</li>
-<li>
-<p><a href="#enable_awaitables">Enable awaitables</a></p>
-</li>
-<li>
-<p><a href="#enable_async_operation">Enable async operation</a></p>
-</li>
-<li>
-<p><a href="#enable_await_executor">Await Executor</a></p>
-</li>
-</ul>
 </div>
 </div>
 </div>
@@ -2472,7 +2420,7 @@ C++20 coroutines are stackless, i.e. they only allocate their own frame and use 
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2023-02-25 23:54:45 +0800
+Last updated 2023-02-27 12:26:00 +0800
 </div>
 </div>
 </body>
