@@ -9,8 +9,8 @@ include::../../example/delay.cpp[tag=timer_example]
 ----
 <1> The <<main, co_main>> function defines an implicit `main` when defined
 and is the easiest way to enter asynchronous code.
-<2> Default the delay to 100ms, and set it if an argument gets passed in.
-<3> Take the executor from the current coroutine promise.
+<2> Take the executor from the current coroutine promise.
+<3> Use an argument to set the timeout
 <4> Perform the wait by using asio::deferred.
 <5> Return a value that gets returns from the implicit main.
 
