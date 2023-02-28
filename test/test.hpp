@@ -7,14 +7,43 @@
 
 #include <boost/async/task.hpp>
 #include <boost/async/run.hpp>
+#include <boost/async/spawn.hpp>
+
+#include "doctest.h"
+
+inline auto test_run(boost::async::task<void> (*func) ())
+{
+  using namespace boost;
+  asio::io_context ctx;
+  async::this_thread::set_executor(ctx.get_executor());
+  spawn(ctx, func(),
+        [](std::exception_ptr e)
+        {
+          CHECK(e == nullptr);
+        });
+  std::size_t n = ctx.run();
+
+  if (::getenv("BOOST_ASYNC_BRUTE_FORCE"))
+    while (n --> 0)
+    {
+      ctx.reset();
+      spawn(ctx, func(),
+            [](std::exception_ptr e)
+            {
+              CHECK(e == nullptr);
+            });
+      for (std::size_t i = n; i > 0; i--)
+        ctx.run_one();
+    }
+}
 
 // tag::test_case_macro[]
-#define CO_TEST_CASE_IMPL(Function, ...)      \
-static ::boost::async::task<void> Function(); \
-DOCTEST_TEST_CASE(__VA_ARGS__)                \
-{                                             \
-    run(Function());                          \
-}                                             \
+#define CO_TEST_CASE_IMPL(Function, ...)                                                                           \
+static ::boost::async::task<void> Function();                                                                      \
+DOCTEST_TEST_CASE(__VA_ARGS__)                                                                                     \
+{                                                                                                                  \
+    test_run(&Function);                                                                                           \
+}                                                                                                                  \
 static ::boost::async::task<void> Function()
 
 #define CO_TEST_CASE(...) CO_TEST_CASE_IMPL(DOCTEST_ANONYMOUS(CO_DOCTEST_ANON_FUNC_), __VA_ARGS__)
