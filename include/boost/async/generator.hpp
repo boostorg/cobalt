@@ -46,6 +46,7 @@ struct [[nodiscard]] generator : detail::generator_base<Yield, Push>
     return receiver_.get_result();
   }
   ~generator() { cancel(); }
+
  private:
   template<typename, typename>
   friend struct detail::generator_base;
@@ -57,6 +58,12 @@ struct [[nodiscard]] generator : detail::generator_base<Yield, Push>
   }
   detail::generator_receiver<Yield, Push> receiver_;
 };
+
+template<typename T>
+auto tag_invoke(const struct with_exit_tag & wet , generator<T> & g, std::exception_ptr e)
+{
+  return detail::generator_with_awaitable<T>{g};
+}
 
 }
 
