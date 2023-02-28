@@ -21,12 +21,11 @@ include::../../example/echo_server.cpp[tag=echo]
 ----
 <1> The operation is wrapped a `try-catch` block, because it should just stop & close the socket
 for any error (including cancellation).
-<2> The loop is infinite because it's either canceled server-side or the user closes the socket.
-Either way will lead to a logged exception.
+<2> We run the loop until we get cancelled (exception) or the user closes the connection.
 <3> Read as much as is available.
 <4> Write all the read bytes.
 
-Note that promise is eager. Calling `echo` will immediately execute code until the `async_ready_some`
+Note that promise is eager. Calling `echo` will immediately execute code until the `async_read_some`
 and then return control to the caller.
 
 Next, we also need an acceptor function. Since this is a tutorial, we're using a <<generator,generator>>.

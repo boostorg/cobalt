@@ -30,7 +30,7 @@ async::promise<void> echo(tcp_socket socket)
   try // <1>
   {
     char data[1024];
-    for (;;) // <2>
+    while (socket.is_open()) // <2>
     {
       std::size_t n = co_await socket.async_read_some(boost::asio::buffer(data)); // <3>
       co_await async_write(socket, boost::asio::buffer(data, n)); // <4>

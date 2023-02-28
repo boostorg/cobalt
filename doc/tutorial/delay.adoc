@@ -1,9 +1,10 @@
 == delay
 Let's start with the simplest example possible: a simple delay.
+=== simple delay
 
 .example/delay.cpp
 [example]
-[source="foobra",cpp]
+[source,cpp]
 ----
 include::../../example/delay.cpp[tag=timer_example]
 ----
@@ -28,4 +29,22 @@ the <<this_coro, this_coro>> namespace.
 We can then construct a timer and initiate the `async_wait` with <<use_op>>.
 `async` provides multiple ways to `co_await` to interact with asio, of which <<use_op>> is the easiest.
 
+=== delay op
 
+The problem with this interaction with asio is that asio doesn't do a pre-suspend check.
+That is, the coroutine will suspend even if the timer is ready (because the delay is zero).
+
+To leverage the coroutine properties, `async` provides an easy way to create a skippable operation:
+
+.example/delay_op.cpp
+[example]
+[source,cpp]
+----
+include::../../example/delay_op.cpp[tag=timer_example]
+----
+<1> Declare the op. We inherit `enable_op` to opt into ADL
+<2> The pre-suspend check is implemented here
+<3> Do the wait if we need to
+<4> Use the <<op, op>> just like any other awaitable.
+
+This way we can minimize the amounts of coroutine suspensions.
