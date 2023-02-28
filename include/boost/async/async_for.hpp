@@ -8,7 +8,7 @@
 #include <boost/preprocessor/cat.hpp>
 
 #define BOOST_ASYNC_FOR_IMPL(Value, Expression, Id) \
-for (auto Id = Expression; Id; )                    \
+for (auto && Id = Expression; Id; )                    \
   if (Value = co_await Id; false) {} else
 
 #define BOOST_ASYNC_FOR(Value, Expression) \
