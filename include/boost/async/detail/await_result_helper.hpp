@@ -8,6 +8,7 @@
 #ifndef BOOST_ASYNC_DETAIL_AWAIT_RESULT_HELPER_HPP
 #define BOOST_ASYNC_DETAIL_AWAIT_RESULT_HELPER_HPP
 
+#include <boost/async/concepts.hpp>
 #include <utility>
 
 namespace boost::async::detail
