@@ -35,10 +35,6 @@ async::generator<int> throw_gen()
   co_return 0;
 }
 
-
-
-
-
 TEST_SUITE_BEGIN("async_for");
 
 /// If the awaitable is not empty the loop must be entered for every value exactly once

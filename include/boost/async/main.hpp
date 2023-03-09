@@ -11,7 +11,6 @@
 
 #include <boost/asio/io_context.hpp>
 #include <boost/container/pmr/memory_resource.hpp>
-#include <boost/container/pmr/monotonic_buffer_resource.hpp>
 #include <boost/container/pmr/unsynchronized_pool_resource.hpp>
 
 #include <coroutine>

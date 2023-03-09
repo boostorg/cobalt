@@ -16,7 +16,6 @@
 #include <boost/async/detail/wrapper.hpp>
 
 #include <boost/asio/bind_allocator.hpp>
-#include <boost/container/pmr/monotonic_buffer_resource.hpp>
 #include <boost/core/exchange.hpp>
 #include <boost/variant2/variant.hpp>
 
@@ -137,9 +136,6 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
     {
     }
 
-    alignas(sizeof(void*)) char buffer[1024];
-    container::pmr::monotonic_buffer_resource resource{buffer, sizeof(buffer)};
-
     bool await_ready() const
     {
        return self->ready();
@@ -161,16 +157,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
         if ((cl = h.promise().get_cancellation_slot()).is_connected())
           cl.emplace<forward_cancellation_with_interrupt>(self->cancel_signal, self);
 
-
-      if constexpr (requires (Promise p) {p.get_executor();})
-        self->awaited_from.reset(detail::dispatch_coroutine(
-            h.promise().get_executor(),
-            asio::bind_allocator(
-                container::pmr::polymorphic_allocator<void>(&resource),
-                [h]() mutable { h.resume(); })
-        ).address());
-      else
-        self->awaited_from.reset(h.address());
+      self->awaited_from.reset(h.address());
 
       std::coroutine_handle<void> res = std::noop_coroutine();
       if (self->yield_from != nullptr)

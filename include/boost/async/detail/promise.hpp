@@ -141,10 +141,6 @@ struct promise_receiver : promise_value_holder<T>
     ~awaitable ()
     {
     }
-
-    alignas(sizeof(void*)) char buffer[1024];
-    container::pmr::monotonic_buffer_resource resource{buffer, sizeof(buffer)};
-
     // the race is fine -> if we miss it, we'll get it in resume.
     bool await_ready() const { return self->done; }
 
@@ -164,17 +160,7 @@ struct promise_receiver : promise_value_holder<T>
         if ((cl = h.promise().get_cancellation_slot()).is_connected())
           cl.emplace<forward_cancellation_with_interrupt>(self->cancel_signal, self);
 
-
-      if constexpr (requires (Promise p) {p.get_executor();})
-        self->awaited_from.reset(detail::dispatch_coroutine(
-            h.promise().get_executor(),
-            asio::bind_allocator(
-                container::pmr::polymorphic_allocator<void>(&resource),
-                [h]() mutable { h.resume(); })
-        ).address());
-      else
-        self->awaited_from.reset(h.address());
-
+      self->awaited_from.reset(h.address());
       return true;
     }
 

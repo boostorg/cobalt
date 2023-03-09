@@ -17,7 +17,6 @@
 #include <boost/asio/cancellation_signal.hpp>
 
 #include <boost/container/pmr/memory_resource.hpp>
-#include <boost/container/pmr/monotonic_buffer_resource.hpp>
 
 #include <coroutine>
 #include <optional>
@@ -139,9 +138,6 @@ struct task_receiver : task_value_holder<T>
     ~awaitable ()
     {
     }
-
-    alignas(sizeof(void*)) char buffer[1024];
-    container::pmr::monotonic_buffer_resource resource{buffer, sizeof(buffer)};
 
     // the race is fine -> if we miss it, we'll get it in resume.
     bool await_ready() const { return self->done; }

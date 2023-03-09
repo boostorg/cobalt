@@ -9,6 +9,7 @@
 #define BOOST_ASYNC_DETAIL_OP_HPP
 
 #include <boost/async/detail/handler.hpp>
+#include <boost/container/pmr/monotonic_buffer_resource.hpp>
 
 #include <boost/asio/io_context.hpp>
 
@@ -29,6 +30,21 @@ struct [[nodiscard]] deferred_op
   std::exception_ptr error;
   using result_type = decltype(deduce_initiate_handler(&Op::initiate));
   result_type result;
+
+  template<typename Op_>
+  deferred_op(Op_ && op_) : op(std::forward<Op_>(op_)) {}
+
+  deferred_op(      Op && op) : op(std::move(op)) {}
+  deferred_op(const Op  & op) : op(op) {}
+
+
+  deferred_op(deferred_op && lhs)
+    : op(std::move(lhs.op))
+    , error(std::move(lhs.error))
+    , result(std::move(lhs.result))
+  {
+    assert(!lhs.resource);
+  }
 
   constexpr static bool await_ready()
     requires (not requires {&Op::ready;})
@@ -54,13 +70,18 @@ struct [[nodiscard]] deferred_op
       return false;
   }
 
+  char buffer[2048];
+  std::optional<container::pmr::monotonic_buffer_resource> resource;
 
   template<typename Promise>
   bool await_suspend(std::coroutine_handle<Promise> h)
   {
     try
     {
-      op.initiate({h, result});
+      auto & res = resource.emplace(
+          buffer, sizeof(buffer),
+          asio::get_associated_allocator(h.promise(), this_thread::get_allocator()).resource());
+      op.initiate({h, result, &res});
       return true;
     }
     catch(...)

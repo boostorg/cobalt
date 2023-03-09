@@ -9,6 +9,7 @@
 #define BOOST_DETAIL_ASYNC_MAIN_HPP
 
 #include <boost/async/main.hpp>
+#include <boost/container/pmr/monotonic_buffer_resource.hpp>
 
 namespace boost::asio
 {

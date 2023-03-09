@@ -48,6 +48,15 @@ struct completion_handler_base
           : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
             executor(asio::get_associated_executor(h.promise())),
             allocator(asio::get_associated_allocator(h.promise(), this_thread::get_allocator())) {}
+
+  template<typename Promise>
+  completion_handler_base(std::coroutine_handle<Promise> h,
+                          container::pmr::memory_resource * resource)
+          : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
+            executor(asio::get_associated_executor(h.promise())),
+            allocator(resource) {}
+
+
 };
 
 template<typename Handler,typename ... Args>
@@ -131,7 +140,17 @@ struct completion_handler : detail::completion_handler_base
     {
     }
 
-    template<typename Handler>
+    template<typename Promise>
+    completion_handler(std::coroutine_handle<Promise> h,
+                       std::optional<std::tuple<Args...>> &result,
+                       container::pmr::memory_resource * resource)
+            : completion_handler_base(h, resource),
+              self(h.address()), result(result)
+    {
+    }
+
+
+  template<typename Handler>
     completion_handler(detail::completion_handler_wrapper<Handler, Args...> w)
             : completion_handler(w.promise, w.promise.promise().res)
     {}
