@@ -7,6 +7,8 @@
 
 #include <boost/async/channel.hpp>
 #include <boost/async/promise.hpp>
+#include <boost/async/select.hpp>
+#include <boost/async/wait.hpp>
 
 #include "test.hpp"
 #include "doctest.h"
@@ -204,6 +206,14 @@ CO_TEST_CASE("str")
     CHECK(seq[14] == 7);
     CHECK(seq[15] == 17);
 }
+/*
+CO_TEST_CASE("selectable")
+{
+    async::channel<int> ci{1u};
+    async::channel<void> cv{1u};
 
+    auto [r1, r2] = co_await async::wait(async::select(ci.read(), cv.read()), cv.write());
+}
+*/
 
 TEST_SUITE_END();

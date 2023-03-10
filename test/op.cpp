@@ -94,26 +94,45 @@ TEST_CASE("op-throw")
   spawn(ctx, val(), asio::detached);
 
   CHECK_THROWS(ctx.run());
-
 }
 
-
-async::task<void> test_case_exception()
+struct throw_op : async::enable_op<throw_op>
 {
+  asio::any_io_executor exec;
 
-  auto throw_ = []<typename Token>(Token && tk)
+  throw_op(asio::any_io_executor exec) : exec(exec) {}
+
+  void initiate(async::completion_handler<std::exception_ptr> complete)
+  {
+    asio::post(exec, asio::append(std::move(complete), std::make_exception_ptr(std::runtime_error("test-exception"))));
+  }
+};
+
+
+CO_TEST_CASE("exception-op")
+{
+  CHECK_THROWS(co_await throw_op(co_await asio::this_coro::executor));
+}
+
+struct initiate_op : async::enable_op<initiate_op>
+{
+  asio::any_io_executor exec;
+
+  initiate_op(asio::any_io_executor exec) : exec(exec) {}
+
+  void initiate(async::completion_handler<> complete)
   {
     throw std::runtime_error("test-exception");
-    return boost::asio::post(std::forward<Token>(tk));
-  };
+    asio::post(exec, std::move(complete));
+  }
+};
 
-  co_await throw_;
-}
 
-TEST_CASE("exception")
+CO_TEST_CASE("initiate-exception-op")
 {
-    CHECK_THROWS(run(test_case_exception()));
+  CHECK_THROWS(co_await throw_op(co_await asio::this_coro::executor));
 }
+
 
 
 TEST_SUITE_END();

@@ -9,10 +9,17 @@
 
 using namespace boost;
 
+TEST_SUITE_BEGIN("run");
+
 TEST_CASE("run")
 {
-    CHECK(42 == run([]() -> async::task<int> {co_return 42;}()));
+  CHECK(42 == run([]() -> async::task<int> {co_return 42;}()));
 
-CHECK(42 == run([]() -> async::task<int> {co_return 42;}()));
+  asio::io_context ctx;
+  async::this_thread::set_executor(ctx.get_executor());
+  CHECK(42 == run([]() -> async::task<int> {co_return 42;}()));
 
+  CHECK(ctx.get_executor() == async::this_thread::get_executor());
 }
+
+TEST_SUITE_END();

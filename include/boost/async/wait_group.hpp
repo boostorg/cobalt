@@ -29,9 +29,9 @@ struct wait_group
 
     }
 
-    detail::wait_wrapper operator co_await ()
+    detail::wait_wrapper::awaitable_type operator co_await ()
     {
-      return detail::wait_wrapper(waitables_);
+      return detail::wait_wrapper(waitables_).operator co_await();
     }
     /// swallow the exception here.
     detail::wait_wrapper await_exit(std::exception_ptr ep)

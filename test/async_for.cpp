@@ -21,6 +21,7 @@ async::generator<int> test_data_gen()
     else
       co_yield td;
   }
+  co_return -1;
 }
 
 async::generator<int> once_gen()
@@ -67,6 +68,7 @@ CO_TEST_CASE("exception")
   auto inner = []() -> async::generator<int>
   {
     BOOST_ASYNC_FOR(auto i, throw_gen()); // should throw
+    co_return -1;
   };
 
   CHECK_THROWS(co_await inner());

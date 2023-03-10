@@ -22,36 +22,51 @@ struct select_wrapper
 {
   using impl_type = decltype(select(std::declval<std::list<promise<void>> &>()));
   std::list<promise<void>> &waitables_;
-  std::optional<impl_type> impl_;
 
   select_wrapper(std::list<promise<void>> &waitables) : waitables_(waitables)
   {
-    if (!waitables_.empty())
-      impl_.emplace(waitables_);
-
   }
 
-  bool await_ready()
+  struct awaitable_type
   {
-    if (waitables_.empty())
-      return true;
-    else
-      return impl_->await_ready();
-  }
 
-  template<typename Promise>
-  auto await_suspend(std::coroutine_handle<Promise> h)
-  {
-    return impl_->await_suspend(h);
-  }
+    bool await_ready()
+    {
+      if (waitables_.empty())
+        return true;
+      else
+        return impl_->await_ready();
+    }
 
-  void await_resume()
+    template<typename Promise>
+    auto await_suspend(std::coroutine_handle<Promise> h)
+    {
+      return impl_->await_suspend(h);
+    }
+
+    void await_resume()
+    {
+      if (waitables_.empty())
+        return;
+      auto idx = impl_->await_resume();
+      if (idx != -1)
+        waitables_.erase(std::next(waitables_.begin(), idx));
+    }
+
+    awaitable_type(std::list<promise<void>> &waitables) : waitables_(waitables)
+    {
+        if (!waitables_.empty())
+          impl_.emplace(waitables_);
+    }
+
+   private:
+    std::optional<impl_type::awaitable_type> impl_;
+    std::list<promise<void>> &waitables_;
+
+  };
+  awaitable_type operator co_await() &&
   {
-    if (waitables_.empty())
-      return;
-    auto idx = impl_->await_resume();
-    if (idx != -1)
-      waitables_.erase(std::next(waitables_.begin(), idx));
+    return awaitable_type(waitables_);
   }
 };
 
@@ -59,37 +74,51 @@ struct wait_wrapper
 {
   using impl_type = decltype(wait(std::declval<std::list<promise<void>> &>()));
   std::list<promise<void>> &waitables_;
-  std::optional<impl_type> impl_;
 
   wait_wrapper(std::list<promise<void>> &waitables) : waitables_(waitables)
   {
-    if (!waitables_.empty())
-      impl_.emplace(wait(waitables_));
-
   }
 
-  bool await_ready()
+  struct awaitable_type
   {
-    if (waitables_.empty())
-      return true;
-    else
-      return impl_->await_ready();
+    bool await_ready()
+    {
+      if (waitables_.empty())
+        return true;
+      else
+        return impl_->await_ready();
+    }
+
+    template<typename Promise>
+    auto await_suspend(std::coroutine_handle<Promise> h)
+    {
+      return impl_->await_suspend(h);
+    }
+
+    void await_resume()
+    {
+      if (waitables_.empty())
+        return;
+      BOOST_ASSERT(impl_);
+      waitables_.clear();
+      impl_->await_resume();
+    }
+
+    awaitable_type(std::list<promise<void>> &waitables) : waitables_(waitables)
+    {
+      if (!waitables_.empty())
+        impl_.emplace(waitables_);
+    }
+   private:
+    std::list<promise<void>> &waitables_;
+    std::optional<impl_type::awaitable_type> impl_;
+  };
+
+  awaitable_type operator co_await()
+  {
+    return awaitable_type(waitables_);
   }
 
-  template<typename Promise>
-  auto await_suspend(std::coroutine_handle<Promise> h)
-  {
-    return impl_->await_suspend(h);
-  }
-
-  void await_resume()
-  {
-    if (waitables_.empty())
-      return;
-    BOOST_ASSERT(impl_);
-    waitables_.clear();
-    impl_->await_resume();
-  }
 };
 
 }

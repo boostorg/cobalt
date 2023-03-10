@@ -80,4 +80,11 @@ CO_TEST_CASE("list")
   CHECK(!vec[2]);
 }
 
+CO_TEST_CASE("empty-list")
+{
+  auto exec = co_await asio::this_coro::executor;
+  std::vector<async::promise<std::size_t>> vec;
+  CHECK_THROWS(co_await select(vec));
+}
+
 TEST_SUITE_END();
