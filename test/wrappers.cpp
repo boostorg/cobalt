@@ -43,4 +43,19 @@ TEST_CASE("expire")
   h.destroy();
 }
 
+TEST_CASE("immediate")
+{
+  boost::asio::io_context ctx;
+  boost::async::this_thread::set_executor(ctx.get_executor());
+  bool called;
+  auto l = [&]{called = true;};
+  auto h = boost::async::detail::immediate_coroutine(l);
+  h.destroy();
+  CHECK(!called);
+
+  h = boost::async::detail::immediate_coroutine(l);
+  h();
+  CHECK(called);
+}
+
 TEST_SUITE_END();

@@ -24,15 +24,21 @@ template<typename Allocator>
 struct partial_promise_base
 {
     template<typename CompletionToken>
-    void * operator new(const std::size_t size, CompletionToken & token)
+    void * operator new(const std::size_t size, CompletionToken & token,
+                        const boost::source_location & loc = BOOST_CURRENT_LOCATION)
     {
+      // gcc: 168 40
+      // clang: 144 40
       return allocate_coroutine(size, asio::get_associated_allocator(token));
     }
 
     template<typename Executor, typename CompletionToken>
-    void * operator new(const std::size_t size, Executor & exec, CompletionToken & token)
+    void * operator new(const std::size_t size, Executor & exec, CompletionToken & token,
+                        const boost::source_location & loc = BOOST_CURRENT_LOCATION)
     {
-      return allocate_coroutine(size, asio::get_associated_allocator(token));
+      // gcc: 120 8 16
+      // clang: 96 8 16
+        return allocate_coroutine(size, asio::get_associated_allocator(token));
     }
 
     void operator delete(void * raw, const std::size_t size)
@@ -67,8 +73,7 @@ template<typename Allocator = void>
 struct post_coroutine_promise : partial_promise<Allocator>
 {
     template<typename CompletionToken>
-    auto yield_value(CompletionToken
-    cpl)
+    auto yield_value(CompletionToken cpl)
     {
         struct awaitable_t
         {
@@ -133,6 +138,62 @@ struct dispatch_coroutine_promise : partial_promise<Allocator>
     }
 };
 
+
+template<typename Allocator = void>
+struct immediate_coroutine_promise : partial_promise<Allocator>
+{
+  template<typename CompletionToken>
+  immediate_coroutine_promise(CompletionToken & cpl)
+      : slot(asio::get_associated_cancellation_slot(cpl))
+      , exec(asio::get_associated_executor(cpl, this_thread::get_executor()))
+  {
+  }
+
+  template<typename CompletionToken>
+  auto yield_value(CompletionToken cpl)
+  {
+    struct awaitable_t
+    {
+      CompletionToken cpl;
+      constexpr bool await_ready() noexcept { return false; }
+      auto await_suspend(std::coroutine_handle<void> h) noexcept
+      {
+        auto c = std::move(cpl);
+        h.destroy();
+        std::move(c)();
+      }
+
+      constexpr void await_resume() noexcept {}
+    };
+    return awaitable_t{std::move(cpl)};
+  }
+
+  std::coroutine_handle<immediate_coroutine_promise<Allocator>> get_return_object()
+  {
+    return std::coroutine_handle<immediate_coroutine_promise<Allocator>>::from_promise(*this);
+  }
+
+  void unhandled_exception()
+  {
+    std::coroutine_handle<immediate_coroutine_promise<Allocator>>::from_promise(*this).destroy();
+    throw;
+  }
+
+  asio::cancellation_slot slot;
+  using cancellation_slot_type = asio::cancellation_slot;
+  cancellation_slot_type get_cancellation_slot() const
+  {
+    return slot;
+  }
+
+  asio::io_context::executor_type exec;
+  using executor_type = asio::io_context::executor_type;
+  executor_type get_executor() const
+  {
+    return exec;
+  }
+};
+
 }
 
 namespace std
@@ -150,6 +211,12 @@ struct coroutine_traits<coroutine_handle<boost::async::detail::dispatch_coroutin
     using promise_type = boost::async::detail::dispatch_coroutine_promise<T>;
 };
 
+template <typename T, typename ... Args>
+struct coroutine_traits<coroutine_handle<boost::async::detail::immediate_coroutine_promise<T>>, Args...>
+{
+  using promise_type = boost::async::detail::immediate_coroutine_promise  <T>;
+};
+
 } // namespace std
 
 
@@ -158,47 +225,93 @@ namespace boost::async::detail
 
 
 template <typename CompletionToken>
-auto post_coroutine(CompletionToken token) noexcept
+auto post_coroutine(CompletionToken token)
     -> std::coroutine_handle<post_coroutine_promise<asio::associated_allocator_t<CompletionToken>>>
 {
     co_yield std::move(token);
 }
 
 template <asio::execution::executor Executor, typename CompletionToken>
-auto post_coroutine(Executor exec, CompletionToken token) noexcept
+auto post_coroutine(Executor exec, CompletionToken token)
     -> std::coroutine_handle<post_coroutine_promise<asio::associated_allocator_t<CompletionToken>>>
 {
     co_yield asio::bind_executor(exec, std::move(token));
 }
 
 template <with_get_executor Context, typename CompletionToken>
-auto post_coroutine(Context &ctx, CompletionToken token) noexcept
+auto post_coroutine(Context &ctx, CompletionToken token)
     -> std::coroutine_handle<post_coroutine_promise<asio::associated_allocator_t<CompletionToken>>>
 {
     co_yield asio::bind_executor(ctx.get_executor(), std::move(token));
 }
 
 template <typename CompletionToken>
-auto dispatch_coroutine(CompletionToken token) noexcept
+auto dispatch_coroutine(CompletionToken token)
     -> std::coroutine_handle<dispatch_coroutine_promise<asio::associated_allocator_t<CompletionToken>>>
 {
     co_yield std::move(token);
 }
 
 template <asio::execution::executor Executor, typename CompletionToken>
-auto dispatch_coroutine(Executor exec, CompletionToken token) noexcept
+auto dispatch_coroutine(Executor exec, CompletionToken token)
     -> std::coroutine_handle<dispatch_coroutine_promise<asio::associated_allocator_t<CompletionToken>>>
 {
     co_yield asio::bind_executor(exec, std::move(token));
 }
 
 template <with_get_executor Context, typename CompletionToken>
-auto dispatch_coroutine(Context &ctx, CompletionToken token) noexcept
+auto dispatch_coroutine(Context &ctx, CompletionToken token)
     -> std::coroutine_handle<dispatch_coroutine_promise<asio::associated_allocator_t<CompletionToken>>>
 {
     co_yield asio::bind_executor(ctx.get_executor(), std::move(token));
 }
 
+template <typename CompletionToken>
+auto  immediate_coroutine(CompletionToken token)
+    -> std::coroutine_handle<immediate_coroutine_promise<asio::associated_allocator_t<CompletionToken>>>
+{
+  co_yield std::move(token);
+}
+
+// note this might NOT invoke the token
+template<typename Awaitable, typename CompletionToken>
+  requires requires (
+      Awaitable & aw,
+      std::coroutine_handle<immediate_coroutine_promise<asio::associated_allocator_t<CompletionToken>>> h)
+      {
+        {aw.await_suspend(h)} -> std::convertible_to<void>;
+      }
+void suspend_for_callback(Awaitable & aw, CompletionToken && ct)
+{
+  aw.await_suspend(immediate_coroutine(std::forward<CompletionToken>(ct)));
+}
+
+template<typename Awaitable, typename CompletionToken>
+requires requires (
+    Awaitable & aw,
+        std::coroutine_handle<immediate_coroutine_promise<asio::associated_allocator_t<CompletionToken>>> h)
+{
+  {aw.await_suspend(h)} -> std::convertible_to<bool>;
+}
+void suspend_for_callback(Awaitable & aw, CompletionToken && ct)
+{
+  auto h = immediate_coroutine(std::forward<CompletionToken>(ct));
+  if (!aw.await_suspend(h))
+    h.resume();
+}
+
+template<typename Awaitable, typename CompletionToken>
+requires requires (
+    Awaitable & aw,
+        std::coroutine_handle<immediate_coroutine_promise<asio::associated_allocator_t<CompletionToken>>> h)
+{
+  {aw.await_suspend(h)} -> std::convertible_to<std::coroutine_handle<>>;
+}
+void suspend_for_callback(Awaitable & aw, CompletionToken && ct)
+{
+  aw.await_suspend(immediate_coroutine(std::forward<CompletionToken>(ct)))
+    .resume();
+}
 
 }
 
