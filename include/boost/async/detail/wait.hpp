@@ -11,506 +11,289 @@
 #include <boost/async/detail/await_result_helper.hpp>
 #include <boost/async/detail/exception.hpp>
 #include <boost/async/detail/forward_cancellation.hpp>
+#include <boost/async/detail/ref.hpp>
 #include <boost/async/detail/util.hpp>
+#include <boost/async/detail/wrapper.hpp>
+#include <boost/async/task.hpp>
 #include <boost/async/this_thread.hpp>
 
 #include <boost/asio/associated_cancellation_slot.hpp>
+#include <boost/asio/bind_cancellation_slot.hpp>
 #include <boost/asio/cancellation_signal.hpp>
 #include <boost/container/pmr/monotonic_buffer_resource.hpp>
 #include <boost/container/pmr/vector.hpp>
+#include <boost/intrusive_ptr.hpp>
 #include <boost/system/result.hpp>
 #include <boost/variant2/variant.hpp>
 
 #include <coroutine>
-#include "forward_cancellation.hpp"
+
 namespace boost::async::detail
 {
 
-template<asio::cancellation_type Ct, typename ... Args>
-struct wait_impl
+struct wait_shared_state
 {
-  using result_type = std::tuple<system::result<co_await_result_t<Args>, std::exception_ptr>...>;
+  std::unique_ptr<void, coro_deleter<>> h;
+  std::size_t use_count = 0u;
 
-  template<std::size_t ... Idx>
-  auto get_awaitables_(std::index_sequence<Idx...>)
+  friend void intrusive_ptr_add_ref(wait_shared_state * st) {st->use_count++;}
+  friend void intrusive_ptr_release(wait_shared_state * st) {if (st->use_count-- == 1u) st->h.reset();}
+
+  void complete()
   {
-    return std::make_tuple(detail::get_awaitable_type(std::get<Idx>(args))...);
+    if (use_count == 1u && h != nullptr)
+      std::coroutine_handle<void>::from_address(h.release()).resume();
   }
 
-  wait_impl(Args && ... p) : args(std::forward<Args>(p)...)
+  struct completer
   {
-  }
+    intrusive_ptr<wait_shared_state> ptr;
+    completer(wait_shared_state & wss) : ptr{&wss} {}
 
-  struct awaitable_type;
-
-  template<std::size_t Idx>
-  struct step
-  {
-    struct promise_type
+    void operator()()
     {
-      wait_impl::awaitable_type & ref;
-      using cancellation_slot_type = asio::cancellation_slot;
-
-      asio::cancellation_signal cancel;
-      cancellation_slot_type get_cancellation_slot()
-      {
-        return cancel.slot();
-      }
-
-      void* operator new(std::size_t n, wait_impl::awaitable_type & ref, std::size_t )
-      {
-        return ref.memory_resource.allocate(n);
-      }
-
-      void operator delete(void *, std::size_t) {}
-
-      promise_type(wait_impl::awaitable_type & ref, std::size_t idx) : ref(ref)
-      {
-        ref.cancel[idx] = &cancel;
-      }
-
-      constexpr static std::suspend_never initial_suspend() noexcept { return {}; }
-      auto final_suspend() noexcept
-      {
-        ref.cancel[Idx] = nullptr;
-
-        struct final_awaitable
-        {
-          constexpr static bool await_ready() noexcept {return false;}
-
-          std::coroutine_handle<void> await_suspend(
-              std::coroutine_handle<promise_type> h) noexcept
-          {
-            auto & rf = h.promise().ref;
-            std::coroutine_handle<void> res = std::noop_coroutine();
-
-            h.destroy();
-            if (--rf.outstanding == 0u)
-              res = std::coroutine_handle<void>::from_address(rf.awaited_from.release());
-
-            return res;
-          }
-          void await_resume() noexcept {}
-        };
-        return final_awaitable{};
-      }
-
-      void unhandled_exception()
-      {
-        std::get<Idx>(ref.result) = std::current_exception();
-      }
-
-      void return_value(variant2::monostate &&)
-      {
-        std::get<Idx>(ref.result) = system::result<void, std::exception_ptr>{};
-        ref.cancel[Idx] = nullptr;
-      }
-
-      template<typename T>
-      void return_value(T && t)
-      {
-        std::get<Idx>(ref.result) = std::forward<T>(t);
-        ref.cancel[Idx] = nullptr;
-      }
-
-      step get_return_object() {return {};}
-
-
-    };
-    constexpr static std::size_t needed_size =
-        64u + // experimented size (64 on gcc, 24 on clang)
-        sizeof(promise_type) +
-        sizeof(co_awaitable_type<std::tuple_element_t<Idx, std::tuple<Args...>>>) +
-        sizeof(std::size_t)
-    ;
-  };
-
-  awaitable_type operator co_await() &&
-  {
-    return std::make_from_tuple<awaitable_type>(std::move(args));
-  }
-
- private:
-  std::tuple<Args...> args;
-};
-
-
-template<asio::cancellation_type Ct, typename ... Args>
-struct wait_impl<Ct, Args...>::awaitable_type
-{
-  template<std::size_t Idx>
-  friend struct step;
-
-  awaitable_type(Args && ... args) : awaitables(detail::get_awaitable_type(std::forward<Args>(args))...)
-  {
-    std::fill(cancel.begin(), cancel.end(), nullptr);
-  }
-
-  template<std::size_t Idx>
-  bool await_ready_impl_step()
-  {
-    if (std::get<Idx>(awaitables).await_ready())
-    {
-      try
-      {
-        if constexpr (std::is_void_v<decltype(std::get<Idx>(awaitables).await_resume())>)
-        {
-          std::get<Idx>(awaitables).await_resume();
-          std::get<Idx>(this->result) = system::result<void, std::exception_ptr>{};
-        }
-        else
-          std::get<Idx>(this->result) = std::get<Idx>(awaitables).await_resume();
-      }
-      catch(std::exception & e)
-      {
-        std::get<Idx>(this->result) = std::tuple_element_t<Idx, result_type>(std::current_exception());
-      }
-
-      outstanding--;
-      return true;
-    }
-    return false;
-  }
-
-  template<std::size_t ... Idx>
-  bool await_ready_impl(std::index_sequence<Idx...>)
-  {
-    return (await_ready_impl_step<Idx>() && ... );
-  };
-
-  bool await_ready()
-  {
-    return await_ready_impl(std::make_index_sequence<sizeof...(Args)>{});
-  }
-
-  template<std::size_t Idx>
-  step<Idx> await_suspend_impl_step(std::size_t = Idx)
-  try
-  {
-    if constexpr (std::is_same_v<typename std::tuple_element_t<Idx, result_type>::value_type, void>)
-    {
-      co_await std::move(std::get<Idx>(awaitables));
-      co_return variant2::monostate{};
-    }
-    else
-      co_return co_await std::move(std::get<Idx>(awaitables));
-  }
-  catch (...)
-  {
-    throw;
-  }
-
-  template<std::size_t ... Idx>
-  void await_suspend_impl(std::index_sequence<Idx...>)
-  {
-    (await_suspend_impl_step<Idx>(), ...);
-  }
-
-  template<typename Promise>
-  void await_suspend(std::coroutine_handle<Promise> h)
-  {
-
-    auto sl = asio::get_associated_cancellation_slot(h);
-    if (sl.is_connected())
-    {
-      struct do_cancel
-      {
-        std::array<asio::cancellation_signal*, sizeof...(Args)> &cancel;
-        std::unique_ptr<void, detail::coro_deleter<void>> &awaited_from;
-        do_cancel(std::array<asio::cancellation_signal*, sizeof...(Args)> &cancel,
-                  std::unique_ptr<void, detail::coro_deleter<void>> &awaited_from)
-            : cancel(cancel), awaited_from(awaited_from) {}
-        void operator()(asio::cancellation_type ct)
-        {
-          if (ct == interrupt_await && awaited_from)
-            return std::coroutine_handle<void>::from_address(awaited_from.release()).resume();
-
-          for (auto & cs : cancel)
-            if (cs) cs->emit(ct);
-        }
-      };
-
-      sl.template emplace<do_cancel>(cancel, awaited_from);
-    }
-    awaited_from.reset(h.address());
-    await_suspend_impl(std::make_index_sequence<sizeof...(Args)>{});
-  }
-
-  auto await_resume()
-  {
-    if (cancellation_slot.is_connected())
-      cancellation_slot.clear();
-
-    return std::move(result);
-  }
-
-
-
- private:
-  std::tuple<detail::co_awaitable_type<Args>...> awaitables;
-
-  std::size_t outstanding{sizeof...(Args)};
-  std::array<asio::cancellation_signal*, sizeof...(Args)> cancel;
-  asio::cancellation_slot cancellation_slot;
-  std::unique_ptr<void, detail::coro_deleter<void>> awaited_from;
-
-  template<std::size_t ...Idx>
-  constexpr static std::size_t step_size(std::index_sequence<Idx...>)
-  {
-    return (step<Idx>::needed_size + ...);
-  }
-
-
-  char memory_buffer[step_size(std::make_index_sequence<sizeof...(Args)>{})];
-  container::pmr::monotonic_buffer_resource memory_resource{memory_buffer, sizeof(memory_buffer)};
-  result_type result{wait_not_ready<Args>()...};
-};
-
-template<asio::cancellation_type Ct, typename PromiseRange>
-struct ranged_wait_impl
-{
-  using awaitable_t =
-      co_awaitable_type<std::decay_t<decltype(*std::begin(std::declval<PromiseRange>()))>>;
-
-  using result_type = system::result<
-      co_await_result_t<std::decay_t<decltype(*std::begin(std::declval<PromiseRange>()))>>,
-      std::exception_ptr>;
-
-  using result_vector = std::vector<
-          result_type,
-          typename std::allocator_traits<
-              asio::associated_allocator_t<std::decay_t<PromiseRange>>>::template rebind_alloc<result_type>
-          >;
-
-  ranged_wait_impl(PromiseRange && p) : range(static_cast<PromiseRange&&>(p))
-  {
-  }
-
-  struct awaitable_type;
-  struct step
-  {
-    struct promise_type
-    {
-      ranged_wait_impl::awaitable_type& ref;
-      std::size_t idx;
-      using cancellation_slot_type = asio::cancellation_slot;
-
-      asio::cancellation_signal cancel;
-      cancellation_slot_type get_cancellation_slot()
-      {
-        return cancel.slot();
-      }
-
-      void* operator new(std::size_t n, ranged_wait_impl::awaitable_type & ref, std::size_t )
-      {
-        return ref.memory_resource.allocate(n);
-      }
-
-      void operator delete(void *, std::size_t) {}
-
-      promise_type(ranged_wait_impl::awaitable_type & ref, std::size_t idx) : ref(ref), idx(idx)
-      {
-        ref.cancel[idx] = &cancel;
-      }
-
-      constexpr static std::suspend_never initial_suspend() noexcept { return {}; }
-      auto final_suspend() noexcept
-      {
-        ref.cancel[idx] = nullptr;
-
-        struct final_awaitable
-        {
-          constexpr static bool await_ready() noexcept {return false;}
-
-          std::coroutine_handle<void> await_suspend(
-              std::coroutine_handle<promise_type> h) noexcept
-          {
-            auto & rf = h.promise().ref;
-            std::coroutine_handle<void> res = std::noop_coroutine();
-
-            h.destroy();
-            if (--rf.outstanding == 0u)
-              res = std::coroutine_handle<void>::from_address(rf.awaited_from.release());
-
-            return res;
-          }
-          void await_resume() noexcept {}
-        };
-        return final_awaitable{};
-      }
-
-      void unhandled_exception()
-      {
-        ref.result[idx] = std::current_exception();
-      }
-
-      template<typename T>
-      void return_value(T && t)
-      {
-        if constexpr (std::is_same_v<void, typename result_type::value_type>)
-          ref.result[idx] = system::result<void, std::exception_ptr>();
-        else
-          ref.result[idx] = std::forward<T>(t);
-
-        ref.cancel[idx] = nullptr;
-
-      }
-
-      step get_return_object() {return {};}
-    };
-    constexpr static std::size_t needed_size =
-        64u + // experimented size (64 on gcc, 24 on clang)
-        sizeof(promise_type) +
-        sizeof(co_awaitable_type<awaitable_t>) +
-        sizeof(std::size_t);
-  };
-  struct awaitable_type
-  {
-
-    friend struct step;
-
-    awaitable_type(awaitable_type &&) = delete;
-
-    template<typename Range>
-    awaitable_type(Range &&range)
-        : outstanding{std::size(range)}
-        , memory_resource{
-          ((step::needed_size + sizeof(awaitable_t) + sizeof(asio::cancellation_signal *)) * std::size(range)),
-            this_thread::get_default_resource()}
-        , cancel{std::size(range), nullptr, alloc}
-        , result(asio::get_associated_allocator(range))
-    {
-      awaitables.reserve(std::size(range));
-      if constexpr (std::is_rvalue_reference_v<PromiseRange&&>)
-        for (auto && v : range)
-          awaitables.push_back(get_awaitable_type(std::move(v)));
+      auto p = std::move(ptr);
+      if (p->use_count == 1u)
+        p.detach()->complete();
       else
-        for (auto && v : range)
-          awaitables.push_back(get_awaitable_type(v));
-
-      result.resize(std::size(range), result_type(detail::wait_not_ready()));
-
-      was_ready.resize(std::size(range), false);
-      std::fill(cancel.begin(), cancel.end(), nullptr);
+        p->complete();
     }
+  };
 
-    bool await_ready()
-    {
-      if (std::empty(awaitables))
-        return true;
+  completer get_completer()
+  {
+    return {*this};
+  }
+};
 
-      bool all_ready = true;
-
-      std::size_t idx = 0u;
-      for (auto &r: awaitables)
-      {
-        if (r.await_ready())
-        {
-          try
-          {
-            if constexpr (std::is_void_v<typename result_type::value_type>)
-            {
-              r.await_resume();
-              this->result[idx] = system::result<void, std::exception_ptr>{};
-            } else
-              this->result[idx] = r.await_resume();
-          }
-          catch (std::exception &e)
-          {
-            this->result[idx] = result_type(std::current_exception());
-          }
-          was_ready[idx] = true;
-          this->outstanding--;
-        } else
-          all_ready = false;
-        idx++;
-      }
-      return all_ready;
-    };
-
-
-    step await_suspend_impl(std::size_t idx)
+struct get_resume_result
+{
+  template<typename Awaitable>
+  auto operator()(Awaitable & aw) const -> system::result<decltype(aw.await_resume()), std::exception_ptr>
+  {
+    using type = decltype(aw.await_resume());
     try
     {
-      if constexpr (std::is_same_v<void, typename result_type::value_type>)
+      if constexpr (std::is_void_v<type>)
       {
-        co_await std::move(awaitables[idx]);
-        co_return variant2::monostate{};
-      } else
-        co_return co_await std::move(awaitables[idx]);
-    }
-    catch (...)
-    {
-      throw;
-    }
-
-    template<typename Promise>
-    void await_suspend(std::coroutine_handle<Promise> h)
-    {
-      auto sl = asio::get_associated_cancellation_slot(h);
-      if (sl.is_connected())
-      {
-        struct do_cancel
-        {
-          container::pmr::vector<asio::cancellation_signal *> &cancel;
-          std::unique_ptr<void, detail::coro_deleter<void>> &awaited_from;
-
-          do_cancel(container::pmr::vector<asio::cancellation_signal *> &cancel,
-                    std::unique_ptr<void, detail::coro_deleter<void>> &awaited_from)
-              : cancel(cancel), awaited_from(awaited_from)
-          {}
-
-          void operator()(asio::cancellation_type ct)
-          {
-            if (ct == interrupt_await && awaited_from)
-              return std::coroutine_handle<void>::from_address(awaited_from.release()).resume();
-            for (auto &cs: cancel)
-              if (cs) cs->emit(ct);
-          }
-        };
-
-        sl.template emplace<do_cancel>(cancel, awaited_from);
+        aw.await_resume();
+        return {};
       }
-      awaited_from.reset(h.address());
-      for (std::size_t i = 0u; i < std::size(awaitables); i++)
-        if (!was_ready[i])
-          await_suspend_impl(i);
+      else
+        return aw.await_resume();
     }
-
-    result_vector await_resume()
+    catch(...)
     {
-      if (cancellation_slot.is_connected())
-        cancellation_slot.clear();
-
-      if constexpr (!std::is_void_v<result_type>)
-        return std::move(result);
+      return std::current_exception();
     }
-   private:
-    std::size_t outstanding;
-    container::pmr::monotonic_buffer_resource memory_resource{
-        ((step::needed_size + sizeof(awaitable_t) + sizeof(asio::cancellation_signal*)) * std::size(awaitables)),
-        this_thread::get_default_resource()};
-
-    container::pmr::polymorphic_allocator<void> alloc{&memory_resource};
-    container::pmr::vector<awaitable_t> awaitables{alloc};
-    container::pmr::vector<asio::cancellation_signal*> cancel{alloc};
-
-    asio::cancellation_slot cancellation_slot;
-    std::unique_ptr<void, detail::coro_deleter<void>> awaited_from;
-    container::pmr::vector<bool> was_ready{cancel.get_allocator()};
-    result_vector result{};
-  };
-
-  awaitable_type operator co_await() &&
-  {
-    return awaitable_type(std::forward<PromiseRange>(range));
   }
-
- private:
-  PromiseRange range;
-
 };
 
+
+template<typename ... Args>
+struct wait_variadic_impl
+{
+  using tuple_type = std::tuple<decltype(get_awaitable_type(std::declval<Args>()))...>;
+
+  template<typename Tuple, std::size_t ... Idx>
+  wait_variadic_impl(Tuple && tup, std::index_sequence<Idx...>)
+      : args{static_cast<std::tuple_element_t<Idx, std::tuple<Args...>>&&>(std::get<Idx>(tup))...},
+        aws{
+          get_awaitable_type(
+            static_cast<std::tuple_element_t<Idx, std::tuple<Args...>>&&>(std::get<Idx>(args))
+          )...}
+  {
+  }
+
+  std::tuple<Args...> args;
+  tuple_type aws;
+
+  constexpr static std::size_t tuple_size = sizeof...(Args);
+
+  struct awaitable
+  {
+    tuple_type & aws;
+
+    std::array<bool, tuple_size> ready{
+        std::apply([](auto && ... aw) {return std::array<bool, tuple_size>{aw.await_ready() ... };}, aws)
+    };
+    std::array<asio::cancellation_signal, tuple_size> cancel;
+    char storage[256 * tuple_size];
+    container::pmr::monotonic_buffer_resource res{storage, sizeof(storage),
+                                                  this_thread::get_default_resource()};
+    container::pmr::polymorphic_allocator<void> alloc{&res};
+
+    wait_shared_state wss;
+
+    bool await_ready(){return std::find(ready.begin(), ready.end(), false) == ready.end();};
+    template<typename H>
+    auto await_suspend(std::coroutine_handle<H> h)
+    {
+      // default cb
+      std::size_t idx = 0u;
+      mp11::tuple_for_each(
+          aws,
+          [&](auto && aw)
+          {
+            if (!ready[idx])
+              suspend_for_callback(
+                  aw,
+                  asio::bind_cancellation_slot(
+                    cancel[idx].slot(),
+                    asio::bind_executor(
+                      h.promise().get_executor(),
+                      asio::bind_allocator(alloc, wss.get_completer())
+                    )
+                  )
+                );
+            idx ++;
+          });
+      if (wss.use_count == 0) // already done, no need to suspend
+        return false;
+
+      // arm the cnacel
+      h.promise().get_cancellation_slot().assign(
+          [&](asio::cancellation_type ct)
+          {
+            for (auto & cs : cancel)
+              cs.emit(ct);
+          });
+
+      wss.h.reset(h.address());
+      return true;
+    }
+
+    auto await_resume()
+    {
+      wss.h.release();
+      return mp11::tuple_transform(get_resume_result{}, aws);
+    }
+  };
+  awaitable operator co_await() && {return awaitable{aws};}
+};
+
+
+template<typename ... Args>
+task<std::tuple<system::result<co_await_result_t<Args>, std::exception_ptr>...>> wait_impl(Args ... args)
+{
+  std::tuple aws{get_awaitable_type(static_cast<Args&&>(args))...};
+  co_return co_await wait_variadic_impl{aws};
+}
+
+
+
+template<typename Range>
+struct wait_ranged_impl
+{
+  Range aws;
+
+  using result_type = system::result<
+      co_await_result_t<std::decay_t<decltype(*std::begin(std::declval<Range>()))>>,
+      std::exception_ptr>;
+
+  struct awaitable
+  {
+    using type = std::decay_t<decltype(*std::begin(std::declval<Range>()))>;
+    container::pmr::monotonic_buffer_resource res;
+    container::pmr::polymorphic_allocator<void> alloc{&res};
+
+    std::conditional_t<awaitable_type<type>, Range &,
+                       container::pmr::vector<co_awaitable_type<type>>> aws;
+
+    container::pmr::vector<bool> ready{std::size(aws), alloc};
+    container::pmr::vector<asio::cancellation_signal> cancel{std::size(aws), alloc};
+
+    awaitable(Range & aws_, std::false_type /* needs co_await */)
+      : res((256 + sizeof(co_awaitable_type<type>)) * std::size(aws_),
+            this_thread::get_default_resource())
+      , aws{alloc}
+      , ready{std::size(aws_), alloc}
+      , cancel{std::size(aws_), alloc}
+    {
+      aws.reserve(std::size(aws_));
+      for (auto && a : aws_)
+        aws.push_back(get_awaitable_type(std::forward<decltype(a)>(a)));
+
+      std::transform(std::begin(this->aws),
+                     std::end(this->aws),
+                     std::begin(ready),
+                     [](auto & aw) {return aw.await_ready();});
+    }
+    awaitable(Range & aws, std::true_type /* needs co_await */)
+        : res((256 + sizeof(co_awaitable_type<type>)) * std::size(aws),
+              this_thread::get_default_resource())
+        , aws(aws)
+    {
+      std::transform(std::begin(aws), std::end(aws), std::begin(ready), [](auto & aw) {return aw.await_ready();});
+    }
+
+    awaitable(Range & aws)
+      : awaitable(aws, std::bool_constant<awaitable_type<type>>{})
+    {
+    }
+
+    wait_shared_state wss;
+
+    bool await_ready(){return std::find(ready.begin(), ready.end(), false) == ready.end();};
+    template<typename H>
+    auto await_suspend(std::coroutine_handle<H> h)
+    {
+      // default cb
+      std::size_t idx = 0u;
+      for (auto && aw : aws)
+      {
+        if (!ready[idx])
+          suspend_for_callback(
+              aw,
+              asio::bind_cancellation_slot(
+                  cancel[idx].slot(),
+                  asio::bind_executor(
+                      h.promise().get_executor(),
+                      asio::bind_allocator(alloc, wss.get_completer())
+                  )
+              )
+          );
+        idx ++;
+      }
+      if (wss.use_count == 0) // already done, no need to suspend
+        return false;
+
+      // arm the cancel
+      sl = h.promise().get_cancellation_slot();
+      if (sl.is_connected())
+          sl.assign(
+            [&](asio::cancellation_type ct)
+            {
+              for (auto & cs : cancel)
+                cs.emit(ct);
+            });
+
+      wss.h.reset(h.address());
+      return true;
+    }
+
+    asio::cancellation_slot sl;
+
+    container::pmr::vector<result_type> await_resume()
+    {
+      sl.clear();
+      ignore_unused(wss.h.release());
+      container::pmr::vector<result_type> result{this_thread::get_allocator()};
+      result.reserve(std::size(aws));
+      for (auto & pp : aws)
+        result.push_back(get_resume_result{}(pp));
+      return result;
+    }
+  };
+  awaitable operator co_await() && {return awaitable{aws};}
+};
+
+
+template<typename PromiseRange>
+auto ranged_wait_impl(PromiseRange p)
+{
+  return wait_ranged_impl<PromiseRange>{p};
+}
 
 }
 

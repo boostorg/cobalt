@@ -34,7 +34,7 @@ template<typename Promise = void>
 struct enable_awaitables
 {
     template<awaitable<Promise> Aw>
-    Aw&& await_transform(Aw && aw)
+    Aw && await_transform(Aw && aw)
     {
         return static_cast<Aw&&>(aw);
     }

@@ -58,4 +58,21 @@ TEST_CASE("immediate")
   CHECK(called);
 }
 
+
+TEST_CASE("immediate")
+{
+  boost::asio::io_context ctx;
+  boost::async::this_thread::set_executor(ctx.get_executor());
+  bool called;
+  auto l = [&]{called = true;};
+  auto t = []{CHECK(false);};
+  auto h = boost::async::detail::transactable_coroutine(t, l);
+  h.destroy();
+  CHECK(!called);
+
+  h = boost::async::detail::transactable_coroutine(t, l);
+  h();
+  CHECK(called);
+}
+
 TEST_SUITE_END();

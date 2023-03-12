@@ -54,13 +54,13 @@ struct channel
     std::optional<T> direct;
     asio::cancellation_slot cancel_slot;
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
-    void (*reserve_completion)(void*);
+    void (*begin_transaction)(void*);
 
     void unlink()
     {
       intrusive::list_base_hook<intrusive::link_mode<intrusive::auto_unlink> >::unlink();
-      if (reserve_completion)
-          reserve_completion(awaited_from.get());
+      if (begin_transaction)
+          begin_transaction(awaited_from.get());
     }
 
     struct cancel_impl;
@@ -80,13 +80,13 @@ struct channel
     asio::cancellation_slot cancel_slot;
 
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
-    void (*reserve_completion)(void*);
+    void (*begin_transaction)(void*);
 
     void unlink()
     {
       intrusive::list_base_hook<intrusive::link_mode<intrusive::auto_unlink> >::unlink();
-      if (reserve_completion)
-        reserve_completion(awaited_from.get());
+      if (begin_transaction)
+          begin_transaction(awaited_from.get());
     }
 
     struct cancel_impl;
@@ -149,13 +149,13 @@ struct channel<void>
     bool cancelled = false, direct = false;
     asio::cancellation_slot cancel_slot;
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
-    void (*reserve_completion)(void*);
+    void (*begin_transaction)(void*);
 
     void unlink()
     {
       intrusive::list_base_hook<intrusive::link_mode<intrusive::auto_unlink> >::unlink();
-      if (reserve_completion)
-        reserve_completion(awaited_from.get());
+      if (begin_transaction)
+          begin_transaction(awaited_from.get());
     }
 
     struct cancel_impl;
@@ -173,13 +173,13 @@ struct channel<void>
     bool cancelled = false, direct = false;
     asio::cancellation_slot cancel_slot;
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
-    void (*reserve_completion)(void*);
+    void (*begin_transaction)(void*);
 
     void unlink()
     {
       intrusive::list_base_hook<intrusive::link_mode<intrusive::auto_unlink> >::unlink();
-      if (reserve_completion)
-        reserve_completion(awaited_from.get());
+      if (begin_transaction)
+          begin_transaction(awaited_from.get());
     }
 
     struct cancel_impl;

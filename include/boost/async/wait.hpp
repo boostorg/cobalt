@@ -15,20 +15,22 @@ namespace boost::async
 {
 
 
-template<asio::cancellation_type Ct = asio::cancellation_type::all, awaitable ... Promise>
-auto wait(Promise && ... p) -> detail::wait_impl<Ct, Promise ...>
+template<awaitable ... Promise>
+auto wait(Promise && ... p)
 {
-  return detail::wait_impl<Ct, Promise ...>{std::forward<Promise>(p)...};
+  return detail::wait_variadic_impl<Promise ...>(
+      std::forward_as_tuple(p...),
+      std::make_index_sequence<sizeof...(Promise)>{});
 }
 
 
-template<asio::cancellation_type Ct = asio::cancellation_type::all, typename PromiseRange>
+template<typename PromiseRange>
   requires awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>>
 auto wait(PromiseRange && p)
 {
-  return detail::ranged_wait_impl<Ct, PromiseRange>{std::forward<PromiseRange>(p)};
+  using type = std::decay_t<decltype(*std::begin(std::declval<PromiseRange>()))>;
+  return detail::ranged_wait_impl<PromiseRange>(std::forward<PromiseRange>(p));
 }
-
 
 
 

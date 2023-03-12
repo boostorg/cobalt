@@ -100,8 +100,8 @@ struct wait_wrapper
       if (waitables_.empty())
         return;
       BOOST_ASSERT(impl_);
-      waitables_.clear();
       impl_->await_resume();
+      waitables_.clear();
     }
 
     awaitable_type(std::list<promise<void>> &waitables) : waitables_(waitables)
@@ -111,7 +111,7 @@ struct wait_wrapper
     }
    private:
     std::list<promise<void>> &waitables_;
-    std::optional<impl_type::awaitable_type> impl_;
+    std::optional<decltype(wait(waitables_).operator co_await())> impl_;
   };
 
   awaitable_type operator co_await()
