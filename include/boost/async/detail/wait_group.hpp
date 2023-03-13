@@ -60,7 +60,7 @@ struct select_wrapper
     }
 
    private:
-    std::optional<impl_type::awaitable_type> impl_;
+    std::optional<impl_type::awaitable> impl_;
     std::list<promise<void>> &waitables_;
 
   };

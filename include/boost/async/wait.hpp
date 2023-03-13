@@ -19,8 +19,7 @@ template<awaitable ... Promise>
 auto wait(Promise && ... p)
 {
   return detail::wait_variadic_impl<Promise ...>(
-      std::forward_as_tuple(p...),
-      std::make_index_sequence<sizeof...(Promise)>{});
+      std::forward<Promise>(p)...);
 }
 
 
@@ -29,7 +28,7 @@ template<typename PromiseRange>
 auto wait(PromiseRange && p)
 {
   using type = std::decay_t<decltype(*std::begin(std::declval<PromiseRange>()))>;
-  return detail::ranged_wait_impl<PromiseRange>(std::forward<PromiseRange>(p));
+  return detail::wait_ranged_impl<PromiseRange>(std::forward<PromiseRange>(p));
 }
 
 

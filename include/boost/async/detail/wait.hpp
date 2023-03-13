@@ -48,7 +48,7 @@ struct wait_shared_state
   struct completer
   {
     intrusive_ptr<wait_shared_state> ptr;
-    completer(wait_shared_state & wss) : ptr{&wss} {}
+    completer(wait_shared_state * wss) : ptr{wss} {}
 
     void operator()()
     {
@@ -62,7 +62,7 @@ struct wait_shared_state
 
   completer get_completer()
   {
-    return {*this};
+    return {this};
   }
 };
 
@@ -95,24 +95,27 @@ struct wait_variadic_impl
 {
   using tuple_type = std::tuple<decltype(get_awaitable_type(std::declval<Args>()))...>;
 
-  template<typename Tuple, std::size_t ... Idx>
-  wait_variadic_impl(Tuple && tup, std::index_sequence<Idx...>)
-      : args{static_cast<std::tuple_element_t<Idx, std::tuple<Args...>>&&>(std::get<Idx>(tup))...},
-        aws{
-          get_awaitable_type(
-            static_cast<std::tuple_element_t<Idx, std::tuple<Args...>>&&>(std::get<Idx>(args))
-          )...}
+  wait_variadic_impl(Args && ... args)
+      : args{std::forward<Args>(args)...}
   {
   }
 
   std::tuple<Args...> args;
-  tuple_type aws;
 
   constexpr static std::size_t tuple_size = sizeof...(Args);
 
   struct awaitable
   {
-    tuple_type & aws;
+    template<std::size_t ... Idx>
+    awaitable(std::tuple<Args...> & args, std::index_sequence<Idx...>) :
+        aws{
+            get_awaitable_type(
+                static_cast<std::tuple_element_t<Idx, std::tuple<Args...>>&&>(std::get<Idx>(args))
+            )...}
+    {
+    }
+
+    tuple_type aws;
 
     std::array<bool, tuple_size> ready{
         std::apply([](auto && ... aw) {return std::array<bool, tuple_size>{aw.await_ready() ... };}, aws)
@@ -126,27 +129,34 @@ struct wait_variadic_impl
     wait_shared_state wss;
 
     bool await_ready(){return std::find(ready.begin(), ready.end(), false) == ready.end();};
+
+    template<typename Aw>
+    void await_suspend_step(
+        asio::io_context::executor_type exec,
+        Aw && aw, std::size_t idx)
+    {
+      if (!ready[idx])
+        suspend_for_callback(
+            aw,
+            asio::bind_cancellation_slot(
+                cancel[idx].slot(),
+                asio::bind_executor(
+                    exec,
+                    asio::bind_allocator(alloc, wss.get_completer())
+                )
+            )
+        );
+    }
+
     template<typename H>
     auto await_suspend(std::coroutine_handle<H> h)
     {
-      // default cb
       std::size_t idx = 0u;
       mp11::tuple_for_each(
           aws,
           [&](auto && aw)
           {
-            if (!ready[idx])
-              suspend_for_callback(
-                  aw,
-                  asio::bind_cancellation_slot(
-                    cancel[idx].slot(),
-                    asio::bind_executor(
-                      h.promise().get_executor(),
-                      asio::bind_allocator(alloc, wss.get_completer())
-                    )
-                  )
-                );
-            idx ++;
+            await_suspend_step(h.promise().get_executor(), aw, idx++);
           });
       if (wss.use_count == 0) // already done, no need to suspend
         return false;
@@ -169,7 +179,10 @@ struct wait_variadic_impl
       return mp11::tuple_transform(get_resume_result{}, aws);
     }
   };
-  awaitable operator co_await() && {return awaitable{aws};}
+  awaitable operator co_await() &&
+  {
+    return awaitable{args, std::make_index_sequence<sizeof...(Args)>{}};
+  }
 };
 
 
@@ -287,13 +300,6 @@ struct wait_ranged_impl
   };
   awaitable operator co_await() && {return awaitable{aws};}
 };
-
-
-template<typename PromiseRange>
-auto ranged_wait_impl(PromiseRange p)
-{
-  return wait_ranged_impl<PromiseRange>{p};
-}
 
 }
 

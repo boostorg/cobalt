@@ -400,6 +400,54 @@ auto  transactable_coroutine(Transaction transaction, CompletionToken token)
   co_yield std::move(token);
 }
 
+
+// note this might NOT invoke the token
+template<typename Awaitable, typename Transaction, typename CompletionToken>
+requires requires (
+    Awaitable & aw,
+        std::coroutine_handle<transactable_coroutine_promise<asio::associated_allocator_t<CompletionToken>>> h)
+{
+  {aw.await_suspend(h)} -> std::convertible_to<void>;
+}
+void suspend_for_callback_with_transaction(Awaitable & aw, Transaction && t, CompletionToken && ct)
+{
+  aw.await_suspend(transactable_coroutine(
+      std::forward<Transaction>(t),
+      std::forward<CompletionToken>(ct)));
+}
+
+template<typename Awaitable, typename Transaction, typename CompletionToken>
+requires requires (
+    Awaitable & aw,
+        std::coroutine_handle<transactable_coroutine_promise<asio::associated_allocator_t<CompletionToken>>> h)
+{
+  {aw.await_suspend(h)} -> std::convertible_to<bool>;
+}
+void suspend_for_callback_with_transaction(Awaitable & aw, Transaction && t, CompletionToken && ct)
+{
+  auto h = transactable_coroutine(
+      std::forward<Transaction>(t),
+      std::forward<CompletionToken>(ct));
+  if (!aw.await_suspend(h))
+    h.resume();
+}
+
+template<typename Awaitable, typename Transaction, typename CompletionToken>
+requires requires (
+    Awaitable & aw,
+        std::coroutine_handle<transactable_coroutine_promise<asio::associated_allocator_t<CompletionToken>>> h)
+{
+  {aw.await_suspend(h)} -> std::convertible_to<std::coroutine_handle<>>;
+}
+void suspend_for_callback_with_transaction(Awaitable & aw, Transaction && t, CompletionToken && ct)
+{
+  aw.await_suspend(transactable_coroutine(
+      std::forward<Transaction>(t),
+      std::forward<CompletionToken>(ct)))
+      .resume();
+}
+
+
 }
 
 #endif //BOOST_ASYNC_WRAPPER_HPP

@@ -280,13 +280,13 @@ std::coroutine_handle<void> channel<void>::read_op::await_suspend(std::coroutine
   if constexpr (requires (Promise p) {p.begin_transaction();})
     begin_transaction = +[](void * p){std::coroutine_handle<Promise>::from_address(p).promise().begin_transaction();};
 
-  // currently nothing to read
+  // nothing to read currently, enqueue
   if (chn->write_queue_.empty())
   {
     chn->read_queue_.push_back(*this);
     return std::noop_coroutine();
   }
-  else // we're good, we can read, so we'll do that, but post our own completetion too.
+  else // we're good, we can read, so we'll do that, but we need to post, so we need to initialize a transactin.
   {
     auto & op = chn->write_queue_.front();
     op.unlink();

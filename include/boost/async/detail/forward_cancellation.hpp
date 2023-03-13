@@ -17,6 +17,8 @@ namespace boost::async
 // in no apparent side effects and where the op can re-awaited.
 constexpr asio::cancellation_type interrupt_await{8u};
 
+
+
 }
 
 namespace boost::async::detail

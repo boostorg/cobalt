@@ -15,9 +15,9 @@ namespace boost::async
 {
 
 template<asio::cancellation_type Ct = asio::cancellation_type::all, awaitable ... Promise>
-auto select(Promise && ... p) -> detail::select_impl<Ct, Promise ...>
+auto select(Promise && ... p) -> detail::select_variadic_impl<Ct, Promise ...>
 {
-  return detail::select_impl<Ct, Promise ...>{std::forward<Promise>(p)...};
+  return detail::select_variadic_impl<Ct, Promise ...>(std::forward<Promise>(p)...);
 }
 
 
@@ -28,7 +28,7 @@ auto select(PromiseRange && p)
   if (std::empty(p))
     throw_exception(std::invalid_argument("empty range selected"));
 
-  return detail::ranged_select_impl<Ct, PromiseRange>{std::forward<PromiseRange>(p)};
+  return detail::select_ranged_impl<Ct, PromiseRange>{std::forward<PromiseRange>(p)};
 }
 
 
