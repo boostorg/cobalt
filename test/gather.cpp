@@ -5,7 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/wait.hpp>
+#include <boost/async/gather.hpp>
 #include <boost/async/generator.hpp>
 #include <boost/async/promise.hpp>
 #include <boost/async/op.hpp>
@@ -43,7 +43,7 @@ async::promise<void> wthrow()
 }
 
 
-TEST_SUITE_BEGIN("wait");
+TEST_SUITE_BEGIN("gather");
 
 async::thread thr();
 
@@ -54,8 +54,8 @@ CO_TEST_CASE("variadic")
   auto d2 = wdummy(exec, std::chrono::milliseconds( 50));
   asio::steady_timer tim{co_await asio::this_coro::executor};
   auto g = wgen(exec);
-  auto c = co_await wait(d1, d2, wdummy(exec, std::chrono::milliseconds(150)), g, wthrow(),
-                         thr());
+  auto c = co_await gather(d1, d2, wdummy(exec, std::chrono::milliseconds(150)),
+                           g, wthrow(), thr());
 
   CHECK( std::get<0>(c).has_value());
   CHECK(!std::get<0>(c).has_error());
@@ -83,7 +83,7 @@ CO_TEST_CASE("list")
   vec.push_back(wdummy(exec, std::chrono::milliseconds(150)));
   vec.push_back(wdummy(exec, std::chrono::milliseconds::max()));
 
-  auto res = co_await wait(vec);
+  auto res = co_await gather(vec);
   REQUIRE(res.size() == 4);
   CHECK( res[0].has_value());
   CHECK(!res[0].has_error());

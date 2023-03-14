@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_ASYNC_DETAIL_WAIT_HPP
-#define BOOST_ASYNC_DETAIL_WAIT_HPP
+#ifndef BOOST_ASYNC_DETAIL_GATHER_HPP
+#define BOOST_ASYNC_DETAIL_GATHER_HPP
 
 #include <boost/async/detail/await_result_helper.hpp>
 #include <boost/async/detail/exception.hpp>
@@ -31,13 +31,13 @@
 namespace boost::async::detail
 {
 
-struct wait_shared_state
+struct gather_shared_state
 {
   std::unique_ptr<void, coro_deleter<>> h;
   std::size_t use_count = 0u;
 
-  friend void intrusive_ptr_add_ref(wait_shared_state * st) {st->use_count++;}
-  friend void intrusive_ptr_release(wait_shared_state * st) {if (st->use_count-- == 1u) st->h.reset();}
+  friend void intrusive_ptr_add_ref(gather_shared_state * st) {st->use_count++;}
+  friend void intrusive_ptr_release(gather_shared_state * st) {if (st->use_count-- == 1u) st->h.reset();}
 
   void complete()
   {
@@ -47,8 +47,8 @@ struct wait_shared_state
 
   struct completer
   {
-    intrusive_ptr<wait_shared_state> ptr;
-    completer(wait_shared_state * wss) : ptr{wss} {}
+    intrusive_ptr<gather_shared_state> ptr;
+    completer(gather_shared_state * wss) : ptr{wss} {}
 
     void operator()()
     {
@@ -89,11 +89,11 @@ auto get_resume_result(Awaitable & aw) -> system::result<decltype(aw.await_resum
 
 
 template<typename ... Args>
-struct wait_variadic_impl
+struct gather_variadic_impl
 {
   using tuple_type = std::tuple<decltype(get_awaitable_type(std::declval<Args&&>()))...>;
 
-  wait_variadic_impl(Args && ... args)
+  gather_variadic_impl(Args && ... args)
       : args{std::forward<Args>(args)...}
   {
   }
@@ -121,7 +121,7 @@ struct wait_variadic_impl
                                                   this_thread::get_default_resource()};
     container::pmr::polymorphic_allocator<void> alloc{&res};
 
-    wait_shared_state wss;
+    gather_shared_state wss;
 
     template<typename T>
     using result_part = system::result<co_await_result_t<T>, std::exception_ptr>;
@@ -202,18 +202,8 @@ struct wait_variadic_impl
   }
 };
 
-
-template<typename ... Args>
-task<std::tuple<system::result<co_await_result_t<Args>, std::exception_ptr>...>> wait_impl(Args ... args)
-{
-  std::tuple aws{get_awaitable_type(static_cast<Args&&>(args))...};
-  co_return co_await wait_variadic_impl{aws};
-}
-
-
-
 template<typename Range>
-struct wait_ranged_impl
+struct gather_ranged_impl
 {
   Range aws;
 
@@ -267,7 +257,7 @@ struct wait_ranged_impl
     {
     }
 
-    wait_shared_state wss;
+    gather_shared_state wss;
 
     bool await_ready(){return std::find(ready.begin(), ready.end(), false) == ready.end();};
     template<typename H>
@@ -340,4 +330,4 @@ struct wait_ranged_impl
 
 }
 
-#endif //BOOST_ASYNC_DETAIL_WAIT_HPP
+#endif //BOOST_ASYNC_DETAIL_GATHER_HPP

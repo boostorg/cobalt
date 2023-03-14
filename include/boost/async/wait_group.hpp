@@ -23,24 +23,24 @@ struct wait_group
         return  detail::select_wrapper(waitables_);
     }
 
-    detail::wait_wrapper wait()
+    detail::gather_wrapper wait()
     {
-        return detail::wait_wrapper(waitables_);
+        return detail::gather_wrapper(waitables_);
 
     }
 
-    detail::wait_wrapper::awaitable_type operator co_await ()
+    detail::gather_wrapper::awaitable_type operator co_await ()
     {
-      return detail::wait_wrapper(waitables_).operator co_await();
+      return detail::gather_wrapper(waitables_).operator co_await();
     }
     /// swallow the exception here.
-    detail::wait_wrapper await_exit(std::exception_ptr ep)
+    detail::gather_wrapper await_exit(std::exception_ptr ep)
     {
         auto ct = ep ? ct_except_ : ct_normal_;
         if (ct != asio::cancellation_type::none || ep)
             for (auto & w : waitables_)
                 w.cancel(ct);
-        return detail::wait_wrapper(waitables_);
+        return detail::gather_wrapper(waitables_);
     }
 
     std::size_t size() const {return waitables_.size();}

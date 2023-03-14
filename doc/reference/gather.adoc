@@ -1,0 +1,23 @@
+[#gather]
+== async/gather.hpp
+
+The `gather` function can be used to `co_await` multiple <<awaitable>>s at once with properly connected cancellations.
+
+It can be called as a variadic function with multiple <<awaitable>> or as on a range of <<awaitable>>s.
+
+[source,cpp]
+----
+async::promise<void> task1();
+async::promise<void> task2();
+
+async::promise<void> do_gather()
+{
+  co_await async::gather(task1(), task2()); // <1>
+  std::vector<async::promise<void>> aws {task1(), task2()};
+  co_await async::gather(aws); // <2>
+}
+----
+<1> Wait for a variadic set of <<awaitable>>s
+<2> Wait for a vector of <<awaitable>>s
+
+The `gather` will invoke the functions of the `awaitable` as if used in a `co_await` expression.

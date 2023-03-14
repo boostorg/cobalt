@@ -37,7 +37,7 @@ include::reference/this_thread.adoc[]
 include::reference/channel.adoc[]
 include::reference/with.adoc[]
 include::reference/select.adoc[]
-include::reference/wait.adoc[]
+include::reference/gather.adoc[]
 include::reference/wait_group.adoc[]
 include::reference/spawn.adoc[]
 

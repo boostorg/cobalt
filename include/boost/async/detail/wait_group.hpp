@@ -10,7 +10,7 @@
 
 #include <boost/async/promise.hpp>
 #include <boost/async/select.hpp>
-#include <boost/async/wait.hpp>
+#include <boost/async/gather.hpp>
 
 #include <list>
 
@@ -70,12 +70,12 @@ struct select_wrapper
   }
 };
 
-struct wait_wrapper
+struct gather_wrapper
 {
-  using impl_type = decltype(wait(std::declval<std::list<promise<void>> &>()));
+  using impl_type = decltype(gather(std::declval<std::list<promise<void>> &>()));
   std::list<promise<void>> &waitables_;
 
-  wait_wrapper(std::list<promise<void>> &waitables) : waitables_(waitables)
+  gather_wrapper(std::list<promise<void>> &waitables) : waitables_(waitables)
   {
   }
 
@@ -111,7 +111,7 @@ struct wait_wrapper
     }
    private:
     std::list<promise<void>> &waitables_;
-    std::optional<decltype(wait(waitables_).operator co_await())> impl_;
+    std::optional<decltype(gather(waitables_).operator co_await())> impl_;
   };
 
   awaitable_type operator co_await()

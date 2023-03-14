@@ -270,7 +270,7 @@ async::main co_main(int argc, char * argv[])
                 sess.cancel();
 
             if (!sessions.empty())
-                co_await async::wait(sessions);
+                co_await async::gather(sessions);
             std::rethrow_exception(ex);
         }
     }
