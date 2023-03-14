@@ -67,4 +67,109 @@ static ::boost::async::task<void> Function()
 #define CO_TEST_CASE(...) CO_TEST_CASE_IMPL(DOCTEST_ANONYMOUS(CO_DOCTEST_ANON_FUNC_), __VA_ARGS__)
 // end::test_case_macro[]
 
+struct stop
+{
+  bool await_ready() {return false;}
+  void await_suspend(std::coroutine_handle<> h) { h.destroy(); }
+  void await_resume() {}
+};
+
+struct immediate
+{
+  int state = 0;
+  immediate() = default;
+  immediate(const immediate & i);
+  bool await_ready() {CHECK(state++ == 0  ); return true;}
+  void await_suspend(std::coroutine_handle<> h) { REQUIRE(false); }
+  void await_resume() {CHECK(state++ == 1);}
+
+  ~immediate()
+  {
+    CHECK(state == 2);
+  }
+};
+
+struct immediate_bool
+{
+  int state = 0;
+
+  bool await_ready() {CHECK(state++ == 0); return false;}
+  bool await_suspend(std::coroutine_handle<> h) { CHECK(state++ == 1); return false; }
+  void await_resume() {CHECK(state++ == 2);}
+
+  ~immediate_bool()
+  {
+    CHECK(state == 3);
+  }
+};
+
+struct immediate_handle
+{
+  int state = 0;
+
+  bool await_ready() {CHECK(state++ == 0); return false;}
+  std::coroutine_handle<> await_suspend(std::coroutine_handle<> h) { CHECK(state++ == 1); return h; }
+  void await_resume() {CHECK(state++ == 2);}
+
+  ~immediate_handle()
+  {
+    CHECK(state == 3);
+  }
+};
+
+
+struct posted
+{
+  int state = 0;
+
+  bool await_ready() {CHECK(state++ == 0); return false;}
+  void await_suspend(std::coroutine_handle<> h)
+  {
+    CHECK(state++ == 1);
+    boost::asio::post(boost::async::this_thread::get_executor(), h);
+  }
+  void await_resume() {CHECK(state++ == 2);}
+  ~posted()
+  {
+    CHECK(state == 3);
+  }
+};
+
+struct posted_bool
+{
+  int state = 0;
+
+  bool await_ready() {CHECK(state++ == 0); return false;}
+  bool await_suspend(std::coroutine_handle<> h)
+  {
+    CHECK(state++ == 1);
+    boost::asio::post(boost::async::this_thread::get_executor(), h);
+    return true;
+  }
+  void await_resume() {CHECK(state++ == 2);}
+  ~posted_bool()
+  {
+    CHECK(state == 3);
+  }
+};
+
+struct posted_handle
+{
+  int state = 0;
+
+  bool await_ready() {CHECK(state++ == 0); return false;}
+  std::coroutine_handle<> await_suspend(std::coroutine_handle<> h)
+  {
+    CHECK(state++ == 1);
+    return boost::async::detail::post_coroutine(
+        boost::async::this_thread::get_executor(), h
+        );
+  }
+  void await_resume() {CHECK(state++ == 2);}
+  ~posted_handle()
+  {
+    CHECK(state == 3);
+  }
+};
+
 #endif //BOOST_ASYNC_TEST2_HPP

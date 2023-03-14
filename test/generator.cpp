@@ -8,6 +8,7 @@
 #include <boost/async/generator.hpp>
 #include <boost/async/promise.hpp>
 #include <boost/async/select.hpp>
+#include <boost/async/op.hpp>
 
 #include <boost/asio.hpp>
 
@@ -136,6 +137,43 @@ CO_TEST_CASE("generator-select")
   g1.cancel();
   CHECK_THROWS(co_await g1);
   co_return ;
+}
+
+
+async::generator<int> gshould_unwind(asio::io_context & ctx)
+{
+  co_await asio::post(ctx, async::use_op);
+  co_return 0;
+}
+
+TEST_CASE("unwind")
+{
+  asio::io_context ctx;
+  boost::async::this_thread::set_executor(ctx.get_executor());
+  boost::ignore_unused(gshould_unwind(ctx));
+}
+
+
+async::generator<int> gen_stop()
+{
+  co_await async::this_coro::pro_active(true);
+  int val = 1u;
+  for (int i = 0; i < 10; i++)
+  {
+    if (i == 4)
+      co_await stop();
+    co_yield i;
+
+  }
+  co_return val;
+}
+
+
+CO_TEST_CASE("stop")
+{
+  auto g = gen_stop();
+  while (g)
+    co_await g;
 }
 
 TEST_SUITE_END();

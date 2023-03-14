@@ -249,7 +249,10 @@ struct select_variadic_impl
               if constexpr (all_void)
                 return sz;
               else if constexpr (std::is_void_v<decltype(std::get<sz>(aws).await_resume())>)
+              {
+                std::get<sz>(aws).await_resume();
                 return result_type(variant2::in_place_index<sz>);
+              }
               else
                 return result_type(variant2::in_place_index<sz>,
                                    std::get<sz>(aws).await_resume());

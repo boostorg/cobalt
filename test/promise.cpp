@@ -61,7 +61,6 @@ TEST_CASE("unwind")
   asio::io_context ctx;
   boost::async::this_thread::set_executor(ctx.get_executor());
   +should_unwind(ctx);
-
 }
 
 async::promise<int> return_(std::size_t ms)
@@ -140,6 +139,16 @@ CO_TEST_CASE("cancel-int")
 CO_TEST_CASE("throw-cpl-delay")
 {
   CHECK_THROWS(co_await throw_post());
+}
+
+CO_TEST_CASE("stop")
+{
+  CHECK_THROWS(
+    co_await
+        []() -> async::promise<void>
+        {
+          co_await stop();
+        }());
 }
 
 TEST_SUITE_END();

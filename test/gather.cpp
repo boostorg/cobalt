@@ -99,5 +99,41 @@ CO_TEST_CASE("list")
   CHECK_THROWS(res[3].value());
 }
 
+CO_TEST_CASE("compliance")
+{
+  auto exec = co_await asio::this_coro::executor;
+  {
+    auto d = wdummy(exec, std::chrono::milliseconds(1));
+    immediate i;
+    co_await gather(d, i);
+  }
+
+  {
+    auto d = wdummy(exec, std::chrono::milliseconds(1));
+    immediate_bool i;
+    co_await gather(d, i);
+  }
+
+  {
+    auto d = wdummy(exec, std::chrono::milliseconds(1));
+    immediate_handle i;
+    co_await gather(d, i);
+  }
+  {
+    auto d = wdummy(exec, std::chrono::milliseconds(1));
+    posted p;
+    co_await gather(d, p);
+  }
+  {
+    auto d = wdummy(exec, std::chrono::milliseconds(1));
+    posted_bool p;
+    co_await gather(d, p);
+  }
+  {
+    auto d = wdummy(exec, std::chrono::milliseconds(1));
+    posted_handle p;
+    co_await gather(d, p);
+  }
+}
 
 TEST_SUITE_END();

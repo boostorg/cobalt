@@ -227,4 +227,16 @@ TEST_CASE("throw-cpl-delay")
   CHECK_THROWS(ctx.run());
 }
 
+
+CO_TEST_CASE("stop")
+{
+  CHECK_THROWS(
+      co_await
+          []() -> async::task<int>
+          {
+            co_await stop();
+            co_return 42;
+          }());
+}
+
 TEST_SUITE_END();

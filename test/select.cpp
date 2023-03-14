@@ -87,4 +87,56 @@ CO_TEST_CASE("empty-list")
   CHECK_THROWS(co_await select(vec));
 }
 
+
+CO_TEST_CASE("stop")
+{
+  auto d = dummy(co_await asio::this_coro::executor,
+                 std::chrono::milliseconds(10));
+  CHECK((co_await select(d, stop())).index() == 0);
+}
+
+CO_TEST_CASE("compliance")
+{
+  auto exec = co_await asio::this_coro::executor;
+  auto d = dummy(exec, std::chrono::milliseconds(100000));
+  {
+    immediate i;
+    CHECK((co_await select(d, i)).index() == 1);
+  }
+
+  {
+    immediate_bool i;
+    CHECK((co_await select(d, i)).index() == 1);
+  }
+
+  {
+    immediate_handle i;
+    CHECK((co_await select(d, i)).index() == 1);
+  }
+  {
+    posted p;
+    CHECK((co_await select(d, p)).index() == 1);
+  }
+  {
+    posted_bool p;
+    CHECK((co_await select(d, p)).index() == 1);
+  }
+  {
+    posted_handle p;
+    CHECK((co_await select(d, p)).index() == 1);
+  }
+  d.cancel();
+  CHECK_THROWS(co_await d);
+}
+
+CO_TEST_CASE("compliance_ranged")
+{
+  CHECK(co_await async::select(std::vector<immediate>(3u))        == 0);
+  CHECK(co_await async::select(std::vector<immediate_bool>(1u))   == 0);
+  CHECK(co_await async::select(std::vector<immediate_handle>(1u)) == 0);
+  CHECK(co_await async::select(std::vector<posted>(3u))           == 0);
+  CHECK(co_await async::select(std::vector<posted_bool>(1u))      == 0);
+  CHECK(co_await async::select(std::vector<posted_handle>(1u))    == 0);
+}
+
 TEST_SUITE_END();
