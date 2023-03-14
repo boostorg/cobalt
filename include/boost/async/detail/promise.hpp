@@ -301,6 +301,7 @@ struct async_promise
       if (!this->receiver->done && !this->receiver->exception)
         this->receiver->exception = completed_unexpected();
       this->receiver->set_done();
+      this->receiver->awaited_from.reset(nullptr);
     }
 
   }

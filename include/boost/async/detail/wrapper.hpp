@@ -43,7 +43,7 @@ struct partial_promise_base
 
     void operator delete(void * raw, const std::size_t size)
     {
-        deallocate_coroutine<Allocator>(raw, size);
+      deallocate_coroutine<Allocator>(raw, size);
     }
 };
 

@@ -10,6 +10,8 @@
 
 #include <boost/async/task.hpp>
 
+#include <boost/smart_ptr/allocate_unique.hpp>
+
 namespace boost::async
 {
 template<typename T>
@@ -30,8 +32,7 @@ struct async_initiate
 
     auto dalloc = container::pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()};
     auto alloc = asio::get_associated_allocator(h, dalloc);
-    auto recs = std::allocate_shared<detail::task_receiver<T>>(
-        alloc, std::move(rec));
+    auto recs = allocate_unique<detail::task_receiver<T>>(alloc, std::move(rec));
 
     auto sl = asio::get_associated_cancellation_slot(h);
     if (sl.is_connected())
@@ -46,13 +47,12 @@ struct async_initiate
             asio::bind_allocator(
                 alloc,
                 [r = std::move(recs),
-                    h = std::move(h)]() mutable
+                 h = std::move(h)]() mutable
                 {
                   auto ex = r->exception;
                   auto rr = std::move(r->get_result());
-                  r = nullptr ;
+                  r.reset();
                   h(ex, std::move(rr));
-
                 }
             )
         )
@@ -69,7 +69,7 @@ struct async_initiate
       return asio::post(asio::append(h, a.receiver_.exception));
 
     auto alloc = asio::get_associated_allocator(h, container::pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()});
-    auto recs = std::allocate_shared<detail::task_receiver<void>>(alloc, std::move(a.receiver_));
+    auto recs = allocate_unique<detail::task_receiver<void>>(alloc, std::move(a.receiver_));
 
     if (recs->done)
       return asio::post(asio::append(h, recs->exception));
@@ -90,7 +90,7 @@ struct async_initiate
                  h = std::move(h)]() mutable
                 {
                   auto ex = r->exception;
-                  r = nullptr ;
+                  r.reset();
                   h(ex);
                 }
             )

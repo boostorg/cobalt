@@ -353,6 +353,7 @@ struct generator_promise
       if (!this->receiver->done && !this->receiver->exception)
         this->receiver->exception = detail::completed_unexpected();
       this->receiver->done = true;
+      this->receiver->awaited_from.reset(nullptr);
     }
   }
 

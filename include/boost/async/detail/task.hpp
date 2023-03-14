@@ -114,7 +114,11 @@ struct task_receiver : task_value_holder<T>
   ~task_receiver()
   {
     if (!done && promise && promise->receiver == this)
-        promise->receiver = nullptr;
+    {
+      promise->receiver = nullptr;
+      if (!promise->started)
+        std::coroutine_handle<task_promise<T>>::from_promise(*promise).destroy();
+    }
   }
 
   task_receiver(task_promise<T> * promise)
@@ -256,7 +260,22 @@ struct task_promise
       : promise_memory_resource_base(detail::get_memory_resource_from_args(args...))
   {}
 
-  std::suspend_always initial_suspend()        {return {};}
+  auto initial_suspend()
+  {
+    struct initial_awaitable
+    {
+      task_promise * promise;
+
+      bool await_ready() const noexcept {return false;}
+      void await_suspend(std::coroutine_handle<>) {}
+
+      void await_resume()
+      {
+        promise->started = true;
+      }
+    };
+    return initial_awaitable{this};
+  }
   auto final_suspend() noexcept
   {
     struct final_awaitable
@@ -300,10 +319,11 @@ struct task_promise
       if (!this->receiver->done && !this->receiver->exception)
         this->receiver->exception = completed_unexpected();
       this->receiver->set_done();
+      this->receiver->awaited_from.reset(nullptr);
     }
 
   }
-
+  bool started = false;
   friend struct async_initiate;
 };
 
