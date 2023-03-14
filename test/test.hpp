@@ -11,6 +11,24 @@
 
 #include "doctest.h"
 
+template<>
+struct doctest::StringMaker<std::exception_ptr>
+{
+  static String convert(std::exception_ptr ex)
+  {
+    if (!ex)
+      return "null";
+    try
+    {
+      std::rethrow_exception(ex);
+    }
+    catch(std::exception & ex)
+    {
+      return ex.what();
+    }
+  }
+};
+
 inline auto test_run(boost::async::task<void> (*func) ())
 {
   using namespace boost;

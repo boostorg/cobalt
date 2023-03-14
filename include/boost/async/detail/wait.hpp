@@ -66,34 +66,32 @@ struct wait_shared_state
   }
 };
 
-struct get_resume_result
+
+template<typename Awaitable>
+auto get_resume_result(Awaitable & aw) -> system::result<decltype(aw.await_resume()), std::exception_ptr>
 {
-  template<typename Awaitable>
-  auto operator()(Awaitable & aw) const -> system::result<decltype(aw.await_resume()), std::exception_ptr>
+  using type = decltype(aw.await_resume());
+  try
   {
-    using type = decltype(aw.await_resume());
-    try
+    if constexpr (std::is_void_v<type>)
     {
-      if constexpr (std::is_void_v<type>)
-      {
-        aw.await_resume();
-        return {};
-      }
-      else
-        return aw.await_resume();
+      aw.await_resume();
+      return {};
     }
-    catch(...)
-    {
-      return std::current_exception();
-    }
+    else
+      return aw.await_resume();
   }
-};
+  catch(...)
+  {
+    return std::current_exception();
+  }
+}
 
 
 template<typename ... Args>
 struct wait_variadic_impl
 {
-  using tuple_type = std::tuple<decltype(get_awaitable_type(std::declval<Args>()))...>;
+  using tuple_type = std::tuple<decltype(get_awaitable_type(std::declval<Args&&>()))...>;
 
   wait_variadic_impl(Args && ... args)
       : args{std::forward<Args>(args)...}
@@ -108,10 +106,7 @@ struct wait_variadic_impl
   {
     template<std::size_t ... Idx>
     awaitable(std::tuple<Args...> & args, std::index_sequence<Idx...>) :
-        aws{
-            get_awaitable_type(
-                static_cast<std::tuple_element_t<Idx, std::tuple<Args...>>&&>(std::get<Idx>(args))
-            )...}
+        aws(awaitable_type_getter<Args>(std::get<Idx>(args))...)
     {
     }
 
@@ -128,46 +123,67 @@ struct wait_variadic_impl
 
     wait_shared_state wss;
 
+    template<typename T>
+    using result_part = system::result<co_await_result_t<T>, std::exception_ptr>;
+
+    std::tuple<result_part<Args> ...> result
+        {
+          result_part<Args>{system::in_place_error, std::exception_ptr()}...
+        };
+
     bool await_ready(){return std::find(ready.begin(), ready.end(), false) == ready.end();};
 
-    template<typename Aw>
+    template<std::size_t Idx, typename Aw>
     void await_suspend_step(
-        asio::io_context::executor_type exec,
-        Aw && aw, std::size_t idx)
+        asio::io_context::executor_type exec, Aw && aw)
     {
-      if (!ready[idx])
+      if (!ready[Idx])
         suspend_for_callback(
-            aw,
-            asio::bind_cancellation_slot(
-                cancel[idx].slot(),
-                asio::bind_executor(
-                    exec,
-                    asio::bind_allocator(alloc, wss.get_completer())
-                )
+          aw,
+          asio::bind_cancellation_slot(
+            cancel[Idx].slot(),
+            asio::bind_executor(
+              exec,
+              asio::bind_allocator(
+                alloc,
+                [this, &aw, c = wss.get_completer()]() mutable
+                {
+                  std::get<Idx>(result) = get_resume_result(aw);
+                  c();
+                }
+              )
             )
+          )
         );
+      else
+        std::get<Idx>(result) = get_resume_result(aw);
     }
 
     template<typename H>
     auto await_suspend(std::coroutine_handle<H> h)
     {
       std::size_t idx = 0u;
-      mp11::tuple_for_each(
-          aws,
-          [&](auto && aw)
+      mp11::mp_for_each<mp11::mp_iota_c<sizeof...(Args)>>
+          ([&](auto idx)
           {
-            await_suspend_step(h.promise().get_executor(), aw, idx++);
+            auto & aw = std::get<idx>(aws);
+            if constexpr (requires {h.promise().get_executor();})
+              await_suspend_step<idx>(h.promise().get_executor(), aw);
+            else
+              await_suspend_step<idx>(this_thread::get_executor(), aw);
           });
       if (wss.use_count == 0) // already done, no need to suspend
         return false;
 
-      // arm the cnacel
-      h.promise().get_cancellation_slot().assign(
-          [&](asio::cancellation_type ct)
-          {
-            for (auto & cs : cancel)
-              cs.emit(ct);
-          });
+      // arm the cancel
+      if constexpr (requires {h.promise().get_cancellation_slot();})
+        if (h.promise().get_cancellation_slot().is_connected())
+          h.promise().get_cancellation_slot().assign(
+              [&](asio::cancellation_type ct)
+              {
+                for (auto & cs : cancel)
+                  cs.emit(ct);
+              });
 
       wss.h.reset(h.address());
       return true;
@@ -176,12 +192,13 @@ struct wait_variadic_impl
     auto await_resume()
     {
       wss.h.release();
-      return mp11::tuple_transform(get_resume_result{}, aws);
+      return std::move(result);
+      //return mp11::tuple_transform(get_resume_result{}, aws);
     }
   };
   awaitable operator co_await() &&
   {
-    return awaitable{args, std::make_index_sequence<sizeof...(Args)>{}};
+    return awaitable(args, std::make_index_sequence<sizeof...(Args)>{});
   }
 };
 
@@ -215,6 +232,11 @@ struct wait_ranged_impl
 
     container::pmr::vector<bool> ready{std::size(aws), alloc};
     container::pmr::vector<asio::cancellation_signal> cancel{std::size(aws), alloc};
+    container::pmr::vector<result_type> result{
+          cancel.size(),
+          result_type{system::in_place_error, std::exception_ptr()},
+          this_thread::get_allocator()};
+
 
     awaitable(Range & aws_, std::false_type /* needs co_await */)
       : res((256 + sizeof(co_awaitable_type<type>)) * std::size(aws_),
@@ -225,7 +247,7 @@ struct wait_ranged_impl
     {
       aws.reserve(std::size(aws_));
       for (auto && a : aws_)
-        aws.push_back(get_awaitable_type(std::forward<decltype(a)>(a)));
+        aws.emplace_back(awaitable_type_getter<decltype(a)>(std::forward<decltype(a)>(a)));
 
       std::transform(std::begin(this->aws),
                      std::end(this->aws),
@@ -252,6 +274,12 @@ struct wait_ranged_impl
     auto await_suspend(std::coroutine_handle<H> h)
     {
       // default cb
+      std::optional<asio::io_context::executor_type> exec;
+      if constexpr (requires {h.promise().get_executor();})
+        exec = h.promise().get_executor();
+      else
+        exec = this_thread::get_executor();
+
       std::size_t idx = 0u;
       for (auto && aw : aws)
       {
@@ -261,25 +289,38 @@ struct wait_ranged_impl
               asio::bind_cancellation_slot(
                   cancel[idx].slot(),
                   asio::bind_executor(
-                      h.promise().get_executor(),
-                      asio::bind_allocator(alloc, wss.get_completer())
+                    *exec,
+                    asio::bind_allocator(
+                      alloc,
+                      [this, c = wss.get_completer(), idx]() mutable
+                      {
+                        result[idx] = get_resume_result(aws[idx]);
+                        c();
+                      }
+                    )
                   )
               )
           );
+        else
+          result[idx] = get_resume_result(aws[idx]);
         idx ++;
       }
       if (wss.use_count == 0) // already done, no need to suspend
         return false;
 
       // arm the cancel
-      sl = h.promise().get_cancellation_slot();
-      if (sl.is_connected())
-          sl.assign(
-            [&](asio::cancellation_type ct)
-            {
-              for (auto & cs : cancel)
-                cs.emit(ct);
-            });
+      if constexpr (requires {h.promise().get_cancellation_slot();})
+        if (h.promise().get_cancellation_slot().is_connected())
+        {
+          sl = h.promise().get_cancellation_slot();
+          if (sl.is_connected())
+            sl.assign(
+                [&](asio::cancellation_type ct)
+                {
+                  for (auto & cs : cancel)
+                    cs.emit(ct);
+                });
+        }
 
       wss.h.reset(h.address());
       return true;
@@ -291,11 +332,7 @@ struct wait_ranged_impl
     {
       sl.clear();
       ignore_unused(wss.h.release());
-      container::pmr::vector<result_type> result{this_thread::get_allocator()};
-      result.reserve(std::size(aws));
-      for (auto & pp : aws)
-        result.push_back(get_resume_result{}(pp));
-      return result;
+      return std::move(result);
     }
   };
   awaitable operator co_await() && {return awaitable{aws};}

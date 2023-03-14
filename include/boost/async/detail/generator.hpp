@@ -174,7 +174,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
       if (self->exception)
         std::rethrow_exception(std::exchange(self->exception, nullptr));
       if (!self->result)
-        boost::throw_exception(std::logic_error("async::generator returned"));
+        boost::throw_exception(std::logic_error("async::generator returned"), BOOST_CURRENT_LOCATION);
 
       BOOST_ASSERT(to_push.index() > 0u);
 

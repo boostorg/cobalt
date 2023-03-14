@@ -56,11 +56,11 @@ struct channel
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
     void (*begin_transaction)(void*);
 
-    void unlink()
+    void transactional_unlink()
     {
-      intrusive::list_base_hook<intrusive::link_mode<intrusive::auto_unlink> >::unlink();
       if (begin_transaction)
           begin_transaction(awaited_from.get());
+      this->unlink();
     }
 
     struct cancel_impl;
@@ -82,11 +82,11 @@ struct channel
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
     void (*begin_transaction)(void*);
 
-    void unlink()
+    void transactional_unlink()
     {
-      intrusive::list_base_hook<intrusive::link_mode<intrusive::auto_unlink> >::unlink();
       if (begin_transaction)
           begin_transaction(awaited_from.get());
+      this->unlink();
     }
 
     struct cancel_impl;
@@ -151,11 +151,11 @@ struct channel<void>
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
     void (*begin_transaction)(void*);
 
-    void unlink()
+    void transactional_unlink()
     {
-      intrusive::list_base_hook<intrusive::link_mode<intrusive::auto_unlink> >::unlink();
       if (begin_transaction)
           begin_transaction(awaited_from.get());
+      this->unlink();
     }
 
     struct cancel_impl;
@@ -175,15 +175,18 @@ struct channel<void>
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
     void (*begin_transaction)(void*);
 
-    void unlink()
+    void transactional_unlink()
     {
-      intrusive::list_base_hook<intrusive::link_mode<intrusive::auto_unlink> >::unlink();
       if (begin_transaction)
           begin_transaction(awaited_from.get());
+      this->unlink();
     }
 
     struct cancel_impl;
-    bool await_ready() { return chn->n_ < chn->limit_; }
+    bool await_ready()
+    {
+      return chn->n_ < chn->limit_;
+    }
 
     template<typename Promise>
     std::coroutine_handle<void> await_suspend(std::coroutine_handle<Promise> h);

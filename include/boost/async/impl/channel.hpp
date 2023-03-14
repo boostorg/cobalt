@@ -9,7 +9,9 @@
 #define BOOST_ASYNC_IMPL_CHANNEL_HPP
 
 #include <boost/async/channel.hpp>
+
 #include <boost/asio/post.hpp>
+#include <boost/core/demangle.hpp>
 
 namespace boost::async
 {
@@ -72,8 +74,8 @@ template<typename Promise>
 std::coroutine_handle<void> channel<T>::read_op::await_suspend(std::coroutine_handle<Promise> h)
 {
   if constexpr (requires (Promise p) {p.get_cancellation_slot();})
-  if ((cancel_slot = h.promise().get_cancellation_slot()).is_connected())
-    cancel_slot.emplace<cancel_impl>(this);
+    if ((cancel_slot = h.promise().get_cancellation_slot()).is_connected())
+      cancel_slot.emplace<cancel_impl>(this);
 
   if (awaited_from)
     boost::throw_exception(std::runtime_error("already-awaited"), loc);
@@ -90,7 +92,7 @@ std::coroutine_handle<void> channel<T>::read_op::await_suspend(std::coroutine_ha
   else
   {
     auto & op = chn->write_queue_.front();
-    op.unlink();
+    op.transactional_unlink();
     op.direct = true;
     if (op.ref.index() == 0)
       direct = std::move(*variant2::get<0>(op.ref));
@@ -125,7 +127,7 @@ T channel<T>::read_op::await_resume()
     BOOST_ASSERT(chn->read_queue_.empty());
     if (op.await_ready())
     {
-      op.unlink();
+      op.transactional_unlink();
       BOOST_ASSERT(op.awaited_from);
       asio::post(
           chn->executor_,
@@ -178,7 +180,7 @@ std::coroutine_handle<void> channel<T>::write_op::await_suspend(std::coroutine_h
   else
   {
     auto & op = chn->read_queue_.front();
-    op.unlink();
+    op.transactional_unlink();
     if (ref.index() == 0)
       op.direct = std::move(*variant2::get<0>(ref));
     else
@@ -220,7 +222,7 @@ void channel<T>::write_op::await_resume()
     BOOST_ASSERT(chn->write_queue_.empty());
     if (op.await_ready())
     {
-      op.unlink();
+      op.transactional_unlink();
       BOOST_ASSERT(op.awaited_from);
       asio::post(
           chn->executor_,
@@ -314,7 +316,6 @@ std::coroutine_handle<void> channel<void>::write_op::await_suspend(std::coroutin
   // currently nothing to read
   if constexpr (requires (Promise p) {p.begin_transaction();})
     begin_transaction = +[](void * p){std::coroutine_handle<Promise>::from_address(p).promise().begin_transaction();};
-
 
   if (chn->read_queue_.empty())
   {

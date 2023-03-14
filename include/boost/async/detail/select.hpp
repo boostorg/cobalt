@@ -87,10 +87,7 @@ struct select_variadic_impl
   {
     template<std::size_t ... Idx>
     awaitable(std::tuple<Args...> & args, std::index_sequence<Idx...>) :
-        aws{
-            get_awaitable_type(
-                static_cast<std::tuple_element_t<Idx, std::tuple<Args...>>&&>(std::get<Idx>(args))
-            )...}
+        aws{awaitable_type_getter<Args>(std::get<Idx>(args))...}
     {
     }
 
@@ -144,13 +141,14 @@ struct select_variadic_impl
         asio::io_context::executor_type exec,
         Aw && aw, std::size_t idx)
     {
-      this->cancel[idx] = &this->cancel_[idx];
+      this->cancel[idx] = &this->cancel_[idx];\
       suspend_for_callback_with_transaction(
         aw,
         [this, idx]
         {
           if (this->index != std::numeric_limits<std::size_t>::max())
-            boost::throw_exception(std::logic_error("Another transaction already started"));
+            boost::throw_exception(std::logic_error("Another transaction already started"),
+                                   BOOST_CURRENT_LOCATION);
           this->cancel[idx] = nullptr;
           this->index = idx;
           this->cancel_all(idx);
@@ -186,19 +184,24 @@ struct select_variadic_impl
             if (index != std::numeric_limits<std::size_t>::max())
               return ; // one coro did a direct complete
             spawned = idx;
-            await_suspend_step(h.promise().get_executor(), aw, idx++);
+            if constexpr (requires {h.promise().get_executor();})
+              await_suspend_step(h.promise().get_executor(), aw, idx++);
+            else
+              await_suspend_step(this_thread::get_executor(), aw, idx++);
           });
       if (sss.use_count == 0) // already done, no need to suspend
         return false;
 
-      // arm the cnacel
-      h.promise().get_cancellation_slot().assign(
-          [&](asio::cancellation_type ct)
-          {
-            for (auto & cs : cancel)
-              if (cs)
-                  cs->emit(ct);
-          });
+      // arm the cancel
+      if constexpr (requires {h.promise().get_cancellation_slot();})
+        if (h.promise().get_cancellation_slot().is_connected())
+          h.promise().get_cancellation_slot().assign(
+              [&](asio::cancellation_type ct)
+              {
+                for (auto & cs : cancel)
+                  if (cs)
+                      cs->emit(ct);
+              });
       if (index == std::numeric_limits<std::size_t>::max())
       {
         sss.h.reset(h.address());
@@ -209,8 +212,16 @@ struct select_variadic_impl
 
     }
 
-    auto await_resume()
-      -> variant2::variant<co_await_result_t<Args>...>
+
+    template<typename T>
+    using void_as_monostate = std::conditional_t<std::is_void_v<T>, variant2::monostate, T>;
+    constexpr static bool all_void = (std::is_void_v<co_await_result_t<Args>> && ... );
+    using result_type = std::conditional_t<
+              all_void,
+              std::size_t,
+              variant2::variant<void_as_monostate<co_await_result_t<Args>>...>>;
+
+    result_type await_resume()
     {
       if (index == std::numeric_limits<std::size_t>::max())
         index = std::distance(ready.begin(), std::find(ready.begin(), ready.end(), true));
@@ -229,14 +240,20 @@ struct select_variadic_impl
             catch (...) {}
           });
 
+
       return mp11::mp_with_index<sizeof...(Args)>(
           index,
-          [this](auto idx) -> variant2::variant<co_await_result_t<Args>...>
+          [this](auto idx) -> result_type
           {
               constexpr std::size_t sz = idx;
-              return variant2::variant<co_await_result_t<Args>...>(
-                variant2::in_place_index<sz>,
-                std::get<sz>(aws).await_resume());
+              if constexpr (all_void)
+                return sz;
+              else if constexpr (std::is_void_v<decltype(std::get<sz>(aws).await_resume())>)
+                return result_type(variant2::in_place_index<sz>);
+              else
+                return result_type(variant2::in_place_index<sz>,
+                                   std::get<sz>(aws).await_resume());
+
           });
     }
   };
@@ -284,7 +301,7 @@ struct select_ranged_impl
     {
       aws.reserve(std::size(aws_));
       for (auto && a : aws_)
-        aws.push_back(get_awaitable_type(std::forward<decltype(a)>(a)));
+        aws.emplace_back(awaitable_type_getter<decltype(a)>(std::forward<decltype(a)>(a)));
 
       std::transform(std::begin(this->aws),
                      std::end(this->aws),
@@ -343,7 +360,8 @@ struct select_ranged_impl
           [this, idx]
           {
             if (this->index != std::numeric_limits<std::size_t>::max())
-              boost::throw_exception(std::logic_error("Another transaction already started"));
+              boost::throw_exception(std::logic_error("Another transaction already started"),
+                                     BOOST_CURRENT_LOCATION);
             this->cancel[idx] = nullptr;
             this->index = idx;
             this->cancel_all(idx);
@@ -377,20 +395,25 @@ struct select_ranged_impl
         if (index != std::numeric_limits<std::size_t>::max())
           break; // one coro did a direct complete
         spawned = idx;
-        await_suspend_step(h.promise().get_executor(), aw, idx++);
+        if constexpr (requires {h.promise().get_executor();})
+          await_suspend_step(h.promise().get_executor(), aw, idx++);
+        else
+          await_suspend_step(this_thread::get_executor(), aw, idx++);
       }
 
       if (sss.use_count == 0) // already done, no need to suspend
         return false;
 
-      // arm the cnacel
-      h.promise().get_cancellation_slot().assign(
-          [&](asio::cancellation_type ct)
-          {
-            for (auto & cs : cancel)
-              if (cs)
-                cs->emit(ct);
-          });
+      // arm the cancel
+      if constexpr (requires {h.promise().get_cancellation_slot();})
+        if (h.promise().get_cancellation_slot().is_connected())
+          h.promise().get_cancellation_slot().assign(
+              [&](asio::cancellation_type ct)
+              {
+                for (auto & cs : cancel)
+                  if (cs)
+                    cs->emit(ct);
+              });
       if (index == std::numeric_limits<std::size_t>::max())
       {
         sss.h.reset(h.address());

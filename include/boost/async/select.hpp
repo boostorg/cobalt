@@ -10,25 +10,28 @@
 
 #include <boost/async/concepts.hpp>
 #include <boost/async/detail/select.hpp>
+#include <boost/async/detail/wrapper.hpp>
 
 namespace boost::async
 {
 
-template<asio::cancellation_type Ct = asio::cancellation_type::all, awaitable ... Promise>
+template<asio::cancellation_type Ct = asio::cancellation_type::all,
+         awaitable<detail::transactable_coroutine_promise<>> ... Promise>
 auto select(Promise && ... p) -> detail::select_variadic_impl<Ct, Promise ...>
 {
-  return detail::select_variadic_impl<Ct, Promise ...>(std::forward<Promise>(p)...);
+  return detail::select_variadic_impl<Ct, Promise ...>(static_cast<Promise&&>(p)...);
 }
 
 
 template<asio::cancellation_type Ct = asio::cancellation_type::all, typename PromiseRange>
-  requires awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>>
+  requires awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>,
+                     detail::transactable_coroutine_promise<>>
 auto select(PromiseRange && p)
 {
   if (std::empty(p))
     throw_exception(std::invalid_argument("empty range selected"));
 
-  return detail::select_ranged_impl<Ct, PromiseRange>{std::forward<PromiseRange>(p)};
+  return detail::select_ranged_impl<Ct, PromiseRange>{static_cast<PromiseRange&&>(p)};
 }
 
 

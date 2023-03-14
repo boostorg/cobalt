@@ -73,7 +73,6 @@ void channel<void>::read_op::await_resume()
 }
 
 void channel<void>::write_op::await_resume()
-
 {
   if (cancel_slot.is_connected())
     cancel_slot.clear();

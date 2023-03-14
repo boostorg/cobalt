@@ -45,10 +45,10 @@ struct [[nodiscard]] promise
       return !receiver_.done || !receiver_.result_taken;
     }
 
-    Return get()
+    Return get(const boost::source_location & loc = BOOST_CURRENT_LOCATION)
     {
       if (!ready())
-        boost::throw_exception(std::logic_error("promise not ready"));
+        boost::throw_exception(std::logic_error("promise not ready"), loc);
 
       receiver_.rethrow_if();
       return receiver_.get_result();

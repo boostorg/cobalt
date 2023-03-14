@@ -15,20 +15,20 @@ namespace boost::async
 {
 
 
-template<awaitable ... Promise>
+template<awaitable<detail::immediate_coroutine_promise<>> ... Promise>
 auto wait(Promise && ... p)
 {
   return detail::wait_variadic_impl<Promise ...>(
-      std::forward<Promise>(p)...);
+      static_cast<Promise&&>(p)...);
 }
 
 
 template<typename PromiseRange>
-  requires awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>>
+  requires awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>,
+                     detail::immediate_coroutine_promise<>>
 auto wait(PromiseRange && p)
 {
-  using type = std::decay_t<decltype(*std::begin(std::declval<PromiseRange>()))>;
-  return detail::wait_ranged_impl<PromiseRange>(std::forward<PromiseRange>(p));
+  return detail::wait_ranged_impl<PromiseRange>{static_cast<PromiseRange&&>(p)};
 }
 
 

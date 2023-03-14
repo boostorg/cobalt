@@ -206,14 +206,25 @@ CO_TEST_CASE("str")
     CHECK(seq[14] == 7);
     CHECK(seq[15] == 17);
 }
-/*
+
 CO_TEST_CASE("selectable")
 {
-    async::channel<int> ci{1u};
-    async::channel<void> cv{1u};
-
+    async::channel<int>  ci{0u};
+    async::channel<void> cv{0u};
     auto [r1, r2] = co_await async::wait(async::select(ci.read(), cv.read()), cv.write());
+    CHECK(r1->index() == 1u);
+    CHECK(!r2.has_error());
 }
-*/
+
+CO_TEST_CASE("selectable-1")
+{
+  async::channel<int>  ci{1u};
+  async::channel<void> cv{1u};
+  auto [r1, r2] = co_await async::wait(
+      async::select(ci.read(), cv.read()),
+      cv.write());
+  CHECK(r1->index() == 1u);
+  CHECK(!r2.has_error());
+}
 
 TEST_SUITE_END();
