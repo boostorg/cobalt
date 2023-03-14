@@ -59,7 +59,7 @@ struct thread
 
   std::thread thread_;
   std::shared_ptr<detail::thread_promise::state_t> state_;
-  friend struct detail::thread_promise;;
+  friend struct detail::thread_promise;
 };
 
 

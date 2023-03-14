@@ -47,7 +47,7 @@ TEST_CASE("immediate")
 {
   boost::asio::io_context ctx;
   boost::async::this_thread::set_executor(ctx.get_executor());
-  bool called;
+  bool called = false;
   auto l = [&]{called = true;};
   auto h = boost::async::detail::immediate_coroutine(l);
   h.destroy();
@@ -63,7 +63,7 @@ TEST_CASE("immediate")
 {
   boost::asio::io_context ctx;
   boost::async::this_thread::set_executor(ctx.get_executor());
-  bool called;
+  bool called = false;
   auto l = [&]{called = true;};
   auto t = []{CHECK(false);};
   auto h = boost::async::detail::transactable_coroutine(t, l);

@@ -58,7 +58,7 @@ CO_TEST_CASE("sync")
             &ft,
             [](finalizer_test * ft)
             {
-                throw 42;
+                throw std::runtime_error("42");
             }));
 
 
@@ -74,8 +74,8 @@ CO_TEST_CASE("async")
                     &ft,
                     [](finalizer_test * ft) -> boost::async::promise<void>
                     {
-                        throw 42;
-                        co_return;
+                      throw std::runtime_error("42");
+                      co_return;
                     }));
 
 
