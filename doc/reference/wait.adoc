@@ -20,3 +20,4 @@ async::promise<void> do_wait()
 <1> Wait for a variadic set of <<awaitable>>s
 <2> wait for a vector of <<awaitable>>s
 
+The `wait` will invoke the functions of the `awaitable` as if used in a `co_await` expression.
