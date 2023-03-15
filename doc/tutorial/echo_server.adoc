@@ -38,9 +38,10 @@ This is a coroutine that can be co_awaited multiple times, while it `co_yield` u
 ----
 include::../../example/echo_server.cpp[tag=listen]
 ----
-<1> Cancellation will also lead to an exception here
-<2> Asynchronously accept the connection
-<3> Yield it to the awaiting coroutine
+<1> Set the generator to `pro_active` mode.
+<2> Cancellation will also lead to an exception here
+<3> Asynchronously accept the connection
+<4> Yield it to the awaiting coroutine
 
 With those two functions we can now write the server:
 
@@ -50,10 +51,9 @@ With those two functions we can now write the server:
 ----
 include::../../example/echo_server.cpp[tag=run_server]
 ----
-<1> Set the generator to `pro_active` mode.
-<2> Constructor the listener (destruction will cause cancellation!)
-<3> When we have more than 10 workers, we wait for one to finish
-<4> Accept a new connection & launch it.
+<1> Constructor the listener (destruction will cause cancellation!)
+<2> When we have more than 10 workers, we wait for one to finish
+<3> Accept a new connection & launch it.
 
 The <<wait_group, wait_group>> is used to manage the running echo functions.
 This class will cancel & await the running `echo` coroutines.
