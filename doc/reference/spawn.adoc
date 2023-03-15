@@ -10,3 +10,19 @@ auto spawn(asio::io_context & context, task<T>    && t, CompletionToken&& token)
 auto spawn(Executor executor,          task<T>    && t, CompletionToken&& token);
 ----
 
+=== Example
+
+[source,cpp]
+----
+async::task<int> work();
+
+int main(int argc, char *argv[])
+{
+  asio::io_context ctx;
+  auto f = spawn(ctx, work(), asio::use_future);
+  ctx.run();
+
+  return f.get();
+}
+----
+

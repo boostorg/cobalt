@@ -18,9 +18,9 @@ and is the easiest way to enter asynchronous code.
 In this example we use the <<main>> header, which provides us with a main coroutine if `co_main`
 is defined as above. This has a few advantages:
 
- - The environment get set up correctly (executor & memory)
- - asio is signaled, that the context is single threaded
- - the asio::signal_set is connected to cancellations (i.e. `Ctrl+C` causes cancellations)
+ - The environment get set up correctly (`executor` & `memory`)
+ - asio is signaled that the context is single threaded
+ - an `asio::signal_set` with `SIGINT` & `SIGTERM` is automatically connected to cancellations (i.e. `Ctrl+C` causes cancellations)
 
 This coroutine then has an executor in it's promisefootnote:[the promise the C++ name for a coroutine state.
 Not to be confused with <<promise>>] which we can obtain through the dummy-<<awaitable, awaitable>>s in
@@ -34,7 +34,7 @@ We can then construct a timer and initiate the `async_wait` with <<use_op>>.
 The problem with this interaction with asio is that asio doesn't do a pre-suspend check.
 That is, the coroutine will suspend even if the timer is ready (because the delay is zero).
 
-To leverage the coroutine properties, `async` provides an easy way to create a skippable operation:
+To leverage the coroutine properties, `async` provides an easy way to create a skipable operation:
 
 .example/delay_op.cpp
 [example]
@@ -48,3 +48,4 @@ include::../../example/delay_op.cpp[tag=timer_example]
 <4> Use the <<op, op>> just like any other awaitable.
 
 This way we can minimize the amounts of coroutine suspensions.
+

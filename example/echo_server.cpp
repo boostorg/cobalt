@@ -29,7 +29,7 @@ async::promise<void> echo(tcp_socket socket)
 {
   try // <1>
   {
-    char data[1024];
+    char data[4096];
     while (socket.is_open()) // <2>
     {
       std::size_t n = co_await socket.async_read_some(boost::asio::buffer(data)); // <3>
@@ -47,11 +47,12 @@ async::promise<void> echo(tcp_socket socket)
 // tag::listen[]
 async::generator<tcp_socket> listen()
 {
+  co_await this_coro::pro_active(true); // <1>
   tcp_acceptor acceptor({co_await async::this_coro::executor}, {tcp::v4(), 55555});
-  for (;;) // <1>
+  for (;;) // <2>
   {
-    tcp_socket sock = co_await acceptor.async_accept(); // <2>
-    co_yield std::move(sock); // <3>
+    tcp_socket sock = co_await acceptor.async_accept(); // <3>
+    co_yield std::move(sock); // <4>
   }
 }
 // end::listen[]

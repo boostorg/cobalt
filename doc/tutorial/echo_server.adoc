@@ -1,6 +1,6 @@
 == echo server
 
-Let's write an echo server. We'll be using the `use_op` token everywhere,
+We'll be using the `use_op` token everywhere,
 so we're using a default completion token:
 
 .example/echo_server.cpp declarations
@@ -11,7 +11,8 @@ include::../../example/echo_server.cpp[tag=decls]
 ----
 
 We're writing the echo function as a <<promise, promise>> coroutine.
-The promise is pretty much the default coroutine; it's an eager coroutine
+It's an eager coroutine and recommended as the default;
+in case a lazy coro is needed, <<task, task>> is available.
 
 .example/echo_server.cpp echo function
 [example]
@@ -49,9 +50,10 @@ With those two functions we can now write the server:
 ----
 include::../../example/echo_server.cpp[tag=run_server]
 ----
-<1> Constructor the listener (destruction will cause cancellation!)
-<2> When we have more than 10 workers, we wait for one to finish
-<3> Accept a new connection & launch it.
+<1> Set the generator to `pro_active` mode.
+<2> Constructor the listener (destruction will cause cancellation!)
+<3> When we have more than 10 workers, we wait for one to finish
+<4> Accept a new connection & launch it.
 
 The <<wait_group, wait_group>> is used to manage the running echo functions.
 This class will cancel & await the running `echo` coroutines.

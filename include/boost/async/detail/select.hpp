@@ -141,7 +141,7 @@ struct select_variadic_impl
         asio::io_context::executor_type exec,
         Aw && aw, std::size_t idx)
     {
-      this->cancel[idx] = &this->cancel_[idx];\
+      this->cancel[idx] = &this->cancel_[idx];
       suspend_for_callback_with_transaction(
         aw,
         [this, idx]
@@ -256,7 +256,6 @@ struct select_variadic_impl
               else
                 return result_type(variant2::in_place_index<sz>,
                                    std::get<sz>(aws).await_resume());
-
           });
     }
   };

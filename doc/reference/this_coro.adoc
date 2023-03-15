@@ -59,7 +59,7 @@ either the default resource or one passed following a `std::allocator_arg` argum
 Likewise, it will add `operator new` overloads so the coroutine uses the same memory resource for it's frame allocation.
 
 [#promise_throw_if_cancelled_base]
-=== Throw is cancelled
+=== Throw if cancelled
 
 The `promise_throw_if_cancelled_base` provides the basic options to allow operation to enable a coroutines
 to turn a set cancellation state into a cancellation.
@@ -70,7 +70,7 @@ co_await async::this_coro::throw_if_cancelled;
 ----
 
 [#promise_cancellation_base]
-=== Promise is cancellable
+=== Cancellation state
 
 The `promise_cancellation_base` provides the basic options to allow operation to enable a coroutines
 to have a cancellation_state that is resettable by

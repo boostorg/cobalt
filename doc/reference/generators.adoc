@@ -77,8 +77,28 @@ Which will generate the following output
  In coro 3
  In main 4
 
-=== Executor
+
+[#pro_active]
+=== Pro-Active mode
+
+By default, the generator is eager until the first resumption,
+and then lazily waits to be resumed. This can however be undesired,
+e.g. if the generator does some async work, like polling a website.
+
+If this is desired behaviour the generator can be set to `pro_active` mode:
+
+[source,cpp]
+----
+co_await this_coro::pro_active(true);
+----
+
+This will cause the generator to `post` it's own continuation onto the executor
+and thus resume when the caller suspends for some async operation.
+
+NOTE: this is inefficient for synchronous generators.
+
 [#generator-executor]
+=== Executor
 
 The executor is taken from the `thread_local` <<this_thread, get_executor>> function, unless a `asio::executor_arg` is used
 in any position followed by the executor argument.

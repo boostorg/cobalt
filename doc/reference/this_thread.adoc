@@ -1,7 +1,8 @@
 [#this_thread]
 == async/this_thread.hpp
 
-Since everything is single threaded this library can provide an executor & default memory-resource per thread.
+Since everything is single threaded this library provides an executor
+& default memory-resource for every thread.
 
 [source,cpp]
 ----
