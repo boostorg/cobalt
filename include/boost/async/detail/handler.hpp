@@ -43,20 +43,37 @@ struct completion_handler_base
     return allocator ;
   }
 
+  completion_handler_base(
+      cancellation_slot_type cancellation_slot,
+      executor_type executor,
+      allocator_type allocator)
+          : cancellation_slot(cancellation_slot)
+          , executor(executor)
+          , allocator(allocator)
+  {
+  }
+
   template<typename Promise>
   completion_handler_base(std::coroutine_handle<Promise> h)
           : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
-            executor(asio::get_associated_executor(h.promise())),
+            executor(asio::get_associated_executor(h.promise(), this_thread::get_executor())),
             allocator(asio::get_associated_allocator(h.promise(), this_thread::get_allocator())) {}
 
   template<typename Promise>
   completion_handler_base(std::coroutine_handle<Promise> h,
                           container::pmr::memory_resource * resource)
           : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
-            executor(asio::get_associated_executor(h.promise())),
+            executor(asio::get_associated_executor(h.promise(), this_thread::get_executor())),
             allocator(resource) {}
 
+  completion_handler_base(std::coroutine_handle<void> h)
+      : executor(this_thread::get_executor()),
+        allocator(this_thread::get_allocator()) {}
 
+  completion_handler_base(std::coroutine_handle<void> h,
+                          container::pmr::memory_resource * resource)
+      : executor(this_thread::get_executor()),
+        allocator(resource) {}
 };
 
 template<typename Handler,typename ... Args>
@@ -108,6 +125,61 @@ struct completion_handler_wrapper
   }
 
 };
+
+template<typename Func>
+struct bound_completion_handler : completion_handler_base, Func
+{
+  using Func::operator();
+  template<typename Func_>
+  bound_completion_handler(
+      completion_handler_base::cancellation_slot_type cancellation_slot,
+      completion_handler_base::executor_type executor,
+      completion_handler_base::allocator_type allocator,
+      Func_ && func) : completion_handler_base(cancellation_slot, executor, allocator),
+                      Func(std::forward<Func_>(func)) {}
+};
+
+template<typename Func>
+auto bind_completion_handler(
+    completion_handler_base::cancellation_slot_type cancellation_slot,
+    completion_handler_base::executor_type executor,
+    completion_handler_base::allocator_type allocator,
+    Func && func) -> bound_completion_handler<std::decay_t<Func>>
+{
+  return bound_completion_handler<std::decay_t<Func>>(
+      cancellation_slot,
+      executor,
+      allocator,
+      std::forward<Func>(func));
+}
+
+
+template<typename Handler>
+void assign_cancellation(std::coroutine_handle<void>, Handler &&) {}
+
+template<typename Promise, typename Handler>
+void assign_cancellation(std::coroutine_handle<Promise> h, Handler && func)
+{
+  if constexpr (requires {h.promise().get_cancellation_slot();})
+    if (h.promise().get_cancellation_slot().is_connected())
+      h.promise().get_cancellation_slot().assign(std::forward<Handler>(func));
+}
+
+template<typename Promise>
+asio::io_context::executor_type
+get_executor(std::coroutine_handle<Promise> h)
+{
+  if constexpr (requires {h.promise().get_executor();})
+    return h.promise().get_executor();
+  else
+    return this_thread::get_executor();
+}
+
+inline asio::io_context::executor_type
+get_executor(std::coroutine_handle<>)
+{
+  return this_thread::get_executor();
+}
 
 }
 
@@ -236,7 +308,6 @@ auto interpret_result(std::tuple<system::error_code, Arg> && args)
         throw system::system_error(std::get<0>(args));
     return std::get<1>(std::move(args));
 }
-
 
 }
 

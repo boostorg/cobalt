@@ -145,25 +145,21 @@ struct join_variadic_impl
       {
         suspend_for_callback(
           aw,
-          asio::bind_cancellation_slot(
+          bind_completion_handler(
             (cancel[Idx] = &cancel_[Idx])->slot(),
-            asio::bind_executor(
-              exec,
-              asio::bind_allocator(
-                alloc,
-                [this, &aw, c = wss.get_completer()]() mutable
-                {
-                  this->cancel[Idx] = nullptr;
-                  auto &re_ = std::get<Idx>(result) = get_resume_result(aw);
-                  if (re_.has_error() && error == nullptr)
-                  {
-                    error = re_.error();
-                    cancel_all();
-                  }
-                  c();
-                }
-              )
-            )
+            exec,
+            alloc,
+            [this, &aw, c = wss.get_completer()]() mutable
+            {
+              this->cancel[Idx] = nullptr;
+              auto &re_ = std::get<Idx>(result) = get_resume_result(aw);
+              if (re_.has_error() && error == nullptr)
+              {
+                error = re_.error();
+                cancel_all();
+              }
+              c();
+            }
           )
         );
 
@@ -187,20 +183,15 @@ struct join_variadic_impl
       mp11::mp_for_each<mp11::mp_iota_c<sizeof...(Args)>>
           ([&](auto idx)
           {
-            auto & aw = std::get<idx>(aws);
-            if constexpr (requires {h.promise().get_executor();})
-              await_suspend_step<idx>(h.promise().get_executor(), aw);
-            else
-              await_suspend_step<idx>(this_thread::get_executor(), aw);
+            await_suspend_step<idx>(get_executor(h), std::get<idx>(aws));
           });
 
       if (wss.use_count == 0) // already done, no need to suspend
         return false;
 
       // arm the cancel
-      if constexpr (requires {h.promise().get_cancellation_slot();})
-        if (h.promise().get_cancellation_slot().is_connected())
-          h.promise().get_cancellation_slot().assign(
+      assign_cancellation(
+              h,
               [&](asio::cancellation_type ct)
               {
                 for (auto & cs : cancel)
@@ -268,7 +259,7 @@ struct join_ranged_impl
 
     std::exception_ptr error;
 
-    awaitable(Range & aws_, std::false_type /* needs co_await */)
+    awaitable(Range & aws_, std::false_type /* needs  operator co_await */)
       : res((256 + sizeof(co_awaitable_type<type>) + result_size) * std::size(aws_),
             this_thread::get_default_resource())
       , aws{alloc}
@@ -285,7 +276,7 @@ struct join_ranged_impl
                      std::begin(ready),
                      [](auto & aw) {return aw.await_ready();});
     }
-    awaitable(Range & aws, std::true_type /* needs co_await */)
+    awaitable(Range & aws, std::true_type /* needs operator co_await */)
         : res((256 + sizeof(co_awaitable_type<type>) + result_size) * std::size(aws),
               this_thread::get_default_resource())
         , aws(aws)
@@ -317,11 +308,7 @@ struct join_ranged_impl
     auto await_suspend(std::coroutine_handle<H> h)
     {
       // default cb
-      std::optional<asio::io_context::executor_type> exec;
-      if constexpr (requires {h.promise().get_executor();})
-        exec = h.promise().get_executor();
-      else
-        exec = this_thread::get_executor();
+      auto exec = get_executor(h);
 
       for(std::size_t idx = 0u; idx < std::size(aws); idx++)
       {
@@ -333,27 +320,22 @@ struct join_ranged_impl
         {
           suspend_for_callback(
               aw,
-              asio::bind_cancellation_slot(
-                  (cancel[idx] = &cancel_[idx])->slot(),
-                  asio::bind_executor(
-                    *exec,
-                    asio::bind_allocator(
-                      alloc,
-                      [this, c = wss.get_completer(), idx]() mutable
-                      {
-                        this->cancel[idx] = nullptr;
-                        auto & re_ = result[idx] = get_resume_result(aws[idx]);
-                        if (re_.has_error() && error == nullptr)
-                        {
-                          error = re_.error();
-                          cancel_all();
-                        }
-                        c();
-                      }
-                    )
-                  )
-                )
-              );
+              bind_completion_handler(
+                (cancel[idx] = &cancel_[idx])->slot(),
+                exec, alloc,
+                [this, c = wss.get_completer(), idx]() mutable
+                {
+                  this->cancel[idx] = nullptr;
+                  auto & re_ = result[idx] = get_resume_result(aws[idx]);
+                  if (re_.has_error() && error == nullptr)
+                  {
+                    error = re_.error();
+                    cancel_all();
+                  }
+                  c();
+                }
+              )
+            );
           if (error && cancel[idx])
             cancel[idx]->emit(asio::cancellation_type::all);
         }
@@ -371,19 +353,14 @@ struct join_ranged_impl
         return false;
 
       // arm the cancel
-      if constexpr (requires {h.promise().get_cancellation_slot();})
-        if (h.promise().get_cancellation_slot().is_connected())
-        {
-          sl = h.promise().get_cancellation_slot();
-          if (sl.is_connected())
-            sl.assign(
+      assign_cancellation(
+                h,
                 [&](asio::cancellation_type ct)
                 {
                   for (auto & cs : cancel)
                     if (cs)
                       cs->emit(ct);
                 });
-        }
 
       wss.h.reset(h.address());
       return true;

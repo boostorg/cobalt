@@ -116,6 +116,11 @@ struct select_variadic_impl
     select_shared_state sss;
     constexpr static std::array<bool, sizeof...(Args)> lval_ref{std::is_lvalue_reference_v<Args>...};
 
+    bool has_result() const
+    {
+      return index != std::numeric_limits<std::size_t>::max();
+    }
+
     void cancel_all()
     {
       for (auto i = 0u; i < tuple_size; i++)
@@ -139,9 +144,9 @@ struct select_variadic_impl
         asio::io_context::executor_type exec,
         Aw && aw, std::size_t idx)
     {
-      if (index != std::numeric_limits<std::size_t>::max() && lval_ref[idx])
+      if (has_result() && lval_ref[idx])
         return ; // one coro did a direct complete
-      else if (index == std::numeric_limits<std::size_t>::max())
+      else if (!has_result())
         spawned = idx;
 
       if (!ready[idx])
@@ -150,36 +155,32 @@ struct select_variadic_impl
           aw,
           [this, idx]
           {
-            if (this->index != std::numeric_limits<std::size_t>::max())
+            if (has_result())
               boost::throw_exception(std::logic_error("Another transaction already started"),
                                      BOOST_CURRENT_LOCATION);
             this->cancel[idx] = nullptr;
             this->index = idx;
             this->cancel_all();
           },
-          asio::bind_cancellation_slot(
-            (cancel[idx] = &cancel_[idx])->slot(),
-            asio::bind_executor(
+          bind_completion_handler(
+              (cancel[idx] = &cancel_[idx])->slot(),
               exec,
-              asio::bind_allocator(
-                alloc,
-                [this, idx, c=sss.get_completer()]() mutable
-                {
-                  this->cancel[idx] = nullptr;
-                  if (index == std::numeric_limits<std::size_t>::max())
-                    index = idx;
-                  this->cancel_all();
-                  c();
-                }
-              )
+              alloc,
+              [this, idx, c=sss.get_completer()]() mutable
+              {
+                this->cancel[idx] = nullptr;
+                if (!has_result())
+                  index = idx;
+                this->cancel_all();
+                c();
+              }
             )
-          )
-        );
-        if (index != std::numeric_limits<std::size_t>::max())
+          );
+        if (has_result())
           if (this->cancel[idx])
             this->cancel[idx]->emit(Ct);
       }
-      else if (index == std::numeric_limits<std::size_t>::max())
+      else if (!has_result())
       {
         index = idx;
         this->cancel_all();
@@ -190,31 +191,28 @@ struct select_variadic_impl
     template<typename H>
     auto await_suspend(std::coroutine_handle<H> h)
     {
+      auto exec = get_executor(h);
       std::size_t idx = 0u;
       mp11::tuple_for_each(
           aws,
           [&](auto && aw)
           {
-            if constexpr (requires {h.promise().get_executor();})
-              await_suspend_step(h.promise().get_executor(), aw, idx++);
-            else
-              await_suspend_step(this_thread::get_executor(), aw, idx++);
+            await_suspend_step(exec, aw, idx++);
           });
       if (sss.use_count == 0) // already done, no need to suspend
         return false;
 
       // arm the cancel
-      if constexpr (requires {h.promise().get_cancellation_slot();})
-        if (h.promise().get_cancellation_slot().is_connected())
-          h.promise().get_cancellation_slot().assign(
-              [&](asio::cancellation_type ct)
-              {
-                for (auto & cs : cancel)
-                  if (cs)
-                      cs->emit(ct);
-              });
+      assign_cancellation(
+          h,
+          [&](asio::cancellation_type ct)
+          {
+            for (auto & cs : cancel)
+              if (cs)
+                  cs->emit(ct);
+          });
 
-      if (index == std::numeric_limits<std::size_t>::max())
+      if (!has_result())
       {
         sss.h.reset(h.address());
         return true;
@@ -234,9 +232,9 @@ struct select_variadic_impl
 
     result_type await_resume()
     {
-      if (index == std::numeric_limits<std::size_t>::max())
+      if (!has_result())
         index = std::distance(ready.begin(), std::find(ready.begin(), ready.end(), true));
-      BOOST_ASSERT(index != std::numeric_limits<std::size_t>::max());
+      BOOST_ASSERT(has_result());
 
       mp11::mp_for_each<mp11::mp_iota_c<sizeof...(Args)>>(
           [&](auto iidx)
@@ -308,6 +306,8 @@ struct select_ranged_impl
     container::pmr::vector<asio::cancellation_signal> cancel_{std::size(aws), alloc};
     container::pmr::vector<asio::cancellation_signal*> cancel{std::size(aws), alloc};
 
+    bool has_result() const {return index != std::numeric_limits<std::size_t>::max(); }
+    
     awaitable(Range & aws_, std::false_type /* needs co_await */)
         : res((256 + sizeof(co_awaitable_type<type>)) * std::size(aws_),
               this_thread::get_default_resource())
@@ -370,31 +370,27 @@ struct select_ranged_impl
           aw,
           [this, idx]
           {
-            if (this->index != std::numeric_limits<std::size_t>::max())
+            if (has_result())
               boost::throw_exception(std::logic_error("Another transaction already started"),
                                      BOOST_CURRENT_LOCATION);
             this->cancel[idx] = nullptr;
             this->index = idx;
             this->cancel_all();
           },
-          asio::bind_cancellation_slot(
+          bind_completion_handler(
             cancel[idx]->slot(),
-            asio::bind_executor(
-              exec,
-              asio::bind_allocator(
-                alloc,
-                [this, idx, c=sss.get_completer()]() mutable
-                {
-                  this->cancel[idx] = nullptr;
-                  if (index == std::numeric_limits<std::size_t>::max())
-                    index = idx;
-                  this->cancel_all();
-                  c();
-                })
-               )
-              )
-            );
-        if (index != std::numeric_limits<std::size_t>::max())
+            exec,
+            alloc,
+            [this, idx, c=sss.get_completer()]() mutable
+            {
+              this->cancel[idx] = nullptr;
+              if (!has_result())
+                index = idx;
+              this->cancel_all();
+              c();
+            })
+          );
+        if (has_result())
           if (this->cancel[idx])
             this->cancel[idx]->emit(Ct);
       }
@@ -406,32 +402,28 @@ struct select_ranged_impl
       std::size_t idx = 0u;
       for (auto && aw : aws)
       {
-        if (index != std::numeric_limits<std::size_t>::max()
-            && std::is_lvalue_reference_v<Range>)
+        if (has_result() && std::is_lvalue_reference_v<Range>)
           break; // one coro did a direct complete
-        else if (index == std::numeric_limits<std::size_t>::max())
+        else if (!has_result())
           spawned = idx;
 
-        if constexpr (requires {h.promise().get_executor();})
-          await_suspend_step(h.promise().get_executor(), aw, idx++);
-        else
-          await_suspend_step(this_thread::get_executor(), aw, idx++);
+        await_suspend_step(get_executor(h), aw, idx++);
       }
 
       if (sss.use_count == 0) // already done, no need to suspend
         return false;
 
       // arm the cancel
-      if constexpr (requires {h.promise().get_cancellation_slot();})
-        if (h.promise().get_cancellation_slot().is_connected())
-          h.promise().get_cancellation_slot().assign(
-              [&](asio::cancellation_type ct)
-              {
-                for (auto & cs : cancel)
-                  if (cs)
-                    cs->emit(ct);
-              });
-      if (index == std::numeric_limits<std::size_t>::max())
+      assign_cancellation(
+          h,
+          [&](asio::cancellation_type ct)
+          {
+            for (auto & cs : cancel)
+              if (cs)
+                cs->emit(ct);
+          });
+
+      if (!has_result())
       {
         sss.h.reset(h.address());
         return true;
@@ -443,7 +435,7 @@ struct select_ranged_impl
 
     auto await_resume()
     {
-      if (index == std::numeric_limits<std::size_t>::max())
+      if (!has_result())
         index = std::distance(ready.begin(), std::find(ready.begin(), ready.end(), true));
       BOOST_ASSERT(index != ready.size());
 

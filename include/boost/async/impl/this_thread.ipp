@@ -9,12 +9,12 @@
 #define BOOST_ASYNC_THIS_THREAD_IPP
 
 #include <boost/async/this_thread.hpp>
-#include <boost/asio/executor.hpp>
 
+#include <boost/asio/executor.hpp>
+#include <boost/asio/io_context.hpp>
 #include <boost/container/pmr/memory_resource.hpp>
 #include <boost/container/pmr/global_resource.hpp>
-#include <boost/container/pmr/global_resource.hpp>
-#include <boost/asio/io_context.hpp>
+
 #include <optional>
 
 namespace boost::async::this_thread
@@ -89,7 +89,6 @@ extract_executor(asio::any_io_executor exec)
 
   return *t;
 }
-
 
 }
 

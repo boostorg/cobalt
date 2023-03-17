@@ -5,7 +5,6 @@
 #ifndef BOOST_ASYNC_UTIL_HPP
 #define BOOST_ASYNC_UTIL_HPP
 
-
 #include <boost/system/result.hpp>
 
 #include <limits>
