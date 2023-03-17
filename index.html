@@ -670,10 +670,12 @@ pre.rouge {
 <ul class="sectlevel2">
 <li><a href="#delay">delay</a>
 <ul class="sectlevel3">
+<li><a href="#simple_delay">simple delay</a></li>
 <li><a href="#delay_op">delay op</a></li>
 </ul>
 </li>
 <li><a href="#echo_server">echo server</a></li>
+<li><a href="#price_ticker">price ticker</a></li>
 </ul>
 </li>
 <li><a href="#reference">Reference</a>
@@ -756,6 +758,7 @@ pre.rouge {
 </ul>
 </li>
 <li><a href="#gather">async/gather.hpp</a></li>
+<li><a href="#join">async/join.hpp</a></li>
 <li><a href="#wait_group">async/wait_group.hpp</a></li>
 <li><a href="#spawn">async/spawn.hpp</a>
 <ul class="sectlevel3">
@@ -787,11 +790,13 @@ pre.rouge {
 <div class="paragraph">
 <p>Many languages provide a simple programming languages
 like node.js and python provide easy to use single-threaded concurrency frameworks.
-While more complex than simple synchronous code,
+While more complex than synchronous code,
 single threaded asynchronicity avoids many of the pitfalls &amp; overhead of multi-threading.</p>
 </div>
 <div class="paragraph">
-<p>This library is meant to provide this to C++: <strong>simple single threaded asynchronicity</strong> akin to node.js and asyncio in python.</p>
+<p>This library is meant to provide this to C++: <strong>simple single threaded asynchronicity</strong>
+akin to node.js and asyncio in python that works with existing libraries like
+<code>boost.beast, `boost.mysql</code> or <code>boost.redis</code>.</p>
 </div>
 <div class="paragraph">
 <p>It takes a collection of concepts from other languages and provides them based on  C++20 coroutines.</p>
@@ -826,9 +831,10 @@ single threaded asynchronicity avoids many of the pitfalls &amp; overhead of mul
 <div class="sect2">
 <h3 id="delay">delay</h3>
 <div class="paragraph">
-<p>Let&#8217;s start with the simplest example possible: a simple delay.
-=== simple delay</p>
+<p>Let&#8217;s start with the simplest example possible: a simple delay.</p>
 </div>
+<div class="sect3">
+<h4 id="simple_delay">simple delay</h4>
 <div class="listingblock">
 <div class="title">example/delay.cpp</div>
 <div class="content">
@@ -890,6 +896,7 @@ the <a href="#this_coro">this_coro</a> namespace.</p>
 <div class="paragraph">
 <p>We can then construct a timer and initiate the <code>async_wait</code> with <a href="#use_op">use_op</a>.
 <code>async</code> provides multiple ways to <code>co_await</code> to interact with asio, of which <a href="#use_op">use_op</a> is the easiest.</p>
+</div>
 </div>
 <div class="sect3">
 <h4 id="delay_op">delay op</h4>
@@ -956,12 +963,12 @@ That is, the coroutine will suspend even if the timer is ready (because the dela
 <h3 id="echo_server">echo server</h3>
 <div class="paragraph">
 <p>We&#8217;ll be using the <code>use_op</code> token everywhere,
-so we&#8217;re using a default completion token:</p>
+so we&#8217;re using a default completion token, so that we can skip the last parameters.</p>
 </div>
 <div class="listingblock">
 <div class="title">example/echo_server.cpp declarations</div>
 <div class="content">
-<pre class="rouge highlight"><code data-lang="c++"><span class="k">namespace</span> <span class="n">async</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">async</span><span class="p">;</span>
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">namespace</span> <span class="n">async</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">async</span><span class="p">;</span>
 <span class="k">using</span> <span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">ip</span><span class="o">::</span><span class="n">tcp</span><span class="p">;</span>
 <span class="k">using</span> <span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">detached</span><span class="p">;</span>
 <span class="k">using</span> <span class="n">tcp_acceptor</span> <span class="o">=</span> <span class="n">async</span><span class="o">::</span><span class="n">use_op_t</span><span class="o">::</span><span class="n">as_default_on_t</span><span class="o">&lt;</span><span class="n">tcp</span><span class="o">::</span><span class="n">acceptor</span><span class="o">&gt;</span><span class="p">;</span>
@@ -977,7 +984,7 @@ in case a lazy coro is needed, <a href="#task">task</a> is available.</p>
 <div class="listingblock">
 <div class="title">example/echo_server.cpp echo function</div>
 <div class="content">
-<pre class="rouge highlight"><code data-lang="c++"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">echo</span><span class="p">(</span><span class="n">tcp_socket</span> <span class="n">socket</span><span class="p">)</span>
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">echo</span><span class="p">(</span><span class="n">tcp_socket</span> <span class="n">socket</span><span class="p">)</span>
 <span class="p">{</span>
   <span class="k">try</span> <i class="conum" data-value="1"></i><b>(1)</b>
   <span class="p">{</span>
@@ -1017,24 +1024,23 @@ for any error (including cancellation).</td>
 </table>
 </div>
 <div class="paragraph">
-<p>Note that promise is eager. Calling <code>echo</code> will immediately execute code until the <code>async_read_some</code>
+<p>Note that promise is eager. Calling <code>echo</code> will immediately execute code until <code>async_read_some</code>
 and then return control to the caller.</p>
 </div>
 <div class="paragraph">
 <p>Next, we also need an acceptor function. Since this is a tutorial, we&#8217;re using a <a href="#generator">generator</a>.
-This is a coroutine that can be co_awaited multiple times, while it <code>co_yield</code> until <code>co_return</code>.</p>
+This is a coroutine that can be co_awaited multiple times, until <code>co_return</code>.</p>
 </div>
 <div class="listingblock">
 <div class="title">example/echo_server.cpp listen function</div>
 <div class="content">
-<pre class="rouge highlight"><code data-lang="c++"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="n">tcp_socket</span><span class="o">&gt;</span> <span class="n">listen</span><span class="p">()</span>
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="n">tcp_socket</span><span class="o">&gt;</span> <span class="n">listen</span><span class="p">()</span>
 <span class="p">{</span>
-  <span class="k">co_await</span> <span class="n">this_coro</span><span class="o">::</span><span class="n">pro_active</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span> <i class="conum" data-value="1"></i><b>(1)</b>
   <span class="n">tcp_acceptor</span> <span class="n">acceptor</span><span class="p">({</span><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">executor</span><span class="p">},</span> <span class="p">{</span><span class="n">tcp</span><span class="o">::</span><span class="n">v4</span><span class="p">(),</span> <span class="mi">55555</span><span class="p">});</span>
-  <span class="k">for</span> <span class="p">(;;)</span> <i class="conum" data-value="2"></i><b>(2)</b>
+  <span class="k">for</span> <span class="p">(;;)</span> <i class="conum" data-value="1"></i><b>(1)</b>
   <span class="p">{</span>
-    <span class="n">tcp_socket</span> <span class="n">sock</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">acceptor</span><span class="p">.</span><span class="n">async_accept</span><span class="p">();</span> <i class="conum" data-value="3"></i><b>(3)</b>
-    <span class="k">co_yield</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">sock</span><span class="p">);</span> <i class="conum" data-value="4"></i><b>(4)</b>
+    <span class="n">tcp_socket</span> <span class="n">sock</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">acceptor</span><span class="p">.</span><span class="n">async_accept</span><span class="p">();</span> <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="k">co_yield</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">sock</span><span class="p">);</span> <i class="conum" data-value="3"></i><b>(3)</b>
   <span class="p">}</span>
 <span class="p">}</span></code></pre>
 </div>
@@ -1043,18 +1049,14 @@ This is a coroutine that can be co_awaited multiple times, while it <code>co_yie
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Set the generator to <code>pro_active</code> mode.</td>
+<td>Cancellation will also lead to an exception here being thrown from the <code>co_await</code></td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Cancellation will also lead to an exception here</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
 <td>Asynchronously accept the connection</td>
 </tr>
 <tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
 <td>Yield it to the awaiting coroutine</td>
 </tr>
 </table>
@@ -1065,7 +1067,7 @@ This is a coroutine that can be co_awaited multiple times, while it <code>co_yie
 <div class="listingblock">
 <div class="title">example/echo_server.cpp run_server function</div>
 <div class="content">
-<pre class="rouge highlight"><code data-lang="c++"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">run_server</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">wait_group</span> <span class="o">&amp;</span> <span class="n">workers</span><span class="p">)</span>
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">run_server</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">wait_group</span> <span class="o">&amp;</span> <span class="n">workers</span><span class="p">)</span>
 <span class="p">{</span>
   <span class="k">auto</span> <span class="n">l</span> <span class="o">=</span> <span class="n">listen</span><span class="p">();</span> <i class="conum" data-value="1"></i><b>(1)</b>
   <span class="k">while</span> <span class="p">(</span><span class="nb">true</span><span class="p">)</span>
@@ -1109,7 +1111,7 @@ We then put those promises into a <a href="#wait_group">wait_group</a> which wil
 <div class="listingblock">
 <div class="title">example/echo_server.cpp co_main function</div>
 <div class="content">
-<pre class="rouge highlight"><code data-lang="c++"><span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="nf">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="nf">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
 <span class="p">{</span>
   <span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">with</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">wait_group</span><span class="p">(),</span> <span class="o">&amp;</span><span class="n">run_server</span><span class="p">);</span> <i class="conum" data-value="1"></i><b>(1)</b>
   <span class="k">co_return</span> <span class="mi">0u</span><span class="p">;</span>
@@ -1128,6 +1130,444 @@ We then put those promises into a <a href="#wait_group">wait_group</a> which wil
 <p>The <a href="#with">with</a> function shown above, will run a function with a resource such as <a href="#wait_group">wait_group</a>.
 On scope exit <code>with</code> will invoke &amp; <code>co_await</code> an asynchronous teardown function.
 This will cause all connections to be properly shutdown before <code>co_main</code> exists.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="price_ticker">price ticker</h3>
+<div class="paragraph">
+<p>To demonstrate <code>channels</code> and other tools, we need a certain complexity.
+For that purpose our project is a price ticker, that connects to
+<a href="https://blockchain.info" class="bare">https://blockchain.info</a>. A user can then connection to localhost
+to query a given currency pair, like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash">wscat <span class="nt">-c</span> localhost:8080/btc/usd</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>First we do the same declarations as echo-server.</p>
+</div>
+<div class="listingblock">
+<div class="title">example/ticker.cpp declarations</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">using</span> <span class="n">executor_type</span> <span class="o">=</span> <span class="n">async</span><span class="o">::</span><span class="n">use_op_t</span><span class="o">::</span><span class="n">executor_with_default</span><span class="o">&lt;</span><span class="n">asio</span><span class="o">::</span><span class="n">io_context</span><span class="o">::</span><span class="n">executor_type</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="k">using</span> <span class="n">socket_type</span>   <span class="o">=</span> <span class="k">typename</span> <span class="n">asio</span><span class="o">::</span><span class="n">ip</span><span class="o">::</span><span class="n">tcp</span><span class="o">::</span><span class="n">socket</span><span class="o">::</span><span class="n">rebind_executor</span><span class="o">&lt;</span><span class="n">executor_type</span><span class="o">&gt;::</span><span class="n">other</span><span class="p">;</span>
+<span class="k">using</span> <span class="n">acceptor_type</span> <span class="o">=</span> <span class="k">typename</span> <span class="n">asio</span><span class="o">::</span><span class="n">ip</span><span class="o">::</span><span class="n">tcp</span><span class="o">::</span><span class="n">acceptor</span><span class="o">::</span><span class="n">rebind_executor</span><span class="o">&lt;</span><span class="n">executor_type</span><span class="o">&gt;::</span><span class="n">other</span><span class="p">;</span>
+<span class="k">using</span> <span class="n">websocket_type</span> <span class="o">=</span> <span class="n">beast</span><span class="o">::</span><span class="n">websocket</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">asio</span><span class="o">::</span><span class="n">ssl</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">socket_type</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+<span class="k">namespace</span> <span class="n">http</span> <span class="o">=</span> <span class="n">beast</span><span class="o">::</span><span class="n">http</span><span class="p">;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The next step is to write a function to connect an ssl-stream,
+to connect upstream:</p>
+</div>
+<div class="listingblock">
+<div class="title">example/ticker.cpp connect</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="n">asio</span><span class="o">::</span><span class="n">ssl</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">socket_type</span><span class="o">&gt;&gt;</span> <span class="n">connect</span><span class="p">(</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">host</span><span class="p">,</span> <span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">ssl</span><span class="o">::</span><span class="n">context</span> <span class="o">&amp;</span> <span class="n">ctx</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">asio</span><span class="o">::</span><span class="n">ip</span><span class="o">::</span><span class="n">tcp</span><span class="o">::</span><span class="n">resolver</span> <span class="n">res</span><span class="p">{</span><span class="n">async</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">get_executor</span><span class="p">()};</span>
+    <span class="k">auto</span> <span class="n">ep</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">res</span><span class="p">.</span><span class="n">async_resolve</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="s">"https"</span><span class="p">,</span> <span class="n">async</span><span class="o">::</span><span class="n">use_op</span><span class="p">);</span> <i class="conum" data-value="1"></i><b>(1)</b>
+
+    <span class="n">asio</span><span class="o">::</span><span class="n">ssl</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">socket_type</span><span class="o">&gt;</span> <span class="n">sock</span><span class="p">{</span><span class="n">async</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">get_executor</span><span class="p">(),</span> <span class="n">ctx</span><span class="p">};</span>
+    <span class="k">co_await</span> <span class="n">sock</span><span class="p">.</span><span class="n">next_layer</span><span class="p">().</span><span class="n">async_connect</span><span class="p">(</span><span class="o">*</span><span class="n">ep</span><span class="p">.</span><span class="n">begin</span><span class="p">());</span> <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="k">co_await</span> <span class="n">sock</span><span class="p">.</span><span class="n">async_handshake</span><span class="p">(</span><span class="n">asio</span><span class="o">::</span><span class="n">ssl</span><span class="o">::</span><span class="n">stream_base</span><span class="o">::</span><span class="n">client</span><span class="p">);</span> <i class="conum" data-value="3"></i><b>(3)</b>
+
+    <span class="k">co_return</span> <span class="n">sock</span><span class="p">;</span> <i class="conum" data-value="4"></i><b>(4)</b>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Lookup the host</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Connect to the endpoint</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Do the ssl handshake</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Return the socket to the caller</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Next, we&#8217;ll need a function to do the websocket upgrade
+on an existing ssl-stream.</p>
+</div>
+<div class="listingblock">
+<div class="title">example/ticker.cpp connect_to_blockchain_info</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">connect_to_blockchain_info</span><span class="p">(</span><span class="n">websocket_type</span> <span class="o">&amp;</span> <span class="n">ws</span><span class="p">)</span>
+<span class="p">{</span>
+ <span class="n">ws</span><span class="p">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">beast</span><span class="o">::</span><span class="n">websocket</span><span class="o">::</span><span class="n">stream_base</span><span class="o">::</span><span class="n">decorator</span><span class="p">(</span>
+     <span class="p">[](</span><span class="n">beast</span><span class="o">::</span><span class="n">websocket</span><span class="o">::</span><span class="n">request_type</span><span class="o">&amp;</span> <span class="n">req</span><span class="p">)</span>
+     <span class="p">{</span>
+       <span class="n">req</span><span class="p">.</span><span class="n">set</span><span class="p">(</span><span class="n">http</span><span class="o">::</span><span class="n">field</span><span class="o">::</span><span class="n">user_agent</span><span class="p">,</span>
+               <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="n">BOOST_BEAST_VERSION_STRING</span><span class="p">)</span> <span class="o">+</span> <span class="s">" async-ticker"</span><span class="p">);</span>
+       <span class="n">req</span><span class="p">.</span><span class="n">set</span><span class="p">(</span><span class="n">http</span><span class="o">::</span><span class="n">field</span><span class="o">::</span><span class="n">origin</span><span class="p">,</span>
+               <span class="s">"https://exchange.blockchain.com"</span><span class="p">);</span> <i class="conum" data-value="1"></i><b>(1)</b>
+     <span class="p">}));</span>
+
+ <span class="k">co_await</span> <span class="n">ws</span><span class="p">.</span><span class="n">async_handshake</span><span class="p">(</span><span class="s">"ws.blockchain.info"</span><span class="p">,</span> <span class="s">"/mercury-gateway/v1/ws"</span><span class="p">);</span> <i class="conum" data-value="2"></i><b>(2)</b>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>blockchain.info</code> requires this header to be set.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Perform the websocket handshake.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Once the websocket is connected, we want to continuously receive json messages,
+for which a generator is a good choice. Note that we&#8217;ll set it to <code>pro_active</code> so it
+eagerly resumes after a <code>co_yield</code>.</p>
+</div>
+<div class="listingblock">
+<div class="title">example/ticker.cpp json_read</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="n">json</span><span class="o">::</span><span class="n">object</span><span class="o">&gt;</span> <span class="n">json_reader</span><span class="p">(</span><span class="n">websocket_type</span> <span class="o">&amp;</span> <span class="n">ws</span><span class="p">)</span>
+<span class="k">try</span>
+<span class="p">{</span>
+    <span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">pro_active</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span> <i class="conum" data-value="1"></i><b>(1)</b>
+    <span class="n">beast</span><span class="o">::</span><span class="n">flat_buffer</span> <span class="n">buf</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">ws</span><span class="p">.</span><span class="n">is_open</span><span class="p">())</span> <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="p">{</span>
+        <span class="k">auto</span> <span class="n">sz</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">ws</span><span class="p">.</span><span class="n">async_read</span><span class="p">(</span><span class="n">buf</span><span class="p">);</span> <i class="conum" data-value="3"></i><b>(3)</b>
+        <span class="n">json</span><span class="o">::</span><span class="n">string_view</span> <span class="n">data</span><span class="p">{</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="k">const</span> <span class="kt">char</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">cdata</span><span class="p">().</span><span class="n">data</span><span class="p">()),</span> <span class="n">sz</span><span class="p">};</span>
+        <span class="k">auto</span> <span class="n">obj</span> <span class="o">=</span> <span class="n">json</span><span class="o">::</span><span class="n">parse</span><span class="p">(</span><span class="n">data</span><span class="p">);</span>
+        <span class="k">co_yield</span> <span class="n">obj</span><span class="p">.</span><span class="n">as_object</span><span class="p">();</span> <i class="conum" data-value="4"></i><b>(4)</b>
+        <span class="n">buf</span><span class="p">.</span><span class="n">consume</span><span class="p">(</span><span class="n">sz</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">co_return</span> <span class="p">{};</span>
+<span class="p">}</span>
+<span class="k">catch</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="o">&amp;</span> <span class="n">e</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Error reading: "</span> <span class="o">&lt;&lt;</span> <span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="k">throw</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Set to proactive</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Keep running as long as the socket is open</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Read a frame from the websocket</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Parse &amp; <code>co_yield</code> it as an object.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>This then needs to be connected to subscriber, for which we&#8217;ll utilize channels to pass raw json.
+To make life-time management easy, the subscriber will hold a <code>shared_ptr</code>, and the producer a <code>weak_ptr</code>.</p>
+</div>
+<div class="listingblock">
+<div class="title">example/ticker.cpp subscription types</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">using</span> <span class="n">subscription</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">weak_ptr</span><span class="o">&lt;</span><span class="n">async</span><span class="o">::</span><span class="n">channel</span><span class="o">&lt;</span><span class="n">json</span><span class="o">::</span><span class="n">object</span><span class="o">&gt;&gt;&gt;</span><span class="p">;</span>
+<span class="k">using</span> <span class="n">subscription_channel</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">weak_ptr</span><span class="o">&lt;</span><span class="n">async</span><span class="o">::</span><span class="n">channel</span><span class="o">&lt;</span><span class="n">json</span><span class="o">::</span><span class="n">object</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+<span class="k">using</span> <span class="n">subscription_map</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">unordered_multimap</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span> <span class="n">subscription_channel</span><span class="o">&gt;</span><span class="p">;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The main function running the blockchain connector, operates on two inputs:
+data coming from the websocket and a channel to handle new subscriptions.</p>
+</div>
+<div class="listingblock">
+<div class="title">example/ticker.cpp run blockchain_info</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">run_blockchain_info</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">channel</span><span class="o">&lt;</span><span class="n">subscription</span><span class="o">&gt;</span> <span class="o">&amp;</span> <span class="n">subc</span><span class="p">)</span>
+<span class="k">try</span>
+<span class="p">{</span>
+    <span class="n">asio</span><span class="o">::</span><span class="n">ssl</span><span class="o">::</span><span class="n">context</span> <span class="n">ctx</span><span class="p">{</span><span class="n">asio</span><span class="o">::</span><span class="n">ssl</span><span class="o">::</span><span class="n">context_base</span><span class="o">::</span><span class="n">tls_client</span><span class="p">};</span>
+    <span class="n">websocket_type</span> <span class="n">ws</span><span class="p">{</span><span class="k">co_await</span> <span class="n">connect</span><span class="p">(</span><span class="s">"blockchain.info"</span><span class="p">,</span> <span class="n">ctx</span><span class="p">)};</span>
+    <span class="k">co_await</span> <span class="n">connect_to_blockchain_info</span><span class="p">(</span><span class="n">ws</span><span class="p">);</span> <i class="conum" data-value="1"></i><b>(1)</b>
+
+    <span class="n">subscription_map</span> <span class="n">subs</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">unconfirmed</span><span class="p">;</span>
+
+    <span class="k">auto</span> <span class="n">rd</span> <span class="o">=</span> <span class="n">json_reader</span><span class="p">(</span><span class="n">ws</span><span class="p">);</span> <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="k">while</span> <span class="p">(</span><span class="n">ws</span><span class="p">.</span><span class="n">is_open</span><span class="p">())</span> <i class="conum" data-value="3"></i><b>(3)</b>
+    <span class="p">{</span>
+      <span class="k">switch</span> <span class="p">(</span><span class="k">auto</span> <span class="n">msg</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">select</span><span class="p">(</span><span class="n">rd</span><span class="p">,</span> <span class="n">subc</span><span class="p">.</span><span class="n">read</span><span class="p">());</span> <span class="n">msg</span><span class="p">.</span><span class="n">index</span><span class="p">())</span> <i class="conum" data-value="4"></i><b>(4)</b>
+      <span class="p">{</span>
+        <span class="k">case</span> <span class="mi">0</span><span class="p">:</span> <i class="conum" data-value="5"></i><b>(5)</b>
+          <span class="k">if</span> <span class="p">(</span><span class="k">auto</span> <span class="n">ms</span> <span class="o">=</span> <span class="n">get</span><span class="o">&lt;</span><span class="mi">0</span><span class="o">&gt;</span><span class="p">(</span><span class="n">msg</span><span class="p">);</span>
+              <span class="n">ms</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="s">"event"</span><span class="p">)</span> <span class="o">==</span> <span class="s">"rejected"</span><span class="p">)</span> <span class="c1">// invalid sub, cancel however subbed</span>
+            <span class="k">co_await</span> <span class="n">handle_rejections</span><span class="p">(</span><span class="n">unconfirmed</span><span class="p">,</span> <span class="n">subs</span><span class="p">,</span> <span class="n">ms</span><span class="p">);</span>
+          <span class="k">else</span>
+            <span class="k">co_await</span> <span class="n">handle_update</span><span class="p">(</span><span class="n">unconfirmed</span><span class="p">,</span> <span class="n">subs</span><span class="p">,</span> <span class="n">ms</span><span class="p">,</span> <span class="n">ws</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+        <span class="k">case</span> <span class="mi">1</span><span class="p">:</span> <span class="c1">// </span><i class="conum" data-value="6"></i><b>(6)</b>
+            <span class="k">co_await</span> <span class="n">handle_new_subscription</span><span class="p">(</span>
+                <span class="n">unconfirmed</span><span class="p">,</span> <span class="n">subs</span><span class="p">,</span>
+                <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">get</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span><span class="n">msg</span><span class="p">)),</span> <span class="n">ws</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span> <span class="p">[</span><span class="n">k</span> <span class="p">,</span><span class="n">c</span><span class="p">]</span> <span class="o">:</span> <span class="n">subs</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="k">auto</span> <span class="n">ptr</span> <span class="o">=</span> <span class="n">c</span><span class="p">.</span><span class="n">lock</span><span class="p">())</span>
+            <span class="n">ptr</span><span class="o">-&gt;</span><span class="n">close</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="k">catch</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="o">&amp;</span> <span class="n">e</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Exception: "</span> <span class="o">&lt;&lt;</span> <span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="k">throw</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Initialize the connection</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Instantiate the json_reader</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Run as long as the websocket is open</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Select, i.e. wait for either a new json message or subscription</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>When it&#8217;s a json handle an update or a rejection</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>Handle new subscription messages</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The <code>handle_*</code> function&#8217;s contents are not as important for the <code>async</code> functionality,
+so it&#8217;s skipped in this tutorial.</p>
+</div>
+<div class="paragraph">
+<p>The <code>handle_new_subscription</code> function sends a message to the <code>blockchain.info</code>,
+which will send a confirmation or rejection back.
+The <code>handle_rejection</code> and <code>handle_update</code> will take the json values
+and forward them to the subscription channel.</p>
+</div>
+<div class="paragraph">
+<p>On the consumer side, our server will just forward data to the client.
+If the client inputs data, we&#8217;ll close the websocket immediately.
+We&#8217;re using <code>as_tuple</code> to ignore potential errors.</p>
+</div>
+<div class="listingblock">
+<div class="title">example/ticker.cpp read and close</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">read_and_close</span><span class="p">(</span><span class="n">beast</span><span class="o">::</span><span class="n">websocket</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">socket_type</span><span class="o">&gt;</span> <span class="o">&amp;</span> <span class="n">st</span><span class="p">,</span> <span class="n">beast</span><span class="o">::</span><span class="n">flat_buffer</span> <span class="n">buf</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">system</span><span class="o">::</span><span class="n">error_code</span> <span class="n">ec</span><span class="p">;</span>
+    <span class="k">co_await</span> <span class="n">st</span><span class="p">.</span><span class="n">async_read</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">asio</span><span class="o">::</span><span class="n">as_tuple</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">use_op</span><span class="p">));</span>
+    <span class="k">co_await</span> <span class="n">st</span><span class="p">.</span><span class="n">async_close</span><span class="p">(</span><span class="n">beast</span><span class="o">::</span><span class="n">websocket</span><span class="o">::</span><span class="n">close_code</span><span class="o">::</span><span class="n">going_away</span><span class="p">,</span> <span class="n">asio</span><span class="o">::</span><span class="n">as_tuple</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">use_op</span><span class="p">));</span>
+    <span class="n">st</span><span class="p">.</span><span class="n">next_layer</span><span class="p">().</span><span class="n">close</span><span class="p">(</span><span class="n">ec</span><span class="p">);</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Next, we&#8217;re running the session that the users sends</p>
+</div>
+<div class="listingblock">
+<div class="title">example/ticker.cpp run_session</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">run_session</span><span class="p">(</span><span class="n">beast</span><span class="o">::</span><span class="n">websocket</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">socket_type</span><span class="o">&gt;</span> <span class="n">st</span><span class="p">,</span>
+                                 <span class="n">async</span><span class="o">::</span><span class="n">channel</span><span class="o">&lt;</span><span class="n">subscription</span><span class="o">&gt;</span> <span class="o">&amp;</span> <span class="n">subc</span><span class="p">)</span>
+<span class="k">try</span>
+<span class="p">{</span>
+    <span class="n">BOOST_ASSERT</span><span class="p">(</span><span class="n">st</span><span class="p">.</span><span class="n">get_executor</span><span class="p">().</span><span class="n">running_in_this_thread</span><span class="p">());</span>
+    <span class="n">http</span><span class="o">::</span><span class="n">request</span><span class="o">&lt;</span><span class="n">http</span><span class="o">::</span><span class="n">empty_body</span><span class="o">&gt;</span> <span class="n">req</span><span class="p">;</span>
+    <span class="n">beast</span><span class="o">::</span><span class="n">flat_buffer</span> <span class="n">buf</span><span class="p">;</span>
+    <span class="k">co_await</span> <span class="n">http</span><span class="o">::</span><span class="n">async_read</span><span class="p">(</span><span class="n">st</span><span class="p">.</span><span class="n">next_layer</span><span class="p">(),</span> <span class="n">buf</span><span class="p">,</span> <span class="n">req</span><span class="p">);</span> <i class="conum" data-value="1"></i><b>(1)</b>
+    <span class="c1">// check the target</span>
+    <span class="k">auto</span> <span class="n">r</span> <span class="o">=</span> <span class="n">urls</span><span class="o">::</span><span class="n">parse_uri_reference</span><span class="p">(</span><span class="n">req</span><span class="p">.</span><span class="n">target</span><span class="p">());</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">has_error</span><span class="p">()</span> <span class="o">||</span> <span class="p">(</span><span class="n">r</span><span class="o">-&gt;</span><span class="n">segments</span><span class="p">().</span><span class="n">size</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">2u</span><span class="p">))</span> <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="p">{</span>
+        <span class="n">http</span><span class="o">::</span><span class="n">response</span><span class="o">&lt;</span><span class="n">http</span><span class="o">::</span><span class="n">string_body</span><span class="o">&gt;</span> <span class="n">res</span><span class="p">{</span><span class="n">http</span><span class="o">::</span><span class="n">status</span><span class="o">::</span><span class="n">bad_request</span><span class="p">,</span> <span class="mi">11</span><span class="p">};</span>
+        <span class="n">res</span><span class="p">.</span><span class="n">body</span><span class="p">()</span> <span class="o">=</span> <span class="n">r</span><span class="p">.</span><span class="n">has_error</span><span class="p">()</span> <span class="o">?</span> <span class="n">r</span><span class="p">.</span><span class="n">error</span><span class="p">().</span><span class="n">message</span><span class="p">()</span> <span class="o">:</span> <span class="s">"url needs two segments, e.g. /btc/usd"</span><span class="p">;</span>
+        <span class="k">co_await</span> <span class="n">http</span><span class="o">::</span><span class="n">async_write</span><span class="p">(</span><span class="n">st</span><span class="p">.</span><span class="n">next_layer</span><span class="p">(),</span> <span class="n">res</span><span class="p">);</span>
+        <span class="n">st</span><span class="p">.</span><span class="n">next_layer</span><span class="p">().</span><span class="n">close</span><span class="p">();</span>
+        <span class="k">co_return</span> <span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">co_await</span> <span class="n">st</span><span class="p">.</span><span class="n">async_accept</span><span class="p">(</span><span class="n">req</span><span class="p">);</span> <i class="conum" data-value="3"></i><b>(3)</b>
+
+    <span class="k">auto</span> <span class="n">sym</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="n">r</span><span class="o">-&gt;</span><span class="n">segments</span><span class="p">().</span><span class="n">front</span><span class="p">())</span> <span class="o">+</span> <span class="s">"-"</span> <span class="o">+</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="n">r</span><span class="o">-&gt;</span><span class="n">segments</span><span class="p">().</span><span class="n">back</span><span class="p">());</span>
+    <span class="n">boost</span><span class="o">::</span><span class="n">algorithm</span><span class="o">::</span><span class="n">to_upper</span><span class="p">(</span><span class="n">sym</span><span class="p">);</span>
+    <span class="c1">// close when data gets sent</span>
+    <span class="k">auto</span> <span class="n">p</span> <span class="o">=</span> <span class="n">read_and_close</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">buf</span><span class="p">));</span> <i class="conum" data-value="4"></i><b>(4)</b>
+
+    <span class="k">auto</span> <span class="n">ptr</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">async</span><span class="o">::</span><span class="n">channel</span><span class="o">&lt;</span><span class="n">json</span><span class="o">::</span><span class="n">object</span><span class="o">&gt;&gt;</span><span class="p">(</span><span class="mi">1u</span><span class="p">);</span> <i class="conum" data-value="5"></i><b>(5)</b>
+    <span class="k">co_await</span> <span class="n">subc</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="n">subscription</span><span class="p">{</span><span class="n">sym</span><span class="p">,</span> <span class="n">ptr</span><span class="p">});</span> <i class="conum" data-value="6"></i><b>(6)</b>
+
+    <span class="k">while</span> <span class="p">(</span><span class="n">ptr</span><span class="o">-&gt;</span><span class="n">is_open</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">st</span><span class="p">.</span><span class="n">is_open</span><span class="p">())</span> <i class="conum" data-value="7"></i><b>(7)</b>
+    <span class="p">{</span>
+      <span class="k">auto</span> <span class="n">bb</span> <span class="o">=</span> <span class="n">json</span><span class="o">::</span><span class="n">serialize</span><span class="p">(</span><span class="k">co_await</span> <span class="n">ptr</span><span class="o">-&gt;</span><span class="n">read</span><span class="p">());</span>
+      <span class="k">co_await</span> <span class="n">st</span><span class="p">.</span><span class="n">async_write</span><span class="p">(</span><span class="n">asio</span><span class="o">::</span><span class="n">buffer</span><span class="p">(</span><span class="n">bb</span><span class="p">));</span>
+    <span class="p">}</span>
+
+    <span class="k">co_await</span> <span class="n">st</span><span class="p">.</span><span class="n">async_close</span><span class="p">(</span><span class="n">beast</span><span class="o">::</span><span class="n">websocket</span><span class="o">::</span><span class="n">close_code</span><span class="o">::</span><span class="n">going_away</span><span class="p">,</span>
+                            <span class="n">asio</span><span class="o">::</span><span class="n">as_tuple</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">use_op</span><span class="p">));</span> <i class="conum" data-value="8"></i><b>(8)</b>
+    <span class="n">st</span><span class="p">.</span><span class="n">next_layer</span><span class="p">().</span><span class="n">close</span><span class="p">();</span>
+    <span class="k">co_await</span> <span class="n">p</span><span class="p">;</span> <i class="conum" data-value="9"></i><b>(9)</b>
+
+<span class="p">}</span>
+<span class="k">catch</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">exception</span> <span class="o">&amp;</span> <span class="n">e</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Session ended with exception: "</span> <span class="o">&lt;&lt;</span> <span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Read the http request, because we want the path</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Check the path, e.g. <code>/btc/usd</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Accept the websocket</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Start reading &amp; close if the consumer sends something</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Create the channel to receive updates</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>Send a subscription requests to <code>run_blockchain_info</code></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>While the channel &amp; websocket are open, we&#8217;re forwarding data.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td>Close the socket &amp; ignore the error</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="9"></i><b>9</b></td>
+<td>Since the websocket is surely closed by now, wait for the read_and_close to close.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>With <code>run_session</code> and <code>run_blockchain_info</code> written, we can not move on to main:</p>
+</div>
+<div class="listingblock">
+<div class="title">example/ticker.cpp main</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="nf">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+    <span class="n">acceptor_type</span> <span class="n">acc</span><span class="p">{</span><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">executor</span><span class="p">,</span>
+                      <span class="n">asio</span><span class="o">::</span><span class="n">ip</span><span class="o">::</span><span class="n">tcp</span><span class="o">::</span><span class="n">endpoint</span> <span class="p">(</span><span class="n">asio</span><span class="o">::</span><span class="n">ip</span><span class="o">::</span><span class="n">tcp</span><span class="o">::</span><span class="n">v4</span><span class="p">(),</span> <span class="mi">8080</span><span class="p">)};</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Listening on localhost:8080"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+
+    <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">limit</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="c1">// allow 10 ongoing sessions</span>
+    <span class="n">async</span><span class="o">::</span><span class="n">channel</span><span class="o">&lt;</span><span class="n">subscription</span><span class="o">&gt;</span> <span class="n">sub_manager</span><span class="p">;</span> <i class="conum" data-value="1"></i><b>(1)</b>
+
+    <span class="k">co_await</span> <span class="n">join</span><span class="p">(</span> <i class="conum" data-value="2"></i><b>(2)</b>
+      <span class="n">run_blockchain_info</span><span class="p">(</span><span class="n">sub_manager</span><span class="p">),</span>
+      <span class="n">async</span><span class="o">::</span><span class="n">with</span><span class="p">(</span> <i class="conum" data-value="3"></i><b>(3)</b>
+        <span class="n">async</span><span class="o">::</span><span class="n">wait_group</span><span class="p">(</span>
+            <span class="n">asio</span><span class="o">::</span><span class="n">cancellation_type</span><span class="o">::</span><span class="n">all</span><span class="p">,</span>
+            <span class="n">asio</span><span class="o">::</span><span class="n">cancellation_type</span><span class="o">::</span><span class="n">all</span><span class="p">),</span>
+        <span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="n">async</span><span class="o">::</span><span class="n">wait_group</span> <span class="o">&amp;</span> <span class="n">sessions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span>
+        <span class="p">{</span>
+          <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">cancellation_state</span><span class="p">).</span><span class="n">cancelled</span><span class="p">())</span> <i class="conum" data-value="4"></i><b>(4)</b>
+          <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">sessions</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">limit</span><span class="p">)</span> <i class="conum" data-value="5"></i><b>(5)</b>
+              <span class="k">co_await</span> <span class="n">sessions</span><span class="p">.</span><span class="n">wait_one</span><span class="p">();</span>
+
+            <span class="k">auto</span> <span class="n">conn</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">acc</span><span class="p">.</span><span class="n">async_accept</span><span class="p">();</span> <i class="conum" data-value="6"></i><b>(6)</b>
+            <span class="n">sessions</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span> <i class="conum" data-value="7"></i><b>(7)</b>
+                <span class="n">run_session</span><span class="p">(</span>
+                    <span class="n">beast</span><span class="o">::</span><span class="n">websocket</span><span class="o">::</span><span class="n">stream</span><span class="o">&lt;</span><span class="n">socket_type</span><span class="o">&gt;</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">conn</span><span class="p">)},</span>
+                    <span class="n">sub_manager</span><span class="p">));</span>
+          <span class="p">}</span>
+        <span class="p">})</span>
+      <span class="p">);</span>
+
+    <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Create the channel to manage subscriptions</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Use <code>join</code> to run both tasks in parallel.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Use an async scope to provide a <code>wait_group</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Run until cancelled.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>When we&#8217;ve reached the <code>limit</code> we wait for one task to complete.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>Wait for a new connection.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>Insert the session into the <code>wait_group</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Main is using <code>join</code> because one task failing should cancel the other one.</p>
 </div>
 </div>
 </div>
@@ -2588,6 +3028,10 @@ If the <code>select</code> doesn&#8217;t detect the immediate completion, it wil
 <p>The <code>gather</code> function can be used to <code>co_await</code> multiple <a href="#awaitable">Awaitable</a>s at once with properly connected cancellations.</p>
 </div>
 <div class="paragraph">
+<p>The function will gather all completion and return them as <code>system::result</code>,
+i.e. capture conceptions as values. One awaitable throwing an exception will not cancel the others.</p>
+</div>
+<div class="paragraph">
 <p>It can be called as a variadic function with multiple <a href="#awaitable">Awaitable</a> or as on a range of <a href="#awaitable">Awaitable</a>s.</p>
 </div>
 <div class="listingblock">
@@ -2617,6 +3061,60 @@ If the <code>select</code> doesn&#8217;t detect the immediate completion, it wil
 </div>
 <div class="paragraph">
 <p>The <code>gather</code> will invoke the functions of the <code>awaitable</code> as if used in a <code>co_await</code> expression.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="join">async/join.hpp</h3>
+<div class="paragraph">
+<p>The <code>join</code> function can be used to <code>co_await</code> multiple <a href="#awaitable">Awaitable</a>s at once with properly connected cancellations.</p>
+</div>
+<div class="paragraph">
+<p>The function will gather all completion and return them as values, unless an exception is thrown.
+If an exception is thrown, all outstanding ops are cancelled (or detached if possible)
+and the first exception gets rethrown.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>void</code> will be returned as <code>variant2::monostate</code> in the tuple, unless all awaitables yield void.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>It can be called as a variadic function with multiple <a href="#awaitable">Awaitable</a> or as on a range of <a href="#awaitable">Awaitable</a>s.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">task1</span><span class="p">();</span>
+<span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">task2</span><span class="p">();</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">do_join</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">join</span><span class="p">(</span><span class="n">task1</span><span class="p">(),</span> <span class="n">task2</span><span class="p">());</span> <i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;&gt;</span> <span class="n">aws</span> <span class="p">{</span><span class="n">task1</span><span class="p">(),</span> <span class="n">task2</span><span class="p">()};</span>
+  <span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">join</span><span class="p">(</span><span class="n">aws</span><span class="p">);</span> <i class="conum" data-value="2"></i><b>(2)</b>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Wait for a variadic set of <a href="#awaitable">Awaitable</a>s</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Wait for a vector of <a href="#awaitable">Awaitable</a>s</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The <code>join</code> will invoke the functions of the <code>awaitable</code> as if used in a <code>co_await</code> expression.</p>
 </div>
 </div>
 <div class="sect2">
@@ -2882,7 +3380,7 @@ C++20 coroutines are stackless, i.e. they only allocate their own frame and use 
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2023-03-14 20:19:30 +0800
+Last updated 2023-03-17 22:28:04 +0800
 </div>
 </div>
 </body>
