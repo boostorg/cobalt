@@ -50,14 +50,6 @@ CO_TEST_CASE("generator-int")
   co_return ;
 }
 
-/*
-
-@startuml
-test --> gen_push: 1
-gen_push --> 2
-@enduml
-
- */
 
 async::generator<int, int> gen_push()
 {
@@ -121,6 +113,8 @@ CO_TEST_CASE("generator-select")
 
   auto itr = seq.begin();
   auto ntr = num.begin();
+
+  int i = 0;
   while (g1 && g2)
   {
     auto r =  co_await select(g1, g2);
@@ -133,6 +127,8 @@ CO_TEST_CASE("generator-select")
           CHECK(i == *ntr++);
         }, r);
   }
+  CHECK(itr == seq.end());
+  CHECK(ntr == num.end());
   CHECK(!g2);
   g1.cancel();
   CHECK_THROWS(co_await g1);

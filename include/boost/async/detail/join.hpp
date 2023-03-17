@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_ASYNC_DETAIL_GATHER_HPP
-#define BOOST_ASYNC_DETAIL_GATHER_HPP
+#ifndef BOOST_ASYNC_DETAIL_JOIN_HPP
+#define BOOST_ASYNC_DETAIL_JOIN_HPP
 
 #include <boost/async/detail/await_result_helper.hpp>
 #include <boost/async/detail/exception.hpp>
@@ -31,13 +31,13 @@
 namespace boost::async::detail
 {
 
-struct gather_shared_state
+struct join_shared_state
 {
   std::unique_ptr<void, coro_deleter<>> h;
   std::size_t use_count = 0u;
 
-  friend void intrusive_ptr_add_ref(gather_shared_state * st) {st->use_count++;}
-  friend void intrusive_ptr_release(gather_shared_state * st) {if (st->use_count-- == 1u) st->h.reset();}
+  friend void intrusive_ptr_add_ref(join_shared_state * st) {st->use_count++;}
+  friend void intrusive_ptr_release(join_shared_state * st) {if (st->use_count-- == 1u) st->h.reset();}
 
   void complete()
   {
@@ -47,8 +47,8 @@ struct gather_shared_state
 
   struct completer
   {
-    intrusive_ptr<gather_shared_state> ptr;
-    completer(gather_shared_state * wss) : ptr{wss} {}
+    intrusive_ptr<join_shared_state> ptr;
+    completer(join_shared_state * wss) : ptr{wss} {}
 
     void operator()()
     {
@@ -72,11 +72,11 @@ struct gather_shared_state
 
 
 template<typename ... Args>
-struct gather_variadic_impl
+struct join_variadic_impl
 {
   using tuple_type = std::tuple<decltype(get_awaitable_type(std::declval<Args&&>()))...>;
 
-  gather_variadic_impl(Args && ... args)
+  join_variadic_impl(Args && ... args)
       : args{std::forward<Args>(args)...}
   {
   }
@@ -98,13 +98,18 @@ struct gather_variadic_impl
     std::array<bool, tuple_size> ready{
         std::apply([](auto && ... aw) {return std::array<bool, tuple_size>{aw.await_ready() ... };}, aws)
     };
-    std::array<asio::cancellation_signal, tuple_size> cancel;
+
+    std::array<asio::cancellation_signal, tuple_size> cancel_;
+    template<typename > constexpr static auto make_null() {return nullptr;};
+    std::array<asio::cancellation_signal*, tuple_size> cancel = {make_null<Args>()...};
+
+
     char storage[256 * tuple_size];
     container::pmr::monotonic_buffer_resource res{storage, sizeof(storage),
                                                   this_thread::get_default_resource()};
     container::pmr::polymorphic_allocator<void> alloc{&res};
 
-    gather_shared_state wss;
+    join_shared_state wss;
 
     template<typename T>
     using result_part = system::result<co_await_result_t<T>, std::exception_ptr>;
@@ -113,6 +118,20 @@ struct gather_variadic_impl
         {
           result_part<Args>{system::in_place_error, std::exception_ptr()}...
         };
+    std::exception_ptr error;
+    constexpr static std::array<bool, sizeof...(Args)> lval_ref{std::is_lvalue_reference_v<Args>...};
+
+    void cancel_all()
+    {
+      for (auto i = 0u; i < tuple_size; i++)
+      {
+        auto &r = cancel[i];
+        if (lval_ref[i] && r)
+          r->emit(interrupt_await);
+        if (r)
+          std::exchange(r, nullptr)->emit(asio::cancellation_type::all);
+      }
+    }
 
     bool await_ready(){return std::find(ready.begin(), ready.end(), false) == ready.end();};
 
@@ -120,32 +139,51 @@ struct gather_variadic_impl
     void await_suspend_step(
         asio::io_context::executor_type exec, Aw && aw)
     {
+      if (error && lval_ref[Idx])
+        return;
       if (!ready[Idx])
+      {
         suspend_for_callback(
           aw,
           asio::bind_cancellation_slot(
-            cancel[Idx].slot(),
+            (cancel[Idx] = &cancel_[Idx])->slot(),
             asio::bind_executor(
               exec,
               asio::bind_allocator(
                 alloc,
                 [this, &aw, c = wss.get_completer()]() mutable
                 {
-                  std::get<Idx>(result) = get_resume_result(aw);
+                  this->cancel[Idx] = nullptr;
+                  auto &re_ = std::get<Idx>(result) = get_resume_result(aw);
+                  if (re_.has_error() && error == nullptr)
+                  {
+                    error = re_.error();
+                    cancel_all();
+                  }
                   c();
                 }
               )
             )
           )
         );
+
+        if (error && cancel[Idx])
+          cancel[Idx]->emit(asio::cancellation_type::all);
+      }
       else
-        std::get<Idx>(result) = get_resume_result(aw);
+      {
+        auto & re_ = std::get<Idx>(result) = get_resume_result(aw);
+        if (re_.has_error() && error == nullptr)
+        {
+          error = re_.error();
+          cancel_all();
+        }
+      }
     }
 
     template<typename H>
     auto await_suspend(std::coroutine_handle<H> h)
     {
-      std::size_t idx = 0u;
       mp11::mp_for_each<mp11::mp_iota_c<sizeof...(Args)>>
           ([&](auto idx)
           {
@@ -155,6 +193,7 @@ struct gather_variadic_impl
             else
               await_suspend_step<idx>(this_thread::get_executor(), aw);
           });
+
       if (wss.use_count == 0) // already done, no need to suspend
         return false;
 
@@ -165,18 +204,33 @@ struct gather_variadic_impl
               [&](asio::cancellation_type ct)
               {
                 for (auto & cs : cancel)
-                  cs.emit(ct);
+                  if (cs)
+                    cs->emit(ct);
               });
 
       wss.h.reset(h.address());
       return true;
     }
 
+    template<typename T>
+    static T                   make_result_step(system::result<T, std::exception_ptr>    & rr) { return *std::move(rr);}
+    static variant2::monostate make_result_step(system::result<void, std::exception_ptr> & )   { return {}; }
+
+
+    template<typename ... Ts>
+    static auto make_result(system::result<Ts, std::exception_ptr> & ... rr)
+    {
+      constexpr auto all_void = (std::is_void_v<Ts> && ...);
+      if constexpr (!all_void)
+        return std::make_tuple(make_result_step(rr)...);
+    }
+
     auto await_resume()
     {
       wss.h.release();
-      return std::move(result);
-      //return mp11::tuple_transform(get_resume_result{}, aws);
+      if (error)
+        std::rethrow_exception(error);
+      return std::apply([](auto & ... args) { return make_result(args...); }, result);
     }
   };
   awaitable operator co_await() &&
@@ -186,13 +240,14 @@ struct gather_variadic_impl
 };
 
 template<typename Range>
-struct gather_ranged_impl
+struct join_ranged_impl
 {
   Range aws;
 
-  using result_type = system::result<
-      co_await_result_t<std::decay_t<decltype(*std::begin(std::declval<Range>()))>>,
-      std::exception_ptr>;
+  using result_type = co_await_result_t<std::decay_t<decltype(*std::begin(std::declval<Range>()))>>;
+
+  constexpr static std::size_t result_size =
+      sizeof(std::conditional_t<std::is_void_v<result_type>, variant2::monostate, result_type>);
 
   struct awaitable
   {
@@ -204,18 +259,21 @@ struct gather_ranged_impl
                        container::pmr::vector<co_awaitable_type<type>>> aws;
 
     container::pmr::vector<bool> ready{std::size(aws), alloc};
-    container::pmr::vector<asio::cancellation_signal> cancel{std::size(aws), alloc};
-    container::pmr::vector<result_type> result{
+    container::pmr::vector<asio::cancellation_signal> cancel_{std::size(aws), alloc};
+    container::pmr::vector<asio::cancellation_signal*> cancel{std::size(aws), alloc};
+    container::pmr::vector<system::result<result_type, std::exception_ptr>> result{
           cancel.size(),
-          result_type{system::in_place_error, std::exception_ptr()},
-          this_thread::get_allocator()};
+          system::result<result_type, std::exception_ptr>{system::in_place_error, std::exception_ptr()},
+          alloc};
 
+    std::exception_ptr error;
 
     awaitable(Range & aws_, std::false_type /* needs co_await */)
-      : res((256 + sizeof(co_awaitable_type<type>)) * std::size(aws_),
+      : res((256 + sizeof(co_awaitable_type<type>) + result_size) * std::size(aws_),
             this_thread::get_default_resource())
       , aws{alloc}
       , ready{std::size(aws_), alloc}
+      , cancel_{std::size(aws_), alloc}
       , cancel{std::size(aws_), alloc}
     {
       aws.reserve(std::size(aws_));
@@ -228,7 +286,7 @@ struct gather_ranged_impl
                      [](auto & aw) {return aw.await_ready();});
     }
     awaitable(Range & aws, std::true_type /* needs co_await */)
-        : res((256 + sizeof(co_awaitable_type<type>)) * std::size(aws),
+        : res((256 + sizeof(co_awaitable_type<type>) + result_size) * std::size(aws),
               this_thread::get_default_resource())
         , aws(aws)
     {
@@ -240,7 +298,19 @@ struct gather_ranged_impl
     {
     }
 
-    gather_shared_state wss;
+    join_shared_state wss;
+
+    void cancel_all()
+    {
+      constexpr bool lval_ref = std::is_lvalue_reference_v<Range>;
+      for (auto & r : cancel)
+      {
+        if (r && lval_ref)
+          r->emit(interrupt_await);
+        if (r)
+          std::exchange(r, nullptr)->emit(asio::cancellation_type::all);
+      }
+    }
 
     bool await_ready(){return std::find(ready.begin(), ready.end(), false) == ready.end();};
     template<typename H>
@@ -253,30 +323,49 @@ struct gather_ranged_impl
       else
         exec = this_thread::get_executor();
 
-      std::size_t idx = 0u;
-      for (auto && aw : aws)
+      for(std::size_t idx = 0u; idx < std::size(aws); idx++)
       {
+        auto & aw = aws[idx];
+        if (error && std::is_lvalue_reference_v<Range>)
+          break;
+
         if (!ready[idx])
+        {
           suspend_for_callback(
               aw,
               asio::bind_cancellation_slot(
-                  cancel[idx].slot(),
+                  (cancel[idx] = &cancel_[idx])->slot(),
                   asio::bind_executor(
                     *exec,
                     asio::bind_allocator(
                       alloc,
                       [this, c = wss.get_completer(), idx]() mutable
                       {
-                        result[idx] = get_resume_result(aws[idx]);
+                        this->cancel[idx] = nullptr;
+                        auto & re_ = result[idx] = get_resume_result(aws[idx]);
+                        if (re_.has_error() && error == nullptr)
+                        {
+                          error = re_.error();
+                          cancel_all();
+                        }
                         c();
                       }
                     )
                   )
-              )
-          );
+                )
+              );
+          if (error && cancel[idx])
+            cancel[idx]->emit(asio::cancellation_type::all);
+        }
         else
-          result[idx] = get_resume_result(aws[idx]);
-        idx ++;
+        {
+          auto & re_ = result[idx] = get_resume_result(aws[idx]);
+          if (re_.has_error() && error == nullptr)
+          {
+            error = re_.error();
+            cancel_all();
+          }
+        }
       }
       if (wss.use_count == 0) // already done, no need to suspend
         return false;
@@ -291,7 +380,8 @@ struct gather_ranged_impl
                 [&](asio::cancellation_type ct)
                 {
                   for (auto & cs : cancel)
-                    cs.emit(ct);
+                    if (cs)
+                      cs->emit(ct);
                 });
         }
 
@@ -301,11 +391,20 @@ struct gather_ranged_impl
 
     asio::cancellation_slot sl;
 
-    container::pmr::vector<result_type> await_resume()
+    auto await_resume()
     {
       sl.clear();
       ignore_unused(wss.h.release());
-      return std::move(result);
+      if (error)
+        std::rethrow_exception(error);
+      if constexpr (!std::is_void_v<result_type>)
+      {
+        container::pmr::vector<result_type> rr{this_thread::get_allocator()};
+        rr.reserve(result.size());
+        for (auto & t : result)
+          rr.push_back(std::move(t).value());
+        return rr;
+      }
     }
   };
   awaitable operator co_await() && {return awaitable{aws};}
@@ -313,4 +412,4 @@ struct gather_ranged_impl
 
 }
 
-#endif //BOOST_ASYNC_DETAIL_GATHER_HPP
+#endif //BOOST_ASYNC_DETAIL_JOIN_HPP

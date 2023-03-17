@@ -5,6 +5,9 @@
 #ifndef BOOST_ASYNC_UTIL_HPP
 #define BOOST_ASYNC_UTIL_HPP
 
+
+#include <boost/system/result.hpp>
+
 #include <limits>
 #include <type_traits>
 #include <coroutine>
@@ -121,6 +124,26 @@ struct coro_deleter<std::noop_coroutine_promise>
 
     }
 };
+
+template<typename Awaitable>
+auto get_resume_result(Awaitable & aw) -> system::result<decltype(aw.await_resume()), std::exception_ptr>
+{
+  using type = decltype(aw.await_resume());
+  try
+  {
+    if constexpr (std::is_void_v<type>)
+    {
+      aw.await_resume();
+      return {};
+    }
+    else
+      return aw.await_resume();
+  }
+  catch(...)
+  {
+    return std::current_exception();
+  }
+}
 
 }
 

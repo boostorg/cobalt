@@ -37,7 +37,7 @@ struct wait_group
     detail::gather_wrapper await_exit(std::exception_ptr ep)
     {
         auto ct = ep ? ct_except_ : ct_normal_;
-        if (ct != asio::cancellation_type::none || ep)
+        if (ct != asio::cancellation_type::none)
             for (auto & w : waitables_)
                 w.cancel(ct);
         return detail::gather_wrapper(waitables_);

@@ -1,0 +1,29 @@
+[#join]
+== async/join.hpp
+
+The `join` function can be used to `co_await` multiple <<awaitable>>s at once with properly connected cancellations.
+
+The function will gather all completion and return them as values, unless an exception is thrown.
+If an exception is thrown, all outstanding ops are cancelled (or detached if possible)
+and the first exception gets rethrown.
+
+NOTE: `void` will be returned as `variant2::monostate` in the tuple, unless all awaitables yield void.
+
+It can be called as a variadic function with multiple <<awaitable>> or as on a range of <<awaitable>>s.
+
+[source,cpp]
+----
+async::promise<void> task1();
+async::promise<void> task2();
+
+async::promise<void> do_join()
+{
+  co_await async::join(task1(), task2()); // <1>
+  std::vector<async::promise<void>> aws {task1(), task2()};
+  co_await async::join(aws); // <2>
+}
+----
+<1> Wait for a variadic set of <<awaitable>>s
+<2> Wait for a vector of <<awaitable>>s
+
+The `join` will invoke the functions of the `awaitable` as if used in a `co_await` expression.

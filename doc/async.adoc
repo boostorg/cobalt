@@ -38,6 +38,7 @@ include::reference/channel.adoc[]
 include::reference/with.adoc[]
 include::reference/select.adoc[]
 include::reference/gather.adoc[]
+include::reference/join.adoc[]
 include::reference/wait_group.adoc[]
 include::reference/spawn.adoc[]
 

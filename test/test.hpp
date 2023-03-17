@@ -39,7 +39,8 @@ inline auto test_run(boost::async::task<void> (*func) ())
         {
           CHECK(e == nullptr);
         });
-  std::size_t n = ctx.run();
+  std::size_t n;
+  n = ctx.run();
 
   if (::getenv("BOOST_ASYNC_BRUTE_FORCE"))
     while (n --> 0)

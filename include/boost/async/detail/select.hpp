@@ -44,7 +44,7 @@ struct select_shared_state
 
   void complete()
   {
-    if (use_count == 1u && h != nullptr)
+    if (use_count == 0u && h != nullptr)
       std::coroutine_handle<void>::from_address(h.release()).resume();
   }
 
@@ -57,7 +57,11 @@ struct select_shared_state
     {
       auto p = std::move(ptr);
       if (p->use_count == 1u)
-        p.detach()->complete();
+      {
+        auto pp = p.detach();
+        pp->use_count--;
+        pp->complete();
+      }
       else
         p->complete();
     }
@@ -110,24 +114,18 @@ struct select_variadic_impl
     container::pmr::polymorphic_allocator<void> alloc{&res};
 
     select_shared_state sss;
+    constexpr static std::array<bool, sizeof...(Args)> lval_ref{std::is_lvalue_reference_v<Args>...};
 
-    void cancel_all(std::size_t idx)
+    void cancel_all()
     {
-      constexpr std::array<bool, sizeof...(Args)> lval_ref{std::is_lvalue_reference_v<Args>...};
-      for (auto & r : cancel)
+      for (auto i = 0u; i < tuple_size; i++)
       {
-        auto i = idx ++;
+        auto &r = cancel[i];
+
+        if (r && lval_ref[i])
+          r->emit(interrupt_await);
         if (r)
-        {
-          if (lval_ref[i])
-          {
-            if (r)
-              r->emit(interrupt_await);
-            if (!r)
-              continue;
-          }
           std::exchange(r, nullptr)->emit(Ct);
-        }
       }
     }
 
@@ -141,35 +139,51 @@ struct select_variadic_impl
         asio::io_context::executor_type exec,
         Aw && aw, std::size_t idx)
     {
-      this->cancel[idx] = &this->cancel_[idx];
-      suspend_for_callback_with_transaction(
-        aw,
-        [this, idx]
-        {
-          if (this->index != std::numeric_limits<std::size_t>::max())
-            boost::throw_exception(std::logic_error("Another transaction already started"),
-                                   BOOST_CURRENT_LOCATION);
-          this->cancel[idx] = nullptr;
-          this->index = idx;
-          this->cancel_all(idx);
-        },
-        asio::bind_cancellation_slot(
-          cancel[idx]->slot(),
-          asio::bind_executor(
-            exec,
-            asio::bind_allocator(
-              alloc,
-              [this, idx, c=sss.get_completer()]() mutable
-              {
-                this->cancel[idx] = nullptr;
-                if (index == std::numeric_limits<std::size_t>::max())
-                  index = idx;
-                this->cancel_all(idx);
-                c();
-              })
+      if (index != std::numeric_limits<std::size_t>::max() && lval_ref[idx])
+        return ; // one coro did a direct complete
+      else if (index == std::numeric_limits<std::size_t>::max())
+        spawned = idx;
+
+      if (!ready[idx])
+      {
+        suspend_for_callback_with_transaction(
+          aw,
+          [this, idx]
+          {
+            if (this->index != std::numeric_limits<std::size_t>::max())
+              boost::throw_exception(std::logic_error("Another transaction already started"),
+                                     BOOST_CURRENT_LOCATION);
+            this->cancel[idx] = nullptr;
+            this->index = idx;
+            this->cancel_all();
+          },
+          asio::bind_cancellation_slot(
+            (cancel[idx] = &cancel_[idx])->slot(),
+            asio::bind_executor(
+              exec,
+              asio::bind_allocator(
+                alloc,
+                [this, idx, c=sss.get_completer()]() mutable
+                {
+                  this->cancel[idx] = nullptr;
+                  if (index == std::numeric_limits<std::size_t>::max())
+                    index = idx;
+                  this->cancel_all();
+                  c();
+                }
+              )
             )
           )
-      );
+        );
+        if (index != std::numeric_limits<std::size_t>::max())
+          if (this->cancel[idx])
+            this->cancel[idx]->emit(Ct);
+      }
+      else if (index == std::numeric_limits<std::size_t>::max())
+      {
+        index = idx;
+        this->cancel_all();
+      }
 
     }
 
@@ -181,9 +195,6 @@ struct select_variadic_impl
           aws,
           [&](auto && aw)
           {
-            if (index != std::numeric_limits<std::size_t>::max())
-              return ; // one coro did a direct complete
-            spawned = idx;
             if constexpr (requires {h.promise().get_executor();})
               await_suspend_step(h.promise().get_executor(), aw, idx++);
             else
@@ -202,6 +213,7 @@ struct select_variadic_impl
                   if (cs)
                       cs->emit(ct);
               });
+
       if (index == std::numeric_limits<std::size_t>::max())
       {
         sss.h.reset(h.address());
@@ -209,7 +221,6 @@ struct select_variadic_impl
       }
       else // short circuit here, great.
         return false;
-
     }
 
 
@@ -233,8 +244,8 @@ struct select_variadic_impl
             constexpr std::size_t idx = iidx;
             try
             {
-              if ((index != idx)
-               && ((idx <= spawned ) || ready[idx]))
+              if ((index != idx) &&
+                  ((idx <= spawned) || !lval_ref[idx] || ready[idx]))
                 std::get<idx>(aws).await_resume();
             }
             catch (...) {}
@@ -246,8 +257,12 @@ struct select_variadic_impl
           [this](auto idx) -> result_type
           {
               constexpr std::size_t sz = idx;
+
               if constexpr (all_void)
+              {
+                std::get<sz>(aws).await_resume();
                 return sz;
+              }
               else if constexpr (std::is_void_v<decltype(std::get<sz>(aws).await_resume())>)
               {
                 std::get<sz>(aws).await_resume();
@@ -326,23 +341,15 @@ struct select_ranged_impl
 
         select_shared_state sss;
 
-    void cancel_all(std::size_t idx)
+    void cancel_all()
     {
       constexpr bool lval_ref = std::is_lvalue_reference_v<Range>;
       for (auto & r : cancel)
       {
-        auto i = idx ++;
+        if (r && lval_ref)
+          r->emit(interrupt_await);
         if (r)
-        {
-          if (lval_ref)
-          {
-            if (r)
-              r->emit(interrupt_await);
-            if (!r)
-              continue;
-          }
           std::exchange(r, nullptr)->emit(Ct);
-        }
       }
     }
 
@@ -357,7 +364,9 @@ struct select_ranged_impl
         Aw && aw, std::size_t idx)
     {
       this->cancel[idx] = &this->cancel_[idx];
-      suspend_for_callback_with_transaction(
+      if (!ready[idx])
+      {
+        suspend_for_callback_with_transaction(
           aw,
           [this, idx]
           {
@@ -366,26 +375,29 @@ struct select_ranged_impl
                                      BOOST_CURRENT_LOCATION);
             this->cancel[idx] = nullptr;
             this->index = idx;
-            this->cancel_all(idx);
+            this->cancel_all();
           },
           asio::bind_cancellation_slot(
-              cancel[idx]->slot(),
-              asio::bind_executor(
-                  exec,
-                  asio::bind_allocator(
-                      alloc,
-                      [this, idx, c=sss.get_completer()]() mutable
-                      {
-                        this->cancel[idx] = nullptr;
-                        if (index == std::numeric_limits<std::size_t>::max())
-                          index = idx;
-                        this->cancel_all(idx);
-                        c();
-                      })
+            cancel[idx]->slot(),
+            asio::bind_executor(
+              exec,
+              asio::bind_allocator(
+                alloc,
+                [this, idx, c=sss.get_completer()]() mutable
+                {
+                  this->cancel[idx] = nullptr;
+                  if (index == std::numeric_limits<std::size_t>::max())
+                    index = idx;
+                  this->cancel_all();
+                  c();
+                })
+               )
               )
-          )
-      );
-
+            );
+        if (index != std::numeric_limits<std::size_t>::max())
+          if (this->cancel[idx])
+            this->cancel[idx]->emit(Ct);
+      }
     }
 
     template<typename H>
@@ -394,9 +406,12 @@ struct select_ranged_impl
       std::size_t idx = 0u;
       for (auto && aw : aws)
       {
-        if (index != std::numeric_limits<std::size_t>::max())
+        if (index != std::numeric_limits<std::size_t>::max()
+            && std::is_lvalue_reference_v<Range>)
           break; // one coro did a direct complete
-        spawned = idx;
+        else if (index == std::numeric_limits<std::size_t>::max())
+          spawned = idx;
+
         if constexpr (requires {h.promise().get_executor();})
           await_suspend_step(h.promise().get_executor(), aw, idx++);
         else
@@ -430,14 +445,14 @@ struct select_ranged_impl
     {
       if (index == std::numeric_limits<std::size_t>::max())
         index = std::distance(ready.begin(), std::find(ready.begin(), ready.end(), true));
-      BOOST_ASSERT(index != std::numeric_limits<std::size_t>::max());
+      BOOST_ASSERT(index != ready.size());
 
       for (std::size_t idx = 0u; idx < aws.size(); idx++)
       {
         try
         {
           if ((index != idx)
-              && ((idx <= spawned ) || ready[idx]))
+              && ((idx <= spawned) || !std::is_lvalue_reference_v<Range> || ready[idx]))
             aws[idx].await_resume();
         }
         catch (...) {}
