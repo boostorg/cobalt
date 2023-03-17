@@ -114,7 +114,8 @@ struct select_variadic_impl
     container::pmr::polymorphic_allocator<void> alloc{&res};
 
     select_shared_state sss;
-    constexpr static std::array<bool, sizeof...(Args)> lval_ref{std::is_lvalue_reference_v<Args>...};
+    constexpr static std::array<bool, sizeof...(Args)> interruptible{
+                  (std::is_lvalue_reference_v<Args> || is_interruptible_v<Args>)...};
 
     bool has_result() const
     {
@@ -127,7 +128,7 @@ struct select_variadic_impl
       {
         auto &r = cancel[i];
 
-        if (r && lval_ref[i])
+        if (r && interruptible[i])
           r->emit(interrupt_await);
         if (r)
           std::exchange(r, nullptr)->emit(Ct);
@@ -144,7 +145,7 @@ struct select_variadic_impl
         asio::io_context::executor_type exec,
         Aw && aw, std::size_t idx)
     {
-      if (has_result() && lval_ref[idx])
+      if (has_result() && interruptible[idx])
         return ; // one coro did a direct complete
       else if (!has_result())
         spawned = idx;
@@ -243,7 +244,7 @@ struct select_variadic_impl
             try
             {
               if ((index != idx) &&
-                  ((idx <= spawned) || !lval_ref[idx] || ready[idx]))
+                  ((idx <= spawned) || !interruptible[idx] || ready[idx]))
                 std::get<idx>(aws).await_resume();
             }
             catch (...) {}
@@ -306,8 +307,12 @@ struct select_ranged_impl
     container::pmr::vector<asio::cancellation_signal> cancel_{std::size(aws), alloc};
     container::pmr::vector<asio::cancellation_signal*> cancel{std::size(aws), alloc};
 
+    constexpr static bool interruptible =
+        std::is_lvalue_reference_v<Range> || is_interruptible_v<type>;
+
+
     bool has_result() const {return index != std::numeric_limits<std::size_t>::max(); }
-    
+
     awaitable(Range & aws_, std::false_type /* needs co_await */)
         : res((256 + sizeof(co_awaitable_type<type>)) * std::size(aws_),
               this_thread::get_default_resource())
@@ -343,10 +348,9 @@ struct select_ranged_impl
 
     void cancel_all()
     {
-      constexpr bool lval_ref = std::is_lvalue_reference_v<Range>;
       for (auto & r : cancel)
       {
-        if (r && lval_ref)
+        if (r && interruptible)
           r->emit(interrupt_await);
         if (r)
           std::exchange(r, nullptr)->emit(Ct);
@@ -465,5 +469,16 @@ struct select_ranged_impl
 };
 
 }
+
+namespace boost::async
+{
+
+template<asio::cancellation_type Ct, typename ... Args>
+struct is_interruptible<detail::select_variadic_impl<Ct, Args...>> : std::true_type {};
+template<asio::cancellation_type Ct, typename Range>
+struct is_interruptible<detail::select_ranged_impl<Ct, Range>> : std::true_type {};
+
+}
+
 
 #endif //BOOST_ASYNC_DETAIL_SELECT_HPP

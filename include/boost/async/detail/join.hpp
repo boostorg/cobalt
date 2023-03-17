@@ -119,14 +119,15 @@ struct join_variadic_impl
           result_part<Args>{system::in_place_error, std::exception_ptr()}...
         };
     std::exception_ptr error;
-    constexpr static std::array<bool, sizeof...(Args)> lval_ref{std::is_lvalue_reference_v<Args>...};
+    constexpr static std::array<bool, sizeof...(Args)> interruptible{
+        (std::is_lvalue_reference_v<Args> || is_interruptible_v<Args>)...};
 
     void cancel_all()
     {
       for (auto i = 0u; i < tuple_size; i++)
       {
         auto &r = cancel[i];
-        if (lval_ref[i] && r)
+        if (interruptible[i] && r)
           r->emit(interrupt_await);
         if (r)
           std::exchange(r, nullptr)->emit(asio::cancellation_type::all);
@@ -139,7 +140,7 @@ struct join_variadic_impl
     void await_suspend_step(
         asio::io_context::executor_type exec, Aw && aw)
     {
-      if (error && lval_ref[Idx])
+      if (error && interruptible[Idx])
         return;
       if (!ready[Idx])
       {
@@ -257,6 +258,9 @@ struct join_ranged_impl
           system::result<result_type, std::exception_ptr>{system::in_place_error, std::exception_ptr()},
           alloc};
 
+    constexpr static bool interruptible =
+        std::is_lvalue_reference_v<Range> || is_interruptible_v<type>;
+
     std::exception_ptr error;
 
     awaitable(Range & aws_, std::false_type /* needs  operator co_await */)
@@ -293,10 +297,9 @@ struct join_ranged_impl
 
     void cancel_all()
     {
-      constexpr bool lval_ref = std::is_lvalue_reference_v<Range>;
       for (auto & r : cancel)
       {
-        if (r && lval_ref)
+        if (r && interruptible)
           r->emit(interrupt_await);
         if (r)
           std::exchange(r, nullptr)->emit(asio::cancellation_type::all);
@@ -386,6 +389,16 @@ struct join_ranged_impl
   };
   awaitable operator co_await() && {return awaitable{aws};}
 };
+
+}
+
+namespace boost::async
+{
+
+template<typename ... Args>
+struct is_interruptible<detail::join_variadic_impl<Args...>> : std::true_type {};
+template<typename Range>
+struct is_interruptible<detail::join_ranged_impl<Range>> : std::true_type {};
 
 }
 

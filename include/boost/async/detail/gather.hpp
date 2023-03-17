@@ -291,4 +291,15 @@ struct gather_ranged_impl
 
 }
 
+namespace boost::async
+{
+
+template<typename ... Args>
+struct is_interruptible<detail::gather_variadic_impl<Args...>> : std::true_type {};
+template<typename Range>
+struct is_interruptible<detail::gather_ranged_impl<Range>> : std::true_type {};
+
+}
+
+
 #endif //BOOST_ASYNC_DETAIL_GATHER_HPP

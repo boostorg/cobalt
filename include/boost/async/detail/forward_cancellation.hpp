@@ -17,7 +17,12 @@ namespace boost::async
 // in no apparent side effects and where the op can re-awaited.
 constexpr asio::cancellation_type interrupt_await{8u};
 
+// usable with interrupt_await
+template<typename Awaitable>
+struct is_interruptible : std::false_type {};
 
+template<typename Awaitable>
+constexpr bool is_interruptible_v = is_interruptible<Awaitable>::value;
 
 }
 
