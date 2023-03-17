@@ -1,11 +1,11 @@
 == echo server
 
 We'll be using the `use_op` token everywhere,
-so we're using a default completion token:
+so we're using a default completion token, so that we can skip the last parameters.
 
 .example/echo_server.cpp declarations
 [example]
-[source]
+[source,cpp]
 ----
 include::../../example/echo_server.cpp[tag=decls]
 ----
@@ -16,7 +16,7 @@ in case a lazy coro is needed, <<task, task>> is available.
 
 .example/echo_server.cpp echo function
 [example]
-[source]
+[source,cpp]
 ----
 include::../../example/echo_server.cpp[tag=echo]
 ----
@@ -26,19 +26,19 @@ for any error (including cancellation).
 <3> Read as much as is available.
 <4> Write all the read bytes.
 
-Note that promise is eager. Calling `echo` will immediately execute code until the `async_read_some`
+Note that promise is eager. Calling `echo` will immediately execute code until `async_read_some`
 and then return control to the caller.
 
 Next, we also need an acceptor function. Since this is a tutorial, we're using a <<generator,generator>>.
-This is a coroutine that can be co_awaited multiple times, while it `co_yield` until `co_return`.
+This is a coroutine that can be co_awaited multiple times, until `co_return`.
 
 .example/echo_server.cpp listen function
 [example]
-[source]
+[source,cpp]
 ----
 include::../../example/echo_server.cpp[tag=listen]
 ----
-<1> Cancellation will also lead to an exception here
+<1> Cancellation will also lead to an exception here being thrown from the `co_await`
 <2> Asynchronously accept the connection
 <3> Yield it to the awaiting coroutine
 
@@ -46,7 +46,7 @@ With those two functions we can now write the server:
 
 .example/echo_server.cpp run_server function
 [example]
-[source]
+[source,cpp]
 ----
 include::../../example/echo_server.cpp[tag=run_server]
 ----
@@ -67,7 +67,7 @@ We then put those promises into a <<wait_group, wait_group>> which will allow us
 
 .example/echo_server.cpp co_main function
 [example]
-[source]
+[source,cpp]
 ----
 include::../../example/echo_server.cpp[tag=main]
 ----
@@ -76,3 +76,4 @@ include::../../example/echo_server.cpp[tag=main]
 The <<with, with>> function shown above, will run a function with a resource such as <<wait_group, wait_group>>.
 On scope exit `with` will invoke & `co_await` an asynchronous teardown function.
 This will cause all connections to be properly shutdown before `co_main` exists.
+

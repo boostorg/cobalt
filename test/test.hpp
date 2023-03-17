@@ -35,7 +35,7 @@ inline auto test_run(boost::async::task<void> (*func) ())
   asio::io_context ctx;
   async::this_thread::set_executor(ctx.get_executor());
   spawn(ctx, func(),
-        [](std::exception_ptr e)
+        +[](std::exception_ptr e)
         {
           CHECK(e == nullptr);
         });
@@ -47,7 +47,7 @@ inline auto test_run(boost::async::task<void> (*func) ())
     {
       ctx.reset();
       spawn(ctx, func(),
-            [](std::exception_ptr e)
+            +[](std::exception_ptr e)
             {
               CHECK(e == nullptr);
             });

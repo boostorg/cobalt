@@ -7,7 +7,7 @@
 
 #include <boost/async/promise.hpp>
 #include <boost/async/with.hpp>
-#include <boost/asio/any_io_executor.hpp>
+#include <boost/asio/io_context.hpp>
 #include <boost/asio/this_coro.hpp>
 
 #include "doctest.h"
@@ -19,8 +19,8 @@ namespace asio = boost::asio;
 
 struct finalizer_test
 {
-    asio::any_io_executor exec;
-    using executor_type = asio::any_io_executor;
+    asio::io_context::executor_type exec;
+    using executor_type = asio::io_context::executor_type ;
     executor_type get_executor()
     {
         return exec;
