@@ -47,12 +47,11 @@ async::promise<void> echo(tcp_socket socket)
 // tag::listen[]
 async::generator<tcp_socket> listen()
 {
-  co_await this_coro::pro_active(true); // <1>
   tcp_acceptor acceptor({co_await async::this_coro::executor}, {tcp::v4(), 55555});
-  for (;;) // <2>
+  for (;;) // <1>
   {
-    tcp_socket sock = co_await acceptor.async_accept(); // <3>
-    co_yield std::move(sock); // <4>
+    tcp_socket sock = co_await acceptor.async_accept(); // <2>
+    co_yield std::move(sock); // <3>
   }
 }
 // end::listen[]

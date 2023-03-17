@@ -3,6 +3,9 @@
 
 The `gather` function can be used to `co_await` multiple <<awaitable>>s at once with properly connected cancellations.
 
+The function will gather all completion and return them as `system::result`,
+i.e. capture conceptions as values. One awaitable throwing an exception will not cancel the others.
+
 It can be called as a variadic function with multiple <<awaitable>> or as on a range of <<awaitable>>s.
 
 [source,cpp]
