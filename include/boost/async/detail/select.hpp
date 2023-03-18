@@ -97,10 +97,7 @@ struct select_variadic_impl
 
     tuple_type aws;
 
-    std::array<bool, tuple_size> ready{
-        std::apply([](auto && ... aw) {
-          return std::array<bool, tuple_size>{aw.await_ready() ... };}, aws)
-    };
+    std::array<bool, tuple_size> ready{};
     std::array<asio::cancellation_signal, tuple_size> cancel_;
 
     template<typename > constexpr static auto make_null() {return nullptr;};
@@ -137,7 +134,20 @@ struct select_variadic_impl
 
     bool await_ready()
     {
-      return std::find(ready.begin(), ready.end(), true) != ready.end();
+      std::size_t idx = 0u;
+      bool found_ready = false;
+      mp11::tuple_for_each(
+          aws,
+          [&](auto & aw)
+          {
+            if (!found_ready || !interruptible[idx])
+              found_ready |= ready[idx] = aw.await_ready();
+            else
+              ready[idx] = false;
+            idx++;
+          });
+
+      return found_ready;
     }
 
     template<typename Aw>
@@ -324,11 +334,6 @@ struct select_ranged_impl
       aws.reserve(std::size(aws_));
       for (auto && a : aws_)
         aws.emplace_back(awaitable_type_getter<decltype(a)>(std::forward<decltype(a)>(a)));
-
-      std::transform(std::begin(this->aws),
-                     std::end(this->aws),
-                     std::begin(ready),
-                     [](auto & aw) {return aw.await_ready();});
     }
 
     awaitable(Range & aws, std::true_type /* needs co_await */)
@@ -336,7 +341,6 @@ struct select_ranged_impl
               this_thread::get_default_resource())
         , aws(aws)
     {
-      std::transform(std::begin(aws), std::end(aws), std::begin(ready), [](auto & aw) {return aw.await_ready();});
     }
 
     awaitable(Range & aws)
@@ -344,7 +348,7 @@ struct select_ranged_impl
     {
     }
 
-        select_shared_state sss;
+    select_shared_state sss;
 
     void cancel_all()
     {
@@ -359,7 +363,22 @@ struct select_ranged_impl
 
     bool await_ready()
     {
-      return std::find(ready.begin(), ready.end(), true) != ready.end();
+      bool found_ready = false;
+      std::transform(
+          std::begin(aws), std::end(aws), std::begin(ready),
+          [&found_ready](auto & aw)
+          {
+            if (!found_ready || !interruptible)
+            {
+              auto r = aw.await_ready();
+              found_ready |= r;
+              return r;
+            }
+            else
+              return false;
+          });
+
+      return found_ready;
     }
 
     template<typename Aw>
