@@ -685,10 +685,6 @@ pre.rouge {
 <li><a href="#executor">Executor</a></li>
 <li><a href="#memory_resource">Memory Resource</a></li>
 <li><a href="#main-promise">Promise</a></li>
-</ul>
-</li>
-<li><a href="#thread">async/thread.hpp</a>
-<ul class="sectlevel3">
 <li><a href="#executor_2">Executor</a></li>
 <li><a href="#memory_resource_2">Memory Resource</a></li>
 <li><a href="#thread-outline">Outline</a></li>
@@ -757,7 +753,6 @@ pre.rouge {
 <li><a href="#interrupt_await">Interrupt Wait</a></li>
 </ul>
 </li>
-<li><a href="#gather">async/gather.hpp</a></li>
 <li><a href="#join">async/join.hpp</a></li>
 <li><a href="#wait_group">async/wait_group.hpp</a></li>
 <li><a href="#spawn">async/spawn.hpp</a>
@@ -777,13 +772,6 @@ pre.rouge {
 </div>
 </div>
 <div id="content">
-<div id="preamble">
-<div class="sectionbody">
-<div class="paragraph">
-<p>The goal of this library is to provide a unified C++20 basic_coro primitive that introduces as little types as possible and integrates with asio.</p>
-</div>
-</div>
-</div>
 <div class="sect1">
 <h2 id="motivation">Motivation</h2>
 <div class="sectionbody">
@@ -1667,14 +1655,11 @@ Depending on the coroutine properties different things can be <code>co_await</co
 <p><a href="#enable_await_allocator">Await Allocator</a></p>
 </li>
 <li>
-<p><a href="#enable_await_executor">Await Executor</a></p>
+<p><a href="#enable_await_executor">Await Executor</a>
+== async/thread.hpp</p>
 </li>
 </ul>
 </div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="thread">async/thread.hpp</h3>
 <div class="paragraph">
 <p>The thread type is another way to create an environment that is similar to <code>main</code>, but doesn&#8217;t `signal_set`s.</p>
 </div>
@@ -1756,6 +1741,7 @@ e.g. <a href="https://www.boost.org/doc/libs/master/doc/html/boost_asio/referenc
 </td>
 </tr>
 </table>
+</div>
 </div>
 <div class="sect3">
 <h4 id="executor_2">Executor</h4>
@@ -3017,15 +3003,23 @@ If the <code>select</code> doesn&#8217;t detect the immediate completion, it wil
 </table>
 </div>
 <div class="paragraph">
-<p>This is supported by <a href="#promise">promise</a>, <a href="#generator">generator</a> and <a href="#wait">wait</a>.</p>
+<p>This is supported by <a href="#promise">promise</a>, <a href="#generator">generator</a> and <a href="#gather">gather</a>.</p>
 </div>
 <div class="paragraph">
-<p>The <code>select</code> will invoke the functions of the <code>awaitable</code> as if used in a <code>co_await</code> expression.</p>
+<p>The <code>select</code> will invoke the functions of the <code>awaitable</code> as if used in a <code>co_await</code> expression,
+with two exceptions:</p>
 </div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>A call to <code>await_ready</code> might not be followed by <code>await_suspend</code> when returning false.</p>
+</li>
+<li>
+<p>A call to <code>operator co_await</code> may not be followed by a call to any <code>await_*</code> function.
+== async/gather.hpp</p>
+</li>
+</ol>
 </div>
-</div>
-<div class="sect2">
-<h3 id="gather">async/gather.hpp</h3>
 <div class="paragraph">
 <p>The <code>gather</code> function can be used to <code>co_await</code> multiple <a href="#awaitable">Awaitable</a>s at once with properly connected cancellations.</p>
 </div>
@@ -3063,6 +3057,7 @@ i.e. capture conceptions as values. One awaitable throwing an exception will not
 </div>
 <div class="paragraph">
 <p>The <code>gather</code> will invoke the functions of the <code>awaitable</code> as if used in a <code>co_await</code> expression.</p>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -3382,7 +3377,7 @@ C++20 coroutines are stackless, i.e. they only allocate their own frame and use 
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2023-03-17 22:28:04 +0800
+Last updated 2023-03-18 11:06:50 +0800
 </div>
 </div>
 </body>
