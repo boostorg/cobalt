@@ -58,3 +58,9 @@ The main promise has the following properties.
  - <<enable_await_allocator>>
  - <<enable_await_executor>>
 
+
+=== Specification
+
+. declaring `co_main` will implicitly declare a `main` function
+. `main` is only present when `co_main` is defined.
+. `SIGINT` and `SIGTERM` will cause cancellation of the internal task.
