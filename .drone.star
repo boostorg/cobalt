@@ -1,88 +1,204 @@
 #
-# Copyright (c) 2019-2023 Ruben Perez Hidalgo (rubenperez038 at gmail dot com)
+# Copyright (c) 2022 Klemens Morgenstern (klemens.morgenstern@gmx.net)
 #
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #
 
-_triggers = {"branch": ["master", "develop", "drone*", "bugfix/*", "feature/*", "fix/*", "pr/*"]}
-_container_tag = '65e51d3af7132dcb1001249629c24cc59b934cb6'
+deps = [
+    'libs/array',
+    'libs/align',
+    'libs/asio',
+    'libs/assert',
+    'libs/beast',
+    'libs/chrono',
+    'libs/config',
+    'libs/core',
+    'libs/date_time',
+    'libs/headers',
+    'libs/integer',
+    'libs/mpl',
+    'libs/numeric',
+    'libs/predef',
+    'libs/preprocessor',
+    'libs/ratio',
+    'libs/system',
+    'libs/static_assert',
+    'libs/smart_ptr',
+    'libs/test',
+    'libs/thread',
+    'libs/throw_exception',
+    'libs/utility',
+    'libs/type_traits',
+    'libs/winapi',
+    'tools/build',
+    'tools/boost_install',
+    'tools/boostdep'
+    ]
 
 
-def linux_cmake(branch, name, image, packages):
-  return {
-    "name": name,
-      "kind": "pipeline",
-      "type": "docker",
-      "trigger": _triggers,
-      "platform": {
-        "os": "linux",
-        "arch": "amd64"
-      },
-      "clone": {
-        "retries": 5
-      },
-      "node": {},
-      "steps" : [
-      {
-        "name": "Install Dependencies",
-        "image": image,
-        "pull": "if-not-exists",
-        "commands": [
-          "dnf install -y " + " ".join(packages)
-        ]
-      },
-      {
-        "name": "Get boost",
-        "image": image,
-        "pull": "if-not-exists",
-        "commands": [
-          "cd ..",
-          "git clone -b {} --depth 1 https://github.com/boostorg/boost.git".format(branch),
-          "cd boost",
-          """git submodule update --init --depth 20 --jobs 4 \
-              libs/array     \
-              libs/headers   \
-              libs/system    \
-              libs/container \
-              libs/asio      \
-              libs/core      \
-              libs/config    \
-              libs/assert
-          """
-        ]
-      }]
+def git_boost_steps(branch, image="alpine/git", env_win_style=False):
+    return [{
+            "name": "boost ({})".format(branch),
+            "image": image,
+            "commands": [
+               "git clone -b {} --depth 1 https://github.com/boostorg/boost.git boost".format(branch)
+                ]
+        },
+        {
+            "name": "boost submodules",
+            "image": image,
+            "commands": [
+                "cd boost",
+                "git submodule update --init --depth 20 --jobs 8 " + " ".join(deps)
+            ]
+        },
+        {
+            "name": "clone",
+            "image": image,
+            "commands": [
+                "cd boost/libs",
+                "git clone {}".format("$Env:DRONE_REMOTE_URL" if env_win_style else "$DRONE_REMOTE_URL"),
+                "cd async",
+                "git checkout {}".format("$Env:DRONE_COMMIT" if env_win_style else "$DRONE_COMMIT")
+            ]
+        }
+    ]
+
+
+def format_b2_args(**kwargs):
+    res = ""
+    for k in kwargs:
+        res += " {}={}".format(k.replace('_', '-'), kwargs[k])
+    return res
+
+
+def linux_build_steps(image, **kwargs):
+    args = format_b2_args(**kwargs)
+    return [
+        {
+            "name": "bootstrap",
+            "image": image,
+            "commands": [
+                "cd boost",
+                "./bootstrap.sh"
+            ]
+        },
+        {
+            "name": "build",
+            "image": image,
+            "commands" : [
+                "cd boost/libs/async",
+                "../../b2 build -j8 " + args
+            ]
+        },
+        {
+            "name": "test",
+            "image": image,
+            "commands" : [
+                "cd boost/libs/async",
+                "../../b2 test -j8 " + args
+            ]
+        },
+        {
+            "name": "bench",
+            "image": image,
+            "commands" : [
+                "cd boost/libs/async",
+                "../../b2 bench -j8 " + args
+            ]
+        }]
+
+
+def windows_build_steps(image, **kwargs):
+    args = format_b2_args(**kwargs)
+    return [
+        {
+            "name": "bootstrap",
+            "image": image,
+            "commands": [
+                "cd boost",
+                ".\\\\bootstrap.bat"
+            ]
+        },
+        {
+            "name" : "build",
+            "image" : image,
+            "commands": [
+                "cd boost/libs/async",
+                "..\\\\..\\\\b2 build -j8 " + args
+            ]
+        },
+        {
+            "name": "test",
+            "image": image,
+            "commands": [
+                "cd boost/libs/async",
+                "..\\\\..\\\\b2 test -j8 " + args
+            ]
+        },
+        {
+            "name": "bench",
+            "image": image,
+            "commands": [
+                "cd boost/libs/async",
+                "..\\\\..\\\\b2 bench -j8 " + args
+            ]
+        }]
+
+
+def linux(
+        name,
+        branch,
+        image,
+        **kwargs):
+
+    return {
+        "kind": "pipeline",
+        "type": "docker",
+        "name": name,
+        "clone": {"disable": True},
+        "platform": {
+            "os": "linux",
+            "arch": "amd64"
+        },
+        "steps": git_boost_steps(branch) + linux_build_steps(image, **kwargs)
     }
 
 
+def windows(
+        name,
+        branch,
+        image,
+        **kwargs):
+
+    return {
+        "kind": "pipeline",
+        "type": "docker",
+        "name": name,
+        "clone": {"disable": True},
+        "platform": {
+            "os": "windows",
+            "arch": "amd64"
+        },
+        "steps": git_boost_steps(branch, image, True) + windows_build_steps(image, **kwargs)
+    }
 
 
 def main(ctx):
-  branch = ctx.build.branch
-  if branch != 'master' or branch != 'refs/heads/master':
-    branch = 'develop';
+    branch = ctx.build.branch
+    if ctx.build.event == 'tag' or (branch != 'master' and branch != 'refs/heads/master'):
+        branch = 'develop'
 
-  return [
-    linux_cmake(branch=branch,
-                name="gcc 10 (fedora 36)",
-                image="docker.io/library/fedora:36",
-                packages=["g++", "cmake", "git"])
-  ]
-#   return [
-#       # CMake Linux
-#       linux_cmake('Linux CMake valgrind',       _image('build-gcc11'), valgrind=1, build_shared_libs=0),
-#       linux_cmake('Linux CMake coverage',       _image('build-gcc11'), coverage=1, build_shared_libs=0),
-#       linux_cmake('Linux CMake MySQL 5.x',      _image('build-clang14'),           build_shared_libs=0),
-#       linux_cmake('Linux CMake MariaDB',        _image('build-clang14'),           build_shared_libs=1),
-#       linux_cmake('Linux CMake cmake 3.8',      _image('build-cmake3_8'),   standalone_tests=0,   install_tests=0),
-#       linux_cmake('Linux CMake no OpenSSL',     _image('build-noopenssl'),  standalone_tests=0, add_subdir_tests=0, install_tests=0),
-#       linux_cmake('Linux CMake gcc Release',    _image('build-gcc11'), cmake_build_type='Release'),
-#       linux_cmake('Linux CMake gcc MinSizeRel', _image('build-gcc11'), cmake_build_type='MinSizeRel'),
-
-#       # CMake Windows
-#       windows_cmake('Windows CMake static', build_shared_libs=0),
-#       windows_cmake('Windows CMake shared', build_shared_libs=1),
-
-#       # Docs
-#       docs()
-#   ]
+    return [
+        linux("gcc-12",         branch, "docker.io/library/gcc:12",  variant="release", cxxstd="20"),
+        linux("gcc-12 (asan)",  branch, "docker.io/library/gcc:12",  variant="release", cxxstd="20", debug_symbols="on", address_sanitizer="on"),
+        linux("gcc-10",         branch, "docker.io/library/gcc:10",  variant="release", cxxstd="20"),
+        linux("clang",          branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20"),
+        linux("clang (asan)",   branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", debug_symbols="on", address_sanitizer="on"),
+        linux("clang (tsan)",   branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", debug_symbols="on",  thread_sanitizer="on"),
+        windows("msvc-14.2 (x64)", branch, "cppalliance/dronevs2019:1", variant="release", cxxstd="20", address_model="64"),
+        windows("msvc-14.2 (x32)", branch, "cppalliance/dronevs2019:1", variant="release", cxxstd="20", address_model="32"),
+        windows("msvc-14.3 (x64)", branch, "cppalliance/dronevs2022:1", variant="release", cxxstd="20", address_model="64"),
+        windows("msvc-14.3 (x32)", branch, "cppalliance/dronevs2022:1", variant="release", cxxstd="20", address_model="32")
+    ]
