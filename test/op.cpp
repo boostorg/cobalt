@@ -8,7 +8,10 @@
 #include <boost/async/op.hpp>
 #include <boost/async/spawn.hpp>
 #include <boost/async/promise.hpp>
-#include <boost/asio.hpp>
+
+#include <boost/asio/detached.hpp>
+#include <boost/asio/steady_timer.hpp>
+
 #include "doctest.h"
 #include "test.hpp"
 

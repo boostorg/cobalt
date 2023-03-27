@@ -72,7 +72,7 @@ target_include_directories(boost_async PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inclu
 target_link_libraries(boost_async PUBLIC
         Boost::container Boost::system
         Threads::Threads)
-target_compile_definitions(boost_async PUBLIC BOOST_ASYNC_SEPARATE_COMPILATION=1 BOOST_FILESYSTEM_NO_DEPRECATED=1)
+
 add_library(Boost::async ALIAS boost_async)
 
 if(BUILD_SHARED_LIBS)

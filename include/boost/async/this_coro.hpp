@@ -262,7 +262,7 @@ struct promise_memory_resource_base
         return pp + 1;
     }
 
-    void operator delete(void * raw, const std::size_t size)
+    void operator delete(void * raw, const std::size_t size) noexcept
     {
         const auto p = static_cast<container::pmr::memory_resource**>(raw) - 1;
         container::pmr::memory_resource * res = *p;

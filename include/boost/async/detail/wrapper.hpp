@@ -13,6 +13,7 @@
 #include <boost/asio/executor.hpp>
 #include <boost/asio/dispatch.hpp>
 #include <boost/asio/post.hpp>
+#include <boost/config.hpp>
 
 #include <coroutine>
 #include <utility>
@@ -24,8 +25,7 @@ template<typename Allocator>
 struct partial_promise_base
 {
     template<typename CompletionToken>
-    void * operator new(const std::size_t size, CompletionToken & token,
-                        const boost::source_location & loc = BOOST_CURRENT_LOCATION)
+    void * operator new(const std::size_t size, CompletionToken & token)
     {
       // gcc: 168 40
       // clang: 144 40
@@ -33,8 +33,7 @@ struct partial_promise_base
     }
 
     template<typename Executor, typename CompletionToken>
-    void * operator new(const std::size_t size, Executor & exec, CompletionToken & token,
-                        const boost::source_location & loc = BOOST_CURRENT_LOCATION)
+    void * operator new(const std::size_t size, Executor & exec, CompletionToken & token)
     {
       // gcc: 120 8 16
       // clang: 96 8 16
@@ -79,6 +78,7 @@ struct post_coroutine_promise : partial_promise<Allocator>
         {
             CompletionToken cpl;
             constexpr bool await_ready() noexcept { return false; }
+            BOOST_NOINLINE
             auto await_suspend(std::coroutine_handle<void> h) noexcept
             {
                 auto c = std::move(cpl);
@@ -113,6 +113,8 @@ struct dispatch_coroutine_promise : partial_promise<Allocator>
         {
             CompletionToken cpl;
             constexpr bool await_ready() noexcept { return false; }
+
+            BOOST_NOINLINE
             auto await_suspend(std::coroutine_handle<void> h) noexcept
             {
                 auto c = std::move(cpl);
@@ -158,6 +160,7 @@ struct immediate_coroutine_promise : partial_promise<Allocator>
     {
       CompletionToken cpl;
       constexpr bool await_ready() noexcept { return false; }
+      BOOST_NOINLINE
       auto await_suspend(std::coroutine_handle<void> h) noexcept
       {
         auto c = std::move(cpl);
@@ -201,14 +204,14 @@ struct transactable_coroutine_promise : partial_promise<Allocator>
 {
   template<typename BeginTransaction, typename CompletionToken>
   transactable_coroutine_promise(BeginTransaction & transaction, CompletionToken & cpl)
-      : slot(asio::get_associated_cancellation_slot(cpl))
-      , exec(asio::get_associated_executor(cpl, this_thread::get_executor()))
-      , begin_transaction_this(&transaction)
+      : begin_transaction_this(&transaction)
       , begin_transaction_func(
           +[](void * ptr)
           {
             (*static_cast<BeginTransaction*>(ptr))();
           })
+      , slot(asio::get_associated_cancellation_slot(cpl))
+      , exec(asio::get_associated_executor(cpl, this_thread::get_executor()))
   {
   }
 
@@ -229,6 +232,7 @@ struct transactable_coroutine_promise : partial_promise<Allocator>
     {
       CompletionToken cpl;
       constexpr bool await_ready() noexcept { return false; }
+      BOOST_NOINLINE
       auto await_suspend(std::coroutine_handle<void> h) noexcept
       {
         auto c = std::move(cpl);

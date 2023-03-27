@@ -11,13 +11,21 @@ deps = [
     'libs/asio',
     'libs/assert',
     'libs/beast',
+    'libs/bind',
     'libs/chrono',
+    'libs/circular_buffer',
+    'libs/concept_check',
     'libs/config',
+    'libs/container',
     'libs/core',
     'libs/date_time',
     'libs/headers',
     'libs/integer',
+    'libs/intrusive',
+    'libs/leaf',
     'libs/mpl',
+    'libs/move',
+    'libs/mp11',
     'libs/numeric',
     'libs/predef',
     'libs/preprocessor',
@@ -30,6 +38,7 @@ deps = [
     'libs/throw_exception',
     'libs/utility',
     'libs/type_traits',
+    'libs/variant2',
     'libs/winapi',
     'tools/build',
     'tools/boost_install',
@@ -99,15 +108,8 @@ def linux_build_steps(image, **kwargs):
                 "cd boost/libs/async",
                 "../../b2 test -j8 " + args
             ]
-        },
-        {
-            "name": "bench",
-            "image": image,
-            "commands" : [
-                "cd boost/libs/async",
-                "../../b2 bench -j8 " + args
-            ]
-        }]
+        }
+    ]
 
 
 def windows_build_steps(image, **kwargs):
@@ -136,15 +138,8 @@ def windows_build_steps(image, **kwargs):
                 "cd boost/libs/async",
                 "..\\\\..\\\\b2 test -j8 " + args
             ]
-        },
-        {
-            "name": "bench",
-            "image": image,
-            "commands": [
-                "cd boost/libs/async",
-                "..\\\\..\\\\b2 bench -j8 " + args
-            ]
-        }]
+        }
+    ]
 
 
 def linux(
@@ -193,7 +188,6 @@ def main(ctx):
     return [
         linux("gcc-12",         branch, "docker.io/library/gcc:12",  variant="release", cxxstd="20"),
         linux("gcc-12 (asan)",  branch, "docker.io/library/gcc:12",  variant="release", cxxstd="20", debug_symbols="on", address_sanitizer="on"),
-        linux("gcc-10",         branch, "docker.io/library/gcc:10",  variant="release", cxxstd="20"),
         linux("clang",          branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20"),
         linux("clang (asan)",   branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", debug_symbols="on", address_sanitizer="on"),
         linux("clang (tsan)",   branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", debug_symbols="on",  thread_sanitizer="on"),

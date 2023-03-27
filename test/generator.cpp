@@ -9,8 +9,9 @@
 #include <boost/async/promise.hpp>
 #include <boost/async/select.hpp>
 #include <boost/async/op.hpp>
+#include <boost/core/ignore_unused.hpp>
 
-#include <boost/asio.hpp>
+#include <boost/asio/steady_timer.hpp>
 
 #include "doctest.h"
 #include "test.hpp"
@@ -90,7 +91,7 @@ async::generator<int> delay_gen(std::chrono::milliseconds tick)
   for (int i = 0; i < 10; i ++)
   {
     co_await tim.async_wait(asio::deferred);
-    tim.expires_at(tim.expires_at() + tick);
+    tim.expires_at(tim.expiry() + tick);
     co_yield i;
   }
   co_return 10;

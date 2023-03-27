@@ -22,6 +22,7 @@
 #include <boost/asio/cancellation_signal.hpp>
 #include <boost/container/pmr/monotonic_buffer_resource.hpp>
 #include <boost/container/pmr/vector.hpp>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/system/result.hpp>
 #include <boost/variant2/variant.hpp>

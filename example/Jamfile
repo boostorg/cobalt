@@ -1,0 +1,23 @@
+# Copyright (c) 2022 Klemens D. Morgenstern
+#
+# Distributed under the Boost Software License, Version 1.0. (See accompanying
+# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+
+import os ;
+
+
+project : requirements
+  <define>BOOST_ASIO_NO_DEPRECATED
+  <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
+  <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
+  <toolset>msvc:<cxxflags>/bigobj
+  <target-os>windows:<define>WIN32_LEAN_AND_MEAN
+  <target-os>linux:<linkflags>-lpthread
+;
+
+exe delay       : delay.cpp         /boost//async ;
+exe delay_op    : delay_op.cpp      /boost//async ;
+exe echo_server : echo_server.cpp   /boost//async ;
+exe outcome     : outcome.cpp       /boost//async ;
+# exe ticker      : ticker.cpp    /boost//json      /boost//async ;

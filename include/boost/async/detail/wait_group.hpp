@@ -49,7 +49,7 @@ struct select_wrapper
       if (waitables_.empty())
         return;
       auto idx = impl_->await_resume();
-      if (idx != -1)
+      if (idx != std::numeric_limits<std::size_t>::max())
         waitables_.erase(std::next(waitables_.begin(), idx));
     }
 

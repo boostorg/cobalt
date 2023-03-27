@@ -5,6 +5,9 @@
 
 #include <boost/async/async_for.hpp>
 #include <boost/async/generator.hpp>
+
+#include <boost/core/ignore_unused.hpp>
+
 #include "doctest.h"
 #include "test.hpp"
 
@@ -48,6 +51,7 @@ CO_TEST_CASE("empty_awaitable")
   BOOST_ASYNC_FOR(auto i, tg)
   {
     CHECK(false);
+    boost::ignore_unused(i);
   }
 }
 

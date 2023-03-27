@@ -118,7 +118,8 @@ struct completion_handler_wrapper
 
   std::coroutine_handle<promise_type> promise;
 
-  static auto run(Handler handler, std::optional<std::tuple<Args...>> res = std::nullopt) -> completion_handler_wrapper<Handler, Args...>
+  static auto run(Handler handler,
+                  std::optional<std::tuple<Args...>> res = std::nullopt) -> completion_handler_wrapper<Handler, Args...>
   {
     std::apply(std::move(handler), std::move(*res));
     co_return ;

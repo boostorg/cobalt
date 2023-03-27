@@ -8,6 +8,7 @@
 #ifndef BOOST_DETAIL_ASYNC_MAIN_HPP
 #define BOOST_DETAIL_ASYNC_MAIN_HPP
 
+#include <boost/config.hpp>
 #include <boost/async/main.hpp>
 #include <boost/container/pmr/monotonic_buffer_resource.hpp>
 
@@ -58,6 +59,8 @@ struct main_promise : signal_helper,
     }
 
     std::suspend_always initial_suspend() {return {};}
+
+    BOOST_SYMBOL_EXPORT
     auto final_suspend() noexcept -> std::suspend_never;
 
     void unhandled_exception() { throw ; }
@@ -68,6 +71,7 @@ struct main_promise : signal_helper,
     }
 
     friend auto ::co_main (int argc, char * argv[]) -> boost::async::main;
+    BOOST_SYMBOL_EXPORT
     static int run_main( ::boost::async::main mn);
 
     friend int main(int argc, char * argv[])

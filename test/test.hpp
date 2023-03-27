@@ -45,7 +45,7 @@ inline auto test_run(boost::async::task<void> (*func) ())
   if (::getenv("BOOST_ASYNC_BRUTE_FORCE"))
     while (n --> 0)
     {
-      ctx.reset();
+      ctx.restart();
       spawn(ctx, func(),
             +[](std::exception_ptr e)
             {
