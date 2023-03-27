@@ -66,6 +66,8 @@ struct partial_promise : partial_promise_base<Allocator>
     {
         return std::suspend_always();
     }
+
+    void return_void() {}
 };
 
 template<typename Allocator = void>
