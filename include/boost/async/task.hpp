@@ -108,11 +108,12 @@ namespace boost::asio
 template<typename ... Args>
 struct async_result<boost::async::use_task_t, void(Args...)>
 {
+  using return_type = async::task<decltype(async::interpret_result(std::declval<std::tuple<Args...>>()))>;
+
   template <typename Initiation, typename... InitArgs>
   static auto initiate(Initiation initiation,
                        boost::async::use_task_t,
-                       InitArgs ... args) ->
-             async::task<decltype(async::interpret_result(std::declval<std::tuple<Args...>>()))>
+                       InitArgs ... args) -> return_type
 
   {
     co_return co_await async_initiate<
