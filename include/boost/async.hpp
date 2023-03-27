@@ -18,7 +18,6 @@
 #include <boost/async/task.hpp>
 #include <boost/async/this_coro.hpp>
 #include <boost/async/this_thread.hpp>
-#include <boost/async/thread.hpp>
 #include <boost/async/gather.hpp>
 #include <boost/async/wait_group.hpp>
 #include <boost/async/with.hpp>

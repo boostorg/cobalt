@@ -9,7 +9,6 @@
 #include <boost/async/generator.hpp>
 #include <boost/async/promise.hpp>
 #include <boost/async/op.hpp>
-#include <boost/async/thread.hpp>
 
 #include <boost/asio.hpp>
 
@@ -45,8 +44,6 @@ static async::promise<void> wthrow()
 
 TEST_SUITE_BEGIN("gather");
 
-async::thread thr();
-
 CO_TEST_CASE("variadic")
 {
   auto exec = co_await asio::this_coro::executor;
@@ -55,7 +52,7 @@ CO_TEST_CASE("variadic")
   asio::steady_timer tim{co_await asio::this_coro::executor};
   auto g = wgen(exec);
   auto c = co_await gather(d1, d2, wdummy(exec, std::chrono::milliseconds(150)),
-                           g, wthrow(), thr());
+                           g, wthrow());
 
   CHECK( std::get<0>(c).has_value());
   CHECK(!std::get<0>(c).has_error());

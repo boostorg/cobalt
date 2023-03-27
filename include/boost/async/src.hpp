@@ -12,6 +12,5 @@
 #include <boost/async/impl/channel.ipp>
 #include <boost/async/impl/main.ipp>
 #include <boost/async/impl/this_thread.ipp>
-#include <boost/async/impl/thread.ipp>
 
 #endif //BOOST_ASYNC_SRC_HPP

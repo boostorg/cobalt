@@ -25,7 +25,6 @@ include::tutorial/ticker.adoc[]
 = Reference
 
 include::reference/main.adoc[]
-include::reference/thread.adoc[]
 include::reference/promise.adoc[]
 include::reference/generators.adoc[]
 include::reference/task.adoc[]
