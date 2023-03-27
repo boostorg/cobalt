@@ -57,8 +57,8 @@ struct async_initiate
             )
         )
     ).address());
-      auto ch = std::coroutine_handle<detail::task_promise<T>>::from_promise(*p->promise);
-      asio::dispatch(exec, [ch]{ch.resume();});
+
+    asio::dispatch(exec, std::coroutine_handle<detail::task_promise<T>>::from_promise(*p->promise));
   }
 
   template<typename Handler>
@@ -95,8 +95,8 @@ struct async_initiate
             )
         )
     ).address());
-    auto ch = std::coroutine_handle<detail::task_promise<void>>::from_promise(*p->promise);
-    asio::dispatch(exec, [ch]{ch.resume();});
+    
+    asio::dispatch(exec, std::coroutine_handle<detail::task_promise<void>>::from_promise(*p->promise));
   }
 
 

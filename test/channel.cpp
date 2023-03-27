@@ -156,13 +156,13 @@ CO_TEST_CASE("int")
 async::promise<void> do_write(async::channel<std::string> &chn, std::vector<int> & seq)
 {
     seq.push_back(0);
-    co_await chn.write("1"); seq.push_back(1);
-    co_await chn.write("2"); seq.push_back(2);
-    co_await chn.write("3"); seq.push_back(3);
-    co_await chn.write("4"); seq.push_back(4);
-    co_await chn.write("5"); seq.push_back(5);
-    co_await chn.write("6"); seq.push_back(6);
-    co_await chn.write("7 but we need to be sure we get ouf of SSO"); seq.push_back(7);
+    co_await chn.write(std::string("1")); seq.push_back(1);
+    co_await chn.write(std::string("2")); seq.push_back(2);
+    co_await chn.write(std::string("3")); seq.push_back(3);
+    co_await chn.write(std::string("4")); seq.push_back(4);
+    co_await chn.write(std::string("5")); seq.push_back(5);
+    co_await chn.write(std::string("6")); seq.push_back(6);
+    co_await chn.write(std::string("7 but we need to be sure we get ouf of SSO")); seq.push_back(7);
 }
 
 async::promise<void> do_read(async::channel<std::string> &chn, std::vector<int> & seq)

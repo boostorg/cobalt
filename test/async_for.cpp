@@ -8,6 +8,8 @@
 
 #include <boost/core/ignore_unused.hpp>
 
+#include <array>
+
 #include "doctest.h"
 #include "test.hpp"
 

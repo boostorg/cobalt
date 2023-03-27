@@ -11,10 +11,11 @@
 #include <boost/async/this_thread.hpp>
 #include <boost/async/detail/util.hpp>
 
-#include <boost/intrusive/list.hpp>
 #include <boost/asio/cancellation_signal.hpp>
 #include <boost/asio/cancellation_type.hpp>
 #include <boost/circular_buffer.hpp>
+#include <boost/config.hpp>
+#include <boost/intrusive/list.hpp>
 #include <boost/variant2/variant.hpp>
 
 #include <optional>
@@ -66,6 +67,7 @@ struct channel
     struct cancel_impl;
     bool await_ready() { return !chn->buffer_.empty(); }
     template<typename Promise>
+    BOOST_NOINLINE 
     std::coroutine_handle<void> await_suspend(std::coroutine_handle<Promise> h);
     T await_resume();
     explicit operator bool() const {return chn && chn->is_open();}
@@ -93,6 +95,7 @@ struct channel
 
     bool await_ready() { return !chn->buffer_.full(); }
     template<typename Promise>
+    BOOST_NOINLINE 
     std::coroutine_handle<void> await_suspend(std::coroutine_handle<Promise> h);
     void await_resume();
     explicit operator bool() const {return chn && chn->is_open();}
@@ -161,6 +164,7 @@ struct channel<void>
     struct cancel_impl;
     bool await_ready() { return (chn->n_ > 0); }
     template<typename Promise>
+    BOOST_NOINLINE 
     std::coroutine_handle<void> await_suspend(std::coroutine_handle<Promise> h);
     void await_resume();
     explicit operator bool() const {return chn && chn->is_open();}
@@ -189,6 +193,7 @@ struct channel<void>
     }
 
     template<typename Promise>
+    BOOST_NOINLINE 
     std::coroutine_handle<void> await_suspend(std::coroutine_handle<Promise> h);
 
     void await_resume();

@@ -14,14 +14,13 @@
 #include <boost/async/detail/wrapper.hpp>
 #include <boost/async/detail/this_thread.hpp>
 
+#include <boost/asio/bind_allocator.hpp>
 #include <boost/asio/cancellation_signal.hpp>
-
 #include <boost/container/pmr/memory_resource.hpp>
 
 #include <coroutine>
 #include <optional>
 #include <utility>
-#include <boost/asio/bind_allocator.hpp>
 
 namespace boost::async
 {
@@ -52,7 +51,11 @@ struct task_value_holder
     result = std::move(ret);
     static_cast<task_receiver<T>*>(this)->set_done();
   }
-
+  void return_value(const T & ret)
+  {
+    result = ret;
+    static_cast<task_receiver<T>*>(this)->set_done();
+  }
 };
 
 template<>
@@ -147,10 +150,10 @@ struct task_receiver : task_value_holder<T>
     bool await_ready() const { return self->done; }
 
     template<typename Promise>
-    std::coroutine_handle<void> await_suspend(std::coroutine_handle<Promise> h)
+    BOOST_NOINLINE std::coroutine_handle<void> await_suspend(std::coroutine_handle<Promise> h)
     {
       if (self->done) // ok, so we're actually done already, so noop
-        return h;
+        return std::coroutine_handle<void>::from_address(h.address());
 
       if constexpr (requires (Promise p) {p.get_cancellation_slot();})
         if ((cl = h.promise().get_cancellation_slot()).is_connected())
@@ -201,7 +204,11 @@ struct task_promise_result
     if(receiver)
       receiver->return_value(std::move(ret));
   }
-
+  void return_value(const Return & ret)
+  {
+    if(receiver)
+      receiver->return_value(ret);
+  }
 };
 
 template<>
@@ -276,6 +283,7 @@ struct task_promise
     };
     return initial_awaitable{this};
   }
+
   auto final_suspend() noexcept
   {
     struct final_awaitable
@@ -286,6 +294,7 @@ struct task_promise
         return promise->receiver && promise->receiver->awaited_from.get() == nullptr;
       }
 
+      BOOST_NOINLINE
       auto await_suspend(std::coroutine_handle<task_promise> h) noexcept -> std::coroutine_handle<void>
       {
         std::coroutine_handle<void> res = std::noop_coroutine();
@@ -293,7 +302,7 @@ struct task_promise
           res = std::coroutine_handle<void>::from_address(promise->receiver->awaited_from.release());
 
         h.destroy();
-        return res;
+        return std::coroutine_handle<void>::from_address(res.address());
       }
 
       void await_resume() noexcept
@@ -321,7 +330,6 @@ struct task_promise
       this->receiver->set_done();
       this->receiver->awaited_from.reset(nullptr);
     }
-
   }
   bool started = false;
   friend struct async_initiate;

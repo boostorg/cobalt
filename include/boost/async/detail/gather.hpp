@@ -27,6 +27,7 @@
 #include <boost/system/result.hpp>
 #include <boost/variant2/variant.hpp>
 
+#include <array>
 #include <coroutine>
 
 namespace boost::async::detail

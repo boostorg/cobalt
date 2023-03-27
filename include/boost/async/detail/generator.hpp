@@ -162,7 +162,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
       std::coroutine_handle<void> res = std::noop_coroutine();
       if (self->yield_from != nullptr)
         res = std::coroutine_handle<void>::from_address(self->yield_from.release());
-      return res;
+      return std::coroutine_handle<void>::from_address(res.address());
     }
 
     Yield await_resume()
@@ -272,7 +272,7 @@ struct generator_promise
         if (generator->receiver)
             generator->receiver->done = true;
         h.destroy();
-        return res;
+        return std::coroutine_handle<void>::from_address(res.address());
       }
 
       void await_resume() noexcept
@@ -404,7 +404,7 @@ struct generator_yield_awaitable<Yield, void>
     if (self->awaited_from.get() != nullptr)
       res= std::coroutine_handle<void>::from_address(self->awaited_from.release());
     self->yield_from.reset(h.address());
-    return res;
+    return std::coroutine_handle<>::from_address(res.address());
   }
 
   void await_resume()
