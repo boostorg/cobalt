@@ -1,0 +1,33 @@
+# Copyright (c) 2023 Klemens D. Morgenstern
+#
+# Distributed under the Boost Software License, Version 1.0. (See accompanying
+# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+
+import os ;
+
+project : requirements
+  <define>BOOST_ASIO_NO_DEPRECATED
+  <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
+  <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
+  <toolset>msvc:<cxxflags>/bigobj
+  <target-os>windows:<define>WIN32_LEAN_AND_MEAN
+  <target-os>linux:<linkflags>-lpthread
+  : source-location ../src
+;
+
+
+alias async_sources
+   : src.cpp
+   ;
+
+explicit async_sources ;
+
+lib boost_async
+   : async_sources /boost//container
+   : usage-requirements <library>/boost//container
+
+   ;
+
+boost-install boost_async ;
+

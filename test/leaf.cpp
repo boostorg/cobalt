@@ -12,6 +12,7 @@
 
 using namespace boost;
 
+
 TEST_SUITE_BEGIN("leaf");
 
 CO_TEST_CASE("try_catch")

@@ -118,7 +118,7 @@ struct promise_receiver : promise_value_holder<T>
       reference = nullptr;
   }
 
-  promise_receiver(promise_receiver * (&reference), asio::cancellation_signal & cancel_signal)
+  promise_receiver(promise_receiver * &reference, asio::cancellation_signal & cancel_signal)
       : reference(reference), cancel_signal(cancel_signal)
   {
     reference = this;
@@ -175,7 +175,7 @@ struct promise_receiver : promise_value_holder<T>
     }
   };
 
-  promise_receiver  * (&reference);
+  promise_receiver  * &reference;
   asio::cancellation_signal & cancel_signal;
 
   awaitable get_awaitable() {return awaitable{this};}

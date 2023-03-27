@@ -20,8 +20,6 @@
 #include <boost/asio/associated_cancellation_slot.hpp>
 #include <boost/container/pmr/monotonic_buffer_resource.hpp>
 #include <boost/container/pmr/vector.hpp>
-#include <boost/exception/info.hpp>
-#include <boost/exception/error_info.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/core/span.hpp>
 #include <boost/variant2/variant.hpp>

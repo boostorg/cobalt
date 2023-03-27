@@ -20,7 +20,7 @@ namespace boost::async
 {
 
 namespace detail { struct main_promise; }
-struct main;
+class main;
 
 }
 

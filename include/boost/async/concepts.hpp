@@ -7,6 +7,7 @@
 
 #include <coroutine>
 #include <concepts>
+#include <utility>
 
 #include <boost/asio/is_executor.hpp>
 #include <boost/asio/execution/executor.hpp>

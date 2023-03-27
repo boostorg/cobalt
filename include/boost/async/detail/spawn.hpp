@@ -64,7 +64,6 @@ struct async_initiate
   template<typename Handler>
   void operator()(Handler && h, task<void> a, asio::io_context::executor_type exec)
   {
-    auto & rec = a.receiver_;
     if (a.receiver_.done)
       return asio::post(asio::append(h, a.receiver_.exception));
 

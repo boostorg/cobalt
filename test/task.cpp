@@ -15,10 +15,11 @@
 #include <boost/asio/detached.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/asio/awaitable.hpp>
+#include <boost/asio/bind_cancellation_slot.hpp>
 #include <boost/asio/co_spawn.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 #include <new>
-#include <boost/asio/bind_cancellation_slot.hpp>
 
 using namespace boost;
 

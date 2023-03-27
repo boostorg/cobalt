@@ -10,7 +10,7 @@
 #include <boost/async/promise.hpp>
 #include <boost/async/op.hpp>
 
-#include <boost/asio.hpp>
+#include <boost/asio/steady_timer.hpp>
 
 #include "doctest.h"
 #include "test.hpp"
