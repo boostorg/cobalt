@@ -56,6 +56,12 @@ struct promise_value_holder
     static_cast<promise_receiver<T>*>(this)->set_done();
   }
 
+  void return_value(const T & ret)
+  {
+    result = ret;
+    static_cast<promise_receiver<T>*>(this)->set_done();
+  }
+
 };
 
 template<>
@@ -203,6 +209,12 @@ struct async_promise_result
       receiver->return_value(std::move(ret));
   }
 
+  void return_value(const Return & ret)
+  {
+    if(receiver)
+      receiver->return_value(ret);
+  }
+
 };
 
 template<>
@@ -275,7 +287,7 @@ struct async_promise
           res = std::coroutine_handle<void>::from_address(promise->receiver->awaited_from.release());
 
         h.destroy();
-        return res;
+        return std::coroutine_handle<void>::from_address(res.address());      
       }
 
       void await_resume() noexcept

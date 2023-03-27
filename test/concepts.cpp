@@ -5,10 +5,6 @@
 
 #include <boost/async/concepts.hpp>
 
-struct foo
-{
-
-};
 
 struct foo_aw
 {
@@ -16,6 +12,12 @@ struct foo_aw
     bool await_suspend(std::coroutine_handle<void>);
     void await_resume();
 };
+
+struct foo
+{
+    foo_aw operator co_await() const;
+};
+
 
 struct my_promise ;
 
@@ -27,7 +29,6 @@ struct special_aw
     void await_resume();
 };
 
-foo_aw operator co_await(foo);
 
 
 static_assert(boost::async::awaitable_type<std::suspend_never>);
@@ -39,9 +40,9 @@ static_assert(boost::async::awaitable<foo_aw>);
 static_assert(boost::async::awaitable<foo>);
 
 static_assert(boost::async::awaitable<std::suspend_never, int>);
-static_assert(boost::async::awaitable<foo_aw, int>);
-static_assert(boost::async::awaitable<foo, int>);
+static_assert(boost::async::awaitable<foo_aw, std::noop_coroutine_promise>);
+static_assert(boost::async::awaitable<foo, std::noop_coroutine_promise>);
 
-static_assert(!boost::async::awaitable<special_aw, int>);
+static_assert(!boost::async::awaitable<special_aw, std::noop_coroutine_promise>);
 static_assert(!boost::async::awaitable<special_aw>);
 static_assert(boost::async::awaitable<special_aw, my_promise>);

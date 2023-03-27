@@ -29,7 +29,7 @@ struct doctest::StringMaker<std::exception_ptr>
   }
 };
 
-inline auto test_run(boost::async::task<void> (*func) ())
+inline void test_run(boost::async::task<void> (*func) ())
 {
   using namespace boost;
   asio::io_context ctx;

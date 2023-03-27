@@ -81,7 +81,7 @@ struct post_coroutine_promise : partial_promise<Allocator>
             CompletionToken cpl;
             constexpr bool await_ready() noexcept { return false; }
             BOOST_NOINLINE
-            auto await_suspend(std::coroutine_handle<void> h) noexcept
+            void await_suspend(std::coroutine_handle<void> h) noexcept
             {
                 auto c = std::move(cpl);
                 h.destroy();
@@ -117,7 +117,7 @@ struct dispatch_coroutine_promise : partial_promise<Allocator>
             constexpr bool await_ready() noexcept { return false; }
 
             BOOST_NOINLINE
-            auto await_suspend(std::coroutine_handle<void> h) noexcept
+            void await_suspend(std::coroutine_handle<void> h) noexcept
             {
                 auto c = std::move(cpl);
                 h.destroy();
@@ -163,7 +163,7 @@ struct immediate_coroutine_promise : partial_promise<Allocator>
       CompletionToken cpl;
       constexpr bool await_ready() noexcept { return false; }
       BOOST_NOINLINE
-      auto await_suspend(std::coroutine_handle<void> h) noexcept
+      void await_suspend(std::coroutine_handle<void> h) noexcept
       {
         auto c = std::move(cpl);
         h.destroy();
@@ -235,7 +235,7 @@ struct transactable_coroutine_promise : partial_promise<Allocator>
       CompletionToken cpl;
       constexpr bool await_ready() noexcept { return false; }
       BOOST_NOINLINE
-      auto await_suspend(std::coroutine_handle<void> h) noexcept
+      void await_suspend(std::coroutine_handle<void> h) noexcept
       {
         auto c = std::move(cpl);
         h.destroy();

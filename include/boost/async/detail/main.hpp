@@ -8,8 +8,12 @@
 #ifndef BOOST_DETAIL_ASYNC_MAIN_HPP
 #define BOOST_DETAIL_ASYNC_MAIN_HPP
 
-#include <boost/config.hpp>
 #include <boost/async/main.hpp>
+#include <boost/async/this_coro.hpp>
+#include <boost/async/detail/async_operation.hpp>
+
+
+#include <boost/config.hpp>
 #include <boost/container/pmr/monotonic_buffer_resource.hpp>
 
 namespace boost::asio
@@ -123,8 +127,8 @@ struct main_promise : signal_helper,
 namespace std
 {
 
-template<>
-struct coroutine_traits<boost::async::main, int, char**>
+template<typename Char>
+struct coroutine_traits<boost::async::main, int, Char>
 {
   using promise_type = boost::async::detail::main_promise;
 };
