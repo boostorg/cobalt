@@ -666,6 +666,18 @@ pre.rouge {
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
 <li><a href="#motivation">Motivation</a></li>
+<li><a href="#coroutine_primer">Coroutine Primer</a>
+<ul class="sectlevel2">
+<li><a href="#coroutines">Coroutines</a>
+<ul class="sectlevel3">
+<li><a href="#co_return"><code>co_return</code></a></li>
+<li><a href="#co_await"><code>co_await</code></a></li>
+<li><a href="#co_yield"><code>co_yield</code></a></li>
+</ul>
+</li>
+<li><a href="#event-loops">Event Loops</a></li>
+</ul>
+</li>
 <li><a href="#tutorial">Tutorial</a>
 <ul class="sectlevel2">
 <li><a href="#delay">delay</a>
@@ -685,16 +697,9 @@ pre.rouge {
 <li><a href="#executor">Executor</a></li>
 <li><a href="#memory_resource">Memory Resource</a></li>
 <li><a href="#main-promise">Promise</a></li>
+<li><a href="#specification">Specification</a></li>
 <li><a href="#executor_2">Executor</a></li>
 <li><a href="#memory_resource_2">Memory Resource</a></li>
-<li><a href="#thread-outline">Outline</a></li>
-<li><a href="#thread-promise">Promise</a></li>
-</ul>
-</li>
-<li><a href="#promise">async/promise.hpp</a>
-<ul class="sectlevel3">
-<li><a href="#executor_3">Executor</a></li>
-<li><a href="#memory_resource_3">Memory Resource</a></li>
 <li><a href="#promise-outline">Outline</a></li>
 <li><a href="#promise-promise">Promise</a></li>
 </ul>
@@ -710,8 +715,8 @@ pre.rouge {
 </li>
 <li><a href="#task">async/task.hpp</a>
 <ul class="sectlevel3">
-<li><a href="#executor_4">Executor</a></li>
-<li><a href="#memory_resource_4">Memory Resource</a></li>
+<li><a href="#executor_3">Executor</a></li>
+<li><a href="#memory_resource_3">Memory Resource</a></li>
 <li><a href="#task-outline">Outline</a></li>
 <li><a href="#task-task">Promise</a></li>
 <li><a href="#use_task">use_task</a></li>
@@ -772,6 +777,14 @@ pre.rouge {
 </div>
 </div>
 <div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>WARN: Some if not all MSVC versions have a broken coroutine implementation, that causes UB (double deletes).
+Run the tests to check if compiler supports coroutines correctly.</p>
+</div>
+</div>
+</div>
 <div class="sect1">
 <h2 id="motivation">Motivation</h2>
 <div class="sectionbody">
@@ -810,6 +823,157 @@ akin to node.js and asyncio in python that works with existing libraries like
 <p><a href="#channel">channel</a></p>
 </li>
 </ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="coroutine_primer">Coroutine Primer</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="coroutines">Coroutines</h3>
+<div class="paragraph">
+<p>Coroutines are resumable functions.
+Resumable means that a function can suspend,
+i.e. pass the control back to the caller multiple times.</p>
+</div>
+<div class="paragraph">
+<p>A regular function yields control back to the caller with the <code>return</code> function, where it also returns the value.
+A function is a coroutine</p>
+</div>
+<div class="paragraph">
+<p>A coroutine has three control keywords akin to co_return
+(of which only <code>co_return</code> has to be supported).</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>co_return</code></p>
+</li>
+<li>
+<p><code>co_yield</code></p>
+</li>
+<li>
+<p><code>co_await</code></p>
+</li>
+</ul>
+</div>
+<div class="sect3">
+<h4 id="co_return"><code>co_return</code></h4>
+<div class="paragraph">
+<p>This is similar to <code>return</code>, but marks the function as a coroutine.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="co_await"><code>co_await</code></h4>
+<div class="paragraph">
+<p>The <code>co_await</code> expression suspends for an <a href="#awaitable">Awaitable</a>,
+i.e. stop execution until the <code>awaitable</code> resumes it.</p>
+</div>
+<div class="paragraph">
+<p>E.g.:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">delay</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">milliseconds</span><span class="p">);</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">task</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">example</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="k">co_await</span> <span class="n">delay</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">milliseconds</span><span class="p">(</span><span class="mi">50</span><span class="p">));</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A <code>co_await</code> value can yield a value, depending on what it is awaiting.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">read_some</span><span class="p">();</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">task</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">example</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">res</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">read_some</span><span class="p">();</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+In <code>async</code> most coroutine primitives are also <a href="#awaitables">[awaitables]</a>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="co_yield"><code>co_yield</code></h4>
+<div class="paragraph">
+<p>The <code>co_yield</code> expression is similar to the <code>co_await</code>,
+but it yields control to the caller and carries a value.</p>
+</div>
+<div class="paragraph">
+<p>For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">iota</span><span class="p">(</span><span class="kt">int</span> <span class="n">max</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="k">while</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">max</span><span class="p">)</span>
+    <span class="k">co_yield</span> <span class="n">i</span><span class="o">++</span><span class="p">;</span>
+
+  <span class="k">co_return</span> <span class="n">i</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A <code>co_yield</code> statement can also produce a value,
+which allows the user of yielding coroutine to push values into it.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="kt">bool</span><span class="o">&gt;</span> <span class="n">iota</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="kt">bool</span> <span class="n">more</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+  <span class="k">do</span>
+  <span class="p">{</span>
+    <span class="n">more</span> <span class="o">=</span> <span class="k">co_yield</span> <span class="n">i</span><span class="o">++</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">while</span><span class="p">(</span><span class="n">more</span><span class="p">);</span>
+  <span class="k">co_return</span> <span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Stackless</div>
+<div class="paragraph">
+<p>C++ coroutine are stack-less, which means they don&#8217;t have a deep stack, but only allocate their own function frame.</p>
+</div>
+<div class="paragraph">
+<p>See <a href="#stackless">Stackless</a> for more details.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="event-loops">Event Loops</h3>
+<div class="paragraph">
+<p>Since the coroutines in <code>async</code> can <code>co_await</code> events,
+they need to be run on an event-loop.
+That is another piece of code is responsible for tracking
+outstanding events and resume a co_await coroutine.
+This pattern is very common and is used in a similar way
+by node.js or python&#8217;s <code>asyncio</code>.</p>
+</div>
+<div class="paragraph">
+<p><code>async</code> uses an <code>asio::io_context</code> as it&#8217;s main event loop.</p>
+</div>
 </div>
 </div>
 </div>
@@ -1655,177 +1819,27 @@ Depending on the coroutine properties different things can be <code>co_await</co
 <p><a href="#enable_await_allocator">Await Allocator</a></p>
 </li>
 <li>
-<p><a href="#enable_await_executor">Await Executor</a>
-== async/thread.hpp</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>The thread type is another way to create an environment that is similar to <code>main</code>, but doesn&#8217;t `signal_set`s.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="kr">thread</span> <span class="nf">my_thread</span><span class="p">()</span>
-<span class="p">{</span>
-  <span class="k">auto</span> <span class="n">exec</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">executor</span><span class="p">;</span>             <i class="conum" data-value="1"></i><b>(1)</b>
-  <span class="n">asio</span><span class="o">::</span><span class="n">steady_timer</span> <span class="n">tim</span><span class="p">{</span><span class="n">exec</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">milliseconds</span><span class="p">(</span><span class="mi">50</span><span class="p">)};</span> <i class="conum" data-value="2"></i><b>(2)</b>
-  <span class="k">co_await</span> <span class="n">tim</span><span class="p">.</span><span class="n">async_wait</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">use_op</span><span class="p">);</span>                      <i class="conum" data-value="3"></i><b>(3)</b>
-  <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span></code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>get the executor <code>thread</code> running on</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Use it with an asio object</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td><code>co_await</code> an async operation</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>To use a thread you can use it like a <code>std::thread</code>:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
-<span class="p">{</span>
-  <span class="k">auto</span> <span class="n">thr</span> <span class="o">=</span> <span class="n">my_thread</span><span class="p">();</span>
-  <span class="n">thr</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>
-  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>A thread is also an <code>awaitable</code> (including cancellation).</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="nf">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
-<span class="p">{</span>
-  <span class="k">auto</span> <span class="n">thr</span> <span class="o">=</span> <span class="n">my_thread</span><span class="p">();</span>
-  <span class="k">co_await</span> <span class="n">thr</span><span class="p">;</span>
-  <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span></code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Destructing a detached thread will cause a hard stop (<code>io_context::stop</code>) and join the thread.
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-Nothing in this library (except for awaiting a thread) is thread-safe.
-If you need to transfer data across threads, you&#8217;ll need a thread-safe class,
-e.g. <a href="https://www.boost.org/doc/libs/master/doc/html/boost_asio/reference/experimental__basic_concurrent_channel.html"><code>asio::conrurrenct_channel</code></a>.
-</td>
-</tr>
-</table>
-</div>
-</div>
-<div class="sect3">
-<h4 id="executor_2">Executor</h4>
-<div id="thread-executor" class="paragraph">
-<p>It will also create an <code>asio::io_context</code> to run on, which you can get through the <code>this_coro::executor</code>.
-It will be assigned to the <code>async::this_thread::get_executor()</code> .</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="memory_resource_2">Memory Resource</h4>
-<div id="thread-allocator" class="paragraph">
-<p>It also creates a memory resource that will be used as a default for internal memory allocations.
-It will be assigned to the <code>thread_local</code> to the  <code>async::this_thread::get_default_resoruce()</code>.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="thread-outline">Outline</h4>
-<div class="listingblock">
-<div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="k">struct</span> <span class="nc">thread</span>
-<span class="p">{</span>
-  <span class="c1">// Send a cancellation signal</span>
-  <span class="kt">void</span> <span class="n">cancel</span><span class="p">(</span><span class="n">asio</span><span class="o">::</span><span class="n">cancellation_type</span> <span class="n">type</span> <span class="o">=</span> <span class="n">asio</span><span class="o">::</span><span class="n">cancellation_type</span><span class="o">::</span><span class="n">all</span><span class="p">);</span>
-
-  <span class="c1">// Add the functions similar to `std::thread`</span>
-  <span class="kt">void</span> <span class="n">join</span><span class="p">();</span>
-  <span class="kt">bool</span> <span class="n">joinable</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
-  <span class="kt">void</span> <span class="n">detach</span><span class="p">();</span>
-
-  <span class="c1">// Allow the thread to be awaited</span>
-  <span class="k">auto</span> <span class="k">operator</span> <span class="k">co_await</span><span class="p">()</span> <span class="o">&amp;-&gt;</span> <span class="n">detail</span><span class="o">::</span><span class="n">thread_awaitable</span><span class="p">;</span>   <i class="conum" data-value="1"></i><b>(1)</b>
-  <span class="k">auto</span> <span class="k">operator</span> <span class="k">co_await</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="o">-&gt;</span> <span class="n">detail</span><span class="o">::</span><span class="n">thread_awaitable</span><span class="p">;</span> <i class="conum" data-value="2"></i><b>(2)</b>
-
-  <span class="c1">/// Move constructible</span>
-  <span class="kr">thread</span><span class="p">(</span><span class="kr">thread</span> <span class="o">&amp;&amp;</span><span class="p">)</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
-  <span class="c1">// Stops the io_context &amp; joins the executor</span>
-    <span class="o">~</span><span class="kr">thread</span><span class="p">();</span>
-<span class="p">};</span></code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Supports <a href="#interrupt_await">Interrupt Wait</a></td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Always forward cancel</td>
-</tr>
-</table>
-</div>
-</div>
-<div class="sect3">
-<h4 id="thread-promise">Promise</h4>
-<div class="paragraph">
-<p>The thread promise has the following properties.</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><a href="#promise_cancellation_base">Cancellation state</a></p>
-</li>
-<li>
-<p><a href="#promise_throw_if_cancelled_base">Throw if cancelled</a></p>
-</li>
-<li>
-<p><a href="#enable_awaitables">Enable awaitables</a></p>
-</li>
-<li>
-<p><a href="#enable_async_operation">Enable async operation</a></p>
-</li>
-<li>
-<p><a href="#enable_await_allocator">Await Allocator</a></p>
-</li>
-<li>
 <p><a href="#enable_await_executor">Await Executor</a></p>
 </li>
 </ul>
 </div>
 </div>
+<div class="sect3">
+<h4 id="specification">Specification</h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>declaring <code>co_main</code> will implicitly declare a <code>main</code> function</p>
+</li>
+<li>
+<p><code>main</code> is only present when <code>co_main</code> is defined.</p>
+</li>
+<li>
+<p><code>SIGINT</code> and <code>SIGTERM</code> will cause cancellation of the internal task.
+== async/promise.hpp</p>
+</li>
+</ol>
 </div>
-<div class="sect2">
-<h3 id="promise">async/promise.hpp</h3>
 <div class="paragraph">
 <p>A promise is an eager coroutine that can <code>co_await</code> and <code>co_return</code> values. That is, it cannot be resumed.</p>
 </div>
@@ -1867,8 +1881,9 @@ It will be assigned to the <code>thread_local</code> to the  <code>async::this_t
 </tr>
 </table>
 </div>
+</div>
 <div class="sect3">
-<h4 id="executor_3">Executor</h4>
+<h4 id="executor_2">Executor</h4>
 <div id="promise-executor" class="paragraph">
 <p>The executor is taken from the <code>thread_local</code> <a href="#this_thread">get_executor</a> function, unless a <code>asio::executor_arg</code> is used
 in any position followed by the executor argument.</p>
@@ -1880,7 +1895,7 @@ in any position followed by the executor argument.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="memory_resource_3">Memory Resource</h4>
+<h4 id="memory_resource_2">Memory Resource</h4>
 <div id="promise-allocator" class="paragraph">
 <p>The memory resource is taken from the <code>thread_local</code> <a href="#this_thread">get_default_resource</a> function,
 unless a <code>std::allocator_arg</code> is used in any position followed by a <code>polymorphic_allocator</code> argument.</p>
@@ -2219,7 +2234,7 @@ unless a <code>std::allocator_arg</code> is used in any position followed by a <
 </div>
 </div>
 <div class="sect3">
-<h4 id="executor_4">Executor</h4>
+<h4 id="executor_3">Executor</h4>
 <div id="task-executor" class="paragraph">
 <p>Since a <code>task</code> it lazy, it does not need to have an executor on construction.
 It rather attempts to take it from the caller or awaiter if present.
@@ -2227,7 +2242,7 @@ Otherwise, it&#8217;ll default to the thread_local executor.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="memory_resource_4">Memory Resource</h4>
+<h4 id="memory_resource_3">Memory Resource</h4>
 <div id="task-allocator" class="paragraph">
 <p>The memory resource is taken from the <code>thread_local</code> <a href="#this_thread">get_default_resource</a> function,
 unless a <code>std::allocator_arg</code> is used in any position followed by a <code>polymorphic_allocator</code> argument.</p>
@@ -3169,7 +3184,7 @@ It works out of the box with <a href="#with">async/with.hpp</a>, by having the m
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
 <span class="p">{</span>
-  <span class="n">asio</span><span class="o">::</span><span class="n">io_context</span> <span class="n">ctx</span><span class="p">;</span>
+  <span class="n">asio</span><span class="o">::</span><span class="n">io_context</span> <span class="n">ctx</span><span class="p">{</span><span class="n">BOOST_ASIO_CONCURRENCY_HINT_1</span><span class="p">};</span>
   <span class="k">auto</span> <span class="n">f</span> <span class="o">=</span> <span class="n">spawn</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">work</span><span class="p">(),</span> <span class="n">asio</span><span class="o">::</span><span class="n">use_future</span><span class="p">);</span>
   <span class="n">ctx</span><span class="p">.</span><span class="n">run</span><span class="p">();</span>
 
@@ -3371,13 +3386,13 @@ C++20 coroutines are stackless, i.e. they only allocate their own frame and use 
 <div id="footnotes">
 <hr>
 <div class="footnote" id="_footnotedef_1">
-<a href="#_footnoteref_1">1</a>. the promise the C++ name for a coroutine state. Not to be confused with <a href="#promise">async/promise.hpp</a>
+<a href="#_footnoteref_1">1</a>. the promise the C++ name for a coroutine state. Not to be confused with <a href="#promise">[promise]</a>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2023-03-18 11:06:50 +0800
+Last updated 2023-03-28 22:42:32 +0800
 </div>
 </div>
 </body>
