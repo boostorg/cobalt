@@ -27,7 +27,7 @@ T run(task<T> t)
     std::unique_ptr<container::pmr::memory_resource, reset_res> pr{
             boost::async::this_thread::set_default_resource(&root_resource)};
 
-    asio::io_context ctx;
+    asio::io_context ctx{BOOST_ASIO_CONCURRENCY_HINT_1};
     struct reset_exec
     {
         std::optional<asio::io_context::executor_type> exec;
