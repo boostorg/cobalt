@@ -18,7 +18,7 @@ async::task<int> work();
 
 int main(int argc, char *argv[])
 {
-  asio::io_context ctx;
+  asio::io_context ctx{BOOST_ASIO_CONCURRENCY_HINT_1};
   auto f = spawn(ctx, work(), asio::use_future);
   ctx.run();
 
