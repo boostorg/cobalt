@@ -72,7 +72,7 @@ struct [[nodiscard]] deferred_op
 
   char buffer[2048];
   std::optional<container::pmr::monotonic_buffer_resource> resource;
-
+  bool completed_immediately = false;
   template<typename Promise>
   bool await_suspend(std::coroutine_handle<Promise> h)
   {
@@ -81,8 +81,8 @@ struct [[nodiscard]] deferred_op
       auto & res = resource.emplace(
           buffer, sizeof(buffer),
           asio::get_associated_allocator(h.promise(), this_thread::get_allocator()).resource());
-      op.initiate({h, result, &res});
-      return true;
+      op.initiate({h, result, &res, &completed_immediately});
+      return !completed_immediately;
     }
     catch(...)
     {
