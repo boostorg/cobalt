@@ -443,10 +443,6 @@ struct generator_with_awaitable
   generator_base<T, void> &g;
   std::optional<typename detail::generator_receiver<T, void>::awaitable> awaitable;
 
-  bool await_suspend()
-  {
-    return g;
-  }
   template<typename Promise>
   void await_suspend(std::coroutine_handle<Promise> h)
   {

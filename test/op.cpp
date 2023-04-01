@@ -10,6 +10,7 @@
 #include <boost/async/promise.hpp>
 
 #include <boost/asio/detached.hpp>
+#include <boost/asio/experimental/channel.hpp>
 #include <boost/asio/steady_timer.hpp>
 
 #include "doctest.h"
@@ -135,6 +136,22 @@ CO_TEST_CASE("initiate-exception-op")
 {
   CHECK_THROWS(co_await throw_op(co_await asio::this_coro::executor));
 }
+
+CO_TEST_CASE("immediate_executor")
+{
+  auto called = false;
+  asio::post(co_await asio::this_coro::executor, [&]{called = true;});
+  asio::experimental::channel<void(system::error_code)> chn{co_await asio::this_coro::executor, 2u};
+  CHECK(chn.try_send(system::error_code()));
+
+
+  co_await chn.async_receive(async::use_op);
+
+  CHECK(!called);
+  co_await asio::post(co_await asio::this_coro::executor, async::use_op);
+  CHECK(called);
+}
+
 
 
 
