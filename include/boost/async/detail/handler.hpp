@@ -9,12 +9,12 @@
 #include <boost/async/detail/util.hpp>
 
 #include <boost/asio/io_context.hpp>
+#include <boost/core/demangle.hpp>
 
 #include <memory>
 #include <boost/container/pmr/memory_resource.hpp>
 #include <optional>
 
-#include <boost/core/demangle.hpp>
 namespace boost::async
 {
 
