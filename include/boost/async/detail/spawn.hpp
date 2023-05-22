@@ -58,7 +58,7 @@ struct async_initiate
         )
     ).address());
 
-    asio::dispatch(exec, std::coroutine_handle<detail::task_promise<T>>::from_promise(*p->promise));
+    asio::post(exec, std::coroutine_handle<detail::task_promise<T>>::from_promise(*p->promise));
   }
 
   template<typename Handler>
@@ -96,7 +96,7 @@ struct async_initiate
         )
     ).address());
     
-    asio::dispatch(exec, std::coroutine_handle<detail::task_promise<void>>::from_promise(*p->promise));
+    asio::post(exec, std::coroutine_handle<detail::task_promise<void>>::from_promise(*p->promise));
   }
 
 
