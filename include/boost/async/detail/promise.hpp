@@ -104,7 +104,7 @@ struct promise_receiver : promise_value_holder<T>
   }
 
   promise_receiver() = default;
-  promise_receiver(promise_receiver && lhs)
+  promise_receiver(promise_receiver && lhs) noexcept
       : promise_value_holder<T>(std::move(lhs)),
         exception(std::move(lhs.exception)), done(lhs.done), awaited_from(std::move(lhs.awaited_from)),
         reference(lhs.reference), cancel_signal(lhs.cancel_signal)
