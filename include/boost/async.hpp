@@ -9,6 +9,7 @@
 #define BOOST_ASYNC_HPP
 
 #include <boost/async/channel.hpp>
+#include <boost/async/detached.hpp>
 #include <boost/async/generator.hpp>
 #include <boost/async/op.hpp>
 #include <boost/async/promise.hpp>

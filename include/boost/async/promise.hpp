@@ -10,10 +10,6 @@
 
 #include <boost/async/detail/promise.hpp>
 
-#include <boost/asio/append.hpp>
-
-
-
 namespace boost::async
 {
 
@@ -79,6 +75,5 @@ struct [[nodiscard]] promise
 
 
 }
-
 
 #endif //BOOST_ASYNC_PROMISE_HPP
