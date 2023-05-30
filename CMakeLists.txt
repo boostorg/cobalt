@@ -28,7 +28,7 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/doc/index.html
                    COMMAND asciidoctor ${CMAKE_CURRENT_SOURCE_DIR}/doc/async.adoc --require asciidoctor-diagram -o ${CMAKE_CURRENT_BINARY_DIR}/doc/index.html
                    DEPENDS ${ADOC_FILES})
 
-add_custom_target(doc DEPENDS  ${CMAKE_CURRENT_BINARY_DIR}/doc/index.html)
+add_custom_target(boost_async_doc DEPENDS  ${CMAKE_CURRENT_BINARY_DIR}/doc/index.html)
 
 
 if(BOOST_ASYNC_IS_ROOT)
