@@ -5,10 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_ASYNC_IMPL_MAIN_IPP
-#define BOOST_ASYNC_IMPL_MAIN_IPP
-
-#include <boost/async/main.hpp>
+#include "boost/async/main.hpp"
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
@@ -60,5 +57,3 @@ int main_promise::run_main(::boost::async::main mn)
 
 
 }
-
-#endif //BOOST_ASYNC_IMPL_MAIN_IPP

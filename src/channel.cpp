@@ -5,9 +5,6 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_ASYNC_IMPL_CHANNEL_IPP
-#define BOOST_ASYNC_IMPL_CHANNEL_IPP
-
 #include <boost/async/channel.hpp>
 
 namespace boost::async
@@ -100,5 +97,3 @@ void channel<void>::write_op::await_resume()
 }
 
 }
-
-#endif //BOOST_ASYNC_IMPL_CHANNEL_IPP

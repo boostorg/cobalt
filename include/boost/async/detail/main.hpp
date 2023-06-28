@@ -64,7 +64,7 @@ struct main_promise : signal_helper,
 
     std::suspend_always initial_suspend() {return {};}
 
-    BOOST_SYMBOL_EXPORT
+    BOOST_ASYNC_DECL
     auto final_suspend() noexcept -> std::suspend_never;
 
     void unhandled_exception() { throw ; }
@@ -75,7 +75,7 @@ struct main_promise : signal_helper,
     }
 
     friend auto ::co_main (int argc, char * argv[]) -> boost::async::main;
-    BOOST_SYMBOL_EXPORT
+    BOOST_ASYNC_DECL
     static int run_main( ::boost::async::main mn);
 
     friend int main(int argc, char * argv[])

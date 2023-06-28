@@ -18,13 +18,19 @@ project : requirements
 
 
 alias async_sources
-   : src.cpp
+   : detail/exception.cpp
+     channel.cpp
+     main.cpp
+     this_thread.cpp
+
    ;
 
 explicit async_sources ;
 
 lib boost_async
    : async_sources /boost//container
+   : requirements <define>BOOST_ASYNC_SOURCE=1
+     <link>shared:<define>BOOST_ASYNC_DYN_LINK=1
    : usage-requirements <library>/boost//container
 
    ;

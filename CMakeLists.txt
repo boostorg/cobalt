@@ -66,11 +66,16 @@ if (NOT MSVC)
     link_libraries(${OPENSSL_LIBRARIES})
 endif()
 
-add_library(boost_async src/src.cpp)
+add_library(boost_async
+            src/detail/exception.cpp
+            src/channel.cpp
+            src/main.cpp
+            src/this_thread.cpp)
 target_include_directories(boost_async PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(boost_async PUBLIC
         Boost::container Boost::system
         Threads::Threads)
+target_compile_definitions(boost_async PRIVATE -DBOOST_ASYNC_SOURCE)
 
 add_library(Boost::async ALIAS boost_async)
 

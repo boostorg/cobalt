@@ -134,10 +134,10 @@ struct channel<void>
   using executor_type = executor_type;
   executor_type get_executor() {return executor_;}
 
-  ~channel();
+  BOOST_ASYNC_DECL ~channel();
 
   bool is_open() const {return !is_closed_;}
-  void close();
+  BOOST_ASYNC_DECL void close();
 
  private:
   std::size_t limit_;
@@ -166,7 +166,7 @@ struct channel<void>
     template<typename Promise>
     BOOST_NOINLINE 
     std::coroutine_handle<void> await_suspend(std::coroutine_handle<Promise> h);
-    void await_resume();
+    BOOST_ASYNC_DECL void await_resume();
     explicit operator bool() const {return chn && chn->is_open();}
   };
 
@@ -196,7 +196,7 @@ struct channel<void>
     BOOST_NOINLINE 
     std::coroutine_handle<void> await_suspend(std::coroutine_handle<Promise> h);
 
-    void await_resume();
+    BOOST_ASYNC_DECL void await_resume();
     explicit operator bool() const {return chn && chn->is_open();}
   };
 

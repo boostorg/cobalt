@@ -5,10 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_ASYNC_THIS_THREAD_IPP
-#define BOOST_ASYNC_THIS_THREAD_IPP
-
 #include <boost/async/this_thread.hpp>
+#include <boost/asio/any_io_executor.hpp>
 
 #include <boost/asio/executor.hpp>
 #include <boost/container/pmr/memory_resource.hpp>
@@ -90,6 +88,3 @@ extract_executor(asio::any_io_executor exec)
 }
 
 }
-
-
-#endif //BOOST_ASYNC_THIS_THREAD_IPP

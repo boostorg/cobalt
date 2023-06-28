@@ -17,16 +17,16 @@
 namespace boost::async::this_thread
 {
 #if !defined(BOOST_ASYNC_NO_PMR)
-BOOST_SYMBOL_EXPORT container::pmr::memory_resource* get_default_resource() noexcept;
-BOOST_SYMBOL_EXPORT container::pmr::memory_resource* set_default_resource(container::pmr::memory_resource* r) noexcept;
-BOOST_SYMBOL_EXPORT container::pmr::polymorphic_allocator<void> get_allocator();
+BOOST_ASYNC_DECL container::pmr::memory_resource* get_default_resource() noexcept;
+BOOST_ASYNC_DECL container::pmr::memory_resource* set_default_resource(container::pmr::memory_resource* r) noexcept;
+BOOST_ASYNC_DECL container::pmr::polymorphic_allocator<void> get_allocator();
 #endif
 
-BOOST_SYMBOL_EXPORT
+BOOST_ASYNC_DECL
 executor_type & get_executor(
     const boost::source_location & loc = BOOST_CURRENT_LOCATION);
-BOOST_SYMBOL_EXPORT bool has_executor();
-BOOST_SYMBOL_EXPORT void set_executor(executor_type exec) noexcept;
+BOOST_ASYNC_DECL bool has_executor();
+BOOST_ASYNC_DECL void set_executor(executor_type exec) noexcept;
 
 }
 

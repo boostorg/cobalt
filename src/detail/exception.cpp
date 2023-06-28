@@ -5,11 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_ASYNC_DETAIL_IMPL_EXCEPTION_IPP
-#define BOOST_ASYNC_DETAIL_IMPL_EXCEPTION_IPP
-
 #include <boost/async/detail/exception.hpp>
-#include <stdexcept>
 
 namespace boost::async::detail
 {
@@ -45,5 +41,3 @@ std::exception_ptr already_awaited()
 }
 
 }
-
-#endif //BOOST_ASYNC_DETAIL_IMPL_EXCEPTION_IPP

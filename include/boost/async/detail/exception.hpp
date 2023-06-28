@@ -9,17 +9,18 @@
 #define BOOST_ASYNC_DETAIL_EXCEPTION_HPP
 
 #include <boost/config.hpp>
+#include <boost/async/config.hpp>
 
 #include <exception>
 
 namespace boost::async::detail
 {
 
-BOOST_SYMBOL_EXPORT std::exception_ptr moved_from_exception();
-BOOST_SYMBOL_EXPORT std::exception_ptr detached_exception();
-BOOST_SYMBOL_EXPORT std::exception_ptr completed_unexpected();
-BOOST_SYMBOL_EXPORT std::exception_ptr wait_not_ready();
-BOOST_SYMBOL_EXPORT std::exception_ptr already_awaited();
+BOOST_ASYNC_DECL std::exception_ptr moved_from_exception();
+BOOST_ASYNC_DECL std::exception_ptr detached_exception();
+BOOST_ASYNC_DECL std::exception_ptr completed_unexpected();
+BOOST_ASYNC_DECL std::exception_ptr wait_not_ready();
+BOOST_ASYNC_DECL std::exception_ptr already_awaited();
 
 template<typename >
 std::exception_ptr wait_not_ready() { return boost::async::detail::wait_not_ready();}
