@@ -15,7 +15,6 @@ target_link_libraries(boost_async_basic_tests  Boost::container Boost::async Ope
 
 add_test(NAME boost_async-main COMMAND boost_async_main)
 add_test(NAME boost_async-basic_tests COMMAND boost_async_basic_tests)
-add_test(NAME boost_async-io-buffers COMMAND boost_async_io_buffers_tests)
 
 file(GLOB ALL_PUBLIC_HEADERS RELATIVE ${CMAKE_SOURCE_DIR}/include/async ${CMAKE_SOURCE_DIR}/include/boost/async/*.hpp)
 set(ALL_PUBLIC_HEADER_TESTS "")
@@ -29,3 +28,5 @@ endforeach()
 
 add_library(boost_async_test_all_public_headers_test OBJECT ${ALL_PUBLIC_HEADER_TESTS})
 target_link_libraries(boost_async_test_all_public_headers_test PUBLIC Boost::headers)
+
+add_subdirectory(io)
