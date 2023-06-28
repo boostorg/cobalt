@@ -23,6 +23,12 @@ BOOST_ASYNC_DECL std::exception_ptr wait_not_ready();
 BOOST_ASYNC_DECL std::exception_ptr already_awaited();
 BOOST_ASYNC_DECL std::exception_ptr allocation_failed();
 
+BOOST_ASYNC_DECL void BOOST_NORETURN throw_invalid_argument(
+    source_location const& loc = BOOST_CURRENT_LOCATION);
+
+BOOST_ASYNC_DECL void BOOST_NORETURN throw_length_error(
+    source_location const& loc = BOOST_CURRENT_LOCATION);
+
 template<typename >
 std::exception_ptr wait_not_ready() { return boost::async::detail::wait_not_ready();}
 

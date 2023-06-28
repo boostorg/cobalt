@@ -66,7 +66,15 @@ namespace pmr = boost::container::pmr;
 #if defined(BOOST_ASYNC_USE_STD_PMR)
 namespace pmr = std::pmr;
 #endif
-
 }
+
+# define BOOST_ASYNC_ERR(ev) ( \
+    ::boost::system::error_code( (ev), [] { \
+    static constexpr auto loc((BOOST_CURRENT_LOCATION)); \
+    return &loc; }()))
+# define BOOST_ASYNC_RETURN_EC(ev) \
+    static constexpr auto loc ## __LINE__((BOOST_CURRENT_LOCATION)); \
+    return ::boost::system::error_code((ev), &loc ## __LINE__)
+
 
 #endif //BOOST_ASYNC_CONFIG_HPP
