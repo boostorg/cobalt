@@ -4,9 +4,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/async.hpp>
+#include <boost/async/main.hpp>
 #include <boost/async/detail/async_operation.hpp>
 #include <boost/asio/steady_timer.hpp>
-#include <boost/async/src.hpp>
 
 
 boost::async::main co_main(int argc, char *argv[])

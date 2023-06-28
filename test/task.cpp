@@ -101,7 +101,7 @@ async::task<int> return_(std::size_t ms)
 }
 
 async::task<int> return_(std::size_t ms, asio::executor_arg_t,
-                            executor_type )
+                         boost::async::executor_type )
 {
   co_return 1234u;
 }

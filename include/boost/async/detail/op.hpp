@@ -41,7 +41,7 @@ struct [[nodiscard]] deferred_op
     , error(std::move(lhs.error))
     , result(std::move(lhs.result))
   {
-    assert(!lhs.resource);
+    BOOST_ASSERT(!lhs.resource);
   }
 
   constexpr static bool await_ready()
