@@ -140,7 +140,7 @@ struct join_variadic_impl
 
     template<std::size_t Idx, typename Aw>
     void await_suspend_step(
-        asio::io_context::executor_type exec, Aw && aw)
+        executor_type exec, Aw && aw)
     {
       if (error && interruptible[Idx])
         return;

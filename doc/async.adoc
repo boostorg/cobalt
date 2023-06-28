@@ -49,6 +49,7 @@ include::reference/gather.adoc[]
 include::reference/join.adoc[]
 include::reference/wait_group.adoc[]
 include::reference/spawn.adoc[]
+include::reference/config.adoc[]
 
 = Technical Background
 

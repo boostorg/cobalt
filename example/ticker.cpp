@@ -29,7 +29,7 @@
 using namespace boost;
 
 // tag::decls[]
-using executor_type = async::use_op_t::executor_with_default<asio::io_context::executor_type>;
+using executor_type = async::use_op_t::executor_with_default<async::executor_type>;
 using socket_type   = typename asio::ip::tcp::socket::rebind_executor<executor_type>::other;
 using acceptor_type = typename asio::ip::tcp::acceptor::rebind_executor<executor_type>::other;
 using websocket_type = beast::websocket::stream<asio::ssl::stream<socket_type>>;

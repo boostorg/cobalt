@@ -96,7 +96,7 @@ struct main_promise : signal_helper,
       return run_main(co_main(argc, argv));
     }
 
-    using executor_type = typename asio::io_context::executor_type;
+    using executor_type = executor_type;
     executor_type get_executor() const {return exec->get_executor();}
 
     using allocator_type = container::pmr::polymorphic_allocator<void>;
@@ -115,7 +115,7 @@ struct main_promise : signal_helper,
   private:
     int * result;
     std::optional<asio::executor_work_guard<executor_type>> exec;
-    asio::basic_signal_set<asio::io_context::executor_type> * signal_set;
+    asio::basic_signal_set<executor_type> * signal_set;
     ::boost::async::main get_return_object()
     {
         return ::boost::async::main{this};

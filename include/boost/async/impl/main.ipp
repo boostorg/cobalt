@@ -34,11 +34,11 @@ int main_promise::run_main(::boost::async::main mn)
   mn.promise->result = &res;
   mn.promise->exec.emplace(ctx.get_executor());
   auto p = std::coroutine_handle<detail::main_promise>::from_promise(*mn.promise);
-  asio::basic_signal_set<asio::io_context::executor_type> ss{ctx, SIGINT, SIGTERM};
+  asio::basic_signal_set<executor_type> ss{ctx, SIGINT, SIGTERM};
   mn.promise->signal_set = &ss;
   struct work
   {
-    asio::basic_signal_set<asio::io_context::executor_type> & ss;
+    asio::basic_signal_set<executor_type> & ss;
     asio::cancellation_signal & signal;
     void operator()(system::error_code ec, int sig) const
     {

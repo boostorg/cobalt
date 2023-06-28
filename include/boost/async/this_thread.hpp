@@ -8,6 +8,7 @@
 #ifndef BOOST_ASYNC_THIS_THREAD_HPP
 #define BOOST_ASYNC_THIS_THREAD_HPP
 
+#include <boost/async/config.hpp>
 #include <boost/config.hpp>
 #include <boost/container/pmr/memory_resource.hpp>
 #include <boost/container/pmr/polymorphic_allocator.hpp>
@@ -15,15 +16,17 @@
 
 namespace boost::async::this_thread
 {
+#if !defined(BOOST_ASYNC_NO_PMR)
 BOOST_SYMBOL_EXPORT container::pmr::memory_resource* get_default_resource() noexcept;
 BOOST_SYMBOL_EXPORT container::pmr::memory_resource* set_default_resource(container::pmr::memory_resource* r) noexcept;
 BOOST_SYMBOL_EXPORT container::pmr::polymorphic_allocator<void> get_allocator();
+#endif
 
 BOOST_SYMBOL_EXPORT
-typename asio::io_context::executor_type & get_executor(
+executor_type & get_executor(
     const boost::source_location & loc = BOOST_CURRENT_LOCATION);
 BOOST_SYMBOL_EXPORT bool has_executor();
-BOOST_SYMBOL_EXPORT void set_executor(asio::io_context::executor_type exec) noexcept;
+BOOST_SYMBOL_EXPORT void set_executor(executor_type exec) noexcept;
 
 }
 

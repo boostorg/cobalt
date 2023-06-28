@@ -21,7 +21,6 @@ struct detached
   detached& operator=(const detached &) = delete;
 
   detached(detached &&lhs) noexcept = default;
-  detached& operator=(detached &&) noexcept = default;
 
   auto operator co_await () {return receiver_.get_awaitable();}
 

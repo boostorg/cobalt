@@ -1,0 +1,17 @@
+[#config]
+== async/config.hpp
+
+The config adder allows to config some implementation details of boost.async.
+
+=== executor_type
+
+The executor type defaults to `boost::asio::io_context::executor_type`.
+
+You can set it to `boost::asio::any_io_executor` by defining `BOOST_ASYNC_USE_ANY_IO_EXECUTOR`
+or to any executor you may want to use by defining `BOOST_ASYNC_EXECUTOR`, like so:
+
+```cpp
+#define BOOST_ASYNC_EXECUTOR ::boost::asio::any_io_executor
+```
+
+NOTE: You will need to make sure that the executor is single threaded.

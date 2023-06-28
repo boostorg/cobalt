@@ -30,7 +30,7 @@ T run(task<T> t)
     asio::io_context ctx{BOOST_ASIO_CONCURRENCY_HINT_1};
     struct reset_exec
     {
-        std::optional<asio::io_context::executor_type> exec;
+        std::optional<executor_type> exec;
         reset_exec()
         {
             if (this_thread::has_executor())

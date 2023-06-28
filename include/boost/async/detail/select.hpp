@@ -150,7 +150,7 @@ struct select_variadic_impl
 
     template<typename Aw>
     void await_suspend_step(
-        asio::io_context::executor_type exec,
+        executor_type exec,
         Aw && aw, std::size_t idx)
     {
       if (has_result() && interruptible[idx])
@@ -381,7 +381,7 @@ struct select_ranged_impl
 
     template<typename Aw>
     void await_suspend_step(
-        asio::io_context::executor_type exec,
+        executor_type exec,
         Aw && aw, std::size_t idx)
     {
       this->cancel[idx] = &this->cancel_[idx];

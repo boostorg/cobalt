@@ -38,7 +38,7 @@ struct with_impl::promise_type
     using enable_await_allocator<promise_type>::await_transform;
 
 
-    using executor_type = typename asio::io_context::executor_type;
+    using executor_type = executor_type;
     executor_type get_executor() const {return exec;}
     executor_type exec{this_thread::get_executor()};
 

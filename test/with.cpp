@@ -19,8 +19,8 @@ namespace asio = boost::asio;
 
 struct finalizer_test
 {
-    asio::io_context::executor_type exec;
-    using executor_type = asio::io_context::executor_type ;
+    executor_type exec;
+    using executor_type = executor_type ;
     executor_type get_executor()
     {
         return exec;

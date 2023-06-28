@@ -154,8 +154,8 @@ struct immediate_coroutine_promise : partial_promise<Allocator>
     return slot;
   }
 
-  asio::io_context::executor_type exec;
-  using executor_type = asio::io_context::executor_type;
+  executor_type exec;
+  using executor_type = executor_type;
   executor_type get_executor() const
   {
     return exec;
@@ -226,8 +226,8 @@ struct transactable_coroutine_promise : partial_promise<Allocator>
     return slot;
   }
 
-  asio::io_context::executor_type exec;
-  using executor_type = asio::io_context::executor_type;
+  executor_type exec;
+  using executor_type = executor_type;
   executor_type get_executor() const
   {
     return exec;

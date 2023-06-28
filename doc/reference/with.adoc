@@ -45,7 +45,7 @@ async::promise<void> run_session(ws_stream & ws);
 
 async::main co_main(int argc, char * argv[])
 {
-  co_await async::with(co_await conenct(argv[1]), &run_session);
+  co_await async::with(co_await connect(argv[1]), &run_session);
   co_return 0;
 }
 ----

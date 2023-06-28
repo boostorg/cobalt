@@ -259,7 +259,7 @@ struct async_promise
     return signal.slot();
   }
 
-  using executor_type = asio::io_context::executor_type;
+  using executor_type = executor_type;
   executor_type exec{boost::async::this_thread::get_executor()};
   executor_type get_executor() const {return exec;}
 

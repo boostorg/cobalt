@@ -8,7 +8,6 @@
 #include <boost/async/this_coro.hpp>
 #include <boost/async/detail/util.hpp>
 
-#include <boost/asio/io_context.hpp>
 #include <boost/core/demangle.hpp>
 
 #include <memory>
@@ -21,10 +20,10 @@ namespace boost::async
 namespace detail
 {
 
-struct completion_handler_noop_executor //: asio::io_context::executor_type
+struct completion_handler_noop_executor //: executor_type
 {
 
-  asio::io_context::executor_type inner;
+  executor_type inner;
   bool * completed_immediately = nullptr;
 
   template <typename Function, typename Allocator>
@@ -64,7 +63,7 @@ struct completion_handler_noop_executor //: asio::io_context::executor_type
   executor_type get_executor();
 
   completion_handler_noop_executor(const completion_handler_noop_executor & rhs) noexcept = default;
-  completion_handler_noop_executor(asio::io_context::executor_type inner,
+  completion_handler_noop_executor(async::executor_type inner,
                                    bool * completed_immediately) : inner(inner), completed_immediately(completed_immediately)
   {
   }
@@ -81,7 +80,7 @@ struct completion_handler_base
       return cancellation_slot ;
   }
 
-  using executor_type = asio::io_context::executor_type;
+  using executor_type = executor_type;
   executor_type executor ;
   executor_type get_executor() const noexcept
   {
@@ -95,7 +94,7 @@ struct completion_handler_base
     return allocator ;
   }
 
-  using immediate_executor_type = completion_handler_noop_executor;// asio::io_context::executor_type;
+  using immediate_executor_type = completion_handler_noop_executor;// executor_type;
   bool * completed_immediately = nullptr;
   immediate_executor_type get_immediate_executor() const noexcept
   {
@@ -155,7 +154,7 @@ struct completion_handler_wrapper
       return asio::get_associated_cancellation_slot(handler) ;
     }
 
-    using executor_type = asio::io_context::executor_type;
+    using executor_type = executor_type;
     executor_type get_executor() const noexcept
     {
       return asio::get_associated_executor(handler, this_thread::get_executor()) ;
@@ -167,7 +166,7 @@ struct completion_handler_wrapper
       return asio::get_associated_allocator(handler, this_thread::get_allocator()) ;
     }
 
-    using immediate_executor_type = asio::io_context::executor_type;
+    using immediate_executor_type = executor_type;
     immediate_executor_type get_immediate_executor() const noexcept
     {
       return asio::get_associated_immediate_executor(handler, this_thread::get_executor());
@@ -240,7 +239,7 @@ void assign_cancellation(std::coroutine_handle<Promise> h, Handler && func)
 }
 
 template<typename Promise>
-asio::io_context::executor_type
+executor_type
 get_executor(std::coroutine_handle<Promise> h)
 {
   if constexpr (requires {h.promise().get_executor();})
@@ -249,7 +248,7 @@ get_executor(std::coroutine_handle<Promise> h)
     return this_thread::get_executor();
 }
 
-inline asio::io_context::executor_type
+inline executor_type
 get_executor(std::coroutine_handle<>)
 {
   return this_thread::get_executor();
