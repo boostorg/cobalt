@@ -28,3 +28,5 @@ endforeach()
 
 add_library(boost_async_test_all_public_headers_test OBJECT ${ALL_PUBLIC_HEADER_TESTS})
 target_link_libraries(boost_async_test_all_public_headers_test PUBLIC Boost::headers)
+
+add_subdirectory(io)
