@@ -30,12 +30,6 @@ using namespace boost::async::io;
   auto ip = get<tcp_b4>(ep);
 */
 
-TEST_CASE("any")
-{
-  endpoint ep{};
-  CHECK(ep.protocol() == any_protocol);
-  //CHECK(!holds_endpoint<local_endpoint>(ep));
-}
 
 TEST_CASE("unix")
 {

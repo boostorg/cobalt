@@ -37,7 +37,8 @@ inline void test_run(boost::async::task<void> (*func) ())
   spawn(ctx, func(),
         +[](std::exception_ptr e)
         {
-          CHECK(e == nullptr);
+          if (e)
+            CHECK_NOTHROW(std::rethrow_exception(e));
         });
   std::size_t n;
   n = ctx.run();
@@ -66,6 +67,20 @@ DOCTEST_TEST_CASE(__VA_ARGS__)                                                  
 static ::boost::async::task<void> Function()
 
 #define CO_TEST_CASE(...) CO_TEST_CASE_IMPL(DOCTEST_ANONYMOUS(CO_DOCTEST_ANON_FUNC_), __VA_ARGS__)
+// end::test_case_macro[]
+
+ // tag::test_case_macro[]
+#define CO_TEST_CASE_TEMPLATE_IMPL(Function, Name, T, ...)                                                         \
+template<typename TName>                                                                                           \
+static ::boost::async::task<void> Function();                                                                      \
+DOCTEST_TEST_CASE_TEMPLATE(Name, T, __VA_ARGS__)                                                                   \
+{                                                                                                                  \
+    test_run(&Function<T>);                                                                                        \
+}                                                                                                                  \
+template<typename T>                                                                                               \
+static ::boost::async::task<void> Function()
+
+#define CO_TEST_CASE_TEMPLATE(...) CO_TEST_CASE_TEMPLATE_IMPL(DOCTEST_ANONYMOUS(CO_DOCTEST_ANON_FUNC_), __VA_ARGS__)
 // end::test_case_macro[]
 
 struct stop
