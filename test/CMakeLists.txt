@@ -14,7 +14,7 @@ target_link_libraries(boost_async_main_compile Boost::container Boost::async Ope
 target_link_libraries(boost_async_basic_tests  Boost::container Boost::async OpenSSL::SSL)
 
 add_test(NAME boost_async-main COMMAND boost_async_main)
-add_test(NAME boost_async-basic_tests COMMAND boost_async_basic_tests)
+add_test(NAME boost_async-basic COMMAND boost_async_basic_tests)
 
 file(GLOB ALL_PUBLIC_HEADERS RELATIVE ${CMAKE_SOURCE_DIR}/include/async ${CMAKE_SOURCE_DIR}/include/boost/async/*.hpp)
 set(ALL_PUBLIC_HEADER_TESTS "")

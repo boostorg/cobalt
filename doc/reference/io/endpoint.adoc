@@ -1,0 +1,132 @@
+[#io::endpoint]
+=== async/io/endpoint.hpp
+
+The endpoint header provides a simple wrapper around endpoints.
+
+The usage is simple:
+
+[source,cpp]
+----
+async::io::endpoint domain_socket{async::io::local_stream, "/var/sys/socket"};
+async::io::local_endpoint le = get<async::io::local_endpoint>(domain_socket);
+
+
+async::io::endpoint ip_socket{async::io::tcp, "192.168.0.1", 8080};
+async::io::local_endpoint le = get<async::io::ip_socket>(domain_socket);
+----
+
+NOTE: `AF_UNSPEC` is treated as an IP that's either ipv6 or ip_v4.
+
+==== Reference
+
+
+[source,cpp]
+----
+// a simple type holding the triplet to describe any endpoint
+struct protocol_type
+{
+  using family_t   = *implementation-defined*;
+  using type_t     = *implementation-defined*;
+  using protocol_t = *implementation-defined*;
+
+  constexpr family_t     family() const noexcept {return family_;};
+  constexpr type_t         type() const noexcept {return type_;};
+  constexpr protocol_t protocol() const noexcept {return protocol_;};
+
+  constexpr explicit
+  protocol_type(family_t family     = static_cast<family_t>(0),
+                type_t type         = static_cast<type_t>(0),
+                protocol_t protocol = static_cast<protocol_t>(0)) noexcept
+
+  constexpr protocol_type(const OtherProtocol & op) noexcept;
+  {}
+  // asio compatibility
+  using endpoint = endpoint;
+};
+
+// the class holding the endpiont
+struct endpoint
+{
+  using storage_type = boost::asio::detail::sockaddr_storage_type;
+  using addr_type = boost::asio::detail::socket_addr_type;
+  void resize(std::size_t size);
+
+        void * data();
+  const void * data() const;
+  std::size_t size();
+
+  protocol_type protocol() const;
+
+  endpoint() = default;
+  endpoint(const endpoint & ep);
+
+  template<protocol_type::family_t   Family,
+           protocol_type::type_t     Type,
+           protocol_type::protocol_t Protocol,
+           typename ... Args>
+  endpoint(static_protocol<Family, Type, Protocol> proto, Args && ... args);
+
+};
+
+// get the type of the endpoint family, see below.
+cosnt auto * get_if(const endpoint * ep);
+// get the type of the endpoint family, see below. throws `bad_endpoint_access` if a mismatched.
+const auto & get(const endpoint & ep);
+----
+
+To make it type-safe, the library provides a `static_protocol` template:
+
+[source,cpp]
+----
+template<protocol_type::family_t   Family   = static_cast<protocol_type::family_t>(0),
+         protocol_type::type_t     Type     = static_cast<protocol_type::type_t>(0),
+         protocol_type::protocol_t Protocol = static_cast<protocol_type::protocol_t>(0)>
+struct static_protocol
+{
+  using family_t   = protocol_type::family_t  ;
+  using type_t     = protocol_type::type_t    ;
+  using protocol_t = protocol_type::protocol_t;
+
+  constexpr family_t   family()   const noexcept {return Family;};
+  constexpr type_t     type()     const noexcept {return Type;};
+  constexpr protocol_t protocol() const noexcept {return Protocol;};
+
+  using endpoint = endpoint;
+};
+----
+
+These can be used to define a constexpr constant for an endpoint type. The following are provided:
+
+[source,cpp]
+----
+constexpr static_protocol<AF_UNSPEC, SOCK_STREAM, IPPROTO_IP>   ip    {};
+constexpr static_protocol<AF_INET,   SOCK_STREAM, IPPROTO_IP>   ip_v4 {};
+constexpr static_protocol<AF_INET6,  SOCK_STREAM, IPPROTO_IP>   ip_v6 {};
+constexpr static_protocol<AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP>  tcp   {};
+constexpr static_protocol<AF_INET,   SOCK_STREAM, IPPROTO_TCP>  tcp_v4{};
+constexpr static_protocol<AF_INET6,  SOCK_STREAM, IPPROTO_TCP>  tcp_v6{};
+constexpr static_protocol<AF_UNSPEC, SOCK_DGRAM,  IPPROTO_UDP>  udp   {};
+constexpr static_protocol<AF_INET,   SOCK_DGRAM,  IPPROTO_UDP>  udp_v4{};
+constexpr static_protocol<AF_INET6,  SOCK_DGRAM,  IPPROTO_ICMP> udp_v6{};
+constexpr static_protocol<AF_UNSPEC, SOCK_DGRAM,  IPPROTO_ICMP> icmp  {};
+constexpr static_protocol<AF_UNIX,   SOCK_STREAM>               local_stream   {};
+constexpr static_protocol<AF_UNIX,   SOCK_DGRAM>                local_datagram {};
+constexpr static_protocol<AF_UNIX,   SOCK_SEQPACKET>            local_seqpacket{};
+constexpr static_protocol<AF_UNIX>                              local_protocol {};
+----
+
+To add your own family type you need to implement those two `tag_invoke` functions:
+
+[source,cpp]
+----
+/// returns the size of the emplaced type.
+std::size_t tag_invoke(make_endpoint_tag<YOUR_FAMILY>,
+                       boost::asio::detail::socket_addr_type* base, // memory to in-place new
+                       ... /* the arguments you need */);
+
+/// get a pointer to the endpoint type.
+const your_endpoint* tag_invoke(get_endpoint_tag<YOUR_FAMILY>,
+                                protocol_type actual,
+                                const endpoint::addr_type * addr);
+----
+
