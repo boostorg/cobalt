@@ -13,9 +13,6 @@
 namespace boost::async
 {
 
-// Requests cancellation where a successful cancellation results
-// in no apparent side effects and where the op can re-awaited.
-constexpr asio::cancellation_type interrupt_await{8u};
 
 template<typename Awaitable>
 concept interruptible =
