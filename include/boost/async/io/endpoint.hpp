@@ -65,9 +65,9 @@ struct protocol_type
   using endpoint = endpoint;
 
  private:
-  family_t family_;
-  type_t type_;
-  protocol_t protocol_;
+  family_t family_     = static_cast<family_t>(0);
+  type_t type_         = static_cast<type_t>(0);
+  protocol_t protocol_ = static_cast<protocol_t>(0);
 };
 
 template<protocol_type::family_t   Family   = static_cast<protocol_type::family_t>(0),
@@ -87,9 +87,9 @@ struct static_protocol
 };
 
 
-constexpr static_protocol<BOOST_ASIO_OS_DEF(AF_UNSPEC), BOOST_ASIO_OS_DEF(SOCK_STREAM), BOOST_ASIO_OS_DEF(IPPROTO_IP)>   ip    {};
-constexpr static_protocol<BOOST_ASIO_OS_DEF(AF_INET),   BOOST_ASIO_OS_DEF(SOCK_STREAM), BOOST_ASIO_OS_DEF(IPPROTO_IP)>   ip_v4 {};
-constexpr static_protocol<BOOST_ASIO_OS_DEF(AF_INET6),  BOOST_ASIO_OS_DEF(SOCK_STREAM), BOOST_ASIO_OS_DEF(IPPROTO_IP)>   ip_v6 {};
+constexpr static_protocol<BOOST_ASIO_OS_DEF(AF_UNSPEC), static_cast<protocol_type::type_t>(0), BOOST_ASIO_OS_DEF(IPPROTO_IP)>   ip    {};
+constexpr static_protocol<BOOST_ASIO_OS_DEF(AF_INET),   static_cast<protocol_type::type_t>(0), BOOST_ASIO_OS_DEF(IPPROTO_IP)>   ip_v4 {};
+constexpr static_protocol<BOOST_ASIO_OS_DEF(AF_INET6),  static_cast<protocol_type::type_t>(0), BOOST_ASIO_OS_DEF(IPPROTO_IP)>   ip_v6 {};
 constexpr static_protocol<BOOST_ASIO_OS_DEF(AF_UNSPEC), BOOST_ASIO_OS_DEF(SOCK_STREAM), BOOST_ASIO_OS_DEF(IPPROTO_TCP)>  tcp   {};
 constexpr static_protocol<BOOST_ASIO_OS_DEF(AF_INET),   BOOST_ASIO_OS_DEF(SOCK_STREAM), BOOST_ASIO_OS_DEF(IPPROTO_TCP)>  tcp_v4{};
 constexpr static_protocol<BOOST_ASIO_OS_DEF(AF_INET6),  BOOST_ASIO_OS_DEF(SOCK_STREAM), BOOST_ASIO_OS_DEF(IPPROTO_TCP)>  tcp_v6{};
@@ -171,8 +171,8 @@ struct endpoint
     storage_type storage_;
   };
   std::size_t size_{sizeof(base_)};
-  protocol_type::protocol_t protocol_;
-  protocol_type::type_t type_;
+  protocol_type::protocol_t protocol_ = static_cast<protocol_type::protocol_t>(0);
+  protocol_type::type_t         type_ = static_cast<protocol_type::type_t>(0);
 };
 
 class bad_endpoint_access : public std::exception
