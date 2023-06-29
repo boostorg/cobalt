@@ -85,12 +85,14 @@ add_library(boost_async
         src/channel.cpp
         src/main.cpp
         src/this_thread.cpp
+        src/thread.cpp
         src/io/buffers/circular_buffer.cpp
         src/io/buffers/const_buffer_pair.cpp
         src/io/buffers/const_buffer_subspan.cpp
         src/io/buffers/mutable_buffer_pair.cpp
         src/io/buffers/mutable_buffer_subspan.cpp
-        src/thread.cpp)
+        src/io/endpoint.cpp)
+
 target_include_directories(boost_async PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(boost_async PUBLIC
         Boost::system
