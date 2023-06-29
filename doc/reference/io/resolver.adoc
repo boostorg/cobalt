@@ -1,0 +1,76 @@
+[#io::resolve]
+=== async/io/resolver.hpp
+
+[source,cpp]
+----
+// a simple type holding the triplet to describe any endpoint
+struct protocol_type
+{
+  using family_t   = *implementation-defined*;
+  using type_t     = *implementation-defined*;
+  using protocol_t = *implementation-defined*;
+
+  constexpr family_t     family() const noexcept {return family_;};
+  constexpr type_t         type() const noexcept {return type_;};
+  constexpr protocol_t protocol() const noexcept {return protocol_;};
+
+  constexpr explicit
+  protocol_type(family_t family     = static_cast<family_t>(0),
+                type_t type         = static_cast<type_t>(0),
+                protocol_t protocol = static_cast<protocol_t>(0)) noexcept
+
+  constexpr protocol_type(const OtherProtocol & op) noexcept;
+  {}
+  // asio compatibility
+  using endpoint = endpoint;
+};
+
+// the class holding the endpiont
+struct endpoint
+{
+  using storage_type = boost::asio::detail::sockaddr_storage_type;
+  using addr_type = boost::asio::detail::socket_addr_type;
+  void resize(std::size_t size);
+
+        void * data();
+  const void * data() const;
+  std::size_t size();
+
+  protocol_type protocol() const;
+
+  endpoint() = default;
+  endpoint(const endpoint & ep);
+
+  template<protocol_type::family_t   Family,
+           protocol_type::type_t     Type,
+           protocol_type::protocol_t Protocol,
+           typename ... Args>
+  endpoint(static_protocol<Family, Type, Protocol> proto, Args && ... args);
+
+};
+
+// get the type of the endpoint family, see below.
+cosnt auto * get_if(const endpoint * ep);
+// get the type of the endpoint family, see below. throws `bad_endpoint_access` if a mismatched.
+const auto & get(const endpoint & ep);
+----
+
+To make it type-safe, the library provides a `static_protocol` template:
+
+[source,cpp]
+----
+
+struct resolver
+{
+  using resolve_result = system::result<container::pmr::vector<endpoint>>;
+  resolver();
+  resolver(resolver && ) = delete;
+
+  void cancel();
+
+  awaitable<result_result> resolve_op_ resolve(core::string_view host, core::string_view service);
+};
+
+awaitable<typename resolver::resolve_result> lookup(core::string_view host, core::string_view service);
+----
+

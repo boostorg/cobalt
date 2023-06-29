@@ -3,3 +3,5 @@
 
 include::io/timer.adoc[]
 include::io/endpoint.adoc[]
+include::io/resolver.adoc[]
+include::io/resolver.adoc[]
