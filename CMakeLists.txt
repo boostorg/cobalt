@@ -80,6 +80,7 @@ add_library(boost_async
         src/io/detail/duplicate.cpp
         src/io/endpoint.cpp
         src/io/resolver.cpp
+        src/io/signal_set.cpp
         src/io/steady_timer.cpp
         src/io/system_timer.cpp)
 
