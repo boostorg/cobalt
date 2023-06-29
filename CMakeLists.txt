@@ -57,7 +57,7 @@ endif()
 
 if (NOT BOOST_ASYNC_BUILD_INLINE)
     find_package(Threads REQUIRED)
-    find_package(Boost REQUIRED container system json)
+    find_package(Boost REQUIRED container system json url)
     include_directories(include)
 endif()
 
@@ -77,12 +77,13 @@ add_library(boost_async
         src/io/buffers/mutable_buffer_pair.cpp
         src/io/buffers/mutable_buffer_subspan.cpp
         src/io/endpoint.cpp
+        src/io/resolver.cpp
         src/io/steady_timer.cpp
         src/io/system_timer.cpp)
 
 target_include_directories(boost_async PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(boost_async PUBLIC
-        Boost::container Boost::system
+        Boost::container Boost::system Boost::url
         Threads::Threads)
 target_compile_definitions(boost_async PRIVATE -DBOOST_ASYNC_SOURCE)
 
