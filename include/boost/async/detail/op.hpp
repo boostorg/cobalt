@@ -36,7 +36,7 @@ struct [[nodiscard]] deferred_op
   deferred_op(const Op  & op) : op(op) {}
 
 
-  deferred_op(deferred_op && lhs)
+  inline deferred_op(deferred_op && lhs)
     : op(std::move(lhs.op))
     , error(std::move(lhs.error))
     , result(std::move(lhs.result))
@@ -44,28 +44,31 @@ struct [[nodiscard]] deferred_op
     BOOST_ASSERT(!lhs.resource);
   }
 
-  constexpr static bool await_ready()
-    requires (not requires {&Op::ready;})
-  {return false;}
-
-  bool await_ready() requires requires {{op.ready(result)};}
-  {
-    op.ready(result);
-    return result.has_value();
-  }
-
   bool await_ready()
-    requires std::is_same_v<typename result_type::value_type, std::tuple<system::error_code>>
-      && requires (system::error_code & ec) {{op.ready(ec)} -> std::convertible_to<bool>;}
   {
-    system::error_code ec;
-    if (op.ready(ec))
+    if constexpr (! requires {&Op::ready;})
+      return false;
+    else if constexpr (requires {{op.ready(result)};})
     {
-      result.emplace(ec);
-      return true;
+      op.ready(result);
+      return result.has_value();
+    }
+    else if constexpr (
+        std::is_same_v<typename result_type::value_type, std::tuple<system::error_code>>
+                   && requires (system::error_code & ec) {{op.ready(ec)} -> std::convertible_to<bool>;})
+    {
+      system::error_code ec;
+      if (op.ready(ec))
+      {
+        result.emplace(ec);
+        return true;
+      }
+      else
+        return false;
     }
     else
-      return false;
+      static_assert(std::is_same_v<Op, void>, "Invalid ready-call");
+
   }
 
   char buffer[2048];
