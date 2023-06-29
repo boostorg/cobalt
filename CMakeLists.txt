@@ -77,6 +77,7 @@ add_library(boost_async
         src/io/buffers/mutable_buffer_pair.cpp
         src/io/buffers/mutable_buffer_subspan.cpp
         src/io/buffers/register.cpp
+        src/io/detail/duplicate.cpp
         src/io/endpoint.cpp
         src/io/resolver.cpp
         src/io/steady_timer.cpp
