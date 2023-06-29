@@ -14,7 +14,13 @@
 namespace boost::cobalt::detail
 {
 
-template<awaitable_type T>
+struct co_await_result_helper_promise_archetype
+{
+  using executor_type = executor;
+  const executor & get_executor() const;
+};
+
+template<awaitable_type<co_await_result_helper_promise_archetype> T>
 auto co_await_result_helper() -> decltype(std::declval<T&>());
 
 template<typename T>
