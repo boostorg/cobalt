@@ -13,8 +13,10 @@
 namespace boost::async::io
 {
 
-struct stream::read_some_op_
+struct stream::read_some_op_ : detail::deferred_op_resource_base
 {
+  read_some_op_(read_some_op_ && ) noexcept = default;
+
   constexpr bool await_ready() noexcept {return false;};
 
   template<typename Promise>
@@ -22,11 +24,8 @@ struct stream::read_some_op_
   {
     try
     {
-      auto & res = resource.emplace(
-          buffer, sizeof(buffer),
-          asio::get_associated_allocator(h.promise(), this_thread::get_allocator()).resource());
       rstream_.async_read_some_impl_({&buffer_, 1u},
-                                     completion_handler<system::error_code, std::size_t>{h, result_, &res});
+                                     completion_handler<system::error_code, std::size_t>{h, result_, get_resource(h)});
       return true;
     }
     catch(...)
@@ -51,12 +50,10 @@ struct stream::read_some_op_
   buffers::mutable_buffer buffer_;
   std::exception_ptr error;
   std::optional<std::tuple<system::error_code, std::size_t>> result_;
-  char buffer[2048];
-  std::optional<container::pmr::monotonic_buffer_resource> resource;
 };
 
 
-struct stream::read_some_op_seq_
+struct stream::read_some_op_seq_ : detail::deferred_op_resource_base
 {
   constexpr bool await_ready() noexcept {return false;};
 
@@ -66,10 +63,7 @@ struct stream::read_some_op_seq_
   {
     try
     {
-      auto & res = resource.emplace(
-          buffer, sizeof(buffer),
-          asio::get_associated_allocator(h.promise(), this_thread::get_allocator()).resource());
-      rstream_.async_read_some_impl_(buffer_, completion_handler<system::error_code, std::size_t>{h, result_, &res});
+      rstream_.async_read_some_impl_(buffer_, completion_handler<system::error_code, std::size_t>{h, result_, get_resource(h)});
       return true;
     }
     catch(...)
@@ -94,11 +88,11 @@ struct stream::read_some_op_seq_
   buffers::mutable_buffer_span buffer_;
   std::exception_ptr error;
   std::optional<std::tuple<system::error_code, std::size_t>> result_;
-  char buffer[2048];
-  std::optional<container::pmr::monotonic_buffer_resource> resource;
 };
-struct stream::write_some_op_
+struct stream::write_some_op_ : detail::deferred_op_resource_base
 {
+  write_some_op_(write_some_op_ && ) noexcept = default;
+
   constexpr bool await_ready() noexcept {return false;};
 
   template<typename Promise>
@@ -106,11 +100,8 @@ struct stream::write_some_op_
   {
     try
     {
-      auto & res = resource.emplace(
-          buffer, sizeof(buffer),
-          asio::get_associated_allocator(h.promise(), this_thread::get_allocator()).resource());
       rstream_.async_write_some_impl_({&buffer_, 1},
-                                      completion_handler<system::error_code, std::size_t>{h, result_, &res});
+                                      completion_handler<system::error_code, std::size_t>{h, result_, get_resource(h)});
       return true;
     }
     catch(...)
@@ -135,12 +126,10 @@ struct stream::write_some_op_
   buffers::const_buffer buffer_;
   std::exception_ptr error;
   std::optional<std::tuple<system::error_code, std::size_t>> result_;
-  char buffer[2048];
-  std::optional<container::pmr::monotonic_buffer_resource> resource;
 };
 
 
-struct stream::write_some_op_seq_
+struct stream::write_some_op_seq_ : detail::deferred_op_resource_base
 {
   constexpr bool await_writey() noexcept {return false;};
 
@@ -150,10 +139,7 @@ struct stream::write_some_op_seq_
   {
     try
     {
-      auto & res = resource.emplace(
-          buffer, sizeof(buffer),
-          asio::get_associated_allocator(h.promise(), this_thread::get_allocator()).resource());
-      rstream_.async_write_some_impl_(buffer_, completion_handler<system::error_code, std::size_t>{h, result_, &res});
+      rstream_.async_write_some_impl_(buffer_, completion_handler<system::error_code, std::size_t>{h, result_, get_resource(h)});
       return true;
     }
     catch(...)
@@ -178,8 +164,6 @@ struct stream::write_some_op_seq_
   buffers::const_buffer_span buffer_;
   std::exception_ptr error;
   std::optional<std::tuple<system::error_code, std::size_t>> result_;
-  char buffer[2048];
-  std::optional<container::pmr::monotonic_buffer_resource> resource;
 };
 
 }

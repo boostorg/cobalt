@@ -32,7 +32,7 @@ struct signal_set
 
 
  private:
-  struct wait_op_
+  struct wait_op_ : detail::deferred_op_resource_base
   {
     constexpr static bool await_ready() { return false; }
 
@@ -41,10 +41,7 @@ struct signal_set
     {
       try
       {
-        auto & res = resource.emplace(
-            buffer, sizeof(buffer),
-            asio::get_associated_allocator(h.promise(), this_thread::get_allocator()).resource());
-        signal_set_.async_wait(completion_handler<system::error_code, int>{h, result_, &res});
+        signal_set_.async_wait(completion_handler<system::error_code, int>{h, result_, get_resource(h)});
         return true;
       }
       catch(...)

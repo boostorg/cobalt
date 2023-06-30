@@ -20,9 +20,30 @@ constexpr auto deduce_initiate_handler(void (Class::* const)(Handler)) -> typena
 template<typename Class, typename Handler>
 constexpr auto deduce_initiate_handler(void (Class::* const)(Handler) const) -> typename std::decay_t<Handler>::result_type;
 
+struct deferred_op_resource_base
+{
+  deferred_op_resource_base() noexcept = default;
+  deferred_op_resource_base(deferred_op_resource_base && lhs) noexcept
+  {
+    BOOST_ASSERT(!lhs.resource);
+  }
+
+  template<typename Promise>
+  container::pmr::monotonic_buffer_resource * get_resource(std::coroutine_handle<Promise> h)
+  {
+    return &resource.emplace(
+        buffer, sizeof(buffer),
+        asio::get_associated_allocator(h.promise(), this_thread::get_allocator()).resource()
+        );
+  }
+
+ private:
+  char buffer[2048];
+  std::optional<container::pmr::monotonic_buffer_resource> resource;
+};
 
 template<typename Op>
-struct [[nodiscard]] deferred_op
+struct [[nodiscard]] deferred_op : deferred_op_resource_base
 {
   Op op;
   std::exception_ptr error;
@@ -71,18 +92,13 @@ struct [[nodiscard]] deferred_op
 
   }
 
-  char buffer[2048];
-  std::optional<container::pmr::monotonic_buffer_resource> resource;
   bool completed_immediately = false;
   template<typename Promise>
   bool await_suspend(std::coroutine_handle<Promise> h)
   {
     try
     {
-      auto & res = resource.emplace(
-          buffer, sizeof(buffer),
-          asio::get_associated_allocator(h.promise(), this_thread::get_allocator()).resource());
-      op.initiate({h, result, &res, &completed_immediately});
+      op.initiate({h, result, this->get_resource(h), &completed_immediately});
       return !completed_immediately;
     }
     catch(...)
