@@ -115,7 +115,7 @@ add_library(boost_async
         src/io/buffers/register.cpp
         src/io/write.cpp
         src/io/write_at.cpp
-        src/io/detail/random_access_device.cpp)
+        src/io/detail/random_access_device.cpp src/io/copy.cpp)
 
 target_include_directories(boost_async PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(boost_async PUBLIC
