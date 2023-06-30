@@ -136,8 +136,7 @@ struct random_access_device::write_some_at_op_ : detail::deferred_op_resource_ba
 
 struct random_access_device::write_some_at_op_seq_ : detail::deferred_op_resource_base
 {
-  constexpr bool await_writey() noexcept {return false;};
-
+  constexpr bool await_ready() noexcept {return false;};
 
   template<typename Promise>
   bool await_suspend(std::coroutine_handle<Promise> h)
