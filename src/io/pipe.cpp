@@ -38,7 +38,7 @@ void readable_pipe::async_read_some_impl_(
     buffers::mutable_buffer_span buffer,
     async::completion_handler<system::error_code, std::size_t> h)
 {
-  pipe_.async_read_some(buffers::mutable_buffer_span(buffer), std::move(h));
+  pipe_.async_read_some(buffer, std::move(h));
 }
 
 void readable_pipe::async_write_some_impl_(

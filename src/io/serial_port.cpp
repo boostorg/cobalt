@@ -126,7 +126,7 @@ void serial_port::async_read_some_impl_(
     buffers::mutable_buffer_span buffer,
     async::completion_handler<system::error_code, std::size_t> h)
 {
-  serial_port_.async_read_some(buffers::mutable_buffer_span(buffer), std::move(h));
+  serial_port_.async_read_some(buffer, std::move(h));
 }
 
 void serial_port::async_write_some_impl_(
