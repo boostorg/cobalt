@@ -132,13 +132,13 @@ struct gather_variadic_impl
               alloc,
               [this, &aw, c = wss.get_completer()]() mutable
               {
-                std::get<Idx>(result) = get_resume_result(aw);
+                assign_resume_result(std::get<Idx>(result), aw);
                 c();
               }
             )
           );
       else
-        std::get<Idx>(result) = get_resume_result(aw);
+        assign_resume_result(std::get<Idx>(result), aw);
     }
 
     template<typename H>
@@ -254,13 +254,13 @@ struct gather_ranged_impl
               exec, alloc,
               [this, c = wss.get_completer(), idx]() mutable
               {
-                result[idx] = get_resume_result(aws[idx]);
+                assign_resume_result(result[idx], aws[idx]);
                 c();
               }
             )
           );
         else
-          result[idx] = get_resume_result(aws[idx]);
+          assign_resume_result(result[idx], aws[idx]);
         idx ++;
       }
       if (wss.use_count == 0) // already done, no need to suspend

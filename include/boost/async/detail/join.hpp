@@ -155,7 +155,7 @@ struct join_variadic_impl
             [this, &aw, c = wss.get_completer()]() mutable
             {
               this->cancel[Idx] = nullptr;
-              auto &re_ = std::get<Idx>(result) = get_resume_result(aw);
+              auto &re_ = assign_resume_result(std::get<Idx>(result), aw);
               if (re_.has_error() && error == nullptr)
               {
                 error = re_.error();
@@ -171,7 +171,7 @@ struct join_variadic_impl
       }
       else
       {
-        auto & re_ = std::get<Idx>(result) = get_resume_result(aw);
+        auto & re_ = assign_resume_result(std::get<Idx>(result), aw);
         if (re_.has_error() && error == nullptr)
         {
           error = re_.error();
@@ -331,7 +331,7 @@ struct join_ranged_impl
                 [this, c = wss.get_completer(), idx]() mutable
                 {
                   this->cancel[idx] = nullptr;
-                  auto & re_ = result[idx] = get_resume_result(aws[idx]);
+                  auto & re_ = assign_resume_result(result[idx], aws[idx]);
                   if (re_.has_error() && error == nullptr)
                   {
                     error = re_.error();
@@ -346,7 +346,7 @@ struct join_ranged_impl
         }
         else
         {
-          auto & re_ = result[idx] = get_resume_result(aws[idx]);
+          auto & re_ = assign_resume_result(result[idx], aws[idx]);
           if (re_.has_error() && error == nullptr)
           {
             error = re_.error();
