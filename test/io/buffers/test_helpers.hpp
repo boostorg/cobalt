@@ -45,9 +45,7 @@ template<class T>
 void
 test_buffer_sequence(T&& t)
 {
-    static_assert(
-        is_const_buffer_sequence<T>::value,
-        "");
+    static_assert(const_buffer_sequence<std::decay_t<T>>);
 
     auto const& pat = test_pattern();
     auto const& ct = t;

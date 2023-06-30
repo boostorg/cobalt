@@ -50,20 +50,20 @@ struct asio_const_buffers
     asio_const_buffer const* end() const noexcept;
 };
 
-BOOST_STATIC_ASSERT(  is_const_buffer_sequence   <const_buffer>::value);
-BOOST_STATIC_ASSERT(  is_const_buffer_sequence   <mutable_buffer>::value);
-BOOST_STATIC_ASSERT(! is_mutable_buffer_sequence <const_buffer>::value);
-BOOST_STATIC_ASSERT(  is_mutable_buffer_sequence <mutable_buffer>::value);
+BOOST_STATIC_ASSERT(  const_buffer_sequence   <const_buffer>);
+BOOST_STATIC_ASSERT(  const_buffer_sequence   <mutable_buffer>);
+BOOST_STATIC_ASSERT(! mutable_buffer_sequence <const_buffer>);
+BOOST_STATIC_ASSERT(  mutable_buffer_sequence <mutable_buffer>);
 
 //BOOST_STATIC_ASSERT(  is_const_buffer_sequence   <asio_const_buffers>::value);
 //BOOST_STATIC_ASSERT(  is_const_buffer_sequence   <asio_mutable_buffers>::value);
 //BOOST_STATIC_ASSERT(  is_mutable_buffer_sequence <asio_mutable_buffers>::value);
 //BOOST_STATIC_ASSERT(! is_mutable_buffer_sequence <asio_const_buffers>::value);
 
-BOOST_STATIC_ASSERT(  is_const_buffer_sequence   <const_buffer_pair>::value);
-BOOST_STATIC_ASSERT(  is_const_buffer_sequence   <mutable_buffer_pair>::value);
-BOOST_STATIC_ASSERT(! is_mutable_buffer_sequence <const_buffer_pair>::value);
-BOOST_STATIC_ASSERT(  is_mutable_buffer_sequence <mutable_buffer_pair>::value);
+BOOST_STATIC_ASSERT(  const_buffer_sequence   <const_buffer_pair>);
+BOOST_STATIC_ASSERT(  const_buffer_sequence   <mutable_buffer_pair>);
+BOOST_STATIC_ASSERT(! mutable_buffer_sequence <const_buffer_pair>);
+BOOST_STATIC_ASSERT(  mutable_buffer_sequence <mutable_buffer_pair>);
 
 struct algorithm_test
 {

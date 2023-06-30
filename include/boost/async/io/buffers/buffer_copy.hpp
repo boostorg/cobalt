@@ -39,9 +39,12 @@ namespace detail {
 
 struct buffer_copy_impl
 {
+    // If you get a compile error here it
+    // means that one or both of your types
+    // do not meet the requirements.
     template<
-        class MutableBuffers,
-        class ConstBuffers>
+        mutable_buffer_sequence MutableBuffers,
+        const_buffer_sequence ConstBuffers>
     std::size_t
     operator()(
         MutableBuffers const& to,
@@ -49,18 +52,6 @@ struct buffer_copy_impl
         std::size_t at_most =
             std::size_t(-1)) const noexcept
     {
-        // If you get a compile error here it
-        // means that one or both of your types
-        // do not meet the requirements.
-        static_assert(
-            is_mutable_buffer_sequence<
-                MutableBuffers>::value,
-            "Type requirements not met");
-        static_assert(
-            is_const_buffer_sequence<
-                ConstBuffers>::value,
-            "Type requirements not met");
-
         std::size_t total = 0;
         std::size_t pos0 = 0;
         std::size_t pos1 = 0;
