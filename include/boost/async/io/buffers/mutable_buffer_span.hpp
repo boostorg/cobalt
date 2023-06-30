@@ -54,22 +54,8 @@ public:
 
     /** Constructor.
     */
-    template<
-        class MutableBufferSequence
-#ifndef BOOST_BUFFERS_DOCS
-        , class = typename std::enable_if<
-            ! std::is_same<
-                MutableBufferSequence,
-                mutable_buffer_span>::value &&
-            is_mutable_buffer_sequence<
-                MutableBufferSequence>::value &&
-            std::is_same<decltype(
-                std::declval<MutableBufferSequence
-                    const&>().begin()),
-                mutable_buffer const*>::value
-            >::type
-#endif
-    >
+    template<mutable_buffer_sequence MutableBufferSequence>
+        requires requires (const MutableBufferSequence & seq) {{seq.begin()} -> std::same_as<const mutable_buffer*>;}
     explicit
     mutable_buffer_span(
         MutableBufferSequence const& bs) noexcept

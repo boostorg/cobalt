@@ -18,9 +18,7 @@ namespace boost::async::io::buffers {
 
 struct any_dynamic_buffer_test
 {
-    BOOST_STATIC_ASSERT(
-        is_dynamic_buffer<
-            any_dynamic_buffer>::value);
+    BOOST_STATIC_ASSERT(dynamic_buffer<any_dynamic_buffer>);
 
     void
     testAny()

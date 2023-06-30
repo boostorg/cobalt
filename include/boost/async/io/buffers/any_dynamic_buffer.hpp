@@ -150,15 +150,7 @@ public:
     }
 };
 
-template<
-    class DynamicBuffer
-#ifndef BOOST_BUFFERS_DOCS
-    , class = typename std::enable_if<
-        is_dynamic_buffer<
-        typename std::decay<DynamicBuffer>::type
-            >::value>::type
-#endif
->
+template<dynamic_buffer DynamicBuffer>
 auto
 make_any(DynamicBuffer&& b) ->
     any_dynamic_buffer_impl<typename
