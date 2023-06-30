@@ -22,7 +22,7 @@ namespace boost::async::io
 struct [[nodiscard]] transfer_result
 {
   system::error_code error;
-  std::size_t transferred;
+  std::size_t transferred{0u};
 
   using value_type = std::size_t;
   using error_type = system::error_code;

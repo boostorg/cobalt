@@ -133,7 +133,7 @@ struct stream::write_some_op_ : detail::deferred_op_resource_base
 
 struct stream::write_some_op_seq_ : detail::deferred_op_resource_base
 {
-  constexpr bool await_writey() noexcept {return false;};
+  constexpr bool await_ready() noexcept {return false;};
 
 
   template<typename Promise>
