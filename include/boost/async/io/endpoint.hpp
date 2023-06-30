@@ -29,7 +29,7 @@ namespace boost::async::io
 {
 
 struct endpoint;
-
+struct stream_socket;
 
 struct protocol_type
 {
@@ -63,7 +63,8 @@ struct protocol_type
   constexpr auto operator<=>(const protocol_type & , const protocol_type &) noexcept = default;
 
   using endpoint = endpoint;
-
+  // for the asio acceptor
+  using socket = stream_socket;
  private:
   family_t family_     = static_cast<family_t>(0);
   type_t type_         = static_cast<type_t>(0);
@@ -120,7 +121,8 @@ struct endpoint
 
         void * data()       {return &storage_; }
   const void * data() const {return &storage_; }
-  std::size_t size() {return size_;}
+  std::size_t size() const {return size_;}
+  std::size_t capacity() const {return sizeof(storage_);}
 
   protocol_type protocol() const
   {
@@ -164,7 +166,6 @@ struct endpoint
     return tag_invoke(get_endpoint_tag<Protocol.family()>{}, ep->protocol(), &ep->base_);
   }
 
-
  private:
   union {
     boost::asio::detail::socket_addr_type base_{};
@@ -201,7 +202,7 @@ auto get(const endpoint & ep, const boost::source_location & loc = BOOST_CURRENT
 
 struct local_endpoint
 {
-  core::string_view path() { return unix_.sun_path;}
+  core::string_view path() const { return unix_.sun_path;}
  private:
   union {
     boost::asio::detail::sockaddr_storage_type addr_;
@@ -224,7 +225,6 @@ struct ip_address_v4
     std::uint16_t port() const {return in_.sin_port;}
     std::uint32_t addr() const {return in_.sin_addr.s_addr;}
     BOOST_ASYNC_DECL static_string<15> addr_str() const;
-
  private:
   union {
     boost::asio::detail::sockaddr_storage_type addr_{};

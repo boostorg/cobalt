@@ -60,10 +60,10 @@ struct stream
   struct write_some_op_;
   struct write_some_op_seq_;
  public:
-  [[nodiscard]] read_some_op_seq_ read_some(buffers::mutable_buffer_span buffers);
-  [[nodiscard]] read_some_op_     read_some(buffers::mutable_buffer      buffer);
-  [[nodiscard]] write_some_op_seq_ write_some(buffers::const_buffer_span buffers);
-  [[nodiscard]] write_some_op_     write_some(buffers::const_buffer      buffer);
+  BOOST_ASYNC_DECL [[nodiscard]] read_some_op_seq_ read_some(buffers::mutable_buffer_span buffers);
+  BOOST_ASYNC_DECL [[nodiscard]] read_some_op_     read_some(buffers::mutable_buffer      buffer);
+  BOOST_ASYNC_DECL [[nodiscard]] write_some_op_seq_ write_some(buffers::const_buffer_span buffers);
+  BOOST_ASYNC_DECL [[nodiscard]] write_some_op_     write_some(buffers::const_buffer      buffer);
 };
 
 }

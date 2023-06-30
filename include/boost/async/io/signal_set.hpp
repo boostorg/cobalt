@@ -22,13 +22,13 @@ struct signal_set
 {
   using wait_result = system::result<int>;
 
-  signal_set();
-  signal_set(std::initializer_list<int> sigs);
+  BOOST_ASYNC_DECL signal_set();
+  BOOST_ASYNC_DECL signal_set(std::initializer_list<int> sigs);
 
-  [[nodiscard]] system::result<void> cancel();
-  [[nodiscard]] system::result<void> clear();
-  [[nodiscard]] system::result<void> add(int signal_number);
-  [[nodiscard]] system::result<void> remove(int signal_number);
+  [[nodiscard]] BOOST_ASYNC_DECL system::result<void> cancel();
+  [[nodiscard]] BOOST_ASYNC_DECL system::result<void> clear();
+  [[nodiscard]] BOOST_ASYNC_DECL system::result<void> add(int signal_number);
+  [[nodiscard]] BOOST_ASYNC_DECL system::result<void> remove(int signal_number);
 
 
  private:
@@ -61,9 +61,9 @@ struct signal_set
       else
         return sig;
     }
-    wait_op_(boost::asio::basic_signal_set<asio::io_context::executor_type> & signal_set) : signal_set_(signal_set) {}
+    wait_op_(boost::asio::basic_signal_set<executor_type> & signal_set) : signal_set_(signal_set) {}
    private:
-    boost::asio::basic_signal_set<asio::io_context::executor_type> & signal_set_;
+    boost::asio::basic_signal_set<executor_type> & signal_set_;
     std::exception_ptr error;
     std::optional<std::tuple<system::error_code, int>> result_;
     char buffer[256];

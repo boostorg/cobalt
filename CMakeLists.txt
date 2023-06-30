@@ -93,12 +93,17 @@ add_library(boost_async
         src/io/buffers/mutable_buffer_subspan.cpp
         src/io/detail/duplicate.cpp
         src/io/detail/stream.cpp
+        src/io/acceptor.cpp
+        src/io/datagram_socket.cpp
         src/io/endpoint.cpp
         src/io/pipe.cpp
         src/io/resolver.cpp
         src/io/serial_port.cpp
         src/io/signal_set.cpp
+        src/io/seq_packet_socket.cpp
+        src/io/socket.cpp
         src/io/steady_timer.cpp
+        src/io/stream_socket.cpp
         src/io/system_timer.cpp)
 
 target_include_directories(boost_async PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")

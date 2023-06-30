@@ -29,16 +29,16 @@ struct system_timer final
   /// The time point type of the clock.
   typedef typename clock_type::time_point time_point;
 
-  system_timer();
-  system_timer(const time_point& expiry_time);
-  system_timer(const duration& expiry_time);
+  BOOST_ASYNC_DECL system_timer();
+  BOOST_ASYNC_DECL system_timer(const time_point& expiry_time);
+  BOOST_ASYNC_DECL system_timer(const duration& expiry_time);
 
-  void cancel();
+  BOOST_ASYNC_DECL void cancel();
 
-  time_point expiry() const;
-  void reset(const time_point& expiry_time);
-  void reset(const duration& expiry_time);
-  bool expired() const;
+  BOOST_ASYNC_DECL time_point expiry() const;
+  BOOST_ASYNC_DECL void reset(const time_point& expiry_time);
+  BOOST_ASYNC_DECL void reset(const duration& expiry_time);
+  BOOST_ASYNC_DECL bool expired() const;
 
   struct wait_op_ : detail::deferred_op_resource_base
   {
