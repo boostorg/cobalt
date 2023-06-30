@@ -106,17 +106,12 @@ namespace detail {
 
 struct prefix_impl
 {
-    template<class BufferSequence>
+    template<const_buffer_sequence BufferSequence>
     prefix_type<BufferSequence>
     operator()(
         BufferSequence const& b,
         std::size_t n) const
     {
-        static_assert(
-            is_const_buffer_sequence<
-                BufferSequence>::value,
-            "Type requirements not met");
-
         return tag_invoke(
             prefix_tag{}, b, n);
     }
@@ -141,17 +136,12 @@ struct sans_suffix_impl
 
 struct suffix_impl
 {
-    template<class BufferSequence>
+    template<const_buffer_sequence BufferSequence>
     suffix_type<BufferSequence>
     operator()(
         BufferSequence const& b,
         std::size_t n) const
     {
-        static_assert(
-            is_const_buffer_sequence<
-                BufferSequence>::value,
-            "Type requirements not met");
-
         return tag_invoke(
             suffix_tag{}, b, n);
     }
@@ -159,17 +149,12 @@ struct suffix_impl
 
 struct sans_prefix_impl
 {
-    template<class BufferSequence>
+    template<const_buffer_sequence BufferSequence>
     suffix_type<BufferSequence>
     operator()(
         BufferSequence const& b,
         std::size_t n) const
     {
-        static_assert(
-            is_const_buffer_sequence<
-                BufferSequence>::value,
-            "Type requirements not met");
-
         auto const n0 = buffer_size(b);
         if(n < n0)
             return tag_invoke(
@@ -181,12 +166,7 @@ struct sans_prefix_impl
 
 struct front_impl
 {
-    template<
-        class MutableBufferSequence
-        , class = typename std::enable_if<
-            is_mutable_buffer_sequence<
-                MutableBufferSequence>::value
-        >::type>
+    template<mutable_buffer_sequence MutableBufferSequence>
     mutable_buffer
     operator()(
         MutableBufferSequence const& bs) const noexcept
@@ -197,21 +177,12 @@ struct front_impl
         return {};
     }
 
-    template<
-        class ConstBufferSequence
-        , class = typename std::enable_if<
-            ! is_mutable_buffer_sequence<
-                ConstBufferSequence>::value
-        >::type>
+    template<const_buffer_sequence ConstBufferSequence>
+      requires (!mutable_buffer_sequence<ConstBufferSequence>)
     const_buffer
     operator()(
         ConstBufferSequence const& bs) const noexcept
     {
-        static_assert(
-            is_const_buffer_sequence<
-                ConstBufferSequence>::value,
-            "Type requirements not met");
-
         auto const it = bs.begin();
         if(it != bs.end())
             return *it;

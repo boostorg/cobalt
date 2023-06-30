@@ -51,17 +51,14 @@ namespace detail {
 
 struct buffer_size_impl
 {
-    template<class Buffers>
+    // If you get a compile error here it
+    // means that your type does not meet
+    // the requirements.
+    template<const_buffer_sequence Buffers>
     std::size_t
     operator()(
         Buffers const& bs) const noexcept
     {
-        // If you get a compile error here it
-        // means that your type does not meet
-        // the requirements.
-        static_assert(
-            is_const_buffer_sequence<Buffers>::value,
-            "Type requirements not met.");
 
         return tag_invoke(size_tag{}, bs);
     }

@@ -15,9 +15,7 @@
 
 namespace boost::async::io::buffers {
 
-BOOST_STATIC_ASSERT(
-    is_dynamic_buffer<
-        circular_buffer>::value);
+BOOST_STATIC_ASSERT(dynamic_buffer<circular_buffer>);
 
 auto
 circular_buffer::
