@@ -128,7 +128,7 @@ system::result<std::pair<bool, int>> socket::get_linger() const
 }
 
 
-auto socket::connect(endpoint ep) -> connect_op_ {return connect_op_{socket_, ep};}
+auto socket::connect(endpoint ep) -> connect_op_ {return connect_op_{this, ep};}
 auto socket::wait(wait_type wt)   -> wait_op_ {return wait_op_{socket_, wt};}
 auto socket::operator co_await()  -> wait_op_ {return wait_op_{socket_, wait_type::wait_read};}
 

@@ -80,6 +80,8 @@ struct socket
   [[nodiscard]] BOOST_ASYNC_DECL system::result<bool> get_reuse_address() const;
 
  private:
+
+  virtual void adopt_endpoint_(endpoint & ) {}
   struct connect_op_;
   struct wait_op_;
   friend struct acceptor;

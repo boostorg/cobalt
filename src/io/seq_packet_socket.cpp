@@ -78,5 +78,25 @@ void seq_packet_socket::send_op_seq_::initiate_(async::completion_handler<system
   this->seq_packet_socket_.async_send(buffer_, out_flags_, std::move(h));
 }
 
+void seq_packet_socket::adopt_endpoint_(endpoint & ep)
+{
+
+  switch (ep.protocol().family())
+  {
+
+#if defined(IPPROTO_SCTP)
+    case BOOST_ASIO_OS_DEF(AF_INET): BOOST_FALLTHROUGH;
+    case BOOST_ASIO_OS_DEF(AF_INET6):
+      if (ep.protocol().protocol() == BOOST_ASIO_OS_DEF(IPPROTO_IP))
+        ep.set_protocol(IPPROTO_SCTP);
+      BOOST_FALLTHROUGH;
+#endif
+
+    case AF_UNIX:
+      if (ep.protocol().type() == 0)
+        ep.set_type(BOOST_ASIO_OS_DEF(SOCK_SEQPACKET));
+      break;
+  }
+}
 
 }

@@ -114,6 +114,22 @@ void datagram_socket::send_to_op_seq_::initiate_(async::completion_handler<syste
   this->datagram_socket_.async_send_to(buffer_, ep_, std::move(h));
 }
 
+void datagram_socket::adopt_endpoint_(endpoint & ep)
+{
+
+  switch (ep.protocol().family())
+  {
+    case BOOST_ASIO_OS_DEF(AF_INET): BOOST_FALLTHROUGH;
+    case BOOST_ASIO_OS_DEF(AF_INET6):
+      if (ep.protocol().protocol() == BOOST_ASIO_OS_DEF(IPPROTO_IP))
+        ep.set_protocol(BOOST_ASIO_OS_DEF(IPPROTO_UDP));
+      BOOST_FALLTHROUGH;
+    case AF_UNIX:
+      if (ep.protocol().type() == 0)
+        ep.set_type(BOOST_ASIO_OS_DEF(SOCK_DGRAM));
+
+  }
+}
 
 
 }

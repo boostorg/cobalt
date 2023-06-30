@@ -43,7 +43,7 @@ struct [[nodiscard]] seq_packet_socket final : socket
   struct receive_op_seq_;
   struct send_op_;
   struct send_op_seq_;
-
+  BOOST_ASYNC_DECL void adopt_endpoint_(endpoint & ep) override;
  public:
 
   [[nodiscard]] BOOST_ASYNC_DECL receive_op_seq_ receive(buffers::mutable_buffer_span buffers, message_flags & out_flags);
