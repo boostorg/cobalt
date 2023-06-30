@@ -124,6 +124,9 @@ struct endpoint
   std::size_t size() const {return size_;}
   std::size_t capacity() const {return sizeof(storage_);}
 
+  void set_type    (protocol_type::type_t type)         { type_ = type;}
+  void set_protocol(protocol_type::protocol_t protocol) { protocol_ = protocol;}
+
   protocol_type protocol() const
   {
     return protocol_type{static_cast<protocol_type::family_t>(base_.sa_family), type_, protocol_};

@@ -34,6 +34,7 @@ struct [[nodiscard]] stream_socket final : stream, socket
   BOOST_ASYNC_DECL void async_write_some_impl_(buffers::const_buffer_span buffer, async::completion_handler<system::error_code, std::size_t> h) override;
   asio::basic_stream_socket<protocol_type, executor_type> stream_socket_;
   friend struct ssl_stream;
+  BOOST_ASYNC_DECL void adopt_endpoint_(endpoint & ep) override;
 };
 
 inline system::result<std::pair<stream_socket, stream_socket>> make_pair(decltype(local_stream) protocol)

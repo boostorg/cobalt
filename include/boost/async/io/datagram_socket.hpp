@@ -35,6 +35,7 @@ struct [[nodiscard]] datagram_socket final : socket
   struct send_op_seq_;
   struct send_to_op_;
   struct send_to_op_seq_;
+  BOOST_ASYNC_DECL void adopt_endpoint_(endpoint & ep) override;
 
  public:
 

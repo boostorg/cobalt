@@ -102,6 +102,7 @@ add_library(boost_async
         src/io/signal_set.cpp
         src/io/seq_packet_socket.cpp
         src/io/socket.cpp
+        src/io/ssl.cpp
         src/io/steady_timer.cpp
         src/io/stream_socket.cpp
         src/io/system_timer.cpp)

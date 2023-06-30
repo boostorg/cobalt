@@ -59,5 +59,19 @@ system::result<void> stream_socket::close() { return socket::close(); }
 system::result<void> stream_socket::cancel() { return socket::cancel(); }
 bool stream_socket::is_open() const {return socket::is_open();}
 
+void stream_socket::adopt_endpoint_(endpoint & ep)
+{
+
+  switch (ep.protocol().family())
+  {
+    case BOOST_ASIO_OS_DEF(AF_INET): BOOST_FALLTHROUGH;
+    case BOOST_ASIO_OS_DEF(AF_INET6):
+      if (ep.protocol().protocol() == BOOST_ASIO_OS_DEF(IPPROTO_IP))
+        ep.set_protocol(BOOST_ASIO_OS_DEF(IPPROTO_TCP));
+    case AF_UNIX:
+      if (ep.protocol().type() == 0)
+        ep.set_type(BOOST_ASIO_OS_DEF(SOCK_STREAM));
+  }
+}
 
 }

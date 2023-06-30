@@ -10,6 +10,7 @@
 
 #include <boost/async/io/socket.hpp>
 #include <boost/async/op.hpp>
+#include <boost/asio/ip/tcp.hpp>
 
 namespace boost::async::io
 {
@@ -62,7 +63,8 @@ struct socket::connect_op_ : detail::deferred_op_resource_base
   {
     try
     {
-      socket_.async_connect(ep_, completion_handler<system::error_code>{h, result_, get_resource(h)});
+      socket_->adopt_endpoint_(ep_);
+      socket_->socket_.async_connect(ep_, completion_handler<system::error_code>{h, result_, get_resource(h)});
       return true;
     }
     catch(...)
@@ -82,10 +84,10 @@ struct socket::connect_op_ : detail::deferred_op_resource_base
     else
       return {};
   }
-  connect_op_(asio::basic_socket<protocol_type, executor_type> & socket,
+  connect_op_(socket* socket,
               endpoint ep) : socket_(socket), ep_(ep) {}
  private:
-  asio::basic_socket<protocol_type, executor_type>  & socket_;
+  socket * socket_;
   endpoint ep_;
   std::exception_ptr error;
   std::optional<std::tuple<system::error_code>> result_;
