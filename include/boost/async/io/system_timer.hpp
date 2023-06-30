@@ -79,7 +79,7 @@ struct system_timer final
  private:
   boost::asio::basic_waitable_timer<std::chrono::system_clock,
                                     asio::wait_traits<std::chrono::system_clock>,
-                                    asio::io_context::executor_type> timer_;
+                                    executor_type> timer_;
 };
 
 }

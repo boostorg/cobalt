@@ -73,7 +73,7 @@ struct signal_set
   [[nodiscard]] wait_op_ wait() { return wait_op_{signal_set_}; }
   wait_op_ operator co_await () { return wait(); }
  private:
-  boost::asio::basic_signal_set<asio::io_context::executor_type> signal_set_;
+  boost::asio::basic_signal_set<executor_type> signal_set_;
 };
 
 
