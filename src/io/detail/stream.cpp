@@ -10,10 +10,12 @@
 namespace boost::async::io
 {
 
-auto stream:: read_some(buffers::mutable_buffer_span buffers) -> read_some_op_seq_ { return read_some_op_seq_{*this, buffers};}
-auto stream:: read_some(buffers::mutable_buffer      buffer)  -> read_some_op_ { return read_some_op_{*this, buffer};}
-auto stream::write_some(buffers::const_buffer_span buffers)   -> write_some_op_seq_ { return write_some_op_seq_{*this, buffers};}
-auto stream::write_some(buffers::const_buffer      buffer)    -> write_some_op_ { return write_some_op_{*this, buffer};}
+auto stream:: read_some(buffers::mutable_buffer_subspan buffers) -> read_some_op_seq_ { return read_some_op_seq_{*this, buffers};}
+auto stream:: read_some(buffers::mutable_buffer_span    buffers) -> read_some_op_seq_ { return read_some_op_seq_{*this, buffers};}
+auto stream:: read_some(buffers::mutable_buffer         buffer)  -> read_some_op_ { return read_some_op_{*this, buffer};}
+auto stream::write_some(buffers::const_buffer_subspan buffers)   -> write_some_op_seq_ { return write_some_op_seq_{*this, buffers};}
+auto stream::write_some(buffers::const_buffer_span    buffers)   -> write_some_op_seq_ { return write_some_op_seq_{*this, buffers};}
+auto stream::write_some(buffers::const_buffer         buffer)    -> write_some_op_ { return write_some_op_{*this, buffer};}
 
 
 }

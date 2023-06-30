@@ -120,11 +120,11 @@ struct ssl_stream::handshake_op_buf_seq_ : detail::deferred_op_resource_base
   }
 
   handshake_op_buf_seq_(ssl_stream & stream, handshake_type ht,
-                     buffers::const_buffer_span buf) : stream(stream), ht(ht), buf(buf) {}
+                     buffers::const_buffer_subspan buf) : stream(stream), ht(ht), buf(buf) {}
  private:
   ssl_stream & stream;
   handshake_type ht;
-  buffers::const_buffer_span buf;
+  buffers::const_buffer_subspan buf;
   std::exception_ptr error;
   std::optional<std::tuple<system::error_code, std::size_t>> result_;
 };

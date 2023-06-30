@@ -41,6 +41,10 @@ datagram_socket::datagram_socket(endpoint ep)
 {
 }
 
+auto datagram_socket::receive(buffers::mutable_buffer_subspan buffers) -> receive_op_seq_
+{
+  return receive_op_seq_{datagram_socket_, buffers};
+}
 auto datagram_socket::receive(buffers::mutable_buffer_span buffers) -> receive_op_seq_
 {
   return receive_op_seq_{datagram_socket_, buffers};
@@ -48,6 +52,10 @@ auto datagram_socket::receive(buffers::mutable_buffer_span buffers) -> receive_o
 auto datagram_socket::receive(buffers::mutable_buffer      buffer) -> receive_op_
 {
   return receive_op_{datagram_socket_, buffer};
+}
+auto datagram_socket::receive_from(buffers::mutable_buffer_subspan buffers, endpoint & ep) -> receive_from_op_seq_
+{
+  return receive_from_op_seq_{datagram_socket_, buffers, ep};
 }
 auto datagram_socket::receive_from(buffers::mutable_buffer_span buffers, endpoint & ep) -> receive_from_op_seq_
 {
@@ -57,6 +65,10 @@ auto datagram_socket::receive_from(buffers::mutable_buffer      buffer,  endpoin
 {
   return receive_from_op_{datagram_socket_, buffer, ep};
 }
+auto datagram_socket::send(buffers::const_buffer_subspan buffers) -> send_op_seq_
+{
+  return send_op_seq_{datagram_socket_, buffers};
+}
 auto datagram_socket::send(buffers::const_buffer_span buffers) -> send_op_seq_
 {
   return send_op_seq_{datagram_socket_, buffers};
@@ -64,6 +76,10 @@ auto datagram_socket::send(buffers::const_buffer_span buffers) -> send_op_seq_
 auto datagram_socket::send(buffers::const_buffer      buffer) -> send_op_
 {
   return send_op_{datagram_socket_, buffer};
+}
+auto datagram_socket::send_to(buffers::const_buffer_subspan buffers, const endpoint & target) -> send_to_op_seq_
+{
+  return send_to_op_seq_{datagram_socket_, buffers, target};
 }
 auto datagram_socket::send_to(buffers::const_buffer_span buffers, const endpoint & target) -> send_to_op_seq_
 {
@@ -76,7 +92,7 @@ auto datagram_socket::send_to(buffers::const_buffer      buffer,  const endpoint
 
 void datagram_socket::receive_op_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
 {
-  this->datagram_socket_.async_receive(buffers::mutable_buffer_span{&buffer_, 1u}, std::move(h));
+  this->datagram_socket_.async_receive(buffers::mutable_buffer_subspan{&buffer_, 1u}, std::move(h));
 }
 
 void datagram_socket::receive_op_seq_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
@@ -86,7 +102,7 @@ void datagram_socket::receive_op_seq_::initiate_(async::completion_handler<syste
 
 void datagram_socket::receive_from_op_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
 {
-  this->datagram_socket_.async_receive_from(buffers::mutable_buffer_span{&buffer_, 1u}, ep_, std::move(h));
+  this->datagram_socket_.async_receive_from(buffers::mutable_buffer_subspan{&buffer_, 1u}, ep_, std::move(h));
 }
 
 void datagram_socket::receive_from_op_seq_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
@@ -96,7 +112,7 @@ void datagram_socket::receive_from_op_seq_::initiate_(async::completion_handler<
 
 void datagram_socket::send_op_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
 {
-  this->datagram_socket_.async_send(buffers::const_buffer_span{&buffer_, 1u}, std::move(h));
+  this->datagram_socket_.async_send(buffers::const_buffer_subspan{&buffer_, 1u}, std::move(h));
 }
 
 void datagram_socket::send_op_seq_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
@@ -106,7 +122,7 @@ void datagram_socket::send_op_seq_::initiate_(async::completion_handler<system::
 
 void datagram_socket::send_to_op_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
 {
-  this->datagram_socket_.async_send_to(buffers::const_buffer_span{&buffer_, 1u}, ep_, std::move(h));
+  this->datagram_socket_.async_send_to(buffers::const_buffer_subspan{&buffer_, 1u}, ep_, std::move(h));
 }
 
 void datagram_socket::send_to_op_seq_::initiate_(async::completion_handler<system::error_code, std::size_t> h)

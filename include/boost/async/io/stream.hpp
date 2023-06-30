@@ -52,18 +52,20 @@ struct stream
 
   virtual ~stream() =  default;
  protected:
-  virtual void async_read_some_impl_(buffers::mutable_buffer_span buffer, async::completion_handler<system::error_code, std::size_t> h) = 0;
-  virtual void async_write_some_impl_(buffers::const_buffer_span buffer, async::completion_handler<system::error_code, std::size_t> h) = 0;
+  virtual void async_read_some_impl_(buffers::mutable_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) = 0;
+  virtual void async_write_some_impl_(buffers::const_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) = 0;
  private:
   struct read_some_op_;
   struct read_some_op_seq_;
   struct write_some_op_;
   struct write_some_op_seq_;
  public:
-  BOOST_ASYNC_DECL [[nodiscard]] read_some_op_seq_ read_some(buffers::mutable_buffer_span buffers);
-  BOOST_ASYNC_DECL [[nodiscard]] read_some_op_     read_some(buffers::mutable_buffer      buffer);
-  BOOST_ASYNC_DECL [[nodiscard]] write_some_op_seq_ write_some(buffers::const_buffer_span buffers);
-  BOOST_ASYNC_DECL [[nodiscard]] write_some_op_     write_some(buffers::const_buffer      buffer);
+  BOOST_ASYNC_DECL [[nodiscard]] read_some_op_seq_ read_some(buffers::mutable_buffer_subspan buffers);
+  BOOST_ASYNC_DECL [[nodiscard]] read_some_op_seq_ read_some(buffers::mutable_buffer_span    buffers);
+  BOOST_ASYNC_DECL [[nodiscard]] read_some_op_     read_some(buffers::mutable_buffer         buffer);
+  BOOST_ASYNC_DECL [[nodiscard]] write_some_op_seq_ write_some(buffers::const_buffer_subspan buffers);
+  BOOST_ASYNC_DECL [[nodiscard]] write_some_op_seq_ write_some(buffers::const_buffer_span    buffers);
+  BOOST_ASYNC_DECL [[nodiscard]] write_some_op_     write_some(buffers::const_buffer         buffer);
 };
 
 }

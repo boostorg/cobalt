@@ -51,14 +51,14 @@ ssl_stream::ssl_stream(asio::ssl::context & ctx, stream_socket && socket_)
 
 
 void ssl_stream::async_read_some_impl_(
-    buffers::mutable_buffer_span buffer,
+    buffers::mutable_buffer_subspan buffer,
     async::completion_handler<system::error_code, std::size_t> h)
 {
   ssl_stream_.async_read_some(buffer, std::move(h));
 }
 
 void ssl_stream::async_write_some_impl_(
-    buffers::const_buffer_span buffer,
+    buffers::const_buffer_subspan buffer,
     async::completion_handler<system::error_code, std::size_t> h)
 {
   ssl_stream_.async_write_some(buffer, std::move(h));
@@ -78,8 +78,13 @@ ssl_stream::handshake_op_buf_     ssl_stream::async_handshake(handshake_type ht,
 }
 ssl_stream::handshake_op_buf_seq_ ssl_stream::async_handshake(handshake_type ht, buffers::const_buffer_span buf)
 {
+  return handshake_op_buf_seq_{*this, ht, buffers::const_buffer_subspan{buf}};
+}
+ssl_stream::handshake_op_buf_seq_ ssl_stream::async_handshake(handshake_type ht, buffers::const_buffer_subspan buf)
+{
   return handshake_op_buf_seq_{*this, ht, buf};
 }
+
 ssl_stream::shutdown_op_ ssl_stream::async_shutdown()
 {
   return shutdown_op_{*this};
@@ -108,7 +113,7 @@ void ssl_stream::handshake_op_::init_op(completion_handler<system::error_code> h
 
 void ssl_stream::handshake_op_buf_::init_op(completion_handler<system::error_code, std::size_t> handler)
 {
-  stream.ssl_stream_.async_handshake(ht, io::buffers::const_buffer_span{&buf, 1u}, std::move(handler));
+  stream.ssl_stream_.async_handshake(ht, io::buffers::const_buffer_subspan{&buf, 1u}, std::move(handler));
 }
 
 void ssl_stream::handshake_op_buf_seq_::init_op(completion_handler<system::error_code, std::size_t> handler)

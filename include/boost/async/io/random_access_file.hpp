@@ -30,8 +30,8 @@ struct random_access_file : file, random_access_device
   BOOST_ASYNC_DECL random_access_file(native_handle_type h);
   BOOST_ASYNC_DECL random_access_file(core::string_view file, flags open_flags = flags::read_write);
  private:
-  BOOST_ASYNC_DECL void async_read_some_at_impl_ (std::uint64_t offset, buffers::mutable_buffer_span buffer, async::completion_handler<system::error_code, std::size_t> h) override;
-  BOOST_ASYNC_DECL void async_write_some_at_impl_(std::uint64_t offset, buffers::const_buffer_span buffer,   async::completion_handler<system::error_code, std::size_t> h) override;
+  BOOST_ASYNC_DECL void async_read_some_at_impl_ (std::uint64_t offset, buffers::mutable_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
+  BOOST_ASYNC_DECL void async_write_some_at_impl_(std::uint64_t offset, buffers::const_buffer_subspan buffer,   async::completion_handler<system::error_code, std::size_t> h) override;
   asio::basic_random_access_file<executor_type> random_access_file_;
 
 };

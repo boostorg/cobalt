@@ -30,8 +30,8 @@ struct stream_file : file, stream
   BOOST_ASYNC_DECL stream_file(native_handle_type h);
   BOOST_ASYNC_DECL stream_file(core::string_view file, flags open_flags = flags::read_write);
  private:
-  BOOST_ASYNC_DECL void async_read_some_impl_(buffers::mutable_buffer_span buffer, async::completion_handler<system::error_code, std::size_t> h) override;
-  BOOST_ASYNC_DECL void async_write_some_impl_(buffers::const_buffer_span buffer, async::completion_handler<system::error_code, std::size_t> h) override;
+  BOOST_ASYNC_DECL void async_read_some_impl_(buffers::mutable_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
+  BOOST_ASYNC_DECL void async_write_some_impl_(buffers::const_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
   asio::basic_stream_file<executor_type> stream_file_;
 
 };

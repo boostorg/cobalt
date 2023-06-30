@@ -39,14 +39,18 @@ struct [[nodiscard]] datagram_socket final : socket
 
  public:
 
-  [[nodiscard]] receive_op_seq_ receive(buffers::mutable_buffer_span buffers);
-  [[nodiscard]] receive_op_     receive(buffers::mutable_buffer      buffer);
-  [[nodiscard]] receive_from_op_seq_ receive_from(buffers::mutable_buffer_span buffers, endpoint & ep);
-  [[nodiscard]] receive_from_op_     receive_from(buffers::mutable_buffer      buffer,  endpoint & ep);
-  [[nodiscard]] send_op_seq_    send(buffers::const_buffer_span buffers);
-  [[nodiscard]] send_op_        send(buffers::const_buffer      buffer);
-  [[nodiscard]] send_to_op_seq_ send_to(buffers::const_buffer_span buffers, const endpoint & target);
-  [[nodiscard]] send_to_op_     send_to(buffers::const_buffer      buffer,  const endpoint & target);
+  [[nodiscard]] receive_op_seq_ receive(buffers::mutable_buffer_subspan buffers);
+  [[nodiscard]] receive_op_seq_ receive(buffers::mutable_buffer_span    buffers);
+  [[nodiscard]] receive_op_     receive(buffers::mutable_buffer         buffer);
+  [[nodiscard]] receive_from_op_seq_ receive_from(buffers::mutable_buffer_subspan buffers, endpoint & ep);
+  [[nodiscard]] receive_from_op_seq_ receive_from(buffers::mutable_buffer_span    buffers, endpoint & ep);
+  [[nodiscard]] receive_from_op_     receive_from(buffers::mutable_buffer         buffer,  endpoint & ep);
+  [[nodiscard]] send_op_seq_    send(buffers::const_buffer_subspan buffers);
+  [[nodiscard]] send_op_seq_    send(buffers::const_buffer_span    buffers);
+  [[nodiscard]] send_op_        send(buffers::const_buffer         buffer);
+  [[nodiscard]] send_to_op_seq_ send_to(buffers::const_buffer_subspan buffers, const endpoint & target);
+  [[nodiscard]] send_to_op_seq_ send_to(buffers::const_buffer_span    buffers, const endpoint & target);
+  [[nodiscard]] send_to_op_     send_to(buffers::const_buffer         buffer,  const endpoint & target);
 
   asio::basic_datagram_socket<protocol_type, executor_type> datagram_socket_;
 };

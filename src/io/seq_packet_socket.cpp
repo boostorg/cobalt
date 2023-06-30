@@ -41,6 +41,10 @@ seq_packet_socket::seq_packet_socket(endpoint ep)
 {
 }
 
+auto seq_packet_socket::receive(buffers::mutable_buffer_subspan buffers, message_flags &out_flags) -> receive_op_seq_
+{
+  return receive_op_seq_{seq_packet_socket_, buffers, out_flags};
+}
 auto seq_packet_socket::receive(buffers::mutable_buffer_span buffers, message_flags &out_flags) -> receive_op_seq_
 {
   return receive_op_seq_{seq_packet_socket_, buffers, out_flags};
@@ -48,6 +52,10 @@ auto seq_packet_socket::receive(buffers::mutable_buffer_span buffers, message_fl
 auto seq_packet_socket::receive(buffers::mutable_buffer      buffer, message_flags &out_flags) -> receive_op_
 {
   return receive_op_{seq_packet_socket_, buffer, out_flags};
+}
+auto seq_packet_socket::send(buffers::const_buffer_subspan buffers, message_flags out_flags) -> send_op_seq_
+{
+  return send_op_seq_{seq_packet_socket_, buffers, out_flags};
 }
 auto seq_packet_socket::send(buffers::const_buffer_span buffers, message_flags out_flags) -> send_op_seq_
 {
@@ -60,7 +68,7 @@ auto seq_packet_socket::send(buffers::const_buffer      buffer,message_flags out
 
 void seq_packet_socket::receive_op_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
 {
-  this->seq_packet_socket_.async_receive(buffers::mutable_buffer_span{&buffer_, 1u}, out_flags_, std::move(h));
+  this->seq_packet_socket_.async_receive(buffers::mutable_buffer_subspan{&buffer_, 1u}, out_flags_, std::move(h));
 }
 
 void seq_packet_socket::receive_op_seq_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
@@ -70,7 +78,7 @@ void seq_packet_socket::receive_op_seq_::initiate_(async::completion_handler<sys
 
 void seq_packet_socket::send_op_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
 {
-  this->seq_packet_socket_.async_send(buffers::const_buffer_span{&buffer_, 1u}, out_flags_, std::move(h));
+  this->seq_packet_socket_.async_send(buffers::const_buffer_subspan{&buffer_, 1u}, out_flags_, std::move(h));
 }
 
 void seq_packet_socket::send_op_seq_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
