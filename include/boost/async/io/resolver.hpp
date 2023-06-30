@@ -80,7 +80,7 @@ struct resolver
 
 
  private:
-  asio::ip::basic_resolver<protocol_type, asio::io_context::executor_type> resolver_;
+  asio::ip::basic_resolver<protocol_type, executor_type> resolver_;
 };
 
 // NOTE: Doesn't need to be a promise, can be optimized.

@@ -81,6 +81,7 @@ add_library(boost_async
         src/io/endpoint.cpp
         src/io/pipe.cpp
         src/io/resolver.cpp
+        src/io/serial_port.cpp
         src/io/signal_set.cpp
         src/io/steady_timer.cpp
         src/io/system_timer.cpp)

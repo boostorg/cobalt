@@ -80,7 +80,7 @@ struct steady_timer
  private:
   boost::asio::basic_waitable_timer<std::chrono::steady_clock,
                                     asio::wait_traits<std::chrono::steady_clock>,
-                                    asio::io_context::executor_type> timer_;
+                                    executor_type> timer_;
 };
 
 }
