@@ -68,8 +68,6 @@ struct signal_set
     boost::asio::basic_signal_set<executor_type> & signal_set_;
     std::exception_ptr error;
     std::optional<std::tuple<system::error_code, int>> result_;
-    char buffer[256];
-    std::optional<container::pmr::monotonic_buffer_resource> resource;
   };
  public:
   [[nodiscard]] wait_op_ wait() { return wait_op_{signal_set_}; }
