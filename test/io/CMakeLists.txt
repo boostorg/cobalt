@@ -1,6 +1,10 @@
 add_subdirectory(buffers)
 
 add_executable(boost_async_io_tests
+        acceptor.cpp
+        datagram_socket.cpp
+        stream_socket.cpp
+        seq_packet_socket.cpp
         endpoint.cpp
         pipe.cpp
         resolver.cpp

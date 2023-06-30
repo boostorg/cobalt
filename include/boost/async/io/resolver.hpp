@@ -10,6 +10,7 @@
 
 #include <boost/async/io/endpoint.hpp>
 
+#include <boost/async/detail/op.hpp>
 #include <boost/async/promise.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/container/pmr/vector.hpp>
@@ -23,16 +24,16 @@ namespace boost::async::io
 struct resolver
 {
   using resolve_result = system::result<container::pmr::vector<endpoint>>;
-  resolver();
-  resolver(resolver && ) = delete;
+  BOOST_ASYNC_DECL resolver();
+  BOOST_ASYNC_DECL resolver(resolver && ) = delete;
 
-  void cancel();
+  BOOST_ASYNC_DECL void cancel();
 
  private:
 
-  struct resolve_op_
+  struct resolve_op_ : detail::deferred_op_resource_base
   {
-    using result_type = asio::ip::basic_resolver<protocol_type, asio::io_context::executor_type>::results_type;
+    using result_type = asio::ip::basic_resolver<protocol_type, executor_type>::results_type;
 
     constexpr static bool await_ready() { return false; }
 
@@ -41,10 +42,7 @@ struct resolver
     {
       try
       {
-        auto & res = resource.emplace(
-            buffer, sizeof(buffer),
-            asio::get_associated_allocator(h.promise(), this_thread::get_allocator()).resource());
-        initiate_(completion_handler<system::error_code, result_type>{h, result_, &res});
+        initiate_(completion_handler<system::error_code, result_type>{h, result_, get_resource(h)});
         return true;
       }
       catch(...)
@@ -55,17 +53,15 @@ struct resolver
     }
 
     [[nodiscard]] resolve_result await_resume();
-    resolve_op_(asio::ip::basic_resolver<protocol_type, asio::io_context::executor_type> & resolver,
+    resolve_op_(asio::ip::basic_resolver<protocol_type, executor_type> & resolver,
                 core::string_view host, core::string_view service)
                 : resolver_(resolver), host_(host), service_(service) {}
    private:
-    asio::ip::basic_resolver<protocol_type, asio::io_context::executor_type> & resolver_;
+    asio::ip::basic_resolver<protocol_type, executor_type> & resolver_;
     core::string_view host_;
     core::string_view service_;
     std::exception_ptr error;
     std::optional<std::tuple<system::error_code, result_type>> result_;
-    char buffer[256];
-    std::optional<container::pmr::monotonic_buffer_resource> resource;
 
     void initiate_(completion_handler<system::error_code, result_type>);
 
