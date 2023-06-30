@@ -33,7 +33,7 @@ struct [[nodiscard]] transfer_result
   constexpr explicit operator bool() const noexcept { return has_value() || !has_error(); }
   constexpr std::size_t value( boost::source_location const& loc = BOOST_CURRENT_LOCATION ) const noexcept
   {
-    if (!has_value() || !has_error())
+    if (!has_value() || has_error())
       throw_exception_from_error(error, loc);
     return transferred;
   }
@@ -42,8 +42,6 @@ struct [[nodiscard]] transfer_result
   bool operator==(const system::error_code &ec) const { return error == ec;}
   bool operator!=(const system::error_code &ec) const { return error != ec;}
 
-  auto operator<=>(std::size_t n) const { return value() <=> n;}
-  bool operator==(std::size_t n) const { return value() == n;}
 };
 
 struct stream

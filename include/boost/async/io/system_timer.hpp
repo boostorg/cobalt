@@ -40,7 +40,7 @@ struct system_timer final
   void reset(const duration& expiry_time);
   bool expired() const;
 
-  struct wait_op_
+  struct wait_op_ : detail::deferred_op_resource_base
   {
     bool await_ready() const { return timer_->expired(); }
 
@@ -49,10 +49,7 @@ struct system_timer final
     {
       try
       {
-        auto & res = resource.emplace(
-            buffer, sizeof(buffer),
-            asio::get_associated_allocator(h.promise(), this_thread::get_allocator()).resource());
-        timer_->timer_.async_wait(completion_handler<system::error_code>{h, result_, &res});
+        timer_->timer_.async_wait(completion_handler<system::error_code>{h, result_, get_resource(h)});
         return true;
       }
       catch(...)
@@ -74,8 +71,6 @@ struct system_timer final
     system_timer * timer_;
     std::exception_ptr error;
     std::optional<std::tuple<system::error_code>> result_;
-    char buffer[256];
-    std::optional<container::pmr::monotonic_buffer_resource> resource;
   };
 
  public:
