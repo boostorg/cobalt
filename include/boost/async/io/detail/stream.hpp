@@ -80,12 +80,14 @@ struct stream::read_some_op_seq_ : detail::deferred_op_resource_base
     return transfer_result{ec, n};
   }
 
+  read_some_op_seq_(stream & rs, buffers::mutable_buffer_subspan buffer)
+      : rstream_(rs), buffer_(buffer) {}
   read_some_op_seq_(stream & rs, buffers::mutable_buffer_span buffer)
       : rstream_(rs), buffer_(buffer) {}
 
  private:
   stream & rstream_;
-  buffers::mutable_buffer_span buffer_;
+  buffers::mutable_buffer_subspan buffer_;
   std::exception_ptr error;
   std::optional<std::tuple<system::error_code, std::size_t>> result_;
 };
@@ -156,12 +158,13 @@ struct stream::write_some_op_seq_ : detail::deferred_op_resource_base
     return transfer_result{ec, n};
   }
 
+  write_some_op_seq_(stream & rs, buffers::const_buffer_subspan buffer)
+      : rstream_(rs), buffer_(buffer) {}
   write_some_op_seq_(stream & rs, buffers::const_buffer_span buffer)
       : rstream_(rs), buffer_(buffer) {}
-
  private:
   stream & rstream_;
-  buffers::const_buffer_span buffer_;
+  buffers::const_buffer_subspan buffer_;
   std::exception_ptr error;
   std::optional<std::tuple<system::error_code, std::size_t>> result_;
 };

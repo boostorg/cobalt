@@ -123,14 +123,14 @@ system::result<void> serial_port::assign(native_handle_type native_handle)
 
 
 void serial_port::async_read_some_impl_(
-    buffers::mutable_buffer_span buffer,
+    buffers::mutable_buffer_subspan buffer,
     async::completion_handler<system::error_code, std::size_t> h)
 {
   serial_port_.async_read_some(buffer, std::move(h));
 }
 
 void serial_port::async_write_some_impl_(
-    buffers::const_buffer_span buffer,
+    buffers::const_buffer_subspan buffer,
     async::completion_handler<system::error_code, std::size_t> h)
 {
   serial_port_.async_write_some(buffer, std::move(h));

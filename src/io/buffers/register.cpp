@@ -12,15 +12,17 @@
 namespace boost::async::io::buffers
 {
 
-using buffer_registration = asio::buffer_registration<buffers::mutable_buffer_span,
-container::pmr::polymorphic_allocator<void>>;
-
 buffer_registration register_(buffers::mutable_buffer buffer)
 {
-  return register_(buffers::mutable_buffer_span{&buffer, 1u});
+  return register_(buffers::mutable_buffer_subspan{&buffer, 1u});
 
 }
 buffer_registration register_(buffers::mutable_buffer_span buffer)
+{
+  return register_(buffers::mutable_buffer_subspan{buffer});
+}
+
+buffer_registration register_(buffers::mutable_buffer_subspan buffer)
 {
   return asio::register_buffers(this_thread::get_executor().context(),
                                 buffer, this_thread::get_allocator());

@@ -46,14 +46,14 @@ stream_file::stream_file(core::string_view file_, flags open_flags)
 
 
 void stream_file::async_read_some_impl_(
-    buffers::mutable_buffer_span buffer,
+    buffers::mutable_buffer_subspan buffer,
     async::completion_handler<system::error_code, std::size_t> h)
 {
   stream_file_.async_read_some(buffer, std::move(h));
 }
 
 void stream_file::async_write_some_impl_(
-    buffers::const_buffer_span buffer,
+    buffers::const_buffer_subspan buffer,
     async::completion_handler<system::error_code, std::size_t> h)
 {
   stream_file_.async_write_some(buffer, std::move(h));

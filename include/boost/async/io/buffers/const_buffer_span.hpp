@@ -64,7 +64,23 @@ public:
     {
     }
 
-    /** Constructor.
+    template<const_buffer_sequence ConstBufferSequence>
+    requires requires (const ConstBufferSequence & seq)
+    {
+      {seq.data()} -> std::same_as<const const_buffer*>;
+      {seq.size()} -> std::same_as<std::size_t>;
+    }
+    explicit
+    const_buffer_span(
+        ConstBufferSequence const& bs) noexcept
+        : p_(bs.data())
+        , n_(bs.size())
+    {
+    }
+
+
+
+  /** Constructor.
     */
     const_buffer_span(
         const_buffer_span const&) = default;

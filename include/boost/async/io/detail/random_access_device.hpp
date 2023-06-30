@@ -81,13 +81,15 @@ struct random_access_device::read_some_at_op_seq_ : detail::deferred_op_resource
     return transfer_result{ec, n};
   }
 
+  read_some_at_op_seq_(random_access_device & rs, std::uint64_t offset, buffers::mutable_buffer_subspan buffer)
+      : random_access_device_(rs), offset_(offset), buffer_(buffer) {}
   read_some_at_op_seq_(random_access_device & rs, std::uint64_t offset, buffers::mutable_buffer_span buffer)
       : random_access_device_(rs), offset_(offset), buffer_(buffer) {}
 
  private:
   random_access_device & random_access_device_;
   std::uint64_t offset_;
-  buffers::mutable_buffer_span buffer_;
+  buffers::mutable_buffer_subspan buffer_;
   std::exception_ptr error;
   std::optional<std::tuple<system::error_code, std::size_t>> result_;
 };
@@ -159,13 +161,15 @@ struct random_access_device::write_some_at_op_seq_ : detail::deferred_op_resourc
     return transfer_result{ec, n};
   }
 
+  write_some_at_op_seq_(random_access_device & rs, std::uint64_t offset, buffers::const_buffer_subspan buffer)
+      : random_access_device_(rs), offset_(offset), buffer_(buffer) {}
   write_some_at_op_seq_(random_access_device & rs, std::uint64_t offset, buffers::const_buffer_span buffer)
       : random_access_device_(rs), offset_(offset), buffer_(buffer) {}
 
  private:
   random_access_device & random_access_device_;
   std::uint64_t offset_;
-  buffers::const_buffer_span buffer_;
+  buffers::const_buffer_subspan buffer_;
   std::exception_ptr error;
   std::optional<std::tuple<system::error_code, std::size_t>> result_;
 };

@@ -30,8 +30,8 @@ struct [[nodiscard]] stream_socket final : stream, socket
   BOOST_ASYNC_DECL stream_socket(native_handle_type h, protocol_type protocol = protocol_type());
   BOOST_ASYNC_DECL stream_socket(endpoint ep);
  private:
-  BOOST_ASYNC_DECL void async_read_some_impl_(buffers::mutable_buffer_span buffer, async::completion_handler<system::error_code, std::size_t> h) override;
-  BOOST_ASYNC_DECL void async_write_some_impl_(buffers::const_buffer_span buffer, async::completion_handler<system::error_code, std::size_t> h) override;
+  BOOST_ASYNC_DECL void async_read_some_impl_(buffers::mutable_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
+  BOOST_ASYNC_DECL void async_write_some_impl_(buffers::const_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
   asio::basic_stream_socket<protocol_type, executor_type> stream_socket_;
   friend struct ssl_stream;
   BOOST_ASYNC_DECL void adopt_endpoint_(endpoint & ep) override;

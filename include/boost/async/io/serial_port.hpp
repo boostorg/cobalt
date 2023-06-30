@@ -55,8 +55,8 @@ struct [[nodiscard]] serial_port final : stream
   BOOST_ASYNC_DECL [[nodiscard]] system::result<void> open(core::string_view device);
 
  private:
-  BOOST_ASYNC_DECL void async_read_some_impl_(buffers::mutable_buffer_span buffer, async::completion_handler<system::error_code, std::size_t> h) override;
-  BOOST_ASYNC_DECL void async_write_some_impl_(buffers::const_buffer_span buffer, async::completion_handler<system::error_code, std::size_t> h) override;
+  BOOST_ASYNC_DECL void async_read_some_impl_(buffers::mutable_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
+  BOOST_ASYNC_DECL void async_write_some_impl_(buffers::const_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
 
   asio::basic_serial_port<executor_type> serial_port_;
 };

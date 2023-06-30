@@ -47,7 +47,7 @@ random_access_file::random_access_file(core::string_view file_, flags open_flags
 
 void random_access_file::async_read_some_at_impl_(
     std::uint64_t offset,
-    buffers::mutable_buffer_span buffer,
+    buffers::mutable_buffer_subspan buffer,
     async::completion_handler<system::error_code, std::size_t> h)
 {
   random_access_file_.async_read_some_at(offset, buffer, std::move(h));
@@ -55,7 +55,7 @@ void random_access_file::async_read_some_at_impl_(
 
 void random_access_file::async_write_some_at_impl_(
     std::uint64_t offset,
-    buffers::const_buffer_span buffer,
+    buffers::const_buffer_subspan buffer,
     async::completion_handler<system::error_code, std::size_t> h)
 {
   random_access_file_.async_write_some_at(offset, buffer, std::move(h));

@@ -35,14 +35,14 @@ system::result<void> readable_pipe::cancel()
 bool readable_pipe::is_open() const { return pipe_.is_open(); }
 
 void readable_pipe::async_read_some_impl_(
-    buffers::mutable_buffer_span buffer,
+    buffers::mutable_buffer_subspan buffer,
     async::completion_handler<system::error_code, std::size_t> h)
 {
   pipe_.async_read_some(buffer, std::move(h));
 }
 
 void readable_pipe::async_write_some_impl_(
-    buffers::const_buffer_span buffer,
+    buffers::const_buffer_subspan buffer,
     async::completion_handler<system::error_code, std::size_t> h)
 {
   constexpr static source_location loc{BOOST_CURRENT_LOCATION};
@@ -104,7 +104,7 @@ system::result<void> writable_pipe::cancel()
 bool writable_pipe::is_open() const { return pipe_.is_open(); }
 
 void writable_pipe::async_write_some_impl_(
-    buffers::const_buffer_span buffer,
+    buffers::const_buffer_subspan buffer,
     async::completion_handler<system::error_code, std::size_t> h)
 {
   pipe_.async_write_some(buffer, std::move(h));
@@ -112,7 +112,7 @@ void writable_pipe::async_write_some_impl_(
 
 
 void writable_pipe::async_read_some_impl_(
-    buffers::mutable_buffer_span buffer,
+    buffers::mutable_buffer_subspan buffer,
     async::completion_handler<system::error_code, std::size_t> h)
 {
   constexpr static source_location loc{BOOST_CURRENT_LOCATION};

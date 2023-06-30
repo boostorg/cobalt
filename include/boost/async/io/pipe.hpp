@@ -35,12 +35,12 @@ struct readable_pipe final : stream
 
   BOOST_ASYNC_DECL system::result<readable_pipe> duplicate();
 
-  void write_some(buffers::mutable_buffer_span buffers) = delete;
+  void write_some(buffers::mutable_buffer_subspan buffers) = delete;
   void write_some(buffers::mutable_buffer      buffer) = delete;
 
  private:
-  BOOST_ASYNC_DECL void async_read_some_impl_(buffers::mutable_buffer_span buffer, async::completion_handler<system::error_code, std::size_t> h) override;
-  BOOST_ASYNC_DECL void async_write_some_impl_(buffers::const_buffer_span buffer, async::completion_handler<system::error_code, std::size_t> h) override;
+  BOOST_ASYNC_DECL void async_read_some_impl_(buffers::mutable_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
+  BOOST_ASYNC_DECL void async_write_some_impl_(buffers::const_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
 
   friend system::result<std::pair<readable_pipe, writable_pipe>> make_pipe();
   asio::basic_readable_pipe<executor_type> pipe_;
@@ -62,11 +62,11 @@ struct writable_pipe final : stream
   BOOST_ASYNC_DECL system::result<native_handle_type> release();
   BOOST_ASYNC_DECL system::result<writable_pipe> duplicate();
 
-  void read_some(buffers::mutable_buffer_span buffers) = delete;
+  void read_some(buffers::mutable_buffer_subspan buffers) = delete;
   void read_some(buffers::mutable_buffer      buffer) = delete;
  private:
-  BOOST_ASYNC_DECL void async_read_some_impl_(buffers::mutable_buffer_span buffer, async::completion_handler<system::error_code, std::size_t> h) override;
-  BOOST_ASYNC_DECL void async_write_some_impl_(buffers::const_buffer_span buffer, async::completion_handler<system::error_code, std::size_t> h) override;
+  BOOST_ASYNC_DECL void async_read_some_impl_(buffers::mutable_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
+  BOOST_ASYNC_DECL void async_write_some_impl_(buffers::const_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
   friend system::result<std::pair<readable_pipe, writable_pipe>> make_pipe();
   asio::basic_writable_pipe<executor_type> pipe_;
 };
