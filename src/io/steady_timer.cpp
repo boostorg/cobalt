@@ -39,4 +39,10 @@ void steady_timer::reset(const duration &expiry_time)
 
 bool steady_timer::expired() const { return timer_.expiry() < clock_type::now(); }
 
+void steady_timer::wait_op_::init_op(completion_handler<system::error_code> handler)
+{
+  timer_->timer_.async_wait(std::move(handler));
+}
+
+
 }

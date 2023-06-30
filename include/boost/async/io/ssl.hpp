@@ -49,16 +49,16 @@ struct ssl_stream : private detail::ssl_stream_base, stream, socket
   BOOST_ASYNC_DECL void async_read_some_impl_(buffers::mutable_buffer_span buffer, async::completion_handler<system::error_code, std::size_t> h) override;
   BOOST_ASYNC_DECL void async_write_some_impl_(buffers::const_buffer_span buffer, async::completion_handler<system::error_code, std::size_t> h) override;
 
-  struct accept_op_;
-  struct accept_op_buf_;
-  struct accept_op_buf_seq_;
+  struct handshake_op_;
+  struct handshake_op_buf_;
+  struct handshake_op_buf_seq_;
   struct shutdown_op_;
   void adopt_endpoint_(endpoint & ep) override;
  public:
   using handshake_type = boost::asio::ssl::stream_base::handshake_type;
-  BOOST_ASYNC_DECL accept_op_         async_handshake(handshake_type ht);
-  BOOST_ASYNC_DECL accept_op_buf_     async_handshake(handshake_type ht, buffers::const_buffer buf);
-  BOOST_ASYNC_DECL accept_op_buf_seq_ async_handshake(handshake_type ht, buffers::const_buffer_span buf);
+  BOOST_ASYNC_DECL handshake_op_         async_handshake(handshake_type ht);
+  BOOST_ASYNC_DECL handshake_op_buf_     async_handshake(handshake_type ht, buffers::const_buffer buf);
+  BOOST_ASYNC_DECL handshake_op_buf_seq_ async_handshake(handshake_type ht, buffers::const_buffer_span buf);
   BOOST_ASYNC_DECL shutdown_op_ async_shutdown();
  private:
 

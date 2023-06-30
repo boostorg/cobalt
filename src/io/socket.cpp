@@ -164,5 +164,16 @@ system::result<void> connect_pair(protocol_type protocol, socket & socket1, sock
   return {};
 }
 
+void socket::wait_op_::init_op(completion_handler<system::error_code> handler)
+{
+  return socket_.async_wait(wt_, std::move(handler));
+}
+
+void socket::connect_op_::init_op(completion_handler<system::error_code> handler)
+{
+  socket_->adopt_endpoint_(ep_);
+  socket_->socket_.async_connect(ep_, std::move(handler));
+}
+
 
 }

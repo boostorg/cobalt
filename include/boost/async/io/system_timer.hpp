@@ -43,13 +43,14 @@ struct system_timer final
   struct wait_op_ : detail::deferred_op_resource_base
   {
     bool await_ready() const { return timer_->expired(); }
+    BOOST_ASYNC_DECL void init_op(completion_handler<system::error_code> handler);
 
     template<typename Promise>
     bool await_suspend(std::coroutine_handle<Promise> h)
     {
       try
       {
-        timer_->timer_.async_wait(completion_handler<system::error_code>{h, result_, get_resource(h)});
+        init_op(completion_handler<system::error_code>{h, result_, get_resource(h)});
         return true;
       }
       catch(...)
