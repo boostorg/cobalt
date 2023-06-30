@@ -46,4 +46,9 @@ system::result<void> signal_set::remove(int signal_number)
   return ec ? ec : system::result<void>{};
 }
 
+void signal_set::wait_op_::init_op(completion_handler<system::error_code, int> handler)
+{
+  signal_set_.async_wait(std::move(handler));
+}
+
 }

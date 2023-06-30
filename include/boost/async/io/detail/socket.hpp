@@ -19,12 +19,14 @@ struct socket::wait_op_ : detail::deferred_op_resource_base
 {
   constexpr static bool await_ready() { return false; }
 
+  BOOST_ASYNC_DECL void init_op(completion_handler<system::error_code> handler);
+
   template<typename Promise>
   bool await_suspend(std::coroutine_handle<Promise> h)
   {
     try
     {
-      socket_.async_wait(wt_, completion_handler<system::error_code>{h, result_, get_resource(h)});
+      init_op(completion_handler<system::error_code>{h, result_, get_resource(h)});
       return true;
     }
     catch(...)
@@ -58,13 +60,14 @@ struct socket::connect_op_ : detail::deferred_op_resource_base
 {
   constexpr static bool await_ready() { return false; }
 
+  BOOST_ASYNC_DECL void init_op(completion_handler<system::error_code> handler);
+
   template<typename Promise>
   bool await_suspend(std::coroutine_handle<Promise> h)
   {
     try
     {
-      socket_->adopt_endpoint_(ep_);
-      socket_->socket_.async_connect(ep_, completion_handler<system::error_code>{h, result_, get_resource(h)});
+      init_op(completion_handler<system::error_code>{h, result_, get_resource(h)});
       return true;
     }
     catch(...)

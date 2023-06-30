@@ -36,12 +36,14 @@ struct signal_set
   {
     constexpr static bool await_ready() { return false; }
 
+    BOOST_ASYNC_DECL void init_op(completion_handler<system::error_code, int> handler);
+
     template<typename Promise>
     bool await_suspend(std::coroutine_handle<Promise> h)
     {
       try
       {
-        signal_set_.async_wait(completion_handler<system::error_code, int>{h, result_, get_resource(h)});
+        init_op(completion_handler<system::error_code, int>{h, result_, get_resource(h)});
         return true;
       }
       catch(...)

@@ -13,16 +13,18 @@
 
 namespace boost::async::io
 {
-struct ssl_stream::accept_op_         : detail::deferred_op_resource_base
+struct ssl_stream::handshake_op_         : detail::deferred_op_resource_base
 {
   constexpr static bool await_ready() { return false; }
+
+  BOOST_ASYNC_DECL void init_op(completion_handler<system::error_code> handler);
 
   template<typename Promise>
   bool await_suspend(std::coroutine_handle<Promise> h)
   {
     try
     {
-      stream.ssl_stream_.async_handshake(ht, completion_handler<system::error_code>{h, result_, get_resource(h)});
+      init_op(completion_handler<system::error_code>{h, result_, get_resource(h)});
       return true;
     }
     catch(...)
@@ -40,7 +42,7 @@ struct ssl_stream::accept_op_         : detail::deferred_op_resource_base
     return ec ? system::result<void>(ec) : system::in_place_value;
   }
 
-  accept_op_(ssl_stream & stream, handshake_type ht) : stream(stream), ht(ht) {}
+  handshake_op_(ssl_stream & stream, handshake_type ht) : stream(stream), ht(ht) {}
  private:
 
   ssl_stream & stream;
@@ -49,19 +51,18 @@ struct ssl_stream::accept_op_         : detail::deferred_op_resource_base
   std::optional<std::tuple<system::error_code>> result_;
 };
 
-struct ssl_stream::accept_op_buf_     : detail::deferred_op_resource_base
+struct ssl_stream::handshake_op_buf_     : detail::deferred_op_resource_base
 {
   constexpr static bool await_ready() { return false; }
+
+  BOOST_ASYNC_DECL void init_op(completion_handler<system::error_code, std::size_t> handler);
 
   template<typename Promise>
   bool await_suspend(std::coroutine_handle<Promise> h)
   {
     try
     {
-      stream.ssl_stream_.async_handshake(
-          ht,
-          io::buffers::const_buffer_span{&buf, 1u},
-          completion_handler<system::error_code, std::size_t>{h, result_, get_resource(h)});
+      init_op(completion_handler<system::error_code, std::size_t>{h, result_, get_resource(h)});
       return true;
     }
     catch(...)
@@ -79,7 +80,7 @@ struct ssl_stream::accept_op_buf_     : detail::deferred_op_resource_base
     return transfer_result{ec, n};
   }
 
-  accept_op_buf_(ssl_stream & stream,
+  handshake_op_buf_(ssl_stream & stream,
                  handshake_type ht,
                  buffers::const_buffer buf) : stream(stream), ht(ht), buf(buf) {}
  private:
@@ -90,16 +91,17 @@ struct ssl_stream::accept_op_buf_     : detail::deferred_op_resource_base
   std::optional<std::tuple<system::error_code, std::size_t>> result_;
 };
 
-struct ssl_stream::accept_op_buf_seq_ : detail::deferred_op_resource_base
+struct ssl_stream::handshake_op_buf_seq_ : detail::deferred_op_resource_base
 {
   constexpr static bool await_ready() { return false; }
+  BOOST_ASYNC_DECL void init_op(completion_handler<system::error_code, std::size_t> handler);
 
   template<typename Promise>
   bool await_suspend(std::coroutine_handle<Promise> h)
   {
     try
     {
-      stream.ssl_stream_.async_handshake(ht, buf, completion_handler<system::error_code, std::size_t>{h, result_, get_resource(h)});
+      init_op(completion_handler<system::error_code, std::size_t>{h, result_, get_resource(h)});
       return true;
     }
     catch(...)
@@ -117,7 +119,7 @@ struct ssl_stream::accept_op_buf_seq_ : detail::deferred_op_resource_base
     return transfer_result{ec, n};
   }
 
-  accept_op_buf_seq_(ssl_stream & stream, handshake_type ht,
+  handshake_op_buf_seq_(ssl_stream & stream, handshake_type ht,
                      buffers::const_buffer_span buf) : stream(stream), ht(ht), buf(buf) {}
  private:
   ssl_stream & stream;
@@ -131,12 +133,14 @@ struct ssl_stream::shutdown_op_ : detail::deferred_op_resource_base
 {
   constexpr static bool await_ready() { return false; }
 
+  BOOST_ASYNC_DECL void init_op(completion_handler<system::error_code> handler);
+
   template<typename Promise>
   bool await_suspend(std::coroutine_handle<Promise> h)
   {
     try
     {
-      stream.ssl_stream_.template async_shutdown(completion_handler<system::error_code>{h, result_, get_resource(h)});
+      init_op(completion_handler<system::error_code>{h, result_, get_resource(h)});
       return true;
     }
     catch(...)

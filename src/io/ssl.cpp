@@ -68,17 +68,17 @@ system::result<void> ssl_stream::close() { return socket::close(); }
 system::result<void> ssl_stream::cancel() { return socket::cancel(); }
 bool ssl_stream::is_open() const {return socket::is_open();}
 
-ssl_stream::accept_op_         ssl_stream::async_handshake(handshake_type ht)
+ssl_stream::handshake_op_         ssl_stream::async_handshake(handshake_type ht)
 {
-  return accept_op_{*this, ht};
+  return handshake_op_{*this, ht};
 }
-ssl_stream::accept_op_buf_     ssl_stream::async_handshake(handshake_type ht, buffers::const_buffer buf)
+ssl_stream::handshake_op_buf_     ssl_stream::async_handshake(handshake_type ht, buffers::const_buffer buf)
 {
-  return accept_op_buf_{*this, ht, buf};
+  return handshake_op_buf_{*this, ht, buf};
 }
-ssl_stream::accept_op_buf_seq_ ssl_stream::async_handshake(handshake_type ht, buffers::const_buffer_span buf)
+ssl_stream::handshake_op_buf_seq_ ssl_stream::async_handshake(handshake_type ht, buffers::const_buffer_span buf)
 {
-  return accept_op_buf_seq_{*this, ht, buf};
+  return handshake_op_buf_seq_{*this, ht, buf};
 }
 ssl_stream::shutdown_op_ ssl_stream::async_shutdown()
 {
@@ -99,6 +99,28 @@ void ssl_stream::adopt_endpoint_(endpoint & ep)
         ep.set_type(BOOST_ASIO_OS_DEF(SOCK_STREAM));
   }
 }
+
+void ssl_stream::handshake_op_::init_op(completion_handler<system::error_code> handler)
+{
+  stream.ssl_stream_.async_handshake(ht, std::move(handler));
+
+}
+
+void ssl_stream::handshake_op_buf_::init_op(completion_handler<system::error_code, std::size_t> handler)
+{
+  stream.ssl_stream_.async_handshake(ht, io::buffers::const_buffer_span{&buf, 1u}, std::move(handler));
+}
+
+void ssl_stream::handshake_op_buf_seq_::init_op(completion_handler<system::error_code, std::size_t> handler)
+{
+  stream.ssl_stream_.async_handshake(ht, buf, std::move(handler));
+}
+
+void ssl_stream::shutdown_op_::init_op(completion_handler<system::error_code> handler)
+{
+  stream.ssl_stream_.async_shutdown(std::move(handler));
+}
+
 
 
 
