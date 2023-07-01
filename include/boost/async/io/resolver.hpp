@@ -33,7 +33,7 @@ struct resolver
 
   struct resolve_op_ : detail::deferred_op_resource_base
   {
-    using result_type = asio::ip::basic_resolver<protocol_type, executor_type>::results_type;
+    using result_type = asio::ip::basic_resolver<protocol_type, executor>::results_type;
 
     constexpr static bool await_ready() { return false; }
 
@@ -53,11 +53,11 @@ struct resolver
     }
 
     [[nodiscard]] resolve_result await_resume();
-    resolve_op_(asio::ip::basic_resolver<protocol_type, executor_type> & resolver,
+    resolve_op_(asio::ip::basic_resolver<protocol_type, executor> & resolver,
                 core::string_view host, core::string_view service)
                 : resolver_(resolver), host_(host), service_(service) {}
    private:
-    asio::ip::basic_resolver<protocol_type, executor_type> & resolver_;
+    asio::ip::basic_resolver<protocol_type, executor> & resolver_;
     core::string_view host_;
     core::string_view service_;
     std::exception_ptr error;
@@ -76,7 +76,7 @@ struct resolver
 
 
  private:
-  asio::ip::basic_resolver<protocol_type, executor_type> resolver_;
+  asio::ip::basic_resolver<protocol_type, executor> resolver_;
 };
 
 // NOTE: Doesn't need to be a promise, can be optimized.

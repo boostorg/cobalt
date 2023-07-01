@@ -63,9 +63,9 @@ struct signal_set
       else
         return sig;
     }
-    wait_op_(boost::asio::basic_signal_set<executor_type> & signal_set) : signal_set_(signal_set) {}
+    wait_op_(boost::asio::basic_signal_set<executor> & signal_set) : signal_set_(signal_set) {}
    private:
-    boost::asio::basic_signal_set<executor_type> & signal_set_;
+    boost::asio::basic_signal_set<executor> & signal_set_;
     std::exception_ptr error;
     std::optional<std::tuple<system::error_code, int>> result_;
   };
@@ -73,7 +73,7 @@ struct signal_set
   [[nodiscard]] wait_op_ wait() { return wait_op_{signal_set_}; }
   wait_op_ operator co_await () { return wait(); }
  private:
-  boost::asio::basic_signal_set<executor_type> signal_set_;
+  boost::asio::basic_signal_set<executor> signal_set_;
 };
 
 

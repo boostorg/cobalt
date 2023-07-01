@@ -34,7 +34,7 @@ struct socket
   constexpr static int message_do_not_route  = asio::socket_base::message_do_not_route;
   constexpr static int message_end_of_record = asio::socket_base::message_end_of_record;
 
-  using native_handle_type = asio::basic_socket<protocol_type, executor_type>::native_handle_type;
+  using native_handle_type = asio::basic_socket<protocol_type, executor>::native_handle_type;
   native_handle_type native_handle();
 
   [[nodiscard]] BOOST_ASYNC_DECL system::result<void> shutdown(shutdown_type = shutdown_type::shutdown_both);
@@ -85,10 +85,10 @@ struct socket
   struct connect_op_;
   struct wait_op_;
   friend struct acceptor;
-  asio::basic_socket<protocol_type, executor_type> & socket_;
+  asio::basic_socket<protocol_type, executor> & socket_;
 
  public:
-  socket(asio::basic_socket<protocol_type, executor_type> & socket) : socket_(socket) {}
+  socket(asio::basic_socket<protocol_type, executor> & socket) : socket_(socket) {}
 
   BOOST_ASYNC_DECL connect_op_  connect(endpoint ep);
   BOOST_ASYNC_DECL wait_op_     wait(wait_type = wait_type::wait_read);

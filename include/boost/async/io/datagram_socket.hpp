@@ -52,7 +52,7 @@ struct [[nodiscard]] datagram_socket final : socket
   [[nodiscard]] send_to_op_seq_ send_to(buffers::const_buffer_span    buffers, const endpoint & target);
   [[nodiscard]] send_to_op_     send_to(buffers::const_buffer         buffer,  const endpoint & target);
 
-  asio::basic_datagram_socket<protocol_type, executor_type> datagram_socket_;
+  asio::basic_datagram_socket<protocol_type, executor> datagram_socket_;
 };
 
 inline system::result<std::pair<datagram_socket, datagram_socket>> make_pair(decltype(local_datagram) protocol)

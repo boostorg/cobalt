@@ -24,7 +24,7 @@ struct readable_pipe final : stream
   BOOST_ASYNC_DECL system::result<void> cancel() override;
   BOOST_ASYNC_DECL bool is_open() const override;
 
-  using native_handle_type = typename asio::basic_readable_pipe<executor_type>::native_handle_type;
+  using native_handle_type = typename asio::basic_readable_pipe<executor>::native_handle_type;
   native_handle_type native_handle() {return pipe_.native_handle();}
 
   BOOST_ASYNC_DECL readable_pipe();
@@ -43,7 +43,7 @@ struct readable_pipe final : stream
   BOOST_ASYNC_DECL void async_write_some_impl_(buffers::const_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
 
   friend system::result<std::pair<readable_pipe, writable_pipe>> make_pipe();
-  asio::basic_readable_pipe<executor_type> pipe_;
+  asio::basic_readable_pipe<executor> pipe_;
 };
 
 struct writable_pipe final : stream
@@ -52,7 +52,7 @@ struct writable_pipe final : stream
   BOOST_ASYNC_DECL system::result<void> cancel() override;
   BOOST_ASYNC_DECL bool is_open() const override;
 
-  using native_handle_type = typename asio::basic_readable_pipe<executor_type>::native_handle_type;
+  using native_handle_type = typename asio::basic_readable_pipe<executor>::native_handle_type;
   native_handle_type native_handle() {return pipe_.native_handle();}
 
   BOOST_ASYNC_DECL writable_pipe();
@@ -68,7 +68,7 @@ struct writable_pipe final : stream
   BOOST_ASYNC_DECL void async_read_some_impl_(buffers::mutable_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
   BOOST_ASYNC_DECL void async_write_some_impl_(buffers::const_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
   friend system::result<std::pair<readable_pipe, writable_pipe>> make_pipe();
-  asio::basic_writable_pipe<executor_type> pipe_;
+  asio::basic_writable_pipe<executor> pipe_;
 };
 
 system::result<std::pair<readable_pipe, writable_pipe>> make_pipe();

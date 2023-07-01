@@ -22,7 +22,7 @@ struct ssl_stream_base
   template<typename ... Args>
   ssl_stream_base(Args && ...args) : ssl_stream_(std::forward<Args>(args)...) {}
 
-  asio::ssl::stream<asio::basic_stream_socket<io::protocol_type, executor_type>> ssl_stream_;
+  asio::ssl::stream<asio::basic_stream_socket<io::protocol_type, executor>> ssl_stream_;
 };
 
 }

@@ -53,7 +53,7 @@ struct [[nodiscard]] seq_packet_socket final : socket
   [[nodiscard]] BOOST_ASYNC_DECL send_op_seq_    send(buffers::const_buffer_span    buffers, message_flags out_flags);
   [[nodiscard]] BOOST_ASYNC_DECL send_op_        send(buffers::const_buffer         buffer,  message_flags out_flags);
 
-  asio::basic_seq_packet_socket<protocol_type, executor_type> seq_packet_socket_;
+  asio::basic_seq_packet_socket<protocol_type, executor> seq_packet_socket_;
 };
 
 
