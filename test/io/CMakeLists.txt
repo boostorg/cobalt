@@ -13,6 +13,7 @@ add_executable(boost_async_io_tests
         ../doctest.cpp
         read.cpp
         copy.cpp
-        read_until.cpp)
+        read_until.cpp
+        process.cpp)
 target_link_libraries(boost_async_io_tests  Boost::container Boost::async OpenSSL::SSL)
 add_test(NAME boost_async-io COMMAND boost_async_io_tests)

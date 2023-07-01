@@ -57,7 +57,7 @@ endif()
 
 if (NOT BOOST_ASYNC_BUILD_INLINE)
     find_package(Threads REQUIRED)
-    find_package(Boost REQUIRED container system json url)
+    find_package(Boost REQUIRED container system json filesystem)
     include_directories(include)
 endif()
 
@@ -97,16 +97,20 @@ add_library(boost_async
         src/io/read.cpp
         src/io/read_at.cpp
         src/io/read_until.cpp
+        src/io/popen.cpp
+        src/io/process.cpp
         src/io/buffers/register.cpp
         src/io/write.cpp
         src/io/write_at.cpp
-        src/io/detail/random_access_device.cpp src/io/copy.cpp)
+        src/io/detail/random_access_device.cpp
+        src/io/copy.cpp)
 
 target_include_directories(boost_async PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(boost_async PUBLIC
-        Boost::container Boost::system Boost::url
+        Boost::container Boost::system
         Threads::Threads)
-target_compile_definitions(boost_async PRIVATE -DBOOST_ASYNC_SOURCE)
+target_compile_definitions(boost_async PRIVATE BOOST_ASYNC_SOURCE=1)
+target_compile_definitions(boost_async PUBLIC BOOST_PROCESS_USE_STD_FS=1)
 
 add_library(Boost::async ALIAS boost_async)
 
