@@ -42,13 +42,9 @@ struct enable_awaitables
 };
 
 template <typename T>
-concept executor = asio::execution::executor<std::decay_t<T>> || asio::is_executor<std::decay_t<T>>::value;
-
-
-template <typename T>
 concept with_get_executor = requires (T& t)
 {
-  {t.get_executor()} -> executor;
+  {t.get_executor()} -> asio::execution::executor;
 };
 
 

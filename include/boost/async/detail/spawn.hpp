@@ -24,7 +24,7 @@ namespace boost::async::detail
 struct async_initiate
 {
   template<typename Handler, typename T>
-  void operator()(Handler && h, task<T> a, executor_type exec)
+  void operator()(Handler && h, task<T> a, executor exec)
   {
     auto & rec = a.receiver_;
     if (rec.done)
@@ -62,7 +62,7 @@ struct async_initiate
   }
 
   template<typename Handler>
-  void operator()(Handler && h, task<void> a, executor_type exec)
+  void operator()(Handler && h, task<void> a, executor exec)
   {
     if (a.receiver_.done)
       return asio::post(asio::append(h, a.receiver_.exception));

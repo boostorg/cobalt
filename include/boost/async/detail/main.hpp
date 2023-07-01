@@ -96,7 +96,7 @@ struct main_promise : signal_helper,
       return run_main(co_main(argc, argv));
     }
 
-    using executor_type = executor_type;
+    using executor_type = executor;
     executor_type get_executor() const {return exec->get_executor();}
 
     using allocator_type = container::pmr::polymorphic_allocator<void>;

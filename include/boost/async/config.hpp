@@ -33,7 +33,7 @@
 namespace boost::async
 {
 
-using executor_type = BOOST_ASYNC_EXECUTOR;
+using executor = BOOST_ASYNC_EXECUTOR;
 
 
 }

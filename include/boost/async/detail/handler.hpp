@@ -23,7 +23,7 @@ namespace detail
 struct completion_handler_noop_executor //: executor_type
 {
 
-  executor_type inner;
+  executor inner;
   bool * completed_immediately = nullptr;
 
   template <typename Function, typename Allocator>
@@ -59,11 +59,8 @@ struct completion_handler_noop_executor //: executor_type
     return false;
   }
 
-  using executor_type = completion_handler_noop_executor;
-  executor_type get_executor();
-
   completion_handler_noop_executor(const completion_handler_noop_executor & rhs) noexcept = default;
-  completion_handler_noop_executor(async::executor_type inner,
+  completion_handler_noop_executor(async::executor inner,
                                    bool * completed_immediately) : inner(inner), completed_immediately(completed_immediately)
   {
   }
@@ -80,11 +77,11 @@ struct completion_handler_base
       return cancellation_slot ;
   }
 
-  using executor_type = executor_type;
-  executor_type executor ;
+  using executor_type = executor;
+  executor_type executor_ ;
   executor_type get_executor() const noexcept
   {
-    return executor ;
+    return executor_ ;
   }
 
   using allocator_type = container::pmr::polymorphic_allocator<void>;
@@ -106,7 +103,7 @@ struct completion_handler_base
       executor_type executor,
       allocator_type allocator)
           : cancellation_slot(cancellation_slot)
-          , executor(executor)
+          , executor_(executor)
           , allocator(allocator)
   {
   }
@@ -114,7 +111,7 @@ struct completion_handler_base
   template<typename Promise>
   completion_handler_base(std::coroutine_handle<Promise> h, bool * completed_immediately = nullptr)
           : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
-            executor(asio::get_associated_executor(h.promise(), this_thread::get_executor())),
+            executor_(asio::get_associated_executor(h.promise(), this_thread::get_executor())),
             allocator(asio::get_associated_allocator(h.promise(), this_thread::get_allocator())),
             completed_immediately(completed_immediately)
 
@@ -125,18 +122,18 @@ struct completion_handler_base
                           container::pmr::memory_resource * resource,
                           bool * completed_immediately = nullptr)
           : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
-            executor(asio::get_associated_executor(h.promise(), this_thread::get_executor())),
+            executor_(asio::get_associated_executor(h.promise(), this_thread::get_executor())),
             allocator(resource),
             completed_immediately(completed_immediately) {}
 
   completion_handler_base(std::coroutine_handle<void> h)
-      : executor(this_thread::get_executor()),
+      : executor_(this_thread::get_executor()),
         allocator(this_thread::get_allocator()) {}
 
   completion_handler_base(std::coroutine_handle<void> h,
                           container::pmr::memory_resource * resource,
                           bool * completed_immediately = nullptr)
-      : executor(this_thread::get_executor()),
+      : executor_(this_thread::get_executor()),
         allocator(resource),
         completed_immediately(completed_immediately) {}
 };
@@ -154,7 +151,7 @@ struct completion_handler_wrapper
       return asio::get_associated_cancellation_slot(handler) ;
     }
 
-    using executor_type = executor_type;
+    using executor_type = executor;
     executor_type get_executor() const noexcept
     {
       return asio::get_associated_executor(handler, this_thread::get_executor()) ;
@@ -239,7 +236,7 @@ void assign_cancellation(std::coroutine_handle<Promise> h, Handler && func)
 }
 
 template<typename Promise>
-executor_type
+executor
 get_executor(std::coroutine_handle<Promise> h)
 {
   if constexpr (requires {h.promise().get_executor();})
@@ -248,7 +245,7 @@ get_executor(std::coroutine_handle<Promise> h)
     return this_thread::get_executor();
 }
 
-inline executor_type
+inline executor
 get_executor(std::coroutine_handle<>)
 {
   return this_thread::get_executor();

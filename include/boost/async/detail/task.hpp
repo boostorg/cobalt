@@ -253,7 +253,7 @@ struct task_promise
     return signal.slot();
   }
 
-  using executor_type = executor_type;
+  using executor_type = executor;
   std::optional<asio::executor_work_guard<executor_type>> exec;
   executor_type get_executor() const
   {

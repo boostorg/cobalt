@@ -191,8 +191,8 @@ def main(ctx):
         linux("clang",          branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20"),
         linux("clang (asan)",   branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", debug_symbols="on", address_sanitizer="on"),
         linux("clang (tsan)",   branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", debug_symbols="on",  thread_sanitizer="on"),
-        windows("msvc-14.2 (x64)", branch, "cppalliance/dronevs2019:1", variant="release", cxxstd="20", address_model="64"),
-        windows("msvc-14.2 (x32)", branch, "cppalliance/dronevs2019:1", variant="release", cxxstd="20", address_model="32"),
-        windows("msvc-14.3 (x64)", branch, "cppalliance/dronevs2022:1", variant="release", cxxstd="20", address_model="64"),
-        windows("msvc-14.3 (x32)", branch, "cppalliance/dronevs2022:1", variant="release", cxxstd="20", address_model="32")
+        windows("msvc-14.2 (x64)", branch, "cppalliance/dronevs2019:2", variant="release", cxxstd="20", address_model="64"),
+        windows("msvc-14.2 (x32)", branch, "cppalliance/dronevs2019:2", variant="release", cxxstd="20", address_model="32"),
+        windows("msvc-14.3 (x64)", branch, "cppalliance/dronevs2022:2", variant="release", cxxstd="20", address_model="64"),
+        windows("msvc-14.3 (x32)", branch, "cppalliance/dronevs2022:2", variant="release", cxxstd="20", address_model="32")
     ]

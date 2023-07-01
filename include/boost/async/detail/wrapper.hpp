@@ -154,8 +154,8 @@ struct immediate_coroutine_promise : partial_promise<Allocator>
     return slot;
   }
 
-  executor_type exec;
-  using executor_type = executor_type;
+  executor exec;
+  using executor_type = executor;
   executor_type get_executor() const
   {
     return exec;
@@ -226,8 +226,8 @@ struct transactable_coroutine_promise : partial_promise<Allocator>
     return slot;
   }
 
-  executor_type exec;
-  using executor_type = executor_type;
+  executor exec;
+  using executor_type = executor;
   executor_type get_executor() const
   {
     return exec;

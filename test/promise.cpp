@@ -69,7 +69,7 @@ async::promise<int> return_(std::size_t ms)
 }
 
 async::promise<int> return_(std::size_t ms, asio::executor_arg_t,
-                            boost::async::executor_type )
+                            boost::async::executor )
 {
   co_return 1234u;
 }

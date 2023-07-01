@@ -30,12 +30,12 @@ template<typename T>
 struct channel
 {
   channel(std::size_t limit = 0u,
-          executor_type executor = this_thread::get_executor(),
+          executor executor = this_thread::get_executor(),
           container::pmr::memory_resource * resource = this_thread::get_default_resource())
             : buffer_(limit, resource), executor_(executor) {}
   channel(channel && ) = default;
 
-  using executor_type = executor_type;
+  using executor_type = executor;
   executor_type get_executor() {return executor_;}
 
   ~channel();
@@ -127,11 +127,11 @@ template<>
 struct channel<void>
 {
   channel(std::size_t limit = 0u,
-          executor_type executor = this_thread::get_executor())
+          executor executor = this_thread::get_executor())
         : limit_(limit), executor_(executor) {}
   channel(channel && ) = default;
 
-  using executor_type = executor_type;
+  using executor_type = executor;
   executor_type get_executor() {return executor_;}
 
   BOOST_ASYNC_DECL ~channel();

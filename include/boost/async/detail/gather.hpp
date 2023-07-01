@@ -120,7 +120,7 @@ struct gather_variadic_impl
 
     template<std::size_t Idx, typename Aw>
     void await_suspend_step(
-        const executor_type & exec,
+        const executor & exec,
         Aw && aw)
     {
       if (!ready[Idx])

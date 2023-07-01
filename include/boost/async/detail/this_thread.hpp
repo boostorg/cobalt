@@ -16,15 +16,15 @@
 namespace boost::async::detail
 {
 
-inline executor_type
-extract_executor(executor_type exec) { return exec; }
+inline executor
+extract_executor(executor exec) { return exec; }
 
-executor_type
+executor
 extract_executor(asio::any_io_executor exec);
 
 
 template<typename ... Args>
-executor_type get_executor_from_args(Args &&... args)
+executor get_executor_from_args(Args &&... args)
 {
   using args_type = mp11::mp_list<std::decay_t<Args>...>;
   constexpr static auto I = mp11::mp_find<args_type, asio::executor_arg_t>::value;

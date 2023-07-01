@@ -23,10 +23,10 @@ BOOST_ASYNC_DECL container::pmr::polymorphic_allocator<void> get_allocator();
 #endif
 
 BOOST_ASYNC_DECL
-executor_type & get_executor(
+executor & get_executor(
     const boost::source_location & loc = BOOST_CURRENT_LOCATION);
 BOOST_ASYNC_DECL bool has_executor();
-BOOST_ASYNC_DECL void set_executor(executor_type exec) noexcept;
+BOOST_ASYNC_DECL void set_executor(executor exec) noexcept;
 
 }
 
