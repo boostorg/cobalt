@@ -79,7 +79,6 @@ struct resolver
   asio::ip::basic_resolver<protocol_type, executor> resolver_;
 };
 
-// NOTE: Doesn't need to be a promise, can be optimized.
 struct lookup
 {
   lookup(core::string_view host, core::string_view service)
