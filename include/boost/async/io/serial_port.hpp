@@ -40,7 +40,7 @@ struct [[nodiscard]] serial_port final : stream
   [[nodiscard]] BOOST_ASYNC_DECL system::result<void>   set_parity(parity rate);
   [[nodiscard]] BOOST_ASYNC_DECL system::result<parity> get_parity();
 
-  using native_handle_type = typename asio::basic_serial_port<executor_type>::native_handle_type;
+  using native_handle_type = typename asio::basic_serial_port<executor>::native_handle_type;
   native_handle_type native_handle() {return serial_port_.native_handle();}
 
   BOOST_ASYNC_DECL serial_port();
@@ -58,7 +58,7 @@ struct [[nodiscard]] serial_port final : stream
   BOOST_ASYNC_DECL void async_read_some_impl_(buffers::mutable_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
   BOOST_ASYNC_DECL void async_write_some_impl_(buffers::const_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
 
-  asio::basic_serial_port<executor_type> serial_port_;
+  asio::basic_serial_port<executor> serial_port_;
 };
 
 

@@ -32,7 +32,7 @@ struct stream_file : file, stream
  private:
   BOOST_ASYNC_DECL void async_read_some_impl_(buffers::mutable_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
   BOOST_ASYNC_DECL void async_write_some_impl_(buffers::const_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
-  asio::basic_stream_file<executor_type> stream_file_;
+  asio::basic_stream_file<executor> stream_file_;
 
 };
 

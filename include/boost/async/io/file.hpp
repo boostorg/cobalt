@@ -37,16 +37,16 @@ struct file
   [[nodiscard]] BOOST_ASYNC_DECL system::result<void> sync_data();
 
 
-  using native_handle_type = asio::basic_file<executor_type>::native_handle_type;
+  using native_handle_type = asio::basic_file<executor>::native_handle_type;
   BOOST_ASYNC_DECL native_handle_type native_handle();
 
   BOOST_ASYNC_DECL system::result<void> assign(native_handle_type native_handle);
   BOOST_ASYNC_DECL system::result<native_handle_type> release();
 
  private:
-  asio::basic_file<executor_type> & file_;
+  asio::basic_file<executor> & file_;
  public:
-  file(asio::basic_file<executor_type> & file) : file_(file) {}
+  file(asio::basic_file<executor> & file) : file_(file) {}
 };
 
 }

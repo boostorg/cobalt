@@ -39,12 +39,12 @@ struct seq_packet_socket::receive_op_ : detail::deferred_op_resource_base
     const auto & [ec, n] = *result_;
     return transfer_result{ec, n};
   }
-  receive_op_(asio::basic_seq_packet_socket<protocol_type, executor_type> & rs,
+  receive_op_(asio::basic_seq_packet_socket<protocol_type, executor> & rs,
               buffers::mutable_buffer buffer, message_flags &out_flags)
     : seq_packet_socket_(rs), buffer_(buffer), out_flags_(out_flags) {}
  private:
   void initiate_(async::completion_handler<system::error_code, std::size_t> h);
-  asio::basic_seq_packet_socket<protocol_type, executor_type> &seq_packet_socket_;
+  asio::basic_seq_packet_socket<protocol_type, executor> &seq_packet_socket_;
   buffers::mutable_buffer buffer_;
   message_flags &out_flags_;
   std::exception_ptr error;
@@ -77,15 +77,15 @@ struct seq_packet_socket::receive_op_seq_ : detail::deferred_op_resource_base
     const auto & [ec, n] = *result_;
     return transfer_result{ec, n};
   }
-  receive_op_seq_(asio::basic_seq_packet_socket<protocol_type, executor_type> & rs,
+  receive_op_seq_(asio::basic_seq_packet_socket<protocol_type, executor> & rs,
                   buffers::mutable_buffer_subspan buffer, message_flags &out_flags)
       : seq_packet_socket_(rs), buffer_(buffer), out_flags_(out_flags) {}
-  receive_op_seq_(asio::basic_seq_packet_socket<protocol_type, executor_type> & rs,
+  receive_op_seq_(asio::basic_seq_packet_socket<protocol_type, executor> & rs,
                   buffers::mutable_buffer_span buffer, message_flags &out_flags)
       : seq_packet_socket_(rs), buffer_(buffer), out_flags_(out_flags) {}
  private:
   void initiate_(async::completion_handler<system::error_code, std::size_t> h);
-  asio::basic_seq_packet_socket<protocol_type, executor_type> &seq_packet_socket_;
+  asio::basic_seq_packet_socket<protocol_type, executor> &seq_packet_socket_;
   buffers::mutable_buffer_subspan buffer_;
   message_flags &out_flags_;
   std::exception_ptr error;
@@ -117,12 +117,12 @@ struct seq_packet_socket::send_op_ : detail::deferred_op_resource_base
     const auto & [ec, n] = *result_;
     return transfer_result{ec, n};
   }
-  send_op_(asio::basic_seq_packet_socket<protocol_type, executor_type> & rs,
+  send_op_(asio::basic_seq_packet_socket<protocol_type, executor> & rs,
            buffers::const_buffer buffer, message_flags out_flags)
       : seq_packet_socket_(rs), buffer_(buffer), out_flags_(out_flags) {}
  private:
   void initiate_(async::completion_handler<system::error_code, std::size_t> h);
-  asio::basic_seq_packet_socket<protocol_type, executor_type> &seq_packet_socket_;
+  asio::basic_seq_packet_socket<protocol_type, executor> &seq_packet_socket_;
   buffers::const_buffer buffer_;
   message_flags out_flags_;
   std::exception_ptr error;
@@ -155,15 +155,15 @@ struct seq_packet_socket::send_op_seq_ : detail::deferred_op_resource_base
     const auto & [ec, n] = *result_;
     return transfer_result{ec, n};
   }
-  send_op_seq_(asio::basic_seq_packet_socket<protocol_type, executor_type> & rs,
+  send_op_seq_(asio::basic_seq_packet_socket<protocol_type, executor> & rs,
                buffers::const_buffer_subspan buffer, message_flags out_flags)
       : seq_packet_socket_(rs), buffer_(buffer), out_flags_(out_flags) {}
-  send_op_seq_(asio::basic_seq_packet_socket<protocol_type, executor_type> & rs,
+  send_op_seq_(asio::basic_seq_packet_socket<protocol_type, executor> & rs,
                buffers::const_buffer_span buffer, message_flags out_flags)
       : seq_packet_socket_(rs), buffer_(buffer), out_flags_(out_flags) {}
  private:
   void initiate_(async::completion_handler<system::error_code, std::size_t> h);
-  asio::basic_seq_packet_socket<protocol_type, executor_type> &seq_packet_socket_;
+  asio::basic_seq_packet_socket<protocol_type, executor> &seq_packet_socket_;
   buffers::const_buffer_subspan buffer_;
   message_flags out_flags_;
   std::exception_ptr error;

@@ -46,10 +46,10 @@ struct socket::wait_op_ : detail::deferred_op_resource_base
     else
       return {};
   }
-  wait_op_(asio::basic_socket<protocol_type, executor_type> & socket,
+  wait_op_(asio::basic_socket<protocol_type, executor> & socket,
            asio::socket_base::wait_type wt) : socket_(socket), wt_(wt) {}
  private:
-  asio::basic_socket<protocol_type, executor_type>  & socket_;
+  asio::basic_socket<protocol_type, executor>  & socket_;
   asio::socket_base::wait_type wt_;
   std::exception_ptr error;
   std::optional<std::tuple<system::error_code>> result_;

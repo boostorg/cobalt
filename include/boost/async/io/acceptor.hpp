@@ -55,10 +55,10 @@ struct acceptor
       else
         return std::move(socket_);
     }
-    accept_op_(    asio::basic_socket_acceptor<protocol_type, executor_type> & acceptor)
+    accept_op_(    asio::basic_socket_acceptor<protocol_type, executor> & acceptor)
       : acceptor_(acceptor) {}
    private:
-    asio::basic_socket_acceptor<protocol_type, executor_type> & acceptor_;
+    asio::basic_socket_acceptor<protocol_type, executor> & acceptor_;
     stream_socket socket_;
     std::exception_ptr error;
     std::optional<std::tuple<system::error_code>> result_;
@@ -93,10 +93,10 @@ struct acceptor
       else
         return std::move(socket_);
     }
-    accept_seq_op_(asio::basic_socket_acceptor<protocol_type, executor_type> & acceptor)
+    accept_seq_op_(asio::basic_socket_acceptor<protocol_type, executor> & acceptor)
         : acceptor_(acceptor) {}
    private:
-    asio::basic_socket_acceptor<protocol_type, executor_type> & acceptor_;
+    asio::basic_socket_acceptor<protocol_type, executor> & acceptor_;
     seq_packet_socket socket_;
     std::exception_ptr error;
     std::optional<std::tuple<system::error_code>> result_;
@@ -105,7 +105,7 @@ struct acceptor
   [[nodiscard]] BOOST_ASYNC_DECL accept_op_     accept();
   [[nodiscard]] BOOST_ASYNC_DECL accept_seq_op_ accept_seq_packet();
  private:
-  asio::basic_socket_acceptor<protocol_type, executor_type> acceptor_;
+  asio::basic_socket_acceptor<protocol_type, executor> acceptor_;
 };
 
 }

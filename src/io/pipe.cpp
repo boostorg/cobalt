@@ -53,7 +53,7 @@ void readable_pipe::async_write_some_impl_(
     h(ec, 0ul);
   }
   else
-    asio::post(h.executor, asio::append(std::move(h), ec, 0ul));
+    asio::post(h.executor_, asio::append(std::move(h), ec, 0ul));
 }
 
 
@@ -123,7 +123,7 @@ void writable_pipe::async_read_some_impl_(
     h(ec, 0ul);
   }
   else
-    asio::post(h.executor, asio::append(std::move(h), ec, 0ul));
+    asio::post(h.executor_, asio::append(std::move(h), ec, 0ul));
 }
 
 system::result<void> writable_pipe::assign(native_handle_type native_handle)
