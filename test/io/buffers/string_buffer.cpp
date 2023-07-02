@@ -23,7 +23,8 @@ struct string_buffer_test
     void
     testMembers()
     {
-        std::string s;
+      std::string s;
+      std::wstring ws = L"1234";
 
         // ~string_buffer
         {
