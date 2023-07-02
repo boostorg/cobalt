@@ -49,6 +49,23 @@ public:
     {
     }
 
+    /** Constructor
+     */
+    template<typename Container>
+    requires (
+        requires (Container & ct)
+        {
+          {std::data(ct)} -> std::convertible_to<void*>;
+          {std::size(ct)} -> std::convertible_to<std::size_t>;
+        }
+        && std::is_trivial_v<typename Container::value_type>)
+    mutable_buffer(Container & ct) : mutable_buffer(std::data(ct), std::size(ct)) {}
+
+    /** Constructor for arrays */
+    template<typename T, std::size_t N>
+      requires std::is_trivial_v<T>
+    mutable_buffer(T (&arr)[N]) : mutable_buffer(&arr[0], sizeof(T) * N) {}
+
     /** Assignment.
     */
     mutable_buffer& operator=(
@@ -56,15 +73,9 @@ public:
 
 #ifndef BOOST_BUFFERS_DOCS
     // conversion to boost::asio::mutable_buffer
-    template<
-        class T
-        , class = typename std::enable_if<
-            std::is_constructible<T,
-                void*, std::size_t>::value
-            && ! std::is_same<T, mutable_buffer>::value
-            //&& ! std::is_same<T, const_buffer>::value
-        >::type
-    >
+    template<class T>
+    requires (std::constructible_from<T, void*, std::size_t>
+           && !std::same_as<T, mutable_buffer>)
     operator T() const noexcept
     {
         return T{ data(), size() };

@@ -54,6 +54,26 @@ public:
             async::detail::throw_invalid_argument();
     }
 
+
+    /** Constructor.
+    */
+    template<typename Container>
+      requires requires (Container & container)
+      {
+        {container.data()} -> std::convertible_to<void*>;
+        {container.size()} -> std::convertible_to<std::size_t>;
+      }
+    flat_buffer(Container & cont,
+                std::size_t initial_size = 0)
+        : data_(cont.data())
+        , cap_(cont.size())
+        , in_size_(initial_size)
+    {
+      // initial size too large
+      if(in_size_ > cap_)
+        async::detail::throw_invalid_argument();
+    }
+
     /** Constructor.
     */
     explicit

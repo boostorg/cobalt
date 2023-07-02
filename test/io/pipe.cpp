@@ -29,8 +29,8 @@ CO_TEST_CASE("pipe")
   char data[7] = "nodata";
 
   auto [written, read] =
-      co_await join(w.write_some(io::buffers::buffer("foobar", 6)),
-                    r.read_some(io::buffers::buffer(data)));
+      co_await join(w.write_some("foobar"),
+                    r.read_some(data));
 
   CHECK(written.transferred == 6u);
   CHECK(read.transferred == 6u);

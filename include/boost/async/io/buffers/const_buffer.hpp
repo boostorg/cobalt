@@ -38,6 +38,27 @@ public:
     {
     }
 
+    /** Constructor
+     */
+    template<typename Container>
+      requires (
+          requires (const Container & ct)
+          {
+            {ct.data()} -> std::convertible_to<const void*>;
+            {ct.size()} -> std::convertible_to<std::size_t>;
+          }
+          && std::is_trivial_v<typename Container::value_type>)
+    const_buffer(Container & ct) : const_buffer(ct.data(), ct.size()) {}
+
+    /** Constructor for strings */
+    template<std::size_t N>
+    const_buffer(const char (&string)[N]) : const_buffer(string, std::strlen(string)) {}
+
+    /** Constructor for strings */
+    template<typename T, std::size_t N>
+      requires std::is_trivial_v<T>
+    const_buffer(const T (&arr)[N]) : const_buffer(&arr[0], sizeof(T) * N) {}
+
     /** Constructor.
     */
     const_buffer(
@@ -60,15 +81,10 @@ public:
 
 #ifndef BOOST_BUFFERS_DOCS
     // conversion to boost::asio::const_buffer
-    template<
-        class T
-        , class = typename std::enable_if<
-            std::is_constructible<T,
-                void const*, std::size_t>::value &&
-            ! std::is_same<T, mutable_buffer>::value &&
-            ! std::is_same<T, const_buffer>::value
-        >::type
-    >
+    template<class T>
+      requires (std::constructible_from<T, void const*, std::size_t>
+            && !std::same_as<T, mutable_buffer>
+            && !std::same_as<T, const_buffer>)
     operator T() const noexcept
     {
         return T{ data(), size() };

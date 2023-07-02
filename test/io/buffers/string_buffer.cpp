@@ -22,7 +22,8 @@ struct string_buffer_test
     void
     testMembers()
     {
-        std::string s;
+      std::string s;
+      std::wstring ws = L"1234";
 
         // ~string_buffer
         {
@@ -67,6 +68,13 @@ struct string_buffer_test
             s = "1234";
             string_buffer b(&s);
             BOOST_TEST_EQ(b.size(), 4);
+        }
+
+        // ws.size()
+        {
+          std::u16string ws = u"1234";
+          basic_string_buffer<char16_t> b(&ws);
+          BOOST_TEST_EQ(b.size(), 8);
         }
 
         // capacity()

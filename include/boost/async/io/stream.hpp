@@ -41,8 +41,15 @@ struct [[nodiscard]] transfer_result
 
   bool operator==(const system::error_code &ec) const { return error == ec;}
   bool operator!=(const system::error_code &ec) const { return error != ec;}
-
 };
+
+inline transfer_result & operator+=(transfer_result & lhs, const transfer_result & rhs)
+{
+  lhs.transferred += rhs.transferred;
+  if (!lhs.error)
+    lhs.error = rhs.error;
+  return lhs;
+}
 
 struct stream
 {

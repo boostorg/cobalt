@@ -45,7 +45,7 @@ struct any_dynamic_buffer
 */
 template<
     class DynamicBuffer,
-    std::size_t N = 8>
+    std::size_t N = asio::detail::max_iov_len>
 class any_dynamic_buffer_impl
     : public any_dynamic_buffer
 {

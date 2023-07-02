@@ -62,13 +62,8 @@ buffer(
 
 /** Return a buffer.
 */
-template<
-    class T, std::size_t N
-#ifndef BOOST_BUFFERS_DOCS
-    , class = typename std::enable_if<
-        std::is_trivially_copyable<T>::value>::type
-#endif
->
+template<class T, std::size_t N>
+  requires std::is_trivially_copyable<T>::value
 mutable_buffer
 buffer(
     T (&data)[N]) noexcept
@@ -79,13 +74,8 @@ buffer(
 
 /** Return a buffer.
 */
-template<
-    class T, std::size_t N
-#ifndef BOOST_BUFFERS_DOCS
-    , class = typename std::enable_if<
-        std::is_trivially_copyable<T>::value>::type
-#endif
->
+template<class T, std::size_t N>
+  requires std::is_trivially_copyable<T>::value
 const_buffer
 buffer(
     T const (&data)[N]) noexcept
