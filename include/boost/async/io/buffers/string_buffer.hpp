@@ -88,13 +88,13 @@ public:
     std::size_t
     size() const noexcept
     {
-        return in_size_;
+        return in_size_* sizeof(CharT);
     }
 
     std::size_t
     max_size() const noexcept
     {
-        return max_size_;
+        return max_size_ * sizeof(CharT);
     }
 
     std::size_t
@@ -102,7 +102,7 @@ public:
     {
         if(s_->capacity() <= max_size_)
             return s_->capacity() - in_size_;
-        return max_size_ - in_size_;
+        return (max_size_ - in_size_) * sizeof(CharT);
     }
 
     const_buffers_type
@@ -110,12 +110,14 @@ public:
     {
         return {
             s_->data(),
-            in_size_ };
+            in_size_ * sizeof(CharT)};
     }
 
     mutable_buffers_type
-    prepare(std::size_t n)
+    prepare(std::size_t n_)
     {
+        const auto n = (n_ / sizeof(CharT)) + (std::min)(n_ % sizeof(CharT), static_cast<std::size_t>(1u));
+
         // n exceeds available space
         if(n > max_size_ - in_size_)
             async::detail::throw_invalid_argument();
@@ -125,7 +127,7 @@ public:
         out_size_ = n;
         return {
             &(*s_)[in_size_],
-            out_size_ };
+            out_size_ * sizeof(CharT)};
     }
 
     void
