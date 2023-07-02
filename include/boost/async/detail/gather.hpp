@@ -116,6 +116,29 @@ struct gather_variadic_impl
           result_part<Args>{system::in_place_error, std::exception_ptr()}...
         };
 
+    template<std::size_t Idx>
+    void interrupt_await_step()
+    {
+      using type= std::tuple_element_t<Idx, std::tuple<Args...>>;
+      using t = std::conditional_t<
+          std::is_reference_v<std::tuple_element_t<Idx, decltype(aws)>>,
+          co_awaitable_type<type> &,
+          co_awaitable_type<type> &&>;
+
+      if constexpr (interruptible<t>)
+          static_cast<t>(std::get<Idx>(aws)).interrupt_await();
+    }
+
+    void interrupt_await()
+    {
+      mp11::mp_for_each<mp11::mp_iota_c<sizeof...(Args)>>
+          ([&](auto idx)
+           {
+             interrupt_await_step<idx>();
+           });
+    }
+
+
     bool await_ready(){return std::find(ready.begin(), ready.end(), false) == ready.end();};
 
     template<std::size_t Idx, typename Aw>
@@ -235,6 +258,16 @@ struct gather_ranged_impl
     }
 
     gather_shared_state wss;
+    void interrupt_await()
+    {
+      using t = std::conditional_t<std::is_reference_v<Range>,
+                                   co_awaitable_type<type> &,
+                                   co_awaitable_type<type> &&>;
+
+      if constexpr (interruptible<t>)
+        for (auto & aw : aws)
+          static_cast<t>(aw).interrupt_await();
+    }
 
     bool await_ready(){return std::find(ready.begin(), ready.end(), false) == ready.end();};
     template<typename H>
@@ -292,16 +325,5 @@ struct gather_ranged_impl
 };
 
 }
-
-namespace boost::async
-{
-
-template<typename ... Args>
-struct is_interruptible<detail::gather_variadic_impl<Args...>> : std::true_type {};
-template<typename Range>
-struct is_interruptible<detail::gather_ranged_impl<Range>> : std::true_type {};
-
-}
-
 
 #endif //BOOST_ASYNC_DETAIL_GATHER_HPP

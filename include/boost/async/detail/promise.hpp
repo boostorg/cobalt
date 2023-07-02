@@ -164,7 +164,7 @@ struct promise_receiver : promise_value_holder<T>
 
       if constexpr (requires (Promise p) {p.get_cancellation_slot();})
         if ((cl = h.promise().get_cancellation_slot()).is_connected())
-          cl.emplace<forward_cancellation_with_interrupt>(self->cancel_signal, self);
+          cl.emplace<forward_cancellation>(self->cancel_signal);
 
       self->awaited_from.reset(h.address());
       return true;
@@ -179,6 +179,14 @@ struct promise_receiver : promise_value_holder<T>
       self->rethrow_if();
       return self->get_result();
     }
+
+    void interrupt_await() &
+    {
+      if (!self || !self->awaited_from)
+        return ;
+      self->exception = detached_exception();
+      std::coroutine_handle<void>::from_address(self->awaited_from.release()).resume();
+    }
   };
 
   promise_receiver  * &reference;
@@ -187,7 +195,7 @@ struct promise_receiver : promise_value_holder<T>
   awaitable get_awaitable() {return awaitable{this};}
 
 
-  void interrupt_await()
+  void interrupt_await() &
   {
     exception = detached_exception();
     std::coroutine_handle<void>::from_address(awaited_from.release()).resume();

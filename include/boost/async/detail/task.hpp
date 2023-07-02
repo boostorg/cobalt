@@ -157,7 +157,7 @@ struct task_receiver : task_value_holder<T>
 
       if constexpr (requires (Promise p) {p.get_cancellation_slot();})
         if ((cl = h.promise().get_cancellation_slot()).is_connected())
-          cl.emplace<forward_cancellation_with_interrupt>(self->promise->signal, self);
+          cl.emplace<forward_cancellation>(self->promise->signal);
 
 
       if constexpr (requires (Promise p) {p.get_executor();})
@@ -176,6 +176,14 @@ struct task_receiver : task_value_holder<T>
       self->rethrow_if();
       return self->get_result();
     }
+
+    void interrupt_await() &
+    {
+      if (!self || !self->awaited_from)
+        return ;
+      self->exception = detached_exception();
+      std::coroutine_handle<void>::from_address(self->awaited_from.release()).resume();
+    }
   };
 
   task_promise<T>  * promise;
@@ -183,7 +191,7 @@ struct task_receiver : task_value_holder<T>
   awaitable get_awaitable() {return awaitable{this};}
 
 
-  void interrupt_await()
+  void interrupt_await() &
   {
     exception = detached_exception();
     std::coroutine_handle<void>::from_address(awaited_from.release()).resume();
