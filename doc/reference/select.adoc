@@ -23,9 +23,9 @@ async::promise<void> do_wait()
 [#interrupt_await]
 === Interrupt Wait
 
-When arguments are passed as rvalue reference, the select will attempt to use `interrupt_await`
-of cancel the not completed <<awaitable>>s. If supported, the <<awaitable>> must complete immediately.
-If the `select` doesn't detect the immediate completion, it will send another cancellation.
+When arguments are passed as rvalue reference, the select will attempt to use `.interrupt_await`
+on the awaitable to detach the not completed <<awaitable>>s. If supported, the <<awaitable>> must complete immediately.
+If the `select` doesn't detect the immediate completion, it will send a cancellation.
 
 This means that you can reuse select like this:
 

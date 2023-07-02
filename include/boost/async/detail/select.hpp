@@ -109,8 +109,6 @@ struct select_variadic_impl
     container::pmr::polymorphic_allocator<void> alloc{&res};
 
     select_shared_state sss;
-    constexpr static std::array<bool, sizeof...(Args)> interruptible{
-                  (std::is_lvalue_reference_v<Args> || is_interruptible_v<Args>)...};
 
     bool has_result() const
     {
@@ -119,30 +117,45 @@ struct select_variadic_impl
 
     void cancel_all()
     {
+      interrupt_await();
       for (auto i = 0u; i < tuple_size; i++)
-      {
-        auto &r = cancel[i];
-
-        if (r && interruptible[i])
-          r->emit(interrupt_await);
-        if (r)
+        if (auto &r = cancel[i]; r)
           std::exchange(r, nullptr)->emit(Ct);
-      }
+    }
+
+
+    template<std::size_t Idx>
+    void interrupt_await_step()
+    {
+      using type= std::tuple_element_t<Idx, tuple_type>;
+      using t = std::conditional_t<std::is_reference_v<std::tuple_element_t<Idx, std::tuple<Args...>>>,
+          type &,
+          type &&>;
+
+      if constexpr (interruptible<t>)
+        static_cast<t>(std::get<Idx>(aws)).interrupt_await();
+    }
+
+    void interrupt_await()
+    {
+      mp11::mp_for_each<mp11::mp_iota_c<sizeof...(Args)>>
+          ([&](auto idx)
+           {
+             interrupt_await_step<idx>();
+           });
     }
 
     bool await_ready()
     {
       std::size_t idx = 0u;
       bool found_ready = false;
-      mp11::tuple_for_each(
-          aws,
-          [&](auto & aw)
+      mp11::mp_for_each<mp11::mp_iota_c<sizeof...(Args)>>(
+          [&](auto idx)
           {
-            if (!found_ready || !interruptible[idx])
-              found_ready |= ready[idx] = aw.await_ready();
+            if (!found_ready || !interruptible<std::tuple_element_t<idx, tuple_type>>)
+              found_ready |= ready[idx] = std::get<idx>(aws).await_ready();
             else
               ready[idx] = false;
-            idx++;
           });
 
       return found_ready;
@@ -153,7 +166,7 @@ struct select_variadic_impl
         executor exec,
         Aw && aw, std::size_t idx)
     {
-      if (has_result() && interruptible[idx])
+      if (has_result() && interruptible<Aw&&>)
         return ; // one coro did a direct complete
       else if (!has_result())
         spawned = idx;
@@ -251,8 +264,13 @@ struct select_variadic_impl
             constexpr std::size_t idx = iidx;
             try
             {
+              using type= std::tuple_element_t<iidx, tuple_type>;
+              using t = std::conditional_t<std::is_reference_v<std::tuple_element_t<iidx, std::tuple<Args...>>>,
+                  type &,
+                  type &>;
+
               if ((index != idx) &&
-                  ((idx <= spawned) || !interruptible[idx] || ready[idx]))
+                  ((idx <= spawned) || !interruptible<t> || ready[idx]))
                 std::get<idx>(aws).await_resume();
             }
             catch (...) {}
@@ -315,10 +333,6 @@ struct select_ranged_impl
     container::pmr::vector<asio::cancellation_signal> cancel_{std::size(aws), alloc};
     container::pmr::vector<asio::cancellation_signal*> cancel{std::size(aws), alloc};
 
-    constexpr static bool interruptible =
-        std::is_lvalue_reference_v<Range> || is_interruptible_v<type>;
-
-
     bool has_result() const {return index != std::numeric_limits<std::size_t>::max(); }
 
     awaitable(Range & aws_, std::false_type /* needs co_await */)
@@ -350,13 +364,19 @@ struct select_ranged_impl
 
     void cancel_all()
     {
+      interrupt_await();
       for (auto & r : cancel)
-      {
-        if (r && interruptible)
-          r->emit(interrupt_await);
         if (r)
           std::exchange(r, nullptr)->emit(Ct);
-      }
+    }
+    void interrupt_await()
+    {
+      using t = std::conditional_t<std::is_reference_v<Range>,
+          co_awaitable_type<type> &,
+          co_awaitable_type<type> &&>;
+      if constexpr (interruptible<t>)
+        for (auto & aw : aws)
+          static_cast<t>(aw).interrupt_await();
     }
 
     bool await_ready()
@@ -366,7 +386,11 @@ struct select_ranged_impl
           std::begin(aws), std::end(aws), std::begin(ready),
           [&found_ready](auto & aw)
           {
-            if (!found_ready || !interruptible)
+            using t = std::conditional_t<std::is_reference_v<Range>,
+                co_awaitable_type<type> &,
+                co_awaitable_type<type> &&>;
+
+            if (!found_ready || !interruptible<t>)
             {
               auto r = aw.await_ready();
               found_ready |= r;
@@ -486,16 +510,5 @@ struct select_ranged_impl
 };
 
 }
-
-namespace boost::async
-{
-
-template<asio::cancellation_type Ct, typename ... Args>
-struct is_interruptible<detail::select_variadic_impl<Ct, Args...>> : std::true_type {};
-template<asio::cancellation_type Ct, typename Range>
-struct is_interruptible<detail::select_ranged_impl<Ct, Range>> : std::true_type {};
-
-}
-
 
 #endif //BOOST_ASYNC_DETAIL_SELECT_HPP

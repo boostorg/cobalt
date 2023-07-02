@@ -121,20 +121,55 @@ struct join_variadic_impl
           result_part<Args>{system::in_place_error, std::exception_ptr()}...
         };
     std::exception_ptr error;
-    constexpr static std::array<bool, sizeof...(Args)> interruptible{
-        (std::is_lvalue_reference_v<Args> || is_interruptible_v<Args>)...};
+
+    template<std::size_t Idx>
+    void cancel_step()
+    {
+      using type = std::tuple_element_t<Idx, tuple_type>;
+      using t = std::conditional_t<std::is_reference_v<std::tuple_element_t<Idx, std::tuple<Args...>>>,
+          type &,
+          type &&>;
+
+      auto &r = cancel[Idx];
+      if constexpr (interruptible<t>)
+        if (r != nullptr)
+          static_cast<t>(std::get<Idx>(aws)).interrupt_await();
+
+      if (r)
+        std::exchange(r, nullptr)->emit(asio::cancellation_type::all);
+    }
 
     void cancel_all()
     {
-      for (auto i = 0u; i < tuple_size; i++)
-      {
-        auto &r = cancel[i];
-        if (interruptible[i] && r)
-          r->emit(interrupt_await);
-        if (r)
-          std::exchange(r, nullptr)->emit(asio::cancellation_type::all);
-      }
+      mp11::mp_for_each<mp11::mp_iota_c<sizeof...(Args)>>
+          ([&](auto idx)
+           {
+             cancel_step<idx>();
+           });
     }
+
+    template<std::size_t Idx>
+    void interrupt_await_step()
+    {
+      using type = std::tuple_element_t<Idx, tuple_type>;
+      using t = std::conditional_t<std::is_reference_v<std::tuple_element_t<Idx, std::tuple<Args...>>>,
+          type &,
+          type &&>;
+
+      if constexpr (interruptible<t>)
+        if (this->cancel[Idx] != nullptr)
+          static_cast<t>(std::get<Idx>(aws)).interrupt_await();
+    }
+
+    void interrupt_await()
+    {
+      mp11::mp_for_each<mp11::mp_iota_c<sizeof...(Args)>>
+          ([&](auto idx)
+           {
+             interrupt_await_step<idx>();
+           });
+    }
+
 
     bool await_ready(){return std::find(ready.begin(), ready.end(), false) == ready.end();};
 
@@ -142,7 +177,13 @@ struct join_variadic_impl
     void await_suspend_step(
         executor exec, Aw && aw)
     {
-      if (error && interruptible[Idx])
+      using type= std::tuple_element_t<Idx, tuple_type>;
+      using t = std::conditional_t<
+          std::is_reference_v<std::tuple_element_t<Idx, std::tuple<Args...>>>,
+          type &,
+          type &&>;
+
+      if (error && interruptible<t>)
         return;
       if (!ready[Idx])
       {
@@ -260,9 +301,6 @@ struct join_ranged_impl
           system::result<result_type, std::exception_ptr>{system::in_place_error, std::exception_ptr()},
           alloc};
 
-    constexpr static bool interruptible =
-        std::is_lvalue_reference_v<Range> || is_interruptible_v<type>;
-
     std::exception_ptr error;
 
     awaitable(Range & aws_, std::false_type /* needs  operator co_await */)
@@ -299,13 +337,26 @@ struct join_ranged_impl
 
     void cancel_all()
     {
+      interrupt_await();
       for (auto & r : cancel)
-      {
-        if (r && interruptible)
-          r->emit(interrupt_await);
         if (r)
           std::exchange(r, nullptr)->emit(asio::cancellation_type::all);
+    }
+
+    void interrupt_await()
+    {
+      using t = std::conditional_t<std::is_reference_v<Range>,
+          co_awaitable_type<type> &,
+          co_awaitable_type<type> &&>;
+
+      if constexpr (interruptible<t>)
+      {
+        std::size_t idx = 0u;
+        for (auto & aw : aws)
+          if (cancel[idx])
+            static_cast<t>(aw).interrupt_await();
       }
+
     }
 
     bool await_ready(){return std::find(ready.begin(), ready.end(), false) == ready.end();};
@@ -394,14 +445,5 @@ struct join_ranged_impl
 
 }
 
-namespace boost::async
-{
-
-template<typename ... Args>
-struct is_interruptible<detail::join_variadic_impl<Args...>> : std::true_type {};
-template<typename Range>
-struct is_interruptible<detail::join_ranged_impl<Range>> : std::true_type {};
-
-}
 
 #endif //BOOST_ASYNC_DETAIL_JOIN_HPP

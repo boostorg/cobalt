@@ -155,7 +155,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 
       if constexpr (requires (Promise p) {p.get_cancellation_slot();})
         if ((cl = h.promise().get_cancellation_slot()).is_connected())
-          cl.emplace<forward_cancellation_with_interrupt>(self->cancel_signal, self);
+          cl.emplace<forward_cancellation>(self->cancel_signal);
 
       self->awaited_from.reset(h.address());
 
@@ -199,9 +199,17 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
             });
       return self->get_result();
     }
+
+    void interrupt_await() &
+    {
+      if (!self || !self->awaited_from)
+        return ;
+      self->exception = detached_exception();
+      std::coroutine_handle<void>::from_address(self->awaited_from.release()).resume();
+    }
   };
 
-  void interrupt_await()
+  void interrupt_await() &
   {
     exception = detached_exception();
     std::coroutine_handle<void>::from_address(awaited_from.release()).resume();
@@ -337,7 +345,7 @@ struct generator_promise
       return generator_receiver<Yield, Push>::terminator();
   }
 
-  void interrupt_await()
+  void interrupt_await() &
   {
     if (this->receiver)
     {
@@ -412,6 +420,7 @@ struct generator_yield_awaitable<Yield, void>
     BOOST_ASSERT(self->pushed_value);
     self->pushed_value = false;
   }
+
 };
 
 

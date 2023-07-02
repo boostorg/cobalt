@@ -17,12 +17,11 @@ namespace boost::async
 // in no apparent side effects and where the op can re-awaited.
 constexpr asio::cancellation_type interrupt_await{8u};
 
-// usable with interrupt_await
 template<typename Awaitable>
-struct is_interruptible : std::false_type {};
+concept interruptible =
+       ( std::is_rvalue_reference_v<Awaitable> && requires (Awaitable && t) {std::move(t).interrupt_await();})
+    || (!std::is_rvalue_reference_v<Awaitable> && requires (Awaitable t) {t.interrupt_await();});
 
-template<typename Awaitable>
-constexpr bool is_interruptible_v = is_interruptible<Awaitable>::value;
 
 }
 
@@ -37,40 +36,6 @@ struct forward_cancellation
   void operator()(asio::cancellation_type ct) const
   {
     cancel_signal.emit(ct);
-  }
-};
-
-struct forward_cancellation_with_interrupt
-{
-  asio::cancellation_signal &cancel_signal;
-  void *promise = nullptr;
-  void (*interrupt_await_)(void*) = nullptr;
-
-  template<typename Promise, void(Promise::*Pointer)()>
-  struct helper
-  {
-    static void function(void * ptr)
-    {
-      (static_cast<Promise*>(ptr)->*Pointer)();
-    }
-  };
-
-  forward_cancellation_with_interrupt(asio::cancellation_signal &cancel_signal) : cancel_signal(cancel_signal) {}
-
-  template<typename Promise>
-  forward_cancellation_with_interrupt(asio::cancellation_signal &cancel_signal,
-                                      Promise * promise)
-      : cancel_signal(cancel_signal), promise(promise),
-        interrupt_await_(helper<Promise, &Promise::interrupt_await>::function) {}
-
-  void operator()(asio::cancellation_type ct) const
-  {
-    if (ct == interrupt_await && promise)
-    {
-      interrupt_await_(promise);
-    }
-    else
-      cancel_signal.emit(ct);
   }
 };
 
