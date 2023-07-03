@@ -271,26 +271,37 @@ handler(std::optional<std::tuple<Args...>> &result) -> handler<Args...>;
 template<typename ... Args>
 struct completion_handler : detail::completion_handler_base
 {
-    completion_handler(completion_handler && ) = default;
+    completion_handler(completion_handler && lhs) noexcept
+      : detail::completion_handler_base(std::move(lhs)),
+      self(std::move(lhs.self)), result(lhs.result), this_(lhs.this_)
+    {
+      if (this_ && (&lhs == *this_))
+        *this_ = this;
+    }
 
     template<typename Promise>
     completion_handler(std::coroutine_handle<Promise> h,
                        std::optional<std::tuple<Args...>> &result,
-                       bool * completed_immediately = nullptr)
+                       bool * completed_immediately = nullptr,
+                       completion_handler ** this_ = nullptr)
             : completion_handler_base(h, completed_immediately),
-              self(h.address()), result(result)
-
+              self(h.address()), result(&result), this_(this_)
     {
+      if (this_)
+        *this_ =this;
     }
 
     template<typename Promise>
     completion_handler(std::coroutine_handle<Promise> h,
                        std::optional<std::tuple<Args...>> &result,
                        container::pmr::memory_resource * resource,
-                       bool * completed_immediately = nullptr)
+                       bool * completed_immediately = nullptr,
+                       completion_handler ** this_ = nullptr)
             : completion_handler_base(h, resource, completed_immediately),
-              self(h.address()), result(result)
+              self(h.address()), result(&result), this_(this_)
     {
+      if (this_)
+        *this_ =this;
     }
 
 
@@ -307,33 +318,39 @@ struct completion_handler : detail::completion_handler_base
     }
     void operator()(Args ... args)
     {
-        result.emplace(std::move(args)...);
-        BOOST_ASSERT(this->self != nullptr);
+        if (result)
+          result->emplace(std::move(args)...);
         auto p = this->self.release();
-        if (completed_immediately != nullptr && *completed_immediately)
+        if (!p || (completed_immediately != nullptr && *completed_immediately))
           return;
-        std::coroutine_handle<void>::from_address(p).resume();
+        if (p)
+          std::coroutine_handle<void>::from_address(p).resume();
     }
+
     using result_type = std::optional<std::tuple<Args...>>;
- private:
     std::unique_ptr<void, detail::coro_deleter<void>> self;
-    std::optional<std::tuple<Args...>> &result;
+    std::optional<std::tuple<Args...>> *result = nullptr;
+ private:
+    completion_handler ** this_ = nullptr;
 };
 
 
 
-inline void interpret_result(std::tuple<> && args)
+inline void interpret_result(std::tuple<> && args,
+                             const boost::source_location & loc = BOOST_CURRENT_LOCATION)
 {
 }
 
 template<typename ... Args>
-auto interpret_result(std::tuple<Args...> && args)
+auto interpret_result(std::tuple<Args...> && args,
+                      const boost::source_location & loc = BOOST_CURRENT_LOCATION)
 {
     return std::move(args);
 }
 
 template<typename ... Args>
-auto interpret_result(std::tuple<std::exception_ptr, Args...> && args)
+auto interpret_result(std::tuple<std::exception_ptr, Args...> && args,
+                      const boost::source_location & loc = BOOST_CURRENT_LOCATION)
 {
     if (std::get<0>(args))
         std::rethrow_exception(std::get<0>(args));
@@ -341,45 +358,51 @@ auto interpret_result(std::tuple<std::exception_ptr, Args...> && args)
 }
 
 template<typename ... Args>
-auto interpret_result(std::tuple<system::error_code, Args...> && args)
+auto interpret_result(std::tuple<system::error_code, Args...> && args,
+                      const boost::source_location & loc = BOOST_CURRENT_LOCATION)
 {
     if (std::get<0>(args))
-        throw system::system_error(std::get<0>(args));
+         boost::throw_exception(system::system_error(std::get<0>(args)), loc);
     return std::apply([](auto first, auto && ... rest) {return std::make_tuple(std::move(rest)...);});
 }
 
 template<typename  Arg>
-auto interpret_result(std::tuple<Arg> && args)
+auto interpret_result(std::tuple<Arg> && args,
+                      const boost::source_location & loc = BOOST_CURRENT_LOCATION)
 {
     return std::get<0>(std::move(args));
 }
 
 template<typename Arg>
-auto interpret_result(std::tuple<std::exception_ptr, Arg> && args)
+auto interpret_result(std::tuple<std::exception_ptr, Arg> && args,
+                      const boost::source_location & loc = BOOST_CURRENT_LOCATION)
 {
     if (std::get<0>(args))
         std::rethrow_exception(std::get<0>(args));
     return std::get<1>(std::move(args));
 }
 
-inline auto interpret_result(std::tuple<system::error_code> && args)
+inline auto interpret_result(std::tuple<system::error_code> && args,
+                             const boost::source_location & loc = BOOST_CURRENT_LOCATION)
 {
     if (std::get<0>(args))
-        throw system::system_error(std::get<0>(args));
+      boost::throw_exception(system::system_error(std::get<0>(args)), loc);
 }
 
 
-inline auto interpret_result(std::tuple<std::exception_ptr> && args)
+inline auto interpret_result(std::tuple<std::exception_ptr> && args,
+                             const boost::source_location & loc = BOOST_CURRENT_LOCATION)
 {
     if (std::get<0>(args))
         std::rethrow_exception(std::get<0>(args));
 }
 
 template<typename Arg>
-auto interpret_result(std::tuple<system::error_code, Arg> && args)
+auto interpret_result(std::tuple<system::error_code, Arg> && args,
+                      const boost::source_location & loc = BOOST_CURRENT_LOCATION)
 {
     if (std::get<0>(args))
-        throw system::system_error(std::get<0>(args));
+        boost::throw_exception(system::system_error(std::get<0>(args)), loc);
     return std::get<1>(std::move(args));
 }
 

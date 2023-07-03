@@ -40,4 +40,10 @@ std::exception_ptr already_awaited()
     return ep;
 }
 
+void throw_already_awaited(const boost::source_location & loc)
+{
+  throw_exception(std::runtime_error("already-awaited"), loc);
+}
+
+
 }

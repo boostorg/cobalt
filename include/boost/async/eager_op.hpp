@@ -5,63 +5,55 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_ASYNC_OP_HPP
-#define BOOST_ASYNC_OP_HPP
+#ifndef BOOST_ASYNC_EAGER_OP_HPP
+#define BOOST_ASYNC_EAGER_OP_HPP
 
 #include <boost/async/detail/handler.hpp>
+#include <boost/async/detail/exception.hpp>
 
 #include <boost/container/pmr/monotonic_buffer_resource.hpp>
 
 namespace boost::async
 {
 
-
 template<typename ... Args>
-struct op
+struct eager_op
 {
-  virtual void ready(async::handler<Args...> h) {};
   virtual void initiate(async::completion_handler<Args...> complete) = 0 ;
-  virtual ~op() = default;
+  virtual ~eager_op() = default;
 
   struct awaitable
   {
-    op<Args...> &op_;
+    eager_op<Args...> &eager_op_;
     std::exception_ptr error;
     std::optional<std::tuple<Args...>> result;
+    async::completion_handler<Args...> *completion;
 
-    awaitable(op<Args...> * op_) : op_(*op_) {}
+    awaitable(eager_op<Args...> * eager_op_) : eager_op_(*eager_op_) {}
     awaitable(awaitable && lhs)
-        : op_(lhs.op_)
+        : eager_op_(lhs.eager_op_)
         , error(std::move(lhs.error))
         , result(std::move(lhs.result))
+        , completion(lhs.completion)
     {
-      BOOST_ASSERT(!lhs.resource);
+      if (completion)
+          completion->result = & result;
     }
 
-    bool await_ready()
+    bool await_ready(const boost::source_location & loc = BOOST_CURRENT_LOCATION)
     {
-      op_.ready(handler<Args...>(result));
+      if (!completion && !result.has_value())
+        detail::throw_already_awaited(loc);
       return result.has_value();
     }
-
-    char buffer[2048];
-    std::optional<container::pmr::monotonic_buffer_resource> resource;
     bool completed_immediately = false;
+
     template<typename Promise>
-    bool await_suspend(std::coroutine_handle<Promise> h)
+    void await_suspend(std::coroutine_handle<Promise> h)
     {
-      try
-      {
-        auto & res = resource.emplace(buffer, sizeof(buffer),
-                                      asio::get_associated_allocator(h.promise(), this_thread::get_allocator()).resource());
-        op_.initiate(completion_handler<Args...>{h, result, &res, &completed_immediately});
-        return !completed_immediately;
-      }
-      catch(...)
-      {
-        error = std::current_exception();
-        return false;
-      }
+      BOOST_ASSERT(completion);
+      completion->self.reset(h.address());
+      completion->cancellation_slot = asio::get_associated_cancellation_slot(h.promise());
     }
 
     auto await_resume(const boost::source_location & loc = BOOST_CURRENT_LOCATION)
@@ -71,19 +63,55 @@ struct op
       return interpret_result(*std::move(result), loc);
     }
 
+    void launch()
+    {
+      eager_op_.initiate(
+          completion_handler<Args...>(
+            std::noop_coroutine(),
+            result,
+            this_thread::get_allocator().resource(),
+            &completed_immediately,
+            &completion));
+    }
+
+    void interrupt_await()
+    {
+      if (completion && !result)
+      {
+        completion->result = nullptr;
+        completion->completed_immediately = nullptr;
+        fill_result_(mp11::mp_list<Args...>{});
+        std::coroutine_handle<void>::from_address(completion->self.release()).resume();
+      }
+    }
+   private:
+
+    void fill_result_(mp11::mp_list<>) {result.emplace();}
+    template<typename ...Args_>
+    void fill_result_(mp11::mp_list<system::error_code, Args_...>)
+    {
+      result.emplace(asio::error::interrupted, Args_()...);
+    }
+    template<typename ...Args_>
+    void fill_result_(mp11::mp_list<std::exception_ptr, Args_...>)
+    {
+      result.emplace(detail::detached_exception(), Args_()...);
+    }
 
   };
 
   awaitable operator co_await()
   {
-    return awaitable{this};
+    auto res =  awaitable{this};
+    res.launch();
+    return res;
   }
 };
 
-struct use_op_t
+struct use_eager_op_t
 {
   /// Default constructor.
-  constexpr use_op_t()
+  constexpr use_eager_op_t()
   {
   }
 
@@ -93,7 +121,7 @@ struct use_op_t
   struct executor_with_default : InnerExecutor
   {
     /// Specify @c deferred_t as the default completion token type.
-    typedef use_op_t default_completion_token_type;
+    typedef use_eager_op_t default_completion_token_type;
 
     executor_with_default(const InnerExecutor& ex) BOOST_ASIO_NOEXCEPT
         : InnerExecutor(ex)
@@ -135,7 +163,7 @@ struct use_op_t
 
 };
 
-constexpr use_op_t use_op{};
+constexpr use_eager_op_t use_eager_op{};
 
 }
 
@@ -143,15 +171,15 @@ namespace boost::asio
 {
 
 template<typename ... Args>
-struct async_result<boost::async::use_op_t, void(Args...)>
+struct async_result<boost::async::use_eager_op_t, void(Args...)>
 {
   template <typename Initiation, typename... InitArgs>
-  struct op_impl : boost::async::op<Args...>
+  struct eager_op_impl : boost::async::eager_op<Args...>
   {
     Initiation initiation;
     std::tuple<InitArgs...> args;
     template<typename Initiation_, typename ...InitArgs_>
-    op_impl(Initiation_ && initiation,
+    eager_op_impl(Initiation_ && initiation,
             InitArgs_   && ... args)
             : initiation(std::forward<Initiation_>(initiation))
             , args(std::forward<InitArgs_>(args)...) {}
@@ -169,14 +197,14 @@ struct async_result<boost::async::use_op_t, void(Args...)>
 
   template <typename Initiation, typename... InitArgs>
   static auto initiate(Initiation && initiation,
-                       boost::async::use_op_t,
+                       boost::async::use_eager_op_t,
                        InitArgs &&... args)
-      -> op_impl<Initiation, InitArgs...>
+      -> eager_op_impl<Initiation, InitArgs...>
   {
-    return op_impl<Initiation, InitArgs...>(
+    return eager_op_impl<Initiation, InitArgs...>(
         std::forward<Initiation>(initiation),
         std::forward<InitArgs>(args)...);
   }
 };
 }
-#endif //BOOST_ASYNC_OP_HPP
+#endif //BOOST_ASYNC_EAGER_OP_HPP

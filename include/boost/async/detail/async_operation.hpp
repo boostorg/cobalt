@@ -49,9 +49,9 @@ struct awaitable_async_operation<void(Args...), Op>
         }
     }
 
-    [[nodiscard]] auto await_resume()
+    [[nodiscard]] auto await_resume(const boost::source_location & loc = BOOST_CURRENT_LOCATION)
     {
-        return interpret_result(std::move(result.value()));
+        return interpret_result(std::move(result.value()), loc);
     }
 };
 

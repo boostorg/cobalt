@@ -7,7 +7,8 @@ add_executable(boost_async_main         main.cpp)
 add_executable(boost_async_main_compile main_compile.cpp)
 add_executable(boost_async_basic_tests
       async_for.cpp doctest.cpp promise.cpp with.cpp op.cpp handler.cpp join.cpp select.cpp this_coro.cpp leaf.cpp
-      channel.cpp generator.cpp run.cpp task.cpp gather.cpp wait_group.cpp wrappers.cpp async_for.cpp)
+      channel.cpp generator.cpp run.cpp task.cpp gather.cpp wait_group.cpp wrappers.cpp async_for.cpp
+      eager_op.cpp)
 
 target_link_libraries(boost_async_main         Boost::container Boost::async OpenSSL::SSL)
 target_link_libraries(boost_async_main_compile Boost::container Boost::async OpenSSL::SSL)
