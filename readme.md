@@ -196,7 +196,7 @@ To make writing asio operations that have an early completion easier, async has 
 
 ```cpp
 template<typename Timer>
-struct wait_op : async::enable_op<test_wait_op_2<Timer>> // enable_op is to use ADL
+struct wait_op : async::op<system::error_code> // enable_op is to use ADL
 {
   Timer & tim;
 

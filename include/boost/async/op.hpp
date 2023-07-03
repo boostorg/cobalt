@@ -8,28 +8,75 @@
 #ifndef BOOST_ASYNC_OP_HPP
 #define BOOST_ASYNC_OP_HPP
 
-#include <boost/async/detail/op.hpp>
+#include <boost/async/detail/handler.hpp>
+
+#include <boost/container/pmr/monotonic_buffer_resource.hpp>
 
 namespace boost::async
 {
 
-template<typename T, auto = &T::initiate>
-auto operator co_await(T && t) -> detail::deferred_op<std::decay_t<T>>
-{
-  return detail::deferred_op<T>{std::forward<T>(t)};
-}
 
-template<typename T>
-struct enable_op
+template<typename ... Args>
+struct op
 {
-  auto operator co_await() && -> detail::deferred_op<std::decay_t<T>>
-  {
-    return detail::deferred_op<T>{std::move(*static_cast<T*>(this))};
-  }
+  virtual void ready(async::handler<Args...> h) {};
+  virtual void initiate(async::completion_handler<Args...> complete) = 0 ;
+  virtual ~op() = default;
 
-  auto operator co_await() & -> detail::deferred_op<std::decay_t<T>>
+  struct awaitable
   {
-    return detail::deferred_op<T>{*static_cast<T*>(this)};
+    op<Args...> &op_;
+    std::exception_ptr error;
+    std::optional<std::tuple<Args...>> result;
+
+    awaitable(op<Args...> * op_) : op_(*op_) {}
+    awaitable(awaitable && lhs)
+        : op_(lhs.op_)
+        , error(std::move(lhs.error))
+        , result(std::move(lhs.result))
+    {
+      BOOST_ASSERT(!lhs.resource);
+    }
+
+    bool await_ready()
+    {
+      op_.ready(handler<Args...>(result));
+      return result.has_value();
+    }
+
+    char buffer[2048];
+    std::optional<container::pmr::monotonic_buffer_resource> resource;
+    bool completed_immediately = false;
+    template<typename Promise>
+    bool await_suspend(std::coroutine_handle<Promise> h)
+    {
+      try
+      {
+        auto & res = resource.emplace(buffer, sizeof(buffer),
+                                      asio::get_associated_allocator(h.promise(), this_thread::get_allocator()).resource());
+        op_.initiate(completion_handler<Args...>{h, result, &res, &completed_immediately});
+        return !completed_immediately;
+      }
+      catch(...)
+      {
+        error = std::current_exception();
+        return false;
+      }
+    }
+
+    auto await_resume()
+    {
+      if (error)
+        std::rethrow_exception(std::exchange(error, nullptr));
+      return interpret_result(*std::move(result));
+    }
+
+
+  };
+
+  awaitable operator co_await() &&
+  {
+    return awaitable{this};
   }
 };
 
@@ -99,17 +146,23 @@ template<typename ... Args>
 struct async_result<boost::async::use_op_t, void(Args...)>
 {
   template <typename Initiation, typename... InitArgs>
-  struct op_impl
+  struct op_impl : boost::async::op<Args...>
   {
     Initiation initiation;
     std::tuple<InitArgs...> args;
+    template<typename Initiation_, typename ...InitArgs_>
+    op_impl(Initiation_ && initiation,
+            InitArgs_   && ... args)
+            : initiation(std::forward<Initiation_>(initiation))
+            , args(std::forward<InitArgs_>(args)...) {}
 
-    void initiate(async::completion_handler<Args...> complete)
+    void initiate(async::completion_handler<Args...> complete) override
     {
       std::apply(
           [&](InitArgs && ... args)
           {
-            std::move(initiation)(std::move(complete), std::forward<InitArgs>(args)...);
+            std::move(initiation)(std::move(complete),
+                                  std::forward<InitArgs>(args)...);
           }, std::move(args));
     }
   };
@@ -118,17 +171,12 @@ struct async_result<boost::async::use_op_t, void(Args...)>
   static auto initiate(Initiation && initiation,
                        boost::async::use_op_t,
                        InitArgs &&... args)
-      -> boost::async::detail::deferred_op<op_impl<Initiation, std::decay_t<InitArgs>...>>
+      -> op_impl<Initiation, InitArgs...>
   {
-    return
-      boost::async::detail::deferred_op<op_impl<Initiation, std::decay_t<InitArgs>...>>
-        ({
-          std::forward<Initiation>(initiation),
-          {std::forward<InitArgs>(args)...}
-        });
+    return op_impl<Initiation, InitArgs...>(
+        std::forward<Initiation>(initiation),
+        std::forward<InitArgs>(args)...);
   }
 };
-
 }
-
 #endif //BOOST_ASYNC_OP_HPP

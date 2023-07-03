@@ -83,15 +83,16 @@ We can for example create a `wait_op` that does nothing if the timer is already 
 
 [source,cpp]
 ----
-struct wait_op : async::enable_op<wait_op> // <1>
+struct wait_op : async::op<system::error_code> // <1>
 {
   asio::steady_timer & tim;
 
   wait_op(asio::steady_timer & tim) : tim(tim) {}
 
-  bool ready(system::error_code & ) // <2>
+  bool ready(async::handler<system::error_code> ) // <2>
   {
-    return tim.expiry() < std::chrono::steady_clock::now();
+    if (tim.expiry() < std::chrono::steady_clock::now())
+        h(system::error_code{});
   }
   void initiate(async::completion_handler<system::error_code> complete) // <3>
   {
@@ -99,20 +100,6 @@ struct wait_op : async::enable_op<wait_op> // <1>
   }
 };
 ----
-<1> Inherit `enable_op` for ADL purposes, so `await_transform` picks it up
+<1> Inherit `op` with the matching signature `await_transform` picks it up
 <2> Check if the operation is ready - called from `await_ready`
 <3> Initiate the async operation if it's not ready.
-
-Alternatively, the `ready` function can take a `handler` argument like this:
-
-[source,cpp]
-----
-  void ready(async::handler<system::error_code> h)
-  {
-    if (tim.expiry() < std::chrono::steady_clock::now())
-      h(system::error_code(asio::error::operation_aborted));
-  }
-----
-
-This can be useful to deliver error or other operations that have more complex completion signatures,
-e.g. for channels.
