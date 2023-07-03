@@ -10,7 +10,7 @@
 using namespace boost;
 
 // tag::timer_example[]
-struct wait_op : async::enable_op<wait_op> // <1>
+struct wait_op : async::op<system::error_code> // <1>
 {
   asio::steady_timer & tim;
   wait_op(asio::steady_timer & tim) : tim(tim) {}
