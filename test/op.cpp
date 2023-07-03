@@ -21,13 +21,17 @@ using namespace boost;
 TEST_SUITE_BEGIN("op");
 
 template<typename Timer>
-struct test_wait_op : async::enable_op<test_wait_op<Timer>>
+struct test_wait_op : async::op<system::error_code>
 {
   Timer & tim;
 
   test_wait_op(Timer & tim) : tim(tim) {}
 
-  bool ready(system::error_code & ) { return tim.expiry() < Timer::clock_type::now(); }
+  void ready(async::handler<system::error_code> h)
+  {
+    if (tim.expiry() < Timer::clock_type::now())
+      h({});
+  }
   void initiate(async::completion_handler<system::error_code> complete)
   {
     tim.async_wait(std::move(complete));
@@ -35,7 +39,7 @@ struct test_wait_op : async::enable_op<test_wait_op<Timer>>
 };
 
 template<typename Timer>
-struct test_wait_op_2 : async::enable_op<test_wait_op_2<Timer>>
+struct test_wait_op_2 : async::op<system::error_code>
 {
   Timer & tim;
 
@@ -53,7 +57,7 @@ struct test_wait_op_2 : async::enable_op<test_wait_op_2<Timer>>
 };
 
 
-struct post_op : async::enable_op<post_op>
+struct post_op : async::op<>
 {
   asio::any_io_executor exec;
 
@@ -100,7 +104,7 @@ TEST_CASE("op-throw")
   CHECK_THROWS(ctx.run());
 }
 
-struct throw_op : async::enable_op<throw_op>
+struct throw_op : async::op<std::exception_ptr>
 {
   asio::any_io_executor exec;
 
@@ -118,7 +122,7 @@ CO_TEST_CASE("exception-op")
   CHECK_THROWS(co_await throw_op(co_await asio::this_coro::executor));
 }
 
-struct initiate_op : async::enable_op<initiate_op>
+struct initiate_op : async::op<>
 {
   asio::any_io_executor exec;
 

@@ -43,7 +43,7 @@ To leverage the coroutine properties, `async` provides an easy way to create a s
 ----
 include::../../example/delay_op.cpp[tag=timer_example]
 ----
-<1> Declare the op. We inherit `enable_op` to opt into ADL
+<1> Declare the op. We inherit `op` to make it awaitable.
 <2> The pre-suspend check is implemented here
 <3> Do the wait if we need to
 <4> Use the <<op, op>> just like any other awaitable.
