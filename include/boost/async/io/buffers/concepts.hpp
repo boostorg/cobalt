@@ -87,11 +87,15 @@ struct is_dynamic_buffer
 
 template<typename T>
 concept dynamic_buffer =
+    requires (const T & buf, std::size_t n)
+    {
+      { buf.size() }     -> std::same_as<std::size_t>;
+      { buf.max_size() } -> std::same_as<std::size_t>;
+      { buf.capacity() } -> std::same_as<std::size_t>;
+    } &&
     requires (T & buf, std::size_t n)
     {
-      {buf.size()}     -> std::same_as<std::size_t>;
-      {buf.max_size()} -> std::same_as<std::size_t>;
-      {buf.capacity()} -> std::same_as<std::size_t>;
+
       {buf.commit(n)};
       {buf.consume(n)};
       {buf.data()}    ->   const_buffer_sequence;

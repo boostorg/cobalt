@@ -66,6 +66,12 @@ public:
       requires std::is_trivial_v<T>
     mutable_buffer(T (&arr)[N]) : mutable_buffer(&arr[0], sizeof(T) * N) {}
 
+    /** Constructor for arrays */
+    template<typename T>
+      requires std::is_trivial_v<T>
+    mutable_buffer(std::pair<T*, std::size_t> p) : mutable_buffer(p.first, sizeof(T) * p.second) {}
+
+
     /** Assignment.
     */
     mutable_buffer& operator=(

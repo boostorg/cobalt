@@ -25,6 +25,7 @@ template<
     buffer_byte CharT,
     class Traits = std::char_traits<CharT>,
     class Allocator = std::allocator<CharT>>
+        requires (sizeof(CharT) == 1u)
 class basic_string_buffer
 {
     std::basic_string<
