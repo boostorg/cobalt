@@ -59,7 +59,13 @@ public:
       requires std::is_trivial_v<T>
     const_buffer(const T (&arr)[N]) : const_buffer(&arr[0], sizeof(T) * N) {}
 
-    /** Constructor.
+    /** Constructor for arrays */
+    template<typename T>
+    requires std::is_trivial_v<T>
+    const_buffer(std::pair<const T*, std::size_t> p) : const_buffer(p.first, sizeof(T) * p.second) {}
+
+
+  /** Constructor.
     */
     const_buffer(
         const_buffer const&) = default;

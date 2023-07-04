@@ -22,6 +22,7 @@ set(PFILES
     const_buffer_pair.cpp
     const_buffer_span.cpp
     const_buffer_subspan.cpp
+    dynamic_buffer_view.cpp
     flat_buffer.cpp
     mutable_buffer.cpp
     mutable_buffer_pair.cpp
