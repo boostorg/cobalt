@@ -10,7 +10,7 @@
 
 #include <boost/async/io/stream.hpp>
 #include <boost/async/promise.hpp>
-#include <boost/async/io/buffers/any_dynamic_buffer.hpp>
+#include <boost/async/io/buffers/dynamic_buffer_view.hpp>
 
 namespace boost::async::io
 {
@@ -19,18 +19,8 @@ BOOST_ASYNC_DECL promise<std::pair<transfer_result, transfer_result>>
 copy_n(stream & source, stream & sink, std::size_t n);
 
 BOOST_ASYNC_DECL promise<std::pair<transfer_result, transfer_result>>
-copy_n(stream & source, stream & sink, buffers::any_dynamic_buffer & buffer,
+copy_n(stream & source, stream & sink, buffers::dynamic_buffer_view buffer,
        std::size_t n, std::size_t chunk_size = 4096);
-
-
-template<buffers::dynamic_buffer DynamicBuffer>
-promise<transfer_result> copy_n(stream & source, stream & sink, DynamicBuffer & buffer,
-                                std::size_t n, std::size_t chunk_size = 4096)
-{
-  auto any = buffers::make_any(buffer);
-  buffers::any_dynamic_buffer & ab = any;
-  co_return co_await copy_n(source, sink,  ab, n, chunk_size);
-}
 
 }
 

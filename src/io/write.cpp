@@ -13,13 +13,12 @@ namespace boost::async::io
 
 promise<transfer_result> write(stream & source, buffers::const_buffer buffer)
 {
-  transfer_result tr;
+  transfer_result tr{};
 
   do
   {
     auto rd = co_await source.write_some(buffer);
-    tr.transferred += rd.transferred;
-    tr.error = rd.error;
+    tr += rd;
     buffer += rd.transferred;
   }
   while (buffer.size() > 0 && !tr.has_error());

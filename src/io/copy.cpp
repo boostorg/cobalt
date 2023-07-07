@@ -24,6 +24,7 @@ copy(stream & source, stream & sink)
                   w = {};
 
   buf.commit(r.transferred);
+  printf("Copy 1 %ld/%ld ==> \n", r.transferred, w.transferred, 1024 * 1024);
 
   while (!r.has_error() && !w.has_error())
   {
@@ -40,18 +41,17 @@ copy(stream & source, stream & sink)
   // remaining readable stuff
   while (r.has_error() && !w.has_error() && buffers::buffer_size(buf.data()) > 0u)
   {
-    assert(false);
     auto w2 = co_await sink.write_some(buffers::const_buffer_span(buf.data()));
     buf.consume(w2.transferred);
     w.transferred = w2.transferred;
     w.error       = w2.error;
   }
-
+  printf("Copy %ld/%ld ==> \n", r.transferred, w.transferred, 1024 * 1024);
   co_return {r, w};
 }
 
 promise<std::pair<transfer_result, transfer_result>>
-copy(stream & source, stream & sink, buffers::any_dynamic_buffer & buf, std::size_t chunk_size)
+copy(stream & source, stream & sink, buffers::dynamic_buffer_view buf, std::size_t chunk_size)
 {
   transfer_result r = co_await source.read_some(buffers::mutable_buffer_span(buf.prepare(chunk_size))),
       w = {};
@@ -73,12 +73,12 @@ copy(stream & source, stream & sink, buffers::any_dynamic_buffer & buf, std::siz
   // remaining readable stuff
   while (r.has_error() && !w.has_error() && buffers::buffer_size(buf.data()) > 0u)
   {
-    assert(false);
     auto w2 = co_await sink.write_some(buffers::const_buffer_span(buf.data()));
     buf.consume(w2.transferred);
     w.transferred = w2.transferred;
     w.error       = w2.error;
   }
+  printf("Copy %ld/%ld\n", r.transferred, w.transferred);
   co_return {r, w};
 }
 

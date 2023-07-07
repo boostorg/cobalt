@@ -17,18 +17,18 @@
 namespace boost::async::io
 {
 
-promise<transfer_result> read_all(stream & source, buffers::any_dynamic_buffer & buffer, std::size_t chunk_size)
+promise<transfer_result> read_all(stream & source, buffers::dynamic_buffer_view buffer, std::size_t chunk_size)
 {
   transfer_result tr;
 
   do
   {
-    auto rd = co_await source.read_some(buffer.prepare(chunk_size));
+    auto rd = co_await source.read_some(buffer.prepare((std::min)(chunk_size, buffer.max_size() - buffer.size())));
     tr.transferred += rd.transferred;
     tr.error = rd.error;
     buffer.commit(rd.transferred);
   }
-  while (buffer.size() >= 0 && !tr.has_error());
+  while (buffer.max_size() > buffer.size() && !tr.has_error());
   co_return tr;
 }
 

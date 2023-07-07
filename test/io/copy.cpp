@@ -20,9 +20,10 @@
 
 using namespace boost::async;
 
-promise<void> do_write__(io::stream & str, std::string & input )
+promise<void> do_write__(io::stream & str, const std::string & input )
 {
-  boost::ignore_unused(co_await io::write(str, {input.data(), input.size()}));
+  auto w = co_await io::write(str, input);
+  CHECK(w.transferred == input.size());
   str.close().value();
 };
 
@@ -53,12 +54,12 @@ CO_TEST_CASE("copy")
   auto p = do_write__(w, input);
   auto c = do_copy(ri, wi);
   std::string output;
-  auto res = co_await io::read_all(r, io::buffers::string_buffer(&output));
+  auto res = co_await io::read_all(r, output);
 
   CHECK(res.transferred == output.size());
   CHECK(res.transferred == input.size());
 
-  CHECK(std::equal(output.begin(), output.end(), input.begin()));
+  CHECK(std::equal(output.begin(), std::next(output.begin(), res.transferred), input.begin()));
 
   CHECK(!r.close().has_error());
   co_await p;

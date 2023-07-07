@@ -52,7 +52,7 @@ copy_n(stream & source, stream & sink, std::size_t n)
 }
 
 promise<std::pair<transfer_result, transfer_result>>
-copy_n(stream & source, stream & sink, buffers::any_dynamic_buffer & buf,
+copy_n(stream & source, stream & sink, buffers::dynamic_buffer_view buf,
        std::size_t n, std::size_t chunk_size)
 {
   transfer_result r = co_await source.read_some(buffers::mutable_buffer_span(buf.prepare(chunk_size))),

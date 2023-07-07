@@ -17,7 +17,7 @@
 namespace boost::async::io
 {
 
-promise<transfer_result> read_until(stream & source, buffers::any_dynamic_buffer & buffer,
+promise<transfer_result> read_until(stream & source, buffers::dynamic_buffer_view buffer,
                                     char delim, std::size_t chunk_size)
 {
   transfer_result tr{};
@@ -25,7 +25,7 @@ promise<transfer_result> read_until(stream & source, buffers::any_dynamic_buffer
   bool matched = false;
   do
   {
-    auto buf = buffer.prepare(chunk_size);
+    auto buf = buffer.prepare((std::min)(chunk_size, buffer.max_size() - buffer.size()));
     auto rd = co_await source.read_some(buf);
 
     auto begin = asio::buffers_begin(buf);
@@ -39,7 +39,7 @@ promise<transfer_result> read_until(stream & source, buffers::any_dynamic_buffer
   co_return tr;
 }
 
-promise<transfer_result> read_until(stream & source, buffers::any_dynamic_buffer & buffer,
+promise<transfer_result> read_until(stream & source, buffers::dynamic_buffer_view buffer,
                                     core::string_view delim, std::size_t chunk_size)
 {
   transfer_result tr;
@@ -51,7 +51,7 @@ promise<transfer_result> read_until(stream & source, buffers::any_dynamic_buffer
   bool matched = false;
   do
   {
-    auto buf = buffer.prepare(chunk_size);
+    auto buf = buffer.prepare((std::min)(chunk_size, buffer.max_size() - buffer.size()));
     auto rd = co_await source.read_some(buf);
     tr.transferred += rd.transferred;
     tr.error = rd.error;
@@ -63,7 +63,7 @@ promise<transfer_result> read_until(stream & source, buffers::any_dynamic_buffer
     auto itr = std::search(begin, end, delim.begin(), delim.end());
     matched = (itr != end);
   }
-  while (buffer.size() > 0 && !tr.has_error() && !matched);
+  while (buffer.max_size() >=  buffer.size() && !tr.has_error() && !matched);
   co_return tr;
 }
 

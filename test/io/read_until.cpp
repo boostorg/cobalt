@@ -42,7 +42,7 @@ CO_TEST_CASE("read_until char")
 
 
     std::string output;
-    auto res = co_await io::read_until(r, io::buffers::string_buffer(&output), '\n');
+    auto res = co_await io::read_until(r, output, '\n');
 
     CHECK(res.transferred >= 4242);
     CHECK(res.transferred <  10000);
@@ -75,7 +75,7 @@ CO_TEST_CASE("read_until string")
 
 
   std::string output;
-  auto res = co_await io::read_until(r, io::buffers::string_buffer(&output), "\r\n");
+  auto res = co_await io::read_until(r, output, "\r\n");
 
   CHECK(res.transferred >= 8001);
   CHECK(res.transferred <  16000);

@@ -10,24 +10,15 @@
 
 #include <boost/async/promise.hpp>
 #include <boost/async/io/stream.hpp>
-#include <boost/async/io/buffers/any_dynamic_buffer.hpp>
+#include <boost/async/io/buffers/dynamic_buffer_view.hpp>
 #include <boost/core/detail/string_view.hpp>
 #include <boost/container/pmr/vector.hpp>
 
 namespace boost::async::io
 {
 
-BOOST_ASYNC_DECL promise<transfer_result> read_all(stream & source, buffers::any_dynamic_buffer & buffer,
+BOOST_ASYNC_DECL promise<transfer_result> read_all(stream & source, buffers::dynamic_buffer_view buffer,
                                                    std::size_t chunk_size = 4096);
-
-template<buffers::dynamic_buffer DynamicBuffer>
-promise<transfer_result> read_all(stream & source, DynamicBuffer &&buffer, std::size_t chunk_size = 4096)
-{
-  auto any = buffers::make_any(std::forward<DynamicBuffer>(buffer));
-  buffers::any_dynamic_buffer & ab = any;
-  co_return co_await read_all(source, ab, chunk_size);
-}
-
 
 }
 

@@ -10,8 +10,8 @@
 
 #include <boost/async/promise.hpp>
 #include <boost/async/io/stream.hpp>
-#include <boost/async/io/buffers/any_dynamic_buffer.hpp>
 #include <boost/async/io/buffers/mutable_buffer_span.hpp>
+#include <boost/async/io/buffers/range.hpp>
 #include <boost/container/pmr/vector.hpp>
 
 namespace boost::async::io
@@ -20,8 +20,6 @@ namespace boost::async::io
 BOOST_ASYNC_DECL promise<transfer_result> read(stream & source, buffers::mutable_buffer buffer);
 BOOST_ASYNC_DECL promise<transfer_result> read(stream & source, buffers::mutable_buffer_span buffer);
 BOOST_ASYNC_DECL promise<transfer_result> read(stream & source, buffers::mutable_buffer_subspan buffer);
-BOOST_ASYNC_DECL promise<transfer_result> read(stream & source, buffers::any_dynamic_buffer & buffer,
-                                               std::size_t chunk_size = 4096);
 
 template<buffers::mutable_buffer_sequence MutableBufferSequence>
   requires (!std::convertible_to<buffers::mutable_buffer_span, MutableBufferSequence>)
