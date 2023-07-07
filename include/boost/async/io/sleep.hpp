@@ -49,9 +49,9 @@ namespace boost::async::io
 
 
 // NOTE: these don't need to be coros, we can optimize that out. Not sure that's worth it though
-BOOST_ASYNC_DECL detail::io::steady_sleep sleep(const std::chrono::steady_clock::duration & d) { return d;}
-BOOST_ASYNC_DECL detail::io::steady_sleep sleep(const std::chrono::steady_clock::time_point & tp) { return tp;}
-BOOST_ASYNC_DECL detail::io::system_sleep sleep(const std::chrono::system_clock::time_point & tp) { return tp;}
+inline detail::io::steady_sleep sleep(const std::chrono::steady_clock::duration & d) { return d;}
+inline detail::io::steady_sleep sleep(const std::chrono::steady_clock::time_point & tp) { return tp;}
+inline detail::io::system_sleep sleep(const std::chrono::system_clock::time_point & tp) { return tp;}
 
 template<typename Duration>
 detail::io::steady_sleep sleep(const std::chrono::time_point<std::chrono::steady_clock, Duration> & tp)

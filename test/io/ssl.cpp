@@ -10,22 +10,23 @@
 #include "../test.hpp"
 
 #include <boost/async/io/resolver.hpp>
+#include <boost/async/io/sleep.hpp>
 #include <boost/asio.hpp>
 
 CO_TEST_CASE("ssl")
 {
   using namespace boost;
-
+  asio::ssl::context ctx{asio::ssl::context_base::tlsv13_client};
   auto t = (co_await async::io::lookup("boost.org", "https")).value();
   REQUIRE(!t.empty());
 
-  async::io::ssl_stream ss{};
+  async::io::ssl_stream ss{ctx};
 
   auto conn = co_await ss.connect(t.front());
   CHECK_MESSAGE(conn, conn.error().message());
 
-  CHECK(co_await ss.async_handshake(async::io::ssl_stream::handshake_type::client)
-        == system::in_place_value);
+  CHECK_NOTHROW(co_await ss.async_handshake(async::io::ssl_stream::handshake_type::client).value());
+  co_await ss;
 
   CHECK_NOTHROW(co_await ss.async_shutdown());
 }
