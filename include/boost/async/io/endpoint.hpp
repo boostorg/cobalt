@@ -31,6 +31,12 @@ namespace boost::async::io
 struct endpoint;
 struct stream_socket;
 
+
+#if __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsubobject-linkage"
+#endif
+
 struct protocol_type
 {
   using family_t   = decltype(BOOST_ASIO_OS_DEF(AF_INET));
@@ -62,7 +68,7 @@ struct protocol_type
   friend
   constexpr auto operator<=>(const protocol_type & , const protocol_type &) noexcept = default;
 
-  using endpoint = endpoint;
+  using endpoint = io::endpoint;
   // for the asio acceptor
   using socket = stream_socket;
  private:
@@ -84,7 +90,7 @@ struct static_protocol
   constexpr type_t     type()     const noexcept {return Type;};
   constexpr protocol_t protocol() const noexcept {return Protocol;};
 
-  using endpoint = endpoint;
+  using endpoint = io::endpoint;
 };
 
 
@@ -178,6 +184,11 @@ struct endpoint
   protocol_type::protocol_t protocol_ = static_cast<protocol_type::protocol_t>(0);
   protocol_type::type_t         type_ = static_cast<protocol_type::type_t>(0);
 };
+
+#if __GNUC__
+#pragma GCC diagnostic pop
+#endif
+
 
 class bad_endpoint_access : public std::exception
 {

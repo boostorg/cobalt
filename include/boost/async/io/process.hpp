@@ -9,7 +9,7 @@
 #define BOOST_ASYNC_IO_PROCESS_HPP
 
 #include <boost/async/config.hpp>
-#include <boost/async/op.hpp>
+#include <boost/async/io/result.hpp>
 
 #include <boost/process/v2/process.hpp>
 #include <boost/process/v2/stdio.hpp>
@@ -62,44 +62,13 @@ struct process
   [[nodiscard]] pid_type id() const;
 
  private:
-  struct wait_op_ : detail::deferred_op_resource_base
+  struct wait_op_ final : result_op<int>
   {
-    constexpr static bool await_ready() { return false; }
+    BOOST_ASYNC_DECL void initiate(completion_handler<system::error_code, int> handler) override;
 
-    BOOST_ASYNC_DECL void init_op(completion_handler<system::error_code, int> handler);
-
-    template<typename Promise>
-    bool await_suspend(std::coroutine_handle<Promise> h)
-    {
-      try
-      {
-        init_op(completion_handler<system::error_code, int>{h, result_, get_resource(h)});
-        return true;
-      }
-      catch(...)
-      {
-        error = std::current_exception();
-        return false;
-      }
-    }
-
-    [[nodiscard]] wait_result await_resume()
-    {
-      if (error)
-        std::rethrow_exception(std::exchange(error, nullptr));
-      auto [ec, sig] = result_.value_or(std::make_tuple(system::error_code{}, 0));
-      if (ec)
-        return ec;
-      else
-        return sig;
-    }
     wait_op_(boost::process::v2::basic_process<executor> & process) : process_(process) {}
    private:
     boost::process::v2::basic_process<executor> & process_;
-    std::exception_ptr error;
-    std::optional<std::tuple<system::error_code, int>> result_;
-    char buffer[256];
-    std::optional<container::pmr::monotonic_buffer_resource> resource;
   };
  public:
   [[nodiscard]] wait_op_ wait() { return wait_op_{process_}; }

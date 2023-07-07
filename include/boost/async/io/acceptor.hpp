@@ -8,6 +8,7 @@
 #ifndef BOOST_ASYNC_IO_ACCEPTOR_HPP
 #define BOOST_ASYNC_IO_ACCEPTOR_HPP
 
+#include <boost/async/io/result.hpp>
 #include <boost/async/io/stream_socket.hpp>
 #include <boost/async/io/seq_packet_socket.hpp>
 #include <boost/asio/basic_socket_acceptor.hpp>
@@ -26,84 +27,20 @@ struct acceptor
 
  private:
 
-  struct accept_op_ : detail::deferred_op_resource_base
+  struct accept_op_ final : result_op<void>
   {
-    constexpr static bool await_ready() { return false; }
+    accept_op_(asio::basic_socket_acceptor<protocol_type, executor> & acceptor,
+               socket &socket)
+      : acceptor_(acceptor), socket_(socket) {}
+    BOOST_ASYNC_DECL void initiate(completion_handler<system::error_code> h) override;
 
-    template<typename Promise>
-    bool await_suspend(std::coroutine_handle<Promise> h)
-    {
-      try
-      {
-        acceptor_.template async_accept(socket_.socket_,  completion_handler<system::error_code>{h, result_, get_resource(h)});
-        return true;
-      }
-      catch(...)
-      {
-        error = std::current_exception();
-        return false;
-      }
-    }
-
-    [[nodiscard]] system::result<stream_socket> await_resume()
-    {
-      if (error)
-        std::rethrow_exception(std::exchange(error, nullptr));
-      auto [ec] = result_.value_or(std::make_tuple(system::error_code{}));
-      if (ec)
-        return ec;
-      else
-        return std::move(socket_);
-    }
-    accept_op_(    asio::basic_socket_acceptor<protocol_type, executor> & acceptor)
-      : acceptor_(acceptor) {}
    private:
     asio::basic_socket_acceptor<protocol_type, executor> & acceptor_;
-    stream_socket socket_;
-    std::exception_ptr error;
-    std::optional<std::tuple<system::error_code>> result_;
+    socket &socket_;
   };
 
-  struct accept_seq_op_ : detail::deferred_op_resource_base
-  {
-    constexpr static bool await_ready() { return false; }
-
-    template<typename Promise>
-    bool await_suspend(std::coroutine_handle<Promise> h)
-    {
-      try
-      {
-        acceptor_.template async_accept(socket_.socket_,  completion_handler<system::error_code>{h, result_, get_resource(h)});
-        return true;
-      }
-      catch(...)
-      {
-        error = std::current_exception();
-        return false;
-      }
-    }
-
-    [[nodiscard]] system::result<seq_packet_socket> await_resume()
-    {
-      if (error)
-        std::rethrow_exception(std::exchange(error, nullptr));
-      auto [ec] = result_.value_or(std::make_tuple(system::error_code{}));
-      if (ec)
-        return ec;
-      else
-        return std::move(socket_);
-    }
-    accept_seq_op_(asio::basic_socket_acceptor<protocol_type, executor> & acceptor)
-        : acceptor_(acceptor) {}
-   private:
-    asio::basic_socket_acceptor<protocol_type, executor> & acceptor_;
-    seq_packet_socket socket_;
-    std::exception_ptr error;
-    std::optional<std::tuple<system::error_code>> result_;
-  };
  public:
-  [[nodiscard]] BOOST_ASYNC_DECL accept_op_     accept();
-  [[nodiscard]] BOOST_ASYNC_DECL accept_seq_op_ accept_seq_packet();
+  [[nodiscard]] BOOST_ASYNC_DECL accept_op_     accept(socket & sock);
  private:
   asio::basic_socket_acceptor<protocol_type, executor> acceptor_;
 };

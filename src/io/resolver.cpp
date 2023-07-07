@@ -14,26 +14,17 @@ namespace boost::async::io
 resolver::resolver() : resolver_(this_thread::get_executor()) {}
 void resolver::cancel() { resolver_.cancel(); }
 
-
-[[nodiscard]] resolver::resolve_result resolver::resolve_op_::await_resume()
+void resolver::resolve_op_::initiate(completion_handler<system::error_code, resolve_result::value_type> h)
 {
-  if (error)
-    std::rethrow_exception(std::exchange(error, nullptr));
-
-  auto [ec, rr] = result_.value();
-  if (ec)
-    return ec;
-  else
-  {
-    container::pmr::vector<endpoint> r{this_thread::get_allocator()};
-    r.assign(rr.begin(), rr.end());
-    return r;
-  }
-}
-
-void resolver::resolve_op_::initiate_(completion_handler<system::error_code, result_type> h)
-{
-  resolver_.async_resolve(async::io::ip, host_, service_, std::move(h));
+  using results_type = typename asio::ip::basic_resolver_results<protocol_type>;
+  resolver_.async_resolve(
+      async::io::ip, host_, service_,
+      asio::deferred([](system::error_code ec, results_type res)
+      {
+        container::pmr::vector<endpoint> r{this_thread::get_allocator()};
+        r.assign(res.begin(), res.end());
+        return asio::deferred.values(ec, std::move(r));
+      }))(std::move(h));
 }
 
 }

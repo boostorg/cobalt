@@ -9,8 +9,8 @@
 #define BOOST_ASYNC_IO_RESOLVER_HPP
 
 #include <boost/async/io/endpoint.hpp>
+#include <boost/async/io/result.hpp>
 
-#include <boost/async/detail/op.hpp>
 #include <boost/async/promise.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/container/pmr/vector.hpp>
@@ -24,6 +24,7 @@ namespace boost::async::io
 struct resolver
 {
   using resolve_result = system::result<container::pmr::vector<endpoint>>;
+
   BOOST_ASYNC_DECL resolver();
   BOOST_ASYNC_DECL resolver(resolver && ) = delete;
 
@@ -31,39 +32,17 @@ struct resolver
 
  private:
 
-  struct resolve_op_ : detail::deferred_op_resource_base
+  struct resolve_op_ final : result_op<resolve_result::value_type>
   {
-    using result_type = asio::ip::basic_resolver<protocol_type, executor>::results_type;
-
-    constexpr static bool await_ready() { return false; }
-
-    template<typename Promise>
-    bool await_suspend(std::coroutine_handle<Promise> h)
-    {
-      try
-      {
-        initiate_(completion_handler<system::error_code, result_type>{h, result_, get_resource(h)});
-        return true;
-      }
-      catch(...)
-      {
-        error = std::current_exception();
-        return false;
-      }
-    }
-
-    [[nodiscard]] resolve_result await_resume();
     resolve_op_(asio::ip::basic_resolver<protocol_type, executor> & resolver,
                 core::string_view host, core::string_view service)
                 : resolver_(resolver), host_(host), service_(service) {}
+    BOOST_ASYNC_DECL void initiate(completion_handler<system::error_code, resolve_result::value_type>);
    private:
     asio::ip::basic_resolver<protocol_type, executor> & resolver_;
     core::string_view host_;
     core::string_view service_;
-    std::exception_ptr error;
-    std::optional<std::tuple<system::error_code, result_type>> result_;
 
-    void initiate_(completion_handler<system::error_code, result_type>);
 
   };
 

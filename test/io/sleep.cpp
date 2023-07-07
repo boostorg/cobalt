@@ -14,10 +14,10 @@ TEST_SUITE_BEGIN("sleep");
 CO_TEST_CASE_TEMPLATE("sleep-timepoint", Clock, std::chrono::steady_clock, std::chrono::system_clock)
 {
   auto pre = Clock::now();
-  (co_await boost::async::io::sleep(pre)).value();
+  co_await boost::async::io::sleep(pre).value();
   auto post = Clock::now();
   CHECK((post - pre) < std::chrono::milliseconds(50));
-  (co_await boost::async::io::sleep(pre + std::chrono::milliseconds(50))).value();
+  co_await boost::async::io::sleep(pre + std::chrono::milliseconds(50)).value();
   post = Clock::now();
   CHECK((post - pre) >= std::chrono::milliseconds(50));
 }
@@ -25,10 +25,10 @@ CO_TEST_CASE_TEMPLATE("sleep-timepoint", Clock, std::chrono::steady_clock, std::
 CO_TEST_CASE("sleep-duration")
 {
   auto pre = std::chrono::steady_clock::now();
-  (co_await boost::async::io::sleep(std::chrono::milliseconds(0))).value();
+  co_await boost::async::io::sleep(std::chrono::milliseconds(0)).value();
   auto post = std::chrono::steady_clock::now();
   CHECK((post - pre) < std::chrono::milliseconds(50));
-  (co_await boost::async::io::sleep(std::chrono::milliseconds(50))).value();
+  co_await boost::async::io::sleep(std::chrono::milliseconds(50)).value();
   post = std::chrono::steady_clock::now();
   CHECK((post - pre) >= std::chrono::milliseconds(50));
 }

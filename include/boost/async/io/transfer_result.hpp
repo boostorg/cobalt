@@ -18,11 +18,10 @@
 namespace boost::async::io
 {
 
-
 struct [[nodiscard]] transfer_result
 {
   system::error_code error;
-  std::size_t transferred;
+  std::size_t transferred{0u};
 
   using value_type = std::size_t;
   using error_type = system::error_code;
@@ -33,7 +32,7 @@ struct [[nodiscard]] transfer_result
   constexpr explicit operator bool() const noexcept { return has_value() || !has_error(); }
   constexpr std::size_t value( boost::source_location const& loc = BOOST_CURRENT_LOCATION ) const noexcept
   {
-    if (!has_value() || !has_error())
+    if (!has_value() || has_error())
       throw_exception_from_error(error, loc);
     return transferred;
   }
@@ -54,6 +53,13 @@ struct [[nodiscard]] transfer_result
   bool operator!=(E e) const { return error != e;}
 };
 
+inline transfer_result & operator+=(transfer_result & lhs, const transfer_result & rhs)
+{
+  lhs.transferred += rhs.transferred;
+  if (!lhs.error)
+    lhs.error = rhs.error;
+  return lhs;
+}
 
 struct transfer_op
 {

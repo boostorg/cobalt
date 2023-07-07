@@ -8,7 +8,7 @@
 #ifndef BOOST_ASYNC_IO_SIGNAL_SET_HPP
 #define BOOST_ASYNC_IO_SIGNAL_SET_HPP
 
-#include <boost/async/op.hpp>
+#include <boost/async/io/result.hpp>
 
 #include <boost/asio/basic_signal_set.hpp>
 #include <boost/system/result.hpp>
@@ -32,42 +32,12 @@ struct signal_set
 
 
  private:
-  struct wait_op_ : detail::deferred_op_resource_base
+  struct wait_op_ final : result_op<int>
   {
-    constexpr static bool await_ready() { return false; }
-
-    BOOST_ASYNC_DECL void init_op(completion_handler<system::error_code, int> handler);
-
-    template<typename Promise>
-    bool await_suspend(std::coroutine_handle<Promise> h)
-    {
-      try
-      {
-        init_op(completion_handler<system::error_code, int>{h, result_, get_resource(h)});
-        return true;
-      }
-      catch(...)
-      {
-        error = std::current_exception();
-        return false;
-      }
-    }
-
-    [[nodiscard]] wait_result await_resume()
-    {
-      if (error)
-        std::rethrow_exception(std::exchange(error, nullptr));
-      auto [ec, sig] = result_.value_or(std::make_tuple(system::error_code{}, 0));
-      if (ec)
-        return ec;
-      else
-        return sig;
-    }
+    BOOST_ASYNC_DECL void initiate(completion_handler<system::error_code, int> handler) override;
     wait_op_(boost::asio::basic_signal_set<executor> & signal_set) : signal_set_(signal_set) {}
    private:
     boost::asio::basic_signal_set<executor> & signal_set_;
-    std::exception_ptr error;
-    std::optional<std::tuple<system::error_code, int>> result_;
   };
  public:
   [[nodiscard]] wait_op_ wait() { return wait_op_{signal_set_}; }

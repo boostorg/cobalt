@@ -31,7 +31,12 @@ endpoint acceptor::local_endpoint()
   return acceptor_.local_endpoint();
 }
 
-auto acceptor::accept() -> accept_op_ { return accept_op_{acceptor_};}
-auto acceptor::accept_seq_packet() -> accept_seq_op_ { return accept_seq_op_{acceptor_};}
+auto acceptor::accept(socket & sock)     -> accept_op_ { return accept_op_{acceptor_, sock};}
+
+void acceptor::accept_op_::initiate(completion_handler<system::error_code> h)
+{
+  acceptor_.async_accept(socket_.socket_,  std::move(h));
+}
+
 
 }

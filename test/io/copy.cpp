@@ -36,6 +36,7 @@ promise<void> do_copy(io::stream & in, io::stream & out)
 
 CO_TEST_CASE("copy")
 {
+  std::signal(SIGPIPE, SIG_IGN);
   auto [r, wi] = io::make_pipe().value();
   auto [ri, w] = io::make_pipe().value();
 

@@ -66,22 +66,22 @@ auto seq_packet_socket::send(buffers::const_buffer      buffer,message_flags out
   return send_op_{seq_packet_socket_, buffer, out_flags};
 }
 
-void seq_packet_socket::receive_op_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
+void seq_packet_socket::receive_op_::initiate(async::completion_handler<system::error_code, std::size_t> h)
 {
   this->seq_packet_socket_.async_receive(buffers::mutable_buffer_subspan{&buffer_, 1u}, out_flags_, std::move(h));
 }
 
-void seq_packet_socket::receive_op_seq_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
+void seq_packet_socket::receive_op_seq_::initiate(async::completion_handler<system::error_code, std::size_t> h)
 {
   this->seq_packet_socket_.async_receive(buffer_, out_flags_, std::move(h));
 }
 
-void seq_packet_socket::send_op_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
+void seq_packet_socket::send_op_::initiate(async::completion_handler<system::error_code, std::size_t> h)
 {
   this->seq_packet_socket_.async_send(buffers::const_buffer_subspan{&buffer_, 1u}, out_flags_, std::move(h));
 }
 
-void seq_packet_socket::send_op_seq_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
+void seq_packet_socket::send_op_seq_::initiate(async::completion_handler<system::error_code, std::size_t> h)
 {
   this->seq_packet_socket_.async_send(buffer_, out_flags_, std::move(h));
 }

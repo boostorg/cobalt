@@ -36,7 +36,7 @@ process::process(pid_type pid) : process_(this_thread::get_executor(), pid) {}
 process::process(pid_type pid, native_handle_type native_handle)
                 : process_(this_thread::get_executor(), pid, native_handle) {}
 
-void process::wait_op_::init_op(completion_handler<system::error_code, int> handler)
+void process::wait_op_::initiate(completion_handler<system::error_code, int> handler)
 {
   process_.async_wait(std::move(handler));
 }

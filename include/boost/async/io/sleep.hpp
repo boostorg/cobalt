@@ -21,9 +21,11 @@ struct steady_sleep
   steady_sleep(const std::chrono::steady_clock::time_point & tp) : tim{tp} {}
   steady_sleep(const std::chrono::steady_clock::duration & du)   : tim{du} {}
 
-  auto operator co_await() { return tim.wait(); }
+  async::io::steady_timer::wait_op_ operator co_await() { return tim.wait(); }
+  async::io::steady_timer::wait_op_::vawaitable value() { return std::move(op_.emplace(tim.wait())).value(); }
  private:
   async::io::steady_timer tim;
+  std::optional<async::io::steady_timer::wait_op_> op_;
 };
 
 
@@ -32,9 +34,11 @@ struct system_sleep
   system_sleep(const std::chrono::system_clock::time_point & tp) : tim{tp} {}
   system_sleep(const std::chrono::system_clock::duration & du)   : tim{du} {}
 
-  auto operator co_await() { return tim.wait(); }
+  async::io::system_timer::wait_op_ operator co_await() { return tim.wait(); }
+  async::io::system_timer::wait_op_::vawaitable value() { return std::move(op_.emplace(tim.wait())).value(); }
  private:
   async::io::system_timer tim;
+  std::optional<async::io::system_timer::wait_op_> op_;
 };
 
 }

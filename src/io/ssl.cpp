@@ -24,7 +24,7 @@ system::result<ssl_stream> ssl_stream::duplicate()
 
 static asio::ssl::context & get_ssl_context()
 {
-  thread_local static asio::ssl::context ctx{asio::ssl::context_base::tls};
+  thread_local static asio::ssl::context ctx{asio::ssl::context_base::tlsv13};
   return ctx;
 }
 
@@ -105,23 +105,23 @@ void ssl_stream::adopt_endpoint_(endpoint & ep)
   }
 }
 
-void ssl_stream::handshake_op_::init_op(completion_handler<system::error_code> handler)
+void ssl_stream::handshake_op_::initiate(completion_handler<system::error_code> handler)
 {
   stream.ssl_stream_.async_handshake(ht, std::move(handler));
 
 }
 
-void ssl_stream::handshake_op_buf_::init_op(completion_handler<system::error_code, std::size_t> handler)
+void ssl_stream::handshake_op_buf_::initiate(completion_handler<system::error_code, std::size_t> handler)
 {
   stream.ssl_stream_.async_handshake(ht, io::buffers::const_buffer_subspan{&buf, 1u}, std::move(handler));
 }
 
-void ssl_stream::handshake_op_buf_seq_::init_op(completion_handler<system::error_code, std::size_t> handler)
+void ssl_stream::handshake_op_buf_seq_::initiate(completion_handler<system::error_code, std::size_t> handler)
 {
   stream.ssl_stream_.async_handshake(ht, buf, std::move(handler));
 }
 
-void ssl_stream::shutdown_op_::init_op(completion_handler<system::error_code> handler)
+void ssl_stream::shutdown_op_::initiate(completion_handler<system::error_code> handler)
 {
   stream.ssl_stream_.async_shutdown(std::move(handler));
 }

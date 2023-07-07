@@ -21,18 +21,18 @@ CO_TEST_CASE("acceptor")
   io::acceptor acceptor{ep};
   io::stream_socket ss{};
 
-  auto [accepted, connected] =
-      co_await join(acceptor.accept(),
+  io::stream_socket accepted;
+  auto [_, connected] =
+      co_await join(acceptor.accept(accepted).value(),
                     ss.connect(ep));
 
-  CHECK(!accepted.has_error());
   CHECK(!connected.has_error());
 
-  CHECK(accepted->remote_endpoint()->protocol() == ss.local_endpoint()->protocol());
-  CHECK(accepted->local_endpoint()->protocol() == ss.remote_endpoint()->protocol());
+  CHECK(accepted.remote_endpoint()->protocol() == ss.local_endpoint()->protocol());
+  CHECK(accepted.local_endpoint()->protocol() == ss.remote_endpoint()->protocol());
 
-  CHECK(get<io::tcp_v4>(*accepted->remote_endpoint()).port() == get<io::tcp_v4>(*ss.local_endpoint()) .port());
-  CHECK(get<io::tcp_v4>(*accepted->local_endpoint()) .port() == get<io::tcp_v4>(*ss.remote_endpoint()).port());
-  CHECK(get<io::tcp_v4>(*accepted->remote_endpoint()).addr() == get<io::tcp_v4>(*ss.local_endpoint()) .addr());
-  CHECK(get<io::tcp_v4>(*accepted->local_endpoint()) .addr() == get<io::tcp_v4>(*ss.remote_endpoint()).addr());
+  CHECK(get<io::tcp_v4>(*accepted.remote_endpoint()).port() == get<io::tcp_v4>(*ss.local_endpoint()) .port());
+  CHECK(get<io::tcp_v4>(*accepted.local_endpoint()) .port() == get<io::tcp_v4>(*ss.remote_endpoint()).port());
+  CHECK(get<io::tcp_v4>(*accepted.remote_endpoint()).addr() == get<io::tcp_v4>(*ss.local_endpoint()) .addr());
+  CHECK(get<io::tcp_v4>(*accepted.local_endpoint()) .addr() == get<io::tcp_v4>(*ss.remote_endpoint()).addr());
 }

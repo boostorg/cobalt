@@ -13,157 +13,45 @@
 
 namespace boost::async::io
 {
-struct ssl_stream::handshake_op_         : detail::deferred_op_resource_base
+struct ssl_stream::handshake_op_ final : result_op<void>
 {
-  constexpr static bool await_ready() { return false; }
-
-  BOOST_ASYNC_DECL void init_op(completion_handler<system::error_code> handler);
-
-  template<typename Promise>
-  bool await_suspend(std::coroutine_handle<Promise> h)
-  {
-    try
-    {
-      init_op(completion_handler<system::error_code>{h, result_, get_resource(h)});
-      return true;
-    }
-    catch(...)
-    {
-      error = std::current_exception();
-      return false;
-    }
-  }
-
-  [[nodiscard]] system::result<void> await_resume()
-  {
-    if (error)
-      std::rethrow_exception(std::exchange(error, nullptr));
-    auto ec = std::get<0>(result_.value_or(std::make_tuple(system::error_code{})));
-    return ec ? system::result<void>(ec) : system::in_place_value;
-  }
-
+  BOOST_ASYNC_DECL void initiate(completion_handler<system::error_code> handler) override;
   handshake_op_(ssl_stream & stream, handshake_type ht) : stream(stream), ht(ht) {}
  private:
 
   ssl_stream & stream;
   handshake_type ht;
-  std::exception_ptr error;
-  std::optional<std::tuple<system::error_code>> result_;
 };
 
-struct ssl_stream::handshake_op_buf_     : detail::deferred_op_resource_base
+struct ssl_stream::handshake_op_buf_ final : transfer_op
 {
-  constexpr static bool await_ready() { return false; }
-
-  BOOST_ASYNC_DECL void init_op(completion_handler<system::error_code, std::size_t> handler);
-
-  template<typename Promise>
-  bool await_suspend(std::coroutine_handle<Promise> h)
-  {
-    try
-    {
-      init_op(completion_handler<system::error_code, std::size_t>{h, result_, get_resource(h)});
-      return true;
-    }
-    catch(...)
-    {
-      error = std::current_exception();
-      return false;
-    }
-  }
-
-  [[nodiscard]] transfer_result await_resume()
-  {
-    if (error)
-      std::rethrow_exception(std::exchange(error, nullptr));
-    const auto & [ec, n] = *result_;
-    return transfer_result{ec, n};
-  }
-
+  BOOST_ASYNC_DECL void initiate(completion_handler<system::error_code, std::size_t> handler) override;
   handshake_op_buf_(ssl_stream & stream,
-                 handshake_type ht,
-                 buffers::const_buffer buf) : stream(stream), ht(ht), buf(buf) {}
+                    handshake_type ht,
+                    buffers::const_buffer buf) : stream(stream), ht(ht), buf(buf) {}
  private:
   ssl_stream & stream;
   handshake_type ht;
   buffers::const_buffer buf;
-  std::exception_ptr error;
-  std::optional<std::tuple<system::error_code, std::size_t>> result_;
 };
 
-struct ssl_stream::handshake_op_buf_seq_ : detail::deferred_op_resource_base
+struct ssl_stream::handshake_op_buf_seq_ final : transfer_op
 {
-  constexpr static bool await_ready() { return false; }
-  BOOST_ASYNC_DECL void init_op(completion_handler<system::error_code, std::size_t> handler);
-
-  template<typename Promise>
-  bool await_suspend(std::coroutine_handle<Promise> h)
-  {
-    try
-    {
-      init_op(completion_handler<system::error_code, std::size_t>{h, result_, get_resource(h)});
-      return true;
-    }
-    catch(...)
-    {
-      error = std::current_exception();
-      return false;
-    }
-  }
-
-  [[nodiscard]] transfer_result await_resume()
-  {
-    if (error)
-      std::rethrow_exception(std::exchange(error, nullptr));
-    const auto & [ec, n] = *result_;
-    return transfer_result{ec, n};
-  }
-
+  BOOST_ASYNC_DECL void initiate(completion_handler<system::error_code, std::size_t> handler) override;
   handshake_op_buf_seq_(ssl_stream & stream, handshake_type ht,
                      buffers::const_buffer_subspan buf) : stream(stream), ht(ht), buf(buf) {}
  private:
   ssl_stream & stream;
   handshake_type ht;
   buffers::const_buffer_subspan buf;
-  std::exception_ptr error;
-  std::optional<std::tuple<system::error_code, std::size_t>> result_;
 };
 
-struct ssl_stream::shutdown_op_ : detail::deferred_op_resource_base
+struct ssl_stream::shutdown_op_ final : result_op<void>
 {
-  constexpr static bool await_ready() { return false; }
-
-  BOOST_ASYNC_DECL void init_op(completion_handler<system::error_code> handler);
-
-  template<typename Promise>
-  bool await_suspend(std::coroutine_handle<Promise> h)
-  {
-    try
-    {
-      init_op(completion_handler<system::error_code>{h, result_, get_resource(h)});
-      return true;
-    }
-    catch(...)
-    {
-      error = std::current_exception();
-      return false;
-    }
-  }
-
-  [[nodiscard]] shutdown_result await_resume()
-  {
-    if (error)
-      std::rethrow_exception(std::exchange(error, nullptr));
-    auto ec = std::get<0>(result_.value_or(std::make_tuple(system::error_code{})));
-    return ec ? shutdown_result(ec) : system::in_place_value;
-  }
-
+  BOOST_ASYNC_DECL void initiate(completion_handler<system::error_code> handler) override;
   shutdown_op_(ssl_stream & stream) : stream(stream) {}
  private:
-
   ssl_stream & stream;
-  std::exception_ptr error;
-  std::optional<std::tuple<system::error_code>> result_;
 };
 
 }

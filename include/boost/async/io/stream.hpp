@@ -19,37 +19,8 @@
 namespace boost::async::io
 {
 
-struct [[nodiscard]] transfer_result
-{
-  system::error_code error;
-  std::size_t transferred{0u};
 
-  using value_type = std::size_t;
-  using error_type = system::error_code;
 
-  // queries
-  constexpr bool has_value() const noexcept { return transferred != 0; }
-  constexpr bool has_error() const noexcept { return error.failed(); }
-  constexpr explicit operator bool() const noexcept { return has_value() || !has_error(); }
-  constexpr std::size_t value( boost::source_location const& loc = BOOST_CURRENT_LOCATION ) const noexcept
-  {
-    if (!has_value() || has_error())
-      throw_exception_from_error(error, loc);
-    return transferred;
-  }
-  constexpr std::size_t operator*() const noexcept { BOOST_ASSERT(has_value()); return transferred; }
-
-  bool operator==(const system::error_code &ec) const { return error == ec;}
-  bool operator!=(const system::error_code &ec) const { return error != ec;}
-};
-
-inline transfer_result & operator+=(transfer_result & lhs, const transfer_result & rhs)
-{
-  lhs.transferred += rhs.transferred;
-  if (!lhs.error)
-    lhs.error = rhs.error;
-  return lhs;
-}
 
 struct stream
 {

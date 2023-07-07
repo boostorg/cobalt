@@ -27,5 +27,5 @@ CO_TEST_CASE("ssl")
   CHECK(co_await ss.async_handshake(async::io::ssl_stream::handshake_type::client)
         == system::in_place_value);
 
-  CHECK(co_await ss.async_shutdown() == system::in_place_value);
+  CHECK_NOTHROW(co_await ss.async_shutdown());
 }

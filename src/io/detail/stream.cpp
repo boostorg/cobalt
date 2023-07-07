@@ -17,5 +17,26 @@ auto stream::write_some(buffers::const_buffer_subspan buffers)   -> write_some_o
 auto stream::write_some(buffers::const_buffer_span    buffers)   -> write_some_op_seq_ { return write_some_op_seq_{*this, buffers};}
 auto stream::write_some(buffers::const_buffer         buffer)    -> write_some_op_ { return write_some_op_{*this, buffer};}
 
+void stream::read_some_op_::initiate(completion_handler<system::error_code, std::size_t> h)
+{
+  rstream_.async_read_some_impl_({&buffer_, 1u}, std::move(h));
+}
+
+void stream::read_some_op_seq_::initiate(completion_handler<system::error_code, std::size_t> h)
+{
+  rstream_.async_read_some_impl_(buffer_, std::move(h));
+}
+
+void stream::write_some_op_::initiate(completion_handler<system::error_code, std::size_t> h)
+{
+  rstream_.async_write_some_impl_({&buffer_, 1u}, std::move(h));
+}
+
+void stream::write_some_op_seq_::initiate(completion_handler<system::error_code, std::size_t> h)
+{
+  rstream_.async_write_some_impl_(buffer_, std::move(h));
+}
+
+
 
 }

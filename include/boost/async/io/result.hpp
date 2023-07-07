@@ -88,7 +88,7 @@ struct result_op
     result_op<T, Error> * op_;
   };
 
-  vawaitable value() { return vawaitable{this}; }
+  vawaitable value() && { return vawaitable{this}; }
  private:
   std::exception_ptr error;
   std::optional<std::tuple<Error, T>> result;
@@ -171,7 +171,7 @@ struct result_op<void, Error>
     result_op<void, Error> * op_;
   };
 
-  vawaitable value() { return vawaitable{this}; }
+  vawaitable value() && { return vawaitable{this}; }
 
  private:
   std::exception_ptr error;

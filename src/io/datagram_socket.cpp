@@ -90,42 +90,42 @@ auto datagram_socket::send_to(buffers::const_buffer      buffer,  const endpoint
   return send_to_op_{datagram_socket_, buffer, target};
 }
 
-void datagram_socket::receive_op_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
+void datagram_socket::receive_op_::initiate(async::completion_handler<system::error_code, std::size_t> h)
 {
   this->datagram_socket_.async_receive(buffers::mutable_buffer_subspan{&buffer_, 1u}, std::move(h));
 }
 
-void datagram_socket::receive_op_seq_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
+void datagram_socket::receive_op_seq_::initiate(async::completion_handler<system::error_code, std::size_t> h)
 {
   this->datagram_socket_.async_receive(buffer_, std::move(h));
 }
 
-void datagram_socket::receive_from_op_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
+void datagram_socket::receive_from_op_::initiate(async::completion_handler<system::error_code, std::size_t> h)
 {
   this->datagram_socket_.async_receive_from(buffers::mutable_buffer_subspan{&buffer_, 1u}, ep_, std::move(h));
 }
 
-void datagram_socket::receive_from_op_seq_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
+void datagram_socket::receive_from_op_seq_::initiate(async::completion_handler<system::error_code, std::size_t> h)
 {
   this->datagram_socket_.async_receive_from(buffer_, ep_, std::move(h));
 }
 
-void datagram_socket::send_op_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
+void datagram_socket::send_op_::initiate(async::completion_handler<system::error_code, std::size_t> h)
 {
   this->datagram_socket_.async_send(buffers::const_buffer_subspan{&buffer_, 1u}, std::move(h));
 }
 
-void datagram_socket::send_op_seq_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
+void datagram_socket::send_op_seq_::initiate(async::completion_handler<system::error_code, std::size_t> h)
 {
   this->datagram_socket_.async_send(buffer_, std::move(h));
 }
 
-void datagram_socket::send_to_op_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
+void datagram_socket::send_to_op_::initiate(async::completion_handler<system::error_code, std::size_t> h)
 {
   this->datagram_socket_.async_send_to(buffers::const_buffer_subspan{&buffer_, 1u}, ep_, std::move(h));
 }
 
-void datagram_socket::send_to_op_seq_::initiate_(async::completion_handler<system::error_code, std::size_t> h)
+void datagram_socket::send_to_op_seq_::initiate(async::completion_handler<system::error_code, std::size_t> h)
 {
   this->datagram_socket_.async_send_to(buffer_, ep_, std::move(h));
 }
