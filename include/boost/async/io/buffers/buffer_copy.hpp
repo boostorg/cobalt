@@ -7,19 +7,19 @@
 // Official repository: https://github.com/CPPAlliance/buffers
 //
 
-#ifndef BOOST_BUFFERS_BUFFER_COPY_HPP
-#define BOOST_BUFFERS_BUFFER_COPY_HPP
+#ifndef BOOST_ASYNC_IO_BUFFERS_BUFFER_COPY_HPP
+#define BOOST_ASYNC_IO_BUFFERS_BUFFER_COPY_HPP
 
 #include <boost/async/config.hpp>
 #include <boost/async/io/buffers/range.hpp>
-#include <boost/async/io/buffers/type_traits.hpp>
+#include <boost/async/io/buffers/concepts.hpp>
 #include <boost/assert.hpp>
 #include <cstring>
 #include <utility>
 
 namespace boost::async::io::buffers {
 
-#ifdef BOOST_BUFFERS_DOCS
+#ifdef BOOST_ASYNC_IO_BUFFERS_DOCS
 
 /** Copy buffer contents
 */

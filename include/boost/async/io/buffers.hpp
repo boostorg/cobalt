@@ -27,6 +27,6 @@
 #include <boost/async/io/buffers/range.hpp>
 #include <boost/async/io/buffers/string_buffer.hpp>
 #include <boost/async/io/buffers/tag_invoke.hpp>
-#include <boost/async/io/buffers/type_traits.hpp>
+#include <boost/async/io/buffers/concepts.hpp>
 
 #endif

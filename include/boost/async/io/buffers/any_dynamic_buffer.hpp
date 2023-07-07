@@ -7,14 +7,14 @@
 // Official repository: https://github.com/CPPAlliance/buffers
 //
 
-#ifndef BOOST_BUFFERS_ANY_DYNAMIC_BUFFER_HPP
-#define BOOST_BUFFERS_ANY_DYNAMIC_BUFFER_HPP
+#ifndef BOOST_ASYNC_IO_BUFFERS_ANY_DYNAMIC_BUFFER_HPP
+#define BOOST_ASYNC_IO_BUFFERS_ANY_DYNAMIC_BUFFER_HPP
 
 #include <boost/async/config.hpp>
 #include <boost/async/io/buffers/const_buffer_span.hpp>
 #include <boost/async/io/buffers/mutable_buffer_span.hpp>
 #include <boost/async/io/buffers/range.hpp>
-#include <boost/async/io/buffers/type_traits.hpp>
+#include <boost/async/io/buffers/concepts.hpp>
 #include <cstdlib>
 
 namespace boost::async::io::buffers {
@@ -75,7 +75,6 @@ class any_dynamic_buffer_impl
 
 public:
     template<class DynamicBuffer_>
-    explicit
     any_dynamic_buffer_impl(
         DynamicBuffer_&& b)
         : b_(std::forward<

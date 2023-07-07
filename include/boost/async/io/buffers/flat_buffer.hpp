@@ -7,8 +7,8 @@
 // Official repository: https://github.com/CPPAlliance/buffers
 //
 
-#ifndef BOOST_BUFFERS_FLAT_BUFFER_HPP
-#define BOOST_BUFFERS_FLAT_BUFFER_HPP
+#ifndef BOOST_ASYNC_IO_BUFFERS_FLAT_BUFFER_HPP
+#define BOOST_ASYNC_IO_BUFFERS_FLAT_BUFFER_HPP
 
 #include <boost/async/io/buffers/const_buffer.hpp>
 #include <boost/async/io/buffers/mutable_buffer.hpp>
@@ -76,7 +76,6 @@ public:
 
     /** Constructor.
     */
-    explicit
     flat_buffer(
         mutable_buffer const& b,
         std::size_t initial_size = 0)

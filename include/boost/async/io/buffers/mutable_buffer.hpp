@@ -7,8 +7,8 @@
 // Official repository: https://github.com/CPPAlliance/buffers
 //
 
-#ifndef BOOST_BUFFERS_MUTABLE_BUFFER_HPP
-#define BOOST_BUFFERS_MUTABLE_BUFFER_HPP
+#ifndef BOOST_ASYNC_IO_BUFFERS_MUTABLE_BUFFER_HPP
+#define BOOST_ASYNC_IO_BUFFERS_MUTABLE_BUFFER_HPP
 
 #include <boost/async/config.hpp>
 #include <boost/async/io/buffers/tag_invoke.hpp>
@@ -59,7 +59,7 @@ public:
           {std::size(ct)} -> std::convertible_to<std::size_t>;
         }
         && std::is_trivial_v<typename Container::value_type>)
-    mutable_buffer(Container & ct) : mutable_buffer(std::data(ct), std::size(ct)) {}
+    mutable_buffer(Container & ct) : mutable_buffer(std::data(ct), sizeof(typename Container::value_type) * std::size(ct)) {}
 
     /** Constructor for arrays */
     template<typename T, std::size_t N>
@@ -71,7 +71,7 @@ public:
     mutable_buffer& operator=(
         mutable_buffer const&) = default;
 
-#ifndef BOOST_BUFFERS_DOCS
+#ifndef BOOST_ASYNC_IO_BUFFERS_DOCS
     // conversion to boost::asio::mutable_buffer
     template<class T>
     requires (std::constructible_from<T, void*, std::size_t>

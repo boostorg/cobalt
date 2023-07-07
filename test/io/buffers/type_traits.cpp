@@ -8,4 +8,4 @@
 //
 
 // Test that header file is self-contained.
-#include <boost/async/io/buffers/type_traits.hpp>
+#include <boost/async/io/buffers/concepts.hpp>

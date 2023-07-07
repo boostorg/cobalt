@@ -7,8 +7,8 @@
 // Official repository: https://github.com/CPPAlliance/buffers
 //
 
-#ifndef BOOST_BUFFERS_TAG_INVOKE_HPP
-#define BOOST_BUFFERS_TAG_INVOKE_HPP
+#ifndef BOOST_ASYNC_IO_BUFFERS_TAG_INVOKE_HPP
+#define BOOST_ASYNC_IO_BUFFERS_TAG_INVOKE_HPP
 
 #include <boost/async/config.hpp>
 

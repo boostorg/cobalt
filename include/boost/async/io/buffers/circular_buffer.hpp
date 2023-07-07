@@ -7,8 +7,8 @@
 // Official repository: https://github.com/CPPAlliance/buffers
 //
 
-#ifndef BOOST_BUFFERS_CIRCULAR_BUFFER_HPP
-#define BOOST_BUFFERS_CIRCULAR_BUFFER_HPP
+#ifndef BOOST_ASYNC_IO_BUFFERS_CIRCULAR_BUFFER_HPP
+#define BOOST_ASYNC_IO_BUFFERS_CIRCULAR_BUFFER_HPP
 
 #include <boost/async/config.hpp>
 #include <boost/async/io/buffers/const_buffer_pair.hpp>
@@ -44,7 +44,6 @@ public:
 #if 0
     /** Constructor.
     */
-    explicit
     circular_buffer(
         mutable_buffer b) noexcept
         : base_(static_cast<

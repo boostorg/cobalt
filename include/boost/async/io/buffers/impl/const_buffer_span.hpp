@@ -7,8 +7,8 @@
 // Official repository: https://github.com/CPPAlliance/buffers
 //
 
-#ifndef BOOST_BUFFERS_IMPL_CONST_BUFFER_SPAN_HPP
-#define BOOST_BUFFERS_IMPL_CONST_BUFFER_SPAN_HPP
+#ifndef BOOST_ASYNC_IO_BUFFERS_IMPL_CONST_BUFFER_SPAN_HPP
+#define BOOST_ASYNC_IO_BUFFERS_IMPL_CONST_BUFFER_SPAN_HPP
 
 namespace boost::async::io::buffers {
 

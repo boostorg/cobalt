@@ -8,7 +8,7 @@
 //
 
 #include <boost/async/io/buffers/circular_buffer.hpp>
-#include <boost/async/io/buffers/type_traits.hpp>
+#include <boost/async/io/buffers/concepts.hpp>
 #include <boost/async/detail/exception.hpp>
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>

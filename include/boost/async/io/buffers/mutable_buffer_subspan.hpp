@@ -7,15 +7,15 @@
 // Official repository: https://github.com/CPPAlliance/buffers
 //
 
-#ifndef BOOST_BUFFERS_MUTABLE_BUFFER_SUBSPAN_HPP
-#define BOOST_BUFFERS_MUTABLE_BUFFER_SUBSPAN_HPP
+#ifndef BOOST_ASYNC_IO_BUFFERS_MUTABLE_BUFFER_SUBSPAN_HPP
+#define BOOST_ASYNC_IO_BUFFERS_MUTABLE_BUFFER_SUBSPAN_HPP
 
 #include <boost/async/config.hpp>
 #include <boost/async/io/buffers/mutable_buffer.hpp>
 
 namespace boost::async::io::buffers {
 
-#ifndef BOOST_BUFFERS_DOCS
+#ifndef BOOST_ASYNC_IO_BUFFERS_DOCS
 class mutable_buffer_span;
 #endif
 
@@ -61,7 +61,6 @@ public:
 
     /** Constructor.
     */
-    explicit
     mutable_buffer_subspan(
         mutable_buffer_span const& s) noexcept;
 
@@ -85,7 +84,7 @@ public:
     const_iterator
     end() const noexcept;
 
-#ifndef BOOST_BUFFERS_DOCS
+#ifndef BOOST_ASYNC_IO_BUFFERS_DOCS
     friend
     mutable_buffer_subspan
     tag_invoke(

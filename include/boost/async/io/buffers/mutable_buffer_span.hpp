@@ -7,13 +7,13 @@
 // Official repository: https://github.com/CPPAlliance/buffers
 //
 
-#ifndef BOOST_BUFFERS_MUTABLE_BUFFER_SPAN_HPP
-#define BOOST_BUFFERS_MUTABLE_BUFFER_SPAN_HPP
+#ifndef BOOST_ASYNC_IO_BUFFERS_MUTABLE_BUFFER_SPAN_HPP
+#define BOOST_ASYNC_IO_BUFFERS_MUTABLE_BUFFER_SPAN_HPP
 
 #include <boost/async/config.hpp>
 #include <boost/async/io/buffers/mutable_buffer.hpp>
 #include <boost/async/io/buffers/mutable_buffer_subspan.hpp>
-#include <boost/async/io/buffers/type_traits.hpp>
+#include <boost/async/io/buffers/concepts.hpp>
 
 namespace boost::async::io::buffers {
 
@@ -55,22 +55,11 @@ public:
     /** Constructor.
     */
     template<mutable_buffer_sequence MutableBufferSequence>
-        requires requires (const MutableBufferSequence & seq) {{seq.begin()} -> std::same_as<const mutable_buffer*>;}
-    explicit
-    mutable_buffer_span(
-        MutableBufferSequence const& bs) noexcept
-        : p_(bs.begin())
-        , n_(bs.end() - bs.begin())
-    {
-    }
-
-    template<mutable_buffer_sequence MutableBufferSequence>
       requires requires (const MutableBufferSequence & seq)
         {
-          {seq.data()} -> std::same_as<const mutable_buffer*>;
+          {seq.data()} -> std::convertible_to<const mutable_buffer*>;
           {seq.size()} -> std::same_as<std::size_t>;
         }
-    explicit
     mutable_buffer_span(
         MutableBufferSequence const& bs) noexcept
         : p_(bs.data())
@@ -104,7 +93,7 @@ public:
         return p_ + n_;
     }
 
-#ifndef BOOST_BUFFERS_DOCS
+#ifndef BOOST_ASYNC_IO_BUFFERS_DOCS
     friend
     mutable_buffer_subspan
     tag_invoke(

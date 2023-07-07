@@ -7,8 +7,8 @@
 // Official repository: https://github.com/CPPAlliance/buffers
 //
 
-#ifndef BOOST_BUFFERS_CONST_BUFFER_PAIR_HPP
-#define BOOST_BUFFERS_CONST_BUFFER_PAIR_HPP
+#ifndef BOOST_ASYNC_IO_BUFFERS_CONST_BUFFER_PAIR_HPP
+#define BOOST_ASYNC_IO_BUFFERS_CONST_BUFFER_PAIR_HPP
 
 #include <boost/async/config.hpp>
 #include <boost/async/io/buffers/const_buffer.hpp>
@@ -93,7 +93,11 @@ public:
         return b_ + 2;
     }
 
-#ifndef BOOST_BUFFERS_DOCS
+          const_buffer * data()       { return b_; }
+    const const_buffer * data() const { return b_; }
+    std::size_t size() const {return 2u;}
+
+#ifndef BOOST_ASYNC_IO_BUFFERS_DOCS
     friend
     const_buffer_pair
     tag_invoke(

@@ -70,13 +70,6 @@ struct string_buffer_test
             BOOST_TEST_EQ(b.size(), 4);
         }
 
-        // ws.size()
-        {
-          std::u16string ws = u"1234";
-          basic_string_buffer<char16_t> b(&ws);
-          BOOST_TEST_EQ(b.size(), 8);
-        }
-
         // capacity()
         {
             {

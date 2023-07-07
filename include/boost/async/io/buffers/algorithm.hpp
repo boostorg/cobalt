@@ -7,8 +7,8 @@
 // Official repository: https://github.com/CPPAlliance/buffers
 //
 
-#ifndef BOOST_BUFFERS_ALGORITHM_HPP
-#define BOOST_BUFFERS_ALGORITHM_HPP
+#ifndef BOOST_ASYNC_IO_BUFFERS_ALGORITHM_HPP
+#define BOOST_ASYNC_IO_BUFFERS_ALGORITHM_HPP
 
 #include <boost/async/config.hpp>
 #include <boost/async/io/buffers/buffer_size.hpp>
@@ -16,12 +16,12 @@
 #include <boost/async/io/buffers/mutable_buffer.hpp>
 #include <boost/async/io/buffers/range.hpp>
 #include <boost/async/io/buffers/tag_invoke.hpp>
-#include <boost/async/io/buffers/type_traits.hpp>
+#include <boost/async/io/buffers/concepts.hpp>
 #include <memory>
 
 namespace boost::async::io::buffers {
 
-#ifdef BOOST_BUFFERS_DOCS
+#ifdef BOOST_ASYNC_IO_BUFFERS_DOCS
 
 /** Returns the type of a prefix of a buffer sequence.
 */

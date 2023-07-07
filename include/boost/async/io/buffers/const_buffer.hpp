@@ -7,8 +7,8 @@
 // Official repository: https://github.com/CPPAlliance/buffers
 //
 
-#ifndef BOOST_BUFFERS_CONST_BUFFER_HPP
-#define BOOST_BUFFERS_CONST_BUFFER_HPP
+#ifndef BOOST_ASYNC_IO_BUFFERS_CONST_BUFFER_HPP
+#define BOOST_ASYNC_IO_BUFFERS_CONST_BUFFER_HPP
 
 #include <boost/async/config.hpp>
 #include <boost/async/io/buffers/mutable_buffer.hpp>
@@ -48,7 +48,7 @@ public:
             {ct.size()} -> std::convertible_to<std::size_t>;
           }
           && std::is_trivial_v<typename Container::value_type>)
-    const_buffer(Container & ct) : const_buffer(ct.data(), ct.size()) {}
+    const_buffer(Container & ct) : const_buffer(ct.data(), sizeof(typename Container::value_type) * ct.size()) {}
 
     /** Constructor for strings */
     template<std::size_t N>
@@ -79,7 +79,7 @@ public:
     const_buffer& operator=(
         const_buffer const&) = default;
 
-#ifndef BOOST_BUFFERS_DOCS
+#ifndef BOOST_ASYNC_IO_BUFFERS_DOCS
     // conversion to boost::asio::const_buffer
     template<class T>
       requires (std::constructible_from<T, void const*, std::size_t>
@@ -141,7 +141,7 @@ public:
         return b += n;
     }
 
-#ifndef BOOST_BUFFERS_DOCS
+#ifndef BOOST_ASYNC_IO_BUFFERS_DOCS
     friend
     const_buffer
     tag_invoke(

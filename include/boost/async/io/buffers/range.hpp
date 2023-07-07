@@ -7,18 +7,18 @@
 // Official repository: https://github.com/CPPAlliance/buffers
 //
 
-#ifndef BOOST_BUFFERS_RANGE_HPP
-#define BOOST_BUFFERS_RANGE_HPP
+#ifndef BOOST_ASYNC_IO_BUFFERS_RANGE_HPP
+#define BOOST_ASYNC_IO_BUFFERS_RANGE_HPP
 
 #include <boost/async/config.hpp>
 #include <boost/async/io/buffers/const_buffer.hpp>
 #include <boost/async/io/buffers/mutable_buffer.hpp>
-#include <boost/async/io/buffers/type_traits.hpp>
+#include <boost/async/io/buffers/concepts.hpp>
 #include <type_traits>
 
 namespace boost::async::io::buffers {
 
-#ifdef BOOST_BUFFERS_DOCS
+#ifdef BOOST_ASYNC_IO_BUFFERS_DOCS
 
 /** Return an iterator to the beginning of the buffer sequence.
 */

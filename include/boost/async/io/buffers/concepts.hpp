@@ -7,15 +7,15 @@
 // Official repository: https://github.com/CPPAlliance/buffers
 //
 
-#ifndef BOOST_BUFFERS_TYPE_TRAITS_HPP
-#define BOOST_BUFFERS_TYPE_TRAITS_HPP
+#ifndef BOOST_ASYNC_IO_BUFFERS_CONCEPTS_HPP
+#define BOOST_ASYNC_IO_BUFFERS_CONCEPTS_HPP
 
 #include <boost/async/config.hpp>
 #include <type_traits>
 
 namespace boost::async::io::buffers {
 
-#ifndef BOOST_BUFFERS_DOCS
+#ifndef BOOST_ASYNC_IO_BUFFERS_DOCS
 class const_buffer;
 class mutable_buffer;
 #endif
@@ -24,7 +24,7 @@ class mutable_buffer;
 
 /** Determine if T is a ConstBuffers.
 */
-#if BOOST_BUFFERS_DOCS
+#if BOOST_ASYNC_IO_BUFFERS_DOCS
 template<class T>
 struct is_const_buffer_sequence
     : std::integral_constant<bool, ...>{};
@@ -54,7 +54,7 @@ concept const_buffer_sequence =
 
 /** Determine if T is a MutableBuffers.
 */
-#if BOOST_BUFFERS_DOCS
+#if BOOST_ASYNC_IO_BUFFERS_DOCS
 template<class T>
 struct is_mutable_buffer_sequence
     : std::integral_constant<bool, ...>{};
@@ -79,7 +79,7 @@ concept mutable_buffer_sequence =
 
 /** Determine if T is a DynamicBuffer
 */
-#if BOOST_BUFFERS_DOCS
+#if BOOST_ASYNC_IO_BUFFERS_DOCS
 template<class T>
 struct is_dynamic_buffer
     : std::integral_constant<bool, ...>{};
@@ -113,6 +113,9 @@ using value_type = typename
             >::type;
 
 #endif
+
+template<typename T>
+concept buffer_byte = (sizeof(T) == 1u) && std::is_trivial_v<T>;
 
 
 } // boost::buffers

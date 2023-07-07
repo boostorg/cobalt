@@ -7,8 +7,8 @@
 // Official repository: https://github.com/CPPAlliance/buffers
 //
 
-#ifndef BOOST_BUFFERS_IMPL_MUTABLE_BUFFER_SUBSPAN_HPP
-#define BOOST_BUFFERS_IMPL_MUTABLE_BUFFER_SUBSPAN_HPP
+#ifndef BOOST_ASYNC_IO_BUFFERS_IMPL_MUTABLE_BUFFER_SUBSPAN_HPP
+#define BOOST_ASYNC_IO_BUFFERS_IMPL_MUTABLE_BUFFER_SUBSPAN_HPP
 
 #include <boost/assert.hpp>
 #include <iterator>

@@ -10,7 +10,7 @@
 // Test that header file is self-contained.
 #include <boost/async/io/buffers/flat_buffer.hpp>
 
-#include <boost/async/io/buffers/type_traits.hpp>
+#include <boost/async/io/buffers/concepts.hpp>
 #include <boost/static_assert.hpp>
 #include "test_helpers.hpp"
 

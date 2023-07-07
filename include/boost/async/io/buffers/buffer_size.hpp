@@ -7,18 +7,18 @@
 // Official repository: https://github.com/CPPAlliance/buffers
 //
 
-#ifndef BOOST_BUFFERS_BUFFER_SIZE_HPP
-#define BOOST_BUFFERS_BUFFER_SIZE_HPP
+#ifndef BOOST_ASYNC_IO_BUFFERS_BUFFER_SIZE_HPP
+#define BOOST_ASYNC_IO_BUFFERS_BUFFER_SIZE_HPP
 
 #include <boost/async/config.hpp>
 #include <boost/async/io/buffers/const_buffer.hpp>
 #include <boost/async/io/buffers/range.hpp>
 #include <boost/async/io/buffers/tag_invoke.hpp>
-#include <boost/async/io/buffers/type_traits.hpp>
+#include <boost/async/io/buffers/concepts.hpp>
 
 namespace boost::async::io::buffers {
 
-#ifdef BOOST_BUFFERS_DOCS
+#ifdef BOOST_ASYNC_IO_BUFFERS_DOCS
 
 /** Return the total octets in a buffer sequence
 

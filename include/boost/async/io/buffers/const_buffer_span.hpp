@@ -7,13 +7,13 @@
 // Official repository: https://github.com/CPPAlliance/buffers
 //
 
-#ifndef BOOST_BUFFERS_CONST_BUFFER_SPAN_HPP
-#define BOOST_BUFFERS_CONST_BUFFER_SPAN_HPP
+#ifndef BOOST_ASYNC_IO_BUFFERS_CONST_BUFFER_SPAN_HPP
+#define BOOST_ASYNC_IO_BUFFERS_CONST_BUFFER_SPAN_HPP
 
 #include <boost/async/config.hpp>
 #include <boost/async/io/buffers/const_buffer.hpp>
 #include <boost/async/io/buffers/const_buffer_subspan.hpp>
-#include <boost/async/io/buffers/type_traits.hpp>
+#include <boost/async/io/buffers/concepts.hpp>
 
 namespace boost::async::io::buffers {
 
@@ -55,22 +55,11 @@ public:
     /** Constructor.
     */
     template<const_buffer_sequence ConstBufferSequence>
-        requires requires (const ConstBufferSequence & seq) {{seq.begin()} -> std::same_as<const const_buffer*>;}
-    explicit
-    const_buffer_span(
-        ConstBufferSequence const& bs) noexcept
-        : p_(bs.begin())
-        , n_(bs.end() - bs.begin())
-    {
-    }
-
-    template<const_buffer_sequence ConstBufferSequence>
     requires requires (const ConstBufferSequence & seq)
     {
-      {seq.data()} -> std::same_as<const const_buffer*>;
+      {seq.data()} -> std::convertible_to<const const_buffer*>;
       {seq.size()} -> std::same_as<std::size_t>;
     }
-    explicit
     const_buffer_span(
         ConstBufferSequence const& bs) noexcept
         : p_(bs.data())
@@ -106,7 +95,7 @@ public:
         return p_ + n_;
     }
 
-#ifndef BOOST_BUFFERS_DOCS
+#ifndef BOOST_ASYNC_IO_BUFFERS_DOCS
     friend
     const_buffer_subspan
     tag_invoke(
