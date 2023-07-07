@@ -21,14 +21,24 @@ BOOST_ASYNC_DECL promise<transfer_result> write(stream & source, buffers::const_
 BOOST_ASYNC_DECL promise<transfer_result> write(stream & source, buffers::const_buffer_span buffer);
 BOOST_ASYNC_DECL promise<transfer_result> write(stream & source, buffers::const_buffer_subspan buffer);
 
-template<buffers::const_buffer_sequence MutableBufferSequence>
-  requires (!std::convertible_to<buffers::const_buffer_span, MutableBufferSequence>)
-promise<transfer_result> write(stream & source, MutableBufferSequence && buffer)
+template<buffers::const_buffer_sequence ConstBufferSequence>
+  requires (!std::convertible_to<buffers::const_buffer_span, ConstBufferSequence>)
+promise<transfer_result> write(stream & source, ConstBufferSequence && buffer)
 {
-  buffers::const_buffer buf[32];
-  container::pmr::monotonic_buffer_resource res{buf, sizeof(buf), this_thread::get_default_resource()};
-  container::pmr::vector<buffers::const_buffer> buf_span{buffer.begin(), buffer.end(), &res};
-  co_return co_await write(source, buffers::const_buffer_span{buf_span});
+  buffers::const_buffer buf[asio::detail::max_iov_len];
+
+  transfer_result tr{};
+
+  for (auto itr = buffers::begin(buffer), end = buffers::end(buffer); itr != end;)
+  {
+    auto ie = (std::min)(end, std::next(itr, asio::detail::max_iov_len));
+    auto oe = std::copy(itr, ie, buf);
+
+    buffers::const_buffer_span cbs{buf, std::distance(buf, oe)};
+    tr += co_await write(source, cbs);
+    itr = ie;
+  }
+  co_return tr;
 }
 
 }

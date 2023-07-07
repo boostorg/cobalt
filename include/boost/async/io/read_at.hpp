@@ -10,6 +10,7 @@
 
 #include <boost/async/promise.hpp>
 #include <boost/async/io/random_access_device.hpp>
+#include <boost/async/io/buffers/range.hpp>
 #include <boost/async/io/buffers/mutable_buffer_span.hpp>
 #include <boost/container/pmr/vector.hpp>
 
@@ -23,10 +24,20 @@ template<buffers::mutable_buffer_sequence MutableBufferSequence>
     requires (!std::convertible_to<buffers::mutable_buffer_span, MutableBufferSequence>)
 promise<transfer_result> read(random_access_device & source, std::uint64_t offset, MutableBufferSequence && buffer)
 {
-  buffers::mutable_buffer buf[32];
-  container::pmr::monotonic_buffer_resource res{buf, sizeof(buf), this_thread::get_default_resource()};
-  container::pmr::vector<buffers::mutable_buffer> buf_span{buffer.begin(), buffer.end(), &res};
-  co_return co_await read_at(source, offset, buffers::mutable_buffer_span{buf_span});
+  buffers::mutable_buffer buf[asio::detail::max_iov_len];
+
+  transfer_result tr{};
+
+  for (auto itr = buffers::begin(buffer), end = buffers::end(buffer); itr != end;)
+  {
+    auto ie = (std::min)(end, std::next(itr, asio::detail::max_iov_len));
+    auto oe = std::copy(itr, ie, buf);
+
+    buffers::mutable_buffer_span cbs{buf, std::distance(buf, oe)};
+    tr += co_await read_at(source, offset + tr.transferred, cbs);
+    itr = ie;
+  }
+  co_return tr;
 }
 
 

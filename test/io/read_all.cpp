@@ -9,9 +9,7 @@
 #include "../test.hpp"
 #include <boost/async/io/pipe.hpp>
 #include <boost/async/io/buffers.hpp>
-#include <boost/async/io/copy.hpp>
 #include <boost/async/io/read_all.hpp>
-#include <boost/async/io/read.hpp>
 #include <boost/async/io/write.hpp>
 #include <boost/async/join.hpp>
 #include <boost/asio.hpp>
@@ -20,26 +18,14 @@
 
 using namespace boost::async;
 
-promise<void> do_write__(io::stream & str, std::string & input )
+static promise<void> do_write_2(io::stream & str, std::string & input )
 {
   boost::ignore_unused(co_await io::write(str, {input.data(), input.size()}));
-  str.close().value();
 };
 
-promise<void> do_copy(io::stream & in, io::stream & out)
+CO_TEST_CASE("read")
 {
-  auto [r, w] = co_await io::copy(in, out);
-  CHECK(r.transferred == (1024*1024));
-  CHECK(w.value() == (1024*1024));
-  out.close().value();
-
-};
-
-CO_TEST_CASE("copy")
-{
-  std::signal(SIGPIPE, SIG_IGN);
-  auto [r, wi] = io::make_pipe().value();
-  auto [ri, w] = io::make_pipe().value();
+  auto [r, w] = io::make_pipe().value();
 
   std::string input;
 
@@ -50,18 +36,18 @@ CO_TEST_CASE("copy")
   input.resize(1024*1024);
   std::generate(input.begin(), input.end(), [&]{return static_cast<char>(distPrintable(rng));});
 
-  auto p = do_write__(w, input);
-  auto c = do_copy(ri, wi);
+  auto p = do_write_2(w, input);
+
   std::string output;
+  output.resize(1024*16);
   auto res = co_await io::read_all(r, io::buffers::string_buffer(&output));
 
   CHECK(res.transferred == output.size());
-  CHECK(res.transferred == input.size());
+  CHECK(!res.has_error());
 
   CHECK(std::equal(output.begin(), output.end(), input.begin()));
 
   CHECK(!r.close().has_error());
   co_await p;
-  co_await c;
 }
 

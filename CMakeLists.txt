@@ -110,6 +110,7 @@ add_library(boost_async
         src/io/random_access_file.cpp
         src/io/file.cpp
         src/io/read.cpp
+        src/io/read_all.cpp
         src/io/read_at.cpp
         src/io/read_until.cpp
         src/io/popen.cpp
@@ -118,7 +119,8 @@ add_library(boost_async
         src/io/write.cpp
         src/io/write_at.cpp
         src/io/detail/random_access_device.cpp
-        src/io/copy.cpp)
+        src/io/copy.cpp
+        src/io/copy_n.cpp)
 
 target_include_directories(boost_async PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(boost_async PUBLIC

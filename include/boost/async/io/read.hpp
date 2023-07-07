@@ -27,18 +27,20 @@ template<buffers::mutable_buffer_sequence MutableBufferSequence>
   requires (!std::convertible_to<buffers::mutable_buffer_span, MutableBufferSequence>)
 promise<transfer_result> read(stream & source, MutableBufferSequence && buffer)
 {
-  buffers::mutable_buffer buf[32];
-  container::pmr::monotonic_buffer_resource res{buf, sizeof(buf), this_thread::get_default_resource()};
-  container::pmr::vector<buffers::mutable_buffer> buf_span{buffer.begin(), buffer.end(), &res};
-  co_return co_await read(source, buffers::mutable_buffer_span{buf_span});
-}
+  buffers::mutable_buffer buf[asio::detail::max_iov_len];
 
-template<buffers::dynamic_buffer DynamicBuffer>
-promise<transfer_result> read(stream & source, DynamicBuffer && buffer, std::size_t chunk_size = 4096)
-{
-  auto any = buffers::make_any(std::forward<DynamicBuffer>(buffer));
-  buffers::any_dynamic_buffer & ab = any;
-  co_return co_await read(source, ab, chunk_size);
+  transfer_result tr{};
+
+  for (auto itr = buffers::begin(buffer), end = buffers::end(buffer); itr != end;)
+  {
+    auto ie = (std::min)(end, std::next(itr, asio::detail::max_iov_len));
+    auto oe = std::copy(itr, ie, buf);
+
+    buffers::mutable_buffer_span cbs{buf, std::distance(buf, oe)};
+    tr += co_await read(source, cbs);
+    itr = ie;
+  }
+  co_return tr;
 }
 
 

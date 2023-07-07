@@ -46,19 +46,5 @@ promise<transfer_result> read(stream & source, buffers::mutable_buffer_span buff
 }
 
 
-promise<transfer_result> read(stream & source, buffers::any_dynamic_buffer & buffer, std::size_t chunk_size)
-{
-  transfer_result tr;
-
-  do
-  {
-    auto rd = co_await source.read_some(buffer.prepare(chunk_size));
-    tr.transferred += rd.transferred;
-    tr.error = rd.error;
-    buffer.commit(rd.transferred);
-  }
-  while (buffer.size() >= 0 && !tr.has_error());
-  co_return tr;
-}
 
 }
