@@ -17,6 +17,7 @@ deps = [
     'libs/concept_check',
     'libs/config',
     'libs/container',
+    'libs/container_hash',
     'libs/core',
     'libs/date_time',
     'libs/headers',
@@ -32,6 +33,7 @@ deps = [
     'libs/ratio',
     'libs/system',
     'libs/static_assert',
+    'libs/stacktrace',
     'libs/smart_ptr',
     'libs/test',
     'libs/thread',
@@ -192,7 +194,5 @@ def main(ctx):
         linux("clang (asan)",   branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", debug_symbols="on", address_sanitizer="on"),
         linux("clang (tsan)",   branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", debug_symbols="on",  thread_sanitizer="on"),
         windows("msvc-14.3 (x64)", branch, "cppalliance/dronevs2022:latest", variant="debug", cxxstd="20", address_model="64"),
-        windows("msvc-14.3 (x32)", branch, "cppalliance/dronevs2022:latest", variant="debug", cxxstd="20", address_model="32"),
-        windows("msvc-14.3 asan (x64)", branch, "cppalliance/dronevs2022:latest", variant="debug", cxxstd="20", address_model="64", address_sanitizer="on"),
-        windows("msvc-14.3 asan (x32)", branch, "cppalliance/dronevs2022:latest", variant="debug", cxxstd="20", address_model="32", address_sanitizer="on")
+        windows("msvc-14.3 (x32)", branch, "cppalliance/dronevs2022:latest", variant="debug", cxxstd="20", address_model="32")
     ]

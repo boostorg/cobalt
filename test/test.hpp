@@ -9,6 +9,11 @@
 #include <boost/async/run.hpp>
 #include <boost/async/spawn.hpp>
 
+#include <boost/stacktrace.hpp>
+
+#include <iostream>
+#include <csignal>
+
 #include "doctest.h"
 
 template<>
@@ -31,6 +36,15 @@ struct doctest::StringMaker<std::exception_ptr>
 
 inline void test_run(boost::async::task<void> (*func) ())
 {
+  std::signal(
+      SIGSEGV,
+      [](int sig)
+      {
+        std::cout << "Stack trace: " << boost::stacktrace::stacktrace();
+        std::terminate();
+      }
+  );
+
   using namespace boost;
   asio::io_context ctx;
   async::this_thread::set_executor(ctx.get_executor());
