@@ -8,6 +8,7 @@
 #include <boost/async/this_coro.hpp>
 #include <boost/async/concepts.hpp>
 #include <boost/async/detail/util.hpp>
+#include <boost/async/detail/yeet.hpp>
 
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/executor.hpp>
@@ -80,11 +81,12 @@ struct post_coroutine_promise : partial_promise<Allocator>
             CompletionToken cpl;
             constexpr bool await_ready() noexcept { return false; }
             BOOST_NOINLINE
-            void await_suspend(std::coroutine_handle<void> h) noexcept
+            auto await_suspend(std::coroutine_handle<void> h) noexcept
             {
                 auto c = std::move(cpl);
-                h.destroy();
                 asio::post(std::move(c));
+                return detail::yeet(std::noop_coroutine(), h);
+
             }
 
             constexpr void await_resume() noexcept {}
@@ -124,11 +126,11 @@ struct immediate_coroutine_promise : partial_promise<Allocator>
       CompletionToken cpl;
       constexpr bool await_ready() noexcept { return false; }
       BOOST_NOINLINE
-      void await_suspend(std::coroutine_handle<void> h) noexcept
+      auto await_suspend(std::coroutine_handle<void> h) noexcept
       {
         auto c = std::move(cpl);
-        h.destroy();
         std::move(c)();
+        return yeet(std::noop_coroutine(), h);
       }
 
       constexpr void await_resume() noexcept {}
@@ -196,11 +198,11 @@ struct transactable_coroutine_promise : partial_promise<Allocator>
       CompletionToken cpl;
       constexpr bool await_ready() noexcept { return false; }
       BOOST_NOINLINE
-      void await_suspend(std::coroutine_handle<void> h) noexcept
+      auto await_suspend(std::coroutine_handle<void> h) noexcept
       {
         auto c = std::move(cpl);
-        h.destroy();
         std::move(c)();
+        return yeet(std::noop_coroutine(), h);
       }
 
       constexpr void await_resume() noexcept {}

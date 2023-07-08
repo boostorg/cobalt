@@ -279,8 +279,7 @@ struct generator_promise
           res = std::coroutine_handle<void>::from_address(generator->receiver->awaited_from.release());
         if (generator->receiver)
             generator->receiver->done = true;
-        h.destroy();
-        return std::coroutine_handle<void>::from_address(res.address());
+        return detail::yeet(std::coroutine_handle<void>::from_address(res.address()), h);
       }
 
       void await_resume() noexcept
@@ -377,7 +376,7 @@ struct generator_yield_awaitable
   std::coroutine_handle<void> await_suspend(std::coroutine_handle<generator_promise<Yield, Push>> h)
   {
     if (self == nullptr) // we're a terminator, kill it
-    {
+`    {
         h.destroy();
         return std::noop_coroutine();
     }

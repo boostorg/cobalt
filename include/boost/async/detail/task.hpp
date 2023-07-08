@@ -11,8 +11,9 @@
 #include <boost/async/detail/async_operation.hpp>
 #include <boost/async/detail/exception.hpp>
 #include <boost/async/detail/forward_cancellation.hpp>
-#include <boost/async/detail/wrapper.hpp>
 #include <boost/async/detail/this_thread.hpp>
+#include <boost/async/detail/wrapper.hpp>
+#include <boost/async/detail/yeet.hpp>
 
 #include <boost/asio/bind_allocator.hpp>
 #include <boost/asio/cancellation_signal.hpp>
@@ -21,6 +22,7 @@
 #include <coroutine>
 #include <optional>
 #include <utility>
+
 
 namespace boost::async
 {
@@ -309,8 +311,7 @@ struct task_promise
         if (promise->receiver && promise->receiver->awaited_from.get() != nullptr)
           res = std::coroutine_handle<void>::from_address(promise->receiver->awaited_from.release());
 
-        h.destroy();
-        return std::coroutine_handle<void>::from_address(res.address());
+        return detail::yeet(std::coroutine_handle<void>::from_address(res.address()), h);
       }
 
       void await_resume() noexcept

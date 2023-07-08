@@ -294,8 +294,7 @@ struct async_promise
         if (promise->receiver && promise->receiver->awaited_from.get() != nullptr)
           res = std::coroutine_handle<void>::from_address(promise->receiver->awaited_from.release());
 
-        h.destroy();
-        return std::coroutine_handle<void>::from_address(res.address());      
+        return detail::yeet(std::coroutine_handle<void>::from_address(res.address()), h);
       }
 
       void await_resume() noexcept
