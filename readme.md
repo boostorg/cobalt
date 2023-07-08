@@ -1,7 +1,7 @@
 # boost.async
 
-**Some if not all MSVC versions have a broken coroutine implementation, that causes UB (double deletes).
-Run the tests to check if compiler supports coroutines correctly.**
+**All MSVC versions as June 2023 have a broken coroutine implementation, that causes UB (double deletes).
+This library works around that using more posts, which can cause slight differences in behaviour and overhead.**
 
 ** This is not yet an official boost library. **
 

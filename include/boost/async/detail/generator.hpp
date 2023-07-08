@@ -272,15 +272,26 @@ struct generator_promise
         return generator->receiver && generator->receiver->awaited_from.get() == nullptr;
       }
 
-      auto await_suspend(std::coroutine_handle<generator_promise> h) noexcept -> std::coroutine_handle<void>
+      auto await_suspend(std::coroutine_handle<generator_promise> h) noexcept
       {
         std::coroutine_handle<void> res = std::noop_coroutine();
         if (generator->receiver && generator->receiver->awaited_from.get() != nullptr)
           res = std::coroutine_handle<void>::from_address(generator->receiver->awaited_from.release());
         if (generator->receiver)
             generator->receiver->done = true;
-        h.destroy();
-        return std::coroutine_handle<void>::from_address(res.address());
+
+
+        if (auto & rec = h.promise().receiver; rec != nullptr)
+        {
+          if (!rec->done && !rec->exception)
+            rec->exception = detail::completed_unexpected();
+          rec->done = true;
+          rec->awaited_from.reset(nullptr);
+          rec = nullptr;
+        }
+
+        detail::self_destroy(h);
+        return res;
       }
 
       void await_resume() noexcept
@@ -378,8 +389,17 @@ struct generator_yield_awaitable
   {
     if (self == nullptr) // we're a terminator, kill it
     {
-        h.destroy();
-        return std::noop_coroutine();
+      if (auto & rec = h.promise().receiver; rec != nullptr)
+      {
+        if (!rec->done && !rec->exception)
+          rec->exception = detail::completed_unexpected();
+        rec->done = true;
+        rec->awaited_from.reset(nullptr);
+        rec = nullptr;
+      }
+
+      detail::self_destroy(h);
+      return std::noop_coroutine();
     }
     std::coroutine_handle<void> res = std::noop_coroutine();
     if (self->awaited_from.get() != nullptr)
@@ -405,7 +425,15 @@ struct generator_yield_awaitable<Yield, void>
   {
     if (self == nullptr) // we're a terminator, kill it
     {
-      h.destroy();
+      if (auto & rec = h.promise().receiver; rec != nullptr)
+      {
+        if (!rec->done && !rec->exception)
+          rec->exception = detail::completed_unexpected();
+        rec->done = true;
+        rec->awaited_from.reset(nullptr);
+        rec = nullptr;
+      }
+      detail::self_destroy(h);
       return std::noop_coroutine();
     }
     std::coroutine_handle<void> res = std::noop_coroutine();

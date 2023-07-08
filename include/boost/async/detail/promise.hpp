@@ -288,14 +288,23 @@ struct async_promise
         return promise->receiver && promise->receiver->awaited_from.get() == nullptr;
       }
 
-      auto await_suspend(std::coroutine_handle<async_promise> h) noexcept -> std::coroutine_handle<void>
+      std::coroutine_handle<void> await_suspend(std::coroutine_handle<async_promise> h) noexcept
       {
         std::coroutine_handle<void> res = std::noop_coroutine();
         if (promise->receiver && promise->receiver->awaited_from.get() != nullptr)
           res = std::coroutine_handle<void>::from_address(promise->receiver->awaited_from.release());
 
-        h.destroy();
-        return std::coroutine_handle<void>::from_address(res.address());      
+
+        if (auto &rec = h.promise().receiver; rec != nullptr)
+        {
+          if (!rec->done && !rec->exception)
+            rec->exception = completed_unexpected();
+          rec->set_done();
+          rec->awaited_from.reset(nullptr);
+          rec = nullptr;
+        }
+        detail::self_destroy(h);
+        return res;
       }
 
       void await_resume() noexcept

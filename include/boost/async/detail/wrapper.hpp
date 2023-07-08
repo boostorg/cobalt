@@ -43,6 +43,7 @@ struct partial_promise_base
     {
       deallocate_coroutine<Allocator>(raw, size);
     }
+
 };
 
 template<>
@@ -63,7 +64,7 @@ struct partial_promise : partial_promise_base<Allocator>
 
     auto final_suspend() noexcept
     {
-        return std::suspend_always();
+        return std::suspend_never();
     }
 
     void return_void() {}
@@ -83,7 +84,7 @@ struct post_coroutine_promise : partial_promise<Allocator>
             void await_suspend(std::coroutine_handle<void> h) noexcept
             {
                 auto c = std::move(cpl);
-                h.destroy();
+                detail::self_destroy(h);
                 asio::post(std::move(c));
             }
 
@@ -99,13 +100,18 @@ struct post_coroutine_promise : partial_promise<Allocator>
 
     void unhandled_exception()
     {
-        std::coroutine_handle<post_coroutine_promise<Allocator>>::from_promise(*this).destroy();
+        detail::self_destroy(std::coroutine_handle<post_coroutine_promise<Allocator>>::from_promise(*this));
         throw;
     }
 };
 
 template<typename Allocator = void>
-struct immediate_coroutine_promise : partial_promise<Allocator>
+struct immediate_coroutine_promise :
+#if !defined(BOOST_ASYNC_NO_SELF_DELETE)
+    partial_promise_base<Allocator>
+#else
+    promise_memory_resource_base
+#endif
 {
   template<typename CompletionToken>
   immediate_coroutine_promise(CompletionToken & cpl)
@@ -127,7 +133,7 @@ struct immediate_coroutine_promise : partial_promise<Allocator>
       void await_suspend(std::coroutine_handle<void> h) noexcept
       {
         auto c = std::move(cpl);
-        h.destroy();
+        detail::self_destroy(h);
         std::move(c)();
       }
 
@@ -141,9 +147,22 @@ struct immediate_coroutine_promise : partial_promise<Allocator>
     return std::coroutine_handle<immediate_coroutine_promise<Allocator>>::from_promise(*this);
   }
 
+  auto initial_suspend() noexcept
+  {
+    return std::suspend_always();
+  }
+
+  auto final_suspend() noexcept
+  {
+    return std::suspend_never();
+  }
+
+  void return_void() {}
+
+
   void unhandled_exception()
   {
-    std::coroutine_handle<immediate_coroutine_promise<Allocator>>::from_promise(*this).destroy();
+    detail::self_destroy(std::coroutine_handle<immediate_coroutine_promise<Allocator>>::from_promise(*this));
     throw;
   }
 
@@ -163,7 +182,12 @@ struct immediate_coroutine_promise : partial_promise<Allocator>
 };
 
 template<typename Allocator = void>
-struct transactable_coroutine_promise : partial_promise<Allocator>
+struct transactable_coroutine_promise :
+#if !defined(BOOST_ASYNC_NO_SELF_DELETE)
+    partial_promise<Allocator>
+#else
+    promise_memory_resource_base
+#endif
 {
   template<typename BeginTransaction, typename CompletionToken>
   transactable_coroutine_promise(BeginTransaction & transaction, CompletionToken & cpl)
@@ -180,6 +204,18 @@ struct transactable_coroutine_promise : partial_promise<Allocator>
 
   void * begin_transaction_this;
   void (*begin_transaction_func)(void*);
+
+  auto initial_suspend() noexcept
+  {
+    return std::suspend_always();
+  }
+
+  auto final_suspend() noexcept
+  {
+    return std::suspend_never();
+  }
+
+  void return_void() {}
 
   void begin_transaction()
   {
@@ -199,7 +235,7 @@ struct transactable_coroutine_promise : partial_promise<Allocator>
       void await_suspend(std::coroutine_handle<void> h) noexcept
       {
         auto c = std::move(cpl);
-        h.destroy();
+        detail::self_destroy(h);
         std::move(c)();
       }
 
@@ -215,7 +251,7 @@ struct transactable_coroutine_promise : partial_promise<Allocator>
 
   void unhandled_exception()
   {
-    std::coroutine_handle<transactable_coroutine_promise<Allocator>>::from_promise(*this).destroy();
+    detail::self_destroy(std::coroutine_handle<transactable_coroutine_promise<Allocator>>::from_promise(*this));
     throw;
   }
 
@@ -334,7 +370,7 @@ void suspend_for_callback(Awaitable & aw, CompletionToken && ct)
 }
 
 template <typename Transaction, typename CompletionToken>
-auto  transactable_coroutine(Transaction transaction, CompletionToken token)
+auto transactable_coroutine(Transaction transaction, CompletionToken token)
   -> std::coroutine_handle<transactable_coroutine_promise<asio::associated_allocator_t<CompletionToken>>>
 {
   co_yield std::move(token);

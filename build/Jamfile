@@ -19,10 +19,10 @@ project : requirements
 
 alias async_sources
    : detail/exception.cpp
+     detail/util.cpp
      channel.cpp
      main.cpp
      this_thread.cpp
-
    ;
 
 explicit async_sources ;

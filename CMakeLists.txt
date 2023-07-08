@@ -68,6 +68,7 @@ endif()
 
 add_library(boost_async
             src/detail/exception.cpp
+            src/detail/util.cpp
             src/channel.cpp
             src/main.cpp
             src/this_thread.cpp)

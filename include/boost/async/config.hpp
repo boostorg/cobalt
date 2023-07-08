@@ -30,6 +30,11 @@
 # endif
 #endif
 
+#if defined(_MSC_VER)
+// msvc doesn't correctly suspend for self-deletion, hence we must workaround here
+#define BOOST_ASYNC_NO_SELF_DELETE 1
+#endif
+
 namespace boost::async
 {
 

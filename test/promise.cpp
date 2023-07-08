@@ -124,14 +124,7 @@ async::promise<void> delay_v(asio::io_context &ctx, std::size_t ms)
 
 CO_TEST_CASE("cancel-int")
 {
-  asio::io_context ctx;
-  async::this_thread::set_executor(ctx.get_executor());
-  asio::cancellation_signal signal;
-
   CHECK_THROWS(co_await throw_());
-
-
-  ctx.run();
 }
 
 
