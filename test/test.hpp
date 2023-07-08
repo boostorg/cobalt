@@ -34,6 +34,8 @@ inline void test_run(boost::async::task<void> (*func) ())
   using namespace boost;
   asio::io_context ctx;
   async::this_thread::set_executor(ctx.get_executor());
+  container::pmr::unsynchronized_pool_resource res;
+  async::this_thread::set_default_resource(&res);
   spawn(ctx, func(),
         +[](std::exception_ptr e)
         {
@@ -54,6 +56,8 @@ inline void test_run(boost::async::task<void> (*func) ())
       for (std::size_t i = n; i > 0; i--)
         ctx.run_one();
     }
+
+  async::this_thread::set_default_resource(container::pmr::get_default_resource());
 }
 
 // tag::test_case_macro[]
@@ -71,7 +75,7 @@ static ::boost::async::task<void> Function()
 struct stop
 {
   bool await_ready() {return false;}
-  void await_suspend(std::coroutine_handle<> h) { h.destroy(); }
+  void await_suspend(std::coroutine_handle<> h) { boost::async::detail::self_destroy(h); }
   void await_resume() {}
 };
 

@@ -5,6 +5,8 @@
 #ifndef BOOST_ASYNC_UTIL_HPP
 #define BOOST_ASYNC_UTIL_HPP
 
+#include <boost/async/config.hpp>
+
 #include <boost/system/result.hpp>
 
 #include <limits>
@@ -144,6 +146,15 @@ auto get_resume_result(Awaitable & aw) -> system::result<decltype(aw.await_resum
   }
 }
 
+#if BOOST_ASYNC_NO_SELF_DELETE
+BOOST_ASYNC_DECL void self_destroy(std::coroutine_handle<void> h) noexcept;
+#else
+template<typename T>
+inline void self_destroy(std::coroutine_handle<T> h) noexcept
+{
+  h.destroy();
+}
+#endif
 }
 
 #endif //BOOST_ASYNC_UTIL_HPP

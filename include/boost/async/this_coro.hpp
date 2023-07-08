@@ -13,6 +13,7 @@
 #include <boost/asio/associated_executor.hpp>
 #include <boost/asio/this_coro.hpp>
 #include <boost/asio/cancellation_state.hpp>
+#include <boost/container/pmr/monotonic_buffer_resource.hpp>
 
 #include <coroutine>
 #include <optional>
@@ -301,9 +302,17 @@ void deallocate_coroutine(void *raw_, const std::size_t size)
     const auto align_offset = align_needed != 0 ? alignof(alloc_type) - align_needed : 0ull;
     const auto alloc_size = size + sizeof(alloc_type) + align_offset;
     auto alloc_p = reinterpret_cast<alloc_type *>(raw + size + align_offset);
+
+
+    if constexpr(std::same_as<alloc_type , container::pmr::polymorphic_allocator<unsigned char>>)
+      if (alloc_p->resource() == nullptr)
+        return ;
+
+
     auto alloc = std::move(*alloc_p);
     alloc_p->~alloc_type();
-    std::allocator_traits<alloc_type>::deallocate(alloc, raw, alloc_size);
+    using size_type = typename std::allocator_traits<alloc_type>::size_type;
+    std::allocator_traits<alloc_type>::deallocate(alloc, raw, static_cast<size_type>(alloc_size));
 }
 
 

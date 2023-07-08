@@ -17,6 +17,7 @@ TEST_SUITE_BEGIN("wrappers");
 TEST_CASE("regular")
 {
     boost::asio::io_context ctx;
+    boost::async::this_thread::set_executor(ctx.get_executor());
     bool ran = false;
 
     char buf[512];
@@ -39,8 +40,9 @@ TEST_CASE("expire")
 {
 
   boost::asio::io_context ct2;
+  boost::async::this_thread::set_executor(ct2.get_executor());
   auto h = boost::async::detail::post_coroutine(ct2.get_executor(), boost::asio::detached);
-  h.destroy();
+  boost::async::detail::self_destroy(h);
 }
 
 TEST_CASE("immediate")
@@ -50,12 +52,13 @@ TEST_CASE("immediate")
   bool called = false;
   auto l = [&]{called = true;};
   auto h = boost::async::detail::immediate_coroutine(l);
-  h.destroy();
+  boost::async::detail::self_destroy(h);
   CHECK(!called);
 
   h = boost::async::detail::immediate_coroutine(l);
   h();
   CHECK(called);
+  ctx.run();
 }
 
 
@@ -67,7 +70,7 @@ TEST_CASE("immediate")
   auto l = [&]{called = true;};
   auto t = []{CHECK(false);};
   auto h = boost::async::detail::transactable_coroutine(t, l);
-  h.destroy();
+  boost::async::detail::self_destroy(h);
   CHECK(!called);
 
   h = boost::async::detail::transactable_coroutine(t, l);
