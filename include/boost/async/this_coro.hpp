@@ -303,7 +303,10 @@ void deallocate_coroutine(void *raw_, const std::size_t size)
     auto alloc_p = reinterpret_cast<alloc_type *>(raw + size + align_offset);
     auto alloc = std::move(*alloc_p);
     alloc_p->~alloc_type();
-    std::allocator_traits<alloc_type>::deallocate(alloc, raw, alloc_size);
+
+    std::allocator_traits<alloc_type>::deallocate(
+        alloc, raw,
+        static_cast<typename std::allocator_traits<alloc_type>::size_type >(alloc_size));
 }
 
 
