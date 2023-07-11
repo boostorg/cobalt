@@ -147,7 +147,6 @@ struct select_variadic_impl
 
     bool await_ready()
     {
-      std::size_t idx = 0u;
       bool found_ready = false;
       mp11::mp_for_each<mp11::mp_iota_c<sizeof...(Args)>>(
           [&](auto idx)
