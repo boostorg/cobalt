@@ -57,7 +57,7 @@ endif()
 
 if (NOT BOOST_ASYNC_BUILD_INLINE)
     find_package(Threads REQUIRED)
-    find_package(Boost REQUIRED container system json)
+    find_package(Boost REQUIRED container system OPTIONAL_COMPONENTS json)
     include_directories(include)
 endif()
 
