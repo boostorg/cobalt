@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_ASYNC_DETAIL_SELECT_HPP
-#define BOOST_ASYNC_DETAIL_SELECT_HPP
+#ifndef BOOST_ASYNC_DETAIL_RACEa_HPP
+#define BOOST_ASYNC_DETAIL_RACEa_HPP
 
 #include <boost/async/detail/await_result_helper.hpp>
 #include <boost/async/detail/forward_cancellation.hpp>
@@ -32,13 +32,13 @@ namespace boost::async::detail
 {
 
 
-struct select_shared_state
+struct race_shared_state
 {
   std::unique_ptr<void, coro_deleter<>> h;
   std::size_t use_count = 0u;
 
-  friend void intrusive_ptr_add_ref(select_shared_state * st) {st->use_count++;}
-  friend void intrusive_ptr_release(select_shared_state * st) {if (st->use_count-- == 1u) st->h.reset();}
+  friend void intrusive_ptr_add_ref(race_shared_state * st) {st->use_count++;}
+  friend void intrusive_ptr_release(race_shared_state * st) {if (st->use_count-- == 1u) st->h.reset();}
 
   void complete()
   {
@@ -48,8 +48,8 @@ struct select_shared_state
 
   struct completer
   {
-    intrusive_ptr<select_shared_state> ptr;
-    completer(select_shared_state * wss) : ptr{wss} {}
+    intrusive_ptr<race_shared_state> ptr;
+    completer(race_shared_state * wss) : ptr{wss} {}
 
     void operator()()
     {
@@ -71,36 +71,30 @@ struct select_shared_state
   }
 };
 
-template<asio::cancellation_type Ct, typename URBG, typename ... Args>
-struct select_variadic_impl
+template<asio::cancellation_type Ct, typename ... Args>
+struct race_variadic_impl
 {
   using tuple_type = std::tuple<decltype(get_awaitable_type(std::declval<Args>()))...>;
 
-  template<typename URBG_>
-  select_variadic_impl(URBG_ && g, Args && ... args)
-      : args{std::forward<Args>(args)...}, g(std::forward<URBG_>(g))
+  race_variadic_impl(Args && ... args)
+      : args{std::forward<Args>(args)...}
   {
   }
 
   std::tuple<Args...> args;
-  URBG g;
 
   constexpr static std::size_t tuple_size = sizeof...(Args);
 
   struct awaitable
   {
     template<std::size_t ... Idx>
-    awaitable(std::tuple<Args...> & args, URBG & g, std::index_sequence<Idx...>) :
+    awaitable(std::tuple<Args...> & args, std::index_sequence<Idx...>) :
         aws{awaitable_type_getter<Args>(std::get<Idx>(args))...}
     {
-      std::generate(reorder.begin(), reorder.end(),
-                    [i = std::size_t(0u)]() mutable {return i++;});
-      std::shuffle(reorder.begin(), reorder.end(), g);
-
     }
 
     tuple_type aws;
-    std::array<std::size_t, tuple_size> reorder;
+
     std::array<bool, tuple_size> ready{};
     std::array<asio::cancellation_signal, tuple_size> cancel_;
 
@@ -114,7 +108,7 @@ struct select_variadic_impl
                                                   this_thread::get_default_resource()};
     container::pmr::polymorphic_allocator<void> alloc{&res};
 
-    select_shared_state sss;
+    race_shared_state sss;
 
     bool has_result() const
     {
@@ -154,18 +148,14 @@ struct select_variadic_impl
     bool await_ready()
     {
       bool found_ready = false;
-      std::size_t idx = 0ul;
-      for (auto rdx : reorder)
-        mp11::mp_with_index<tuple_size>(
-            rdx,
-            [&]( auto rdx )
-            {
-              if (!found_ready || !interruptible<std::tuple_element_t<rdx, tuple_type>>)
-                found_ready |= ready[idx] = std::get<rdx>(aws).await_ready();
-              else
-                ready[idx] = false;
-              idx++;
-            });
+      mp11::mp_for_each<mp11::mp_iota_c<sizeof...(Args)>>(
+          [&](auto idx)
+          {
+            if (!found_ready || !interruptible<std::tuple_element_t<idx, tuple_type>>)
+              found_ready |= ready[idx] = std::get<idx>(aws).await_ready();
+            else
+              ready[idx] = false;
+          });
 
       return found_ready;
     }
@@ -224,14 +214,12 @@ struct select_variadic_impl
     {
       auto exec = get_executor(h);
       std::size_t idx = 0u;
-      for (auto rdx : reorder)
-        mp11::mp_with_index<tuple_size>(
-            rdx,
-            [&]( auto I )
-            {
-              await_suspend_step(exec, std::get<I>(aws), idx++);
-            });
-
+      mp11::tuple_for_each(
+          aws,
+          [&](auto && aw)
+          {
+            await_suspend_step(exec, aw, idx++);
+          });
       if (sss.use_count == 0) // already done, no need to suspend
         return false;
 
@@ -268,29 +256,28 @@ struct select_variadic_impl
       if (!has_result())
         index = std::distance(ready.begin(), std::find(ready.begin(), ready.end(), true));
       BOOST_ASSERT(has_result());
-      BOOST_ASSERT(index < tuple_size);
 
       mp11::mp_for_each<mp11::mp_iota_c<sizeof...(Args)>>(
           [&](auto iidx)
           {
-            const std::size_t idx = std::find(reorder.begin(), reorder.end(), iidx) - reorder.begin();
+            constexpr std::size_t idx = iidx;
             try
             {
               using type= std::tuple_element_t<iidx, tuple_type>;
               using t = std::conditional_t<std::is_reference_v<std::tuple_element_t<iidx, std::tuple<Args...>>>,
                   type &,
-                  type &&>;
+                  type &>;
 
               if ((index != idx) &&
                   ((idx <= spawned) || !interruptible<t> || ready[idx]))
-                std::get<iidx>(aws).await_resume();
+                std::get<idx>(aws).await_resume();
             }
             catch (...) {}
           });
 
 
       return mp11::mp_with_index<sizeof...(Args)>(
-          reorder[index],
+          index,
           [this](auto idx) -> result_type
           {
               constexpr std::size_t sz = idx;
@@ -313,23 +300,21 @@ struct select_variadic_impl
   };
   awaitable operator co_await() &&
   {
-    return awaitable{args, g, std::make_index_sequence<tuple_size>{}};
+    return awaitable{args, std::make_index_sequence<tuple_size>{}};
   }
 };
 
 
-template<asio::cancellation_type Ct, typename URBG, typename Range>
-struct select_ranged_impl
+template<asio::cancellation_type Ct, typename Range>
+struct race_ranged_impl
 {
   using result_type = co_await_result_t<std::decay_t<decltype(*std::begin(std::declval<Range>()))>>;
-  template<typename URBG_>
-  select_ranged_impl(URBG_ && g, Range && rng)
-      : range{std::forward<Range>(rng)}, g(std::forward<URBG_>(g))
+  race_ranged_impl(Range && rng)
+      : range{std::forward<Range>(rng)}
   {
   }
 
   Range range;
-  URBG g;
 
   struct awaitable
   {
@@ -343,24 +328,16 @@ struct select_ranged_impl
     std::conditional_t<awaitable_type<type>, Range &,
         container::pmr::vector<co_awaitable_type<type>>> aws;
 
-    /* all below `reorder` is reordered
-     *
-     * cancel[idx] is for aws[reorder[idx]]
-    */
-    container::pmr::vector<std::size_t> reorder{std::size(aws), alloc};
     container::pmr::vector<bool> ready{std::size(aws), alloc};
     container::pmr::vector<asio::cancellation_signal> cancel_{std::size(aws), alloc};
     container::pmr::vector<asio::cancellation_signal*> cancel{std::size(aws), alloc};
 
     bool has_result() const {return index != std::numeric_limits<std::size_t>::max(); }
 
-    awaitable(Range & aws_,
-              URBG & g,
-              std::false_type /* needs co_await */)
-        : res((256 + sizeof(co_awaitable_type<type>) + sizeof(std::size_t)) * std::size(aws_),
+    awaitable(Range & aws_, std::false_type /* needs co_await */)
+        : res((256 + sizeof(co_awaitable_type<type>)) * std::size(aws_),
               this_thread::get_default_resource())
         , aws{alloc}
-        , reorder{std::size(aws_), alloc}
         , ready{std::size(aws_), alloc}
         , cancel_{std::size(aws_), alloc}
         , cancel{std::size(aws_), alloc}
@@ -368,26 +345,21 @@ struct select_ranged_impl
       aws.reserve(std::size(aws_));
       for (auto && a : aws_)
         aws.emplace_back(awaitable_type_getter<decltype(a)>(std::forward<decltype(a)>(a)));
-
-      std::generate(reorder.begin(), reorder.end(), [i = std::size_t(0u)]() mutable {return i++;});
-      std::shuffle(reorder.begin(), reorder.end(), g);
     }
 
-    awaitable(Range & aws, URBG & g, std::true_type /* needs co_await */)
-        : res((256 + sizeof(co_awaitable_type<type>) + sizeof(std::size_t)) * std::size(aws),
+    awaitable(Range & aws, std::true_type /* needs co_await */)
+        : res((256 + sizeof(co_awaitable_type<type>)) * std::size(aws),
               this_thread::get_default_resource())
         , aws(aws)
     {
-      std::generate(reorder.begin(), reorder.end(), [i = std::size_t(0u)]() mutable {return i++;});
-      std::shuffle(reorder.begin(), reorder.end(), g);
     }
 
-    awaitable(Range & aws, URBG & g)
-        : awaitable(aws, g, std::bool_constant<awaitable_type<type>>{})
+    awaitable(Range & aws)
+        : awaitable(aws, std::bool_constant<awaitable_type<type>>{})
     {
     }
 
-    select_shared_state sss;
+    race_shared_state sss;
 
     void cancel_all()
     {
@@ -410,10 +382,9 @@ struct select_ranged_impl
     {
       bool found_ready = false;
       std::transform(
-          std::begin(reorder), std::end(reorder), std::begin(ready),
-          [&](std::size_t idx)
+          std::begin(aws), std::end(aws), std::begin(ready),
+          [&found_ready](auto & aw)
           {
-            auto & aw = *std::next(std::begin(aws), idx);
             using t = std::conditional_t<std::is_reference_v<Range>,
                 co_awaitable_type<type> &,
                 co_awaitable_type<type> &&>;
@@ -473,9 +444,8 @@ struct select_ranged_impl
     auto await_suspend(std::coroutine_handle<H> h)
     {
       std::size_t idx = 0u;
-      for (auto rdx : reorder)
+      for (auto && aw : aws)
       {
-        auto & aw = *std::next(std::begin(aws), rdx);
         if (has_result() && std::is_lvalue_reference_v<Range>)
           break; // one coro did a direct complete
         else if (!has_result())
@@ -517,29 +487,27 @@ struct select_ranged_impl
       {
         try
         {
-            if ((index != idx)
+          if ((index != idx)
               && ((idx <= spawned) || !std::is_lvalue_reference_v<Range> || ready[idx]))
-                std::next(std::begin(aws), reorder[idx])->await_resume();
+            aws[idx].await_resume();
         }
         catch (...) {}
       }
       if constexpr (std::is_void_v<result_type>)
       {
-        std::next(std::begin(aws), reorder[index])->await_resume();
-        return reorder[index];
+        aws[index].await_resume();
+        return index;
       }
       else
-        return std::make_pair(reorder[index],
-                              std::next(std::begin(aws),
-                                        reorder[index])->await_resume());
+        return std::make_pair(index, aws[index].await_resume());
     }
   };
   awaitable operator co_await() &&
   {
-    return awaitable{range, g};
+    return awaitable{range};
   }
 };
 
 }
 
-#endif //BOOST_ASYNC_DETAIL_SELECT_HPP
+#endif //BOOST_ASYNC_DETAIL_RACEa_HPP
