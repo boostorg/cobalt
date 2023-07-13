@@ -30,6 +30,10 @@
 # endif
 #endif
 
+#if BOOST_VERSION < 108200
+#error "Boost.Async needs Boost v1.82 or later otherwise the Boost.ASIO is missing needed support"
+#endif
+
 #if defined(_MSC_VER)
 // msvc doesn't correctly suspend for self-deletion, hence we must workaround here
 #define BOOST_ASYNC_NO_SELF_DELETE 1

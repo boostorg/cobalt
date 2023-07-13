@@ -57,7 +57,8 @@ endif()
 
 if (NOT BOOST_ASYNC_BUILD_INLINE)
     find_package(Threads REQUIRED)
-    find_package(Boost REQUIRED container system json)
+    # Boost 1.82 is the first with a Boost.ASIO with necessary support
+    find_package(Boost 1.82 REQUIRED container system json)
     include_directories(include)
 endif()
 

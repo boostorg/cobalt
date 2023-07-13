@@ -15,7 +15,7 @@ outcome_v2::awaitables::lazy<int> lazy_func(int x)
   co_return x + 1;
 }
 
-outcome_v2::awaitables::lazy<int> eager_func(int x)
+outcome_v2::awaitables::eager<int> eager_func(int x)
 {
   co_return x + 1;
 }
