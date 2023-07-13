@@ -212,6 +212,8 @@ CO_TEST_CASE("selectable")
     async::channel<int>  ci{0u};
     async::channel<void> cv{0u};
     auto [r1, r2] = co_await async::gather(async::select(ci.read(), cv.read()), cv.write());
+    r1.value();
+    REQUIRE(r1.has_value());
     CHECK(r1->index() == 1u);
     CHECK(!r2.has_error());
 }

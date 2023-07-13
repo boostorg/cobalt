@@ -56,12 +56,13 @@ struct select_wrapper
     awaitable_type(std::list<promise<void>> &waitables) : waitables_(waitables)
     {
         if (!waitables_.empty())
-          impl_.emplace(waitables_);
+          impl_.emplace(waitables_, random_);
     }
 
    private:
     std::optional<impl_type::awaitable> impl_;
     std::list<promise<void>> &waitables_;
+    std::mt19937 random_{detail::random_device()};
 
   };
   awaitable_type operator co_await() &&
