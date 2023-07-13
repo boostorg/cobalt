@@ -33,23 +33,22 @@ That is, [`main`](doc/reference/main.adoc) runs on a single threaded `io_context
 
 It also hooks up signals, so that things like `Ctrl+C` get forwarded as cancellations automatically
 
+Alternatively, [`run`](doc/reference/run.adoc) can be used manually.
+
 ```cpp
-async::thread example_thread(int ms)
+async::task<int> main_func()
 {
     asio::steady_timer tim{co_await async::this_coro::executor};
     dt.expires_after(std::chrono::milliseconds(100));
+
     co_await tim.async_wait(async::use_op);
+    co_return 0;
 }
-```
 
-This thread can be used from anywhere, not only from an async::main:
 
-```cpp
 int main(int argc, char ** argv)
 {
-    auto tt = example_thread(ms);
-    tt.join();
-    return 0;
+    return run(main_func());
 }
 ```
 
@@ -106,6 +105,10 @@ async::main co_main()
 ```
 
 An async:promise can also be used with `spawn` to turn it into an asio operation.
+
+## Task
+
+A [`task`](doc/reference/task.adoc) is a lazy alternative to a promise.
 
 ## Generator
 
@@ -247,5 +250,3 @@ async::main co_main(int argc, char ** argv)
 
 `async` has a special cancellation_type, `interrupt_await`, that can stop the select without cancelling. 
 It is supported by [`channel`](doc/reference/channel.adoc), [`promise`](doc/reference/promise.adoc) & [`generator`](doc/reference/generator.adoc). 
-
-## 
