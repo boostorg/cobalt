@@ -5,13 +5,13 @@ This library works around that using more posts, which can cause slight differen
 
 ** This is not yet an official boost library. **
 
-This library provides a set of easy to use coroutine primitives & utilities.
+This library provides a set of easy to use coroutine primitives & utilities for Boost.ASIO. A minimum of Boost 1.82 is necessary as the ASIO in that version has needed support. C++ 20 is needed for C++ coroutines.
 
 The assumptions are:
 
  - `io_context` is the execution_context of choice.
- - Any `asio::io_context` is single threaded
- - Eager execution is the way to go
+ - If `asio::io_context` is the executor, no more than one kernel thread executes within it at a time.
+ - Eager execution is the way to go.
  - A thread created with promise is only using promise stuff.
 
 ## Entry points
