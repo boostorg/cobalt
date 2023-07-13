@@ -60,7 +60,7 @@ CO_TEST_CASE("variadic")
 CO_TEST_CASE("list")
 {
 
-  std::size_t seed;
+  std::mt19937::result_type seed;
   SUBCASE("1") {seed = 1u;}
   SUBCASE("2") {seed = 2u;}
   SUBCASE("3") {seed = 3u;}

@@ -7,7 +7,7 @@
 
 #include <boost/async/generator.hpp>
 #include <boost/async/promise.hpp>
-#include <boost/async/select.hpp>
+#include <boost/async/race.hpp>
 #include <boost/async/op.hpp>
 #include <boost/core/ignore_unused.hpp>
 
@@ -97,7 +97,9 @@ async::generator<int> delay_gen(std::chrono::milliseconds tick)
   co_return 10;
 }
 
-CO_TEST_CASE("generator-select")
+#if !defined(BOOST_ASYNC_NO_SELF_DELETE)
+
+CO_TEST_CASE("generator-race")
 {
   asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::milliseconds(50)};
   auto g1 = delay_gen(std::chrono::milliseconds(200));
@@ -118,7 +120,7 @@ CO_TEST_CASE("generator-select")
   int i = 0;
   while (g1 && g2)
   {
-    auto r =  co_await select(g1, g2);
+    auto r =  co_await race(g1, g2);
     REQUIRE(itr != seq.end());
     REQUIRE(ntr != num.end());
     CHECK(r.index() == *itr++);
@@ -135,7 +137,7 @@ CO_TEST_CASE("generator-select")
   CHECK_THROWS(co_await g1);
   co_return ;
 }
-
+#endif
 
 async::generator<int> gshould_unwind(asio::io_context & ctx)
 {
