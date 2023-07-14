@@ -15,14 +15,22 @@ namespace boost::async::detail
 #if BOOST_ASYNC_NO_SELF_DELETE
 
 // avoid build-up
-struct destroy_service final : asio::detail::service_base<destroy_service>
+struct destroy_service final : asio::execution_context::service
 {
+  using asio::execution_context::service::service;
 
-  using asio::detail::service_base<destroy_service>::service_base;
+  struct service_id : asio::execution_context::id
+  {
+  };
+
+  static service_id id;
 
   void shutdown() override { to_delete.reset(nullptr); }
   std::unique_ptr<void, coro_deleter<void>> to_delete;
 };
+
+
+destroy_service::service_id destroy_service::id;
 
 void self_destroy(std::coroutine_handle<void> h) noexcept
 {

@@ -83,9 +83,9 @@ async::promise<std::size_t> delay_r(asio::io_context &ctx, std::size_t ms,
 }
 
 
-async::promise<std::size_t> delay_r(asio::io_context &ctx, std::size_t ms)
+async::promise<std::size_t> delay_r(asio::any_io_executor exec, std::size_t ms)
 {
-   auto tim = async::use_op.as_default_on(asio::steady_timer(ctx, std::chrono::milliseconds{ms}));
+   auto tim = async::use_op.as_default_on(asio::steady_timer(exec, std::chrono::milliseconds{ms}));
   co_await tim.async_wait();
   co_return ms;
 }
@@ -106,7 +106,7 @@ async::promise<void> throw_post()
 
 CO_TEST_CASE("get")
 {
-  auto r = delay_r((co_await async::this_coro::executor).context(), 100);
+  auto r = delay_r(co_await async::this_coro::executor, 100);
   CHECK_THROWS(r.get());
   CHECK_THROWS(throw_().get());
 

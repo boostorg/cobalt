@@ -8,10 +8,11 @@
 #include <boost/async/this_coro.hpp>
 #include <boost/async/detail/util.hpp>
 
+#include <boost/asio/bind_allocator.hpp>
+#include <boost/asio/post.hpp>
 #include <boost/core/demangle.hpp>
 
 #include <memory>
-
 #include <optional>
 
 namespace boost::async
@@ -30,7 +31,7 @@ struct completion_handler_noop_executor //: executor_type
   void dispatch(Function && f, const Allocator& a) const
   {
     if (completed_immediately == nullptr)
-      inner.post(std::forward<Function>(f), a);
+      asio::post(inner,  asio::bind_allocator(a, std::forward<Function>(f)));
     else
     {
       *completed_immediately = true;
