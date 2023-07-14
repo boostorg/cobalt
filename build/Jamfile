@@ -27,6 +27,7 @@ alias async_sources
    : detail/exception.cpp
      detail/util.cpp
      channel.cpp
+     error.cpp
      main.cpp
      this_thread.cpp
    ;

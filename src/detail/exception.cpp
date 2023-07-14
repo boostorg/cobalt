@@ -6,38 +6,61 @@
 //
 
 #include <boost/async/detail/exception.hpp>
+#include <boost/async/error.hpp>
 
 namespace boost::async::detail
 {
 
 std::exception_ptr moved_from_exception()
 {
-  static auto ep = std::make_exception_ptr(std::logic_error("async::promise was moved from"));
+  static auto ep = std::make_exception_ptr(system::error_code(
+      error::moved_from
+      ));
   return ep;
 }
 
 std::exception_ptr detached_exception()
 {
-  static auto ep = std::make_exception_ptr(std::runtime_error("detached"));
+
+  static auto ep = std::make_exception_ptr(system::error_code(
+        error::detached
+      ));
   return ep;
 }
 
 std::exception_ptr completed_unexpected()
 {
-  static auto ep = std::make_exception_ptr(std::runtime_error("unexpected exit"));
+
+  static auto ep = std::make_exception_ptr(system::error_code(
+          error::completed_unexpected
+      ));
   return ep;
 }
 
 std::exception_ptr wait_not_ready()
 {
-  static auto ep = std::make_exception_ptr(std::runtime_error("wait_not_ready"));
+  static auto ep = std::make_exception_ptr(system::error_code(
+          error::wait_not_ready
+      ));
   return ep;
 }
 
 std::exception_ptr already_awaited()
 {
-    static auto ep = std::make_exception_ptr(std::runtime_error("already-awaited"));
-    return ep;
+  static auto ep = std::make_exception_ptr(system::error_code(
+        error::already_awaited
+    ));
+  return ep;
 }
+
+
+std::exception_ptr allocation_failed()
+{
+  static auto ep = std::make_exception_ptr(system::error_code(
+      error::already_awaited
+  ));
+  return ep;
+}
+
 
 }
