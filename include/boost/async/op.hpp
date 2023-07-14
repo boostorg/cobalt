@@ -95,7 +95,7 @@ struct use_op_t
     /// Specify @c deferred_t as the default completion token type.
     typedef use_op_t default_completion_token_type;
 
-    executor_with_default(const InnerExecutor& ex) BOOST_ASIO_NOEXCEPT
+    executor_with_default(const InnerExecutor& ex) noexcept
         : InnerExecutor(ex)
     {
     }
@@ -146,7 +146,7 @@ template<typename ... Args>
 struct async_result<boost::async::use_op_t, void(Args...)>
 {
   template <typename Initiation, typename... InitArgs>
-  struct op_impl : boost::async::op<Args...>
+  struct op_impl final : boost::async::op<Args...>
   {
     Initiation initiation;
     std::tuple<InitArgs...> args;
@@ -156,7 +156,7 @@ struct async_result<boost::async::use_op_t, void(Args...)>
             : initiation(std::forward<Initiation_>(initiation))
             , args(std::forward<InitArgs_>(args)...) {}
 
-    void initiate(async::completion_handler<Args...> complete) override
+    void initiate(async::completion_handler<Args...> complete) final override
     {
       std::apply(
           [&](InitArgs && ... args)

@@ -50,12 +50,12 @@ struct completion_handler_noop_executor //: executor_type
   void on_work_started();
   void on_work_finished();
 
-  friend bool operator==(const completion_handler_noop_executor& a, const completion_handler_noop_executor& b) BOOST_ASIO_NOEXCEPT
+  friend bool operator==(const completion_handler_noop_executor& a, const completion_handler_noop_executor& b) noexcept
   {
     return true;
   }
 
-  friend bool operator!=(const completion_handler_noop_executor& a, const completion_handler_noop_executor& b) BOOST_ASIO_NOEXCEPT
+  friend bool operator!=(const completion_handler_noop_executor& a, const completion_handler_noop_executor& b) noexcept
   {
     return false;
   }
@@ -86,13 +86,13 @@ struct completion_handler_base
   }
 
   using allocator_type = pmr::polymorphic_allocator<void>;
-  allocator_type allocator ;
+  pmr::polymorphic_allocator<void> allocator ;
   allocator_type get_allocator() const noexcept
   {
     return allocator ;
   }
 
-  using immediate_executor_type = completion_handler_noop_executor;// executor_type;
+  using immediate_executor_type = completion_handler_noop_executor;
   bool * completed_immediately = nullptr;
   immediate_executor_type get_immediate_executor() const noexcept
   {
