@@ -57,7 +57,7 @@ struct use_task_t
     /// Specify @c deferred_t as the default completion token type.
     typedef use_task_t default_completion_token_type;
 
-    executor_with_default(const InnerExecutor& ex) BOOST_ASIO_NOEXCEPT
+    executor_with_default(const InnerExecutor& ex) noexcept
         : InnerExecutor(ex)
     {
     }
