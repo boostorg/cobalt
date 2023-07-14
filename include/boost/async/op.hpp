@@ -10,7 +10,7 @@
 
 #include <boost/async/detail/handler.hpp>
 
-#include <boost/container/pmr/monotonic_buffer_resource.hpp>
+
 
 namespace boost::async
 {
@@ -45,7 +45,7 @@ struct op
     }
 
     char buffer[2048];
-    std::optional<container::pmr::monotonic_buffer_resource> resource;
+    std::optional<pmr::monotonic_buffer_resource> resource;
     bool completed_immediately = false;
     template<typename Promise>
     bool await_suspend(std::coroutine_handle<Promise> h)

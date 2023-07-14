@@ -6,7 +6,7 @@
 #include <boost/async/this_coro.hpp>
 #include <boost/async/detail/util.hpp>
 
-#include <boost/container/pmr/unsynchronized_pool_resource.hpp>
+
 
 #include "doctest.h"
 #include "test.hpp"
@@ -40,11 +40,12 @@ struct coro_feature_tester
   void unhandled_exception() {throw;}
   void get_return_object() {}
 
-  container::pmr::unsynchronized_pool_resource res;
-  using allocator_type = container::pmr::polymorphic_allocator<void>;
+  async::pmr::unsynchronized_pool_resource res;
+  using allocator_type = async::pmr::polymorphic_allocator<void>;
   allocator_type get_allocator() {return alloc;}
   allocator_type alloc{&res};
 };
+
 
 namespace std
 {

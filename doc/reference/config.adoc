@@ -15,3 +15,16 @@ or to any executor you may want to use by defining `BOOST_ASYNC_EXECUTOR`, like 
 ```
 
 NOTE: You will need to make sure that the executor is single threaded.
+
+=== pmr
+
+Boost.async can be used with different pmr implementations, defaulting to `std::pmr`.
+
+The following macros can be used to configure it:
+
+ - `BOOST_ASYNC_USE_STD_PMR`
+ - `BOOST_ASYNC_USE_BOOST_CONTAINER_PMR`
+ - `BOOST_ASYNC_USE_CUSTOM_PMR`
+
+If you define `BOOST_ASYNC_USE_CUSTOM_PMR` you will need to provide a `boost::async::pmr` namespace,
+that is a drop-in replacement for `std::pmr`.

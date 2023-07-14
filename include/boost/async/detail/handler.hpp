@@ -11,7 +11,7 @@
 #include <boost/core/demangle.hpp>
 
 #include <memory>
-#include <boost/container/pmr/memory_resource.hpp>
+
 #include <optional>
 
 namespace boost::async
@@ -84,7 +84,7 @@ struct completion_handler_base
     return executor_ ;
   }
 
-  using allocator_type = container::pmr::polymorphic_allocator<void>;
+  using allocator_type = pmr::polymorphic_allocator<void>;
   allocator_type allocator ;
   allocator_type get_allocator() const noexcept
   {
@@ -119,7 +119,7 @@ struct completion_handler_base
 
   template<typename Promise>
   completion_handler_base(std::coroutine_handle<Promise> h,
-                          container::pmr::memory_resource * resource,
+                          pmr::memory_resource * resource,
                           bool * completed_immediately = nullptr)
           : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
             executor_(asio::get_associated_executor(h.promise(), this_thread::get_executor())),
@@ -131,7 +131,7 @@ struct completion_handler_base
         allocator(this_thread::get_allocator()) {}
 
   completion_handler_base(std::coroutine_handle<void> h,
-                          container::pmr::memory_resource * resource,
+                          pmr::memory_resource * resource,
                           bool * completed_immediately = nullptr)
       : executor_(this_thread::get_executor()),
         allocator(resource),
@@ -157,7 +157,7 @@ struct completion_handler_wrapper
       return asio::get_associated_executor(handler, this_thread::get_executor()) ;
     }
 
-    using allocator_type = container::pmr::polymorphic_allocator<void>;
+    using allocator_type = pmr::polymorphic_allocator<void>;
     allocator_type get_allocator() const noexcept
     {
       return asio::get_associated_allocator(handler, this_thread::get_allocator()) ;
@@ -286,7 +286,7 @@ struct completion_handler : detail::completion_handler_base
     template<typename Promise>
     completion_handler(std::coroutine_handle<Promise> h,
                        std::optional<std::tuple<Args...>> &result,
-                       container::pmr::memory_resource * resource,
+                       pmr::memory_resource * resource,
                        bool * completed_immediately = nullptr)
             : completion_handler_base(h, resource, completed_immediately),
               self(h.address()), result(result)

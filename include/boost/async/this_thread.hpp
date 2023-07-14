@@ -10,16 +10,16 @@
 
 #include <boost/async/config.hpp>
 #include <boost/config.hpp>
-#include <boost/container/pmr/memory_resource.hpp>
-#include <boost/container/pmr/polymorphic_allocator.hpp>
+
+
 #include <boost/asio/io_context.hpp>
 
 namespace boost::async::this_thread
 {
 #if !defined(BOOST_ASYNC_NO_PMR)
-BOOST_ASYNC_DECL container::pmr::memory_resource* get_default_resource() noexcept;
-BOOST_ASYNC_DECL container::pmr::memory_resource* set_default_resource(container::pmr::memory_resource* r) noexcept;
-BOOST_ASYNC_DECL container::pmr::polymorphic_allocator<void> get_allocator();
+BOOST_ASYNC_DECL pmr::memory_resource* get_default_resource() noexcept;
+BOOST_ASYNC_DECL pmr::memory_resource* set_default_resource(pmr::memory_resource* r) noexcept;
+BOOST_ASYNC_DECL pmr::polymorphic_allocator<void> get_allocator();
 #endif
 
 BOOST_ASYNC_DECL

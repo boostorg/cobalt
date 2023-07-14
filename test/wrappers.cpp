@@ -8,7 +8,7 @@
 #include <boost/asio/detached.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/bind_allocator.hpp>
-#include <boost/container/pmr/monotonic_buffer_resource.hpp>
+
 
 #include "doctest.h"
 
@@ -21,10 +21,10 @@ TEST_CASE("regular")
     bool ran = false;
 
     char buf[512];
-    boost::container::pmr::monotonic_buffer_resource res{buf, 512};
+    boost::async::pmr::monotonic_buffer_resource res{buf, 512};
     auto p = boost::async::detail::post_coroutine(ctx.get_executor(),
                                               boost::asio::bind_allocator(
-                                              boost::container::pmr::polymorphic_allocator<void>(&res),
+                                              boost::async::pmr::polymorphic_allocator<void>(&res),
                                               [&]{ran = true;}
                                               )
                                           );

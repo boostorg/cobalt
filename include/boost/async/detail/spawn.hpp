@@ -30,7 +30,7 @@ struct async_initiate
     if (rec.done)
       return asio::post(asio::append(h, rec.exception, rec.exception ? T() : rec.get_result()));
 
-    auto dalloc = container::pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()};
+    auto dalloc = pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()};
     auto alloc = asio::get_associated_allocator(h, dalloc);
     auto recs = allocate_unique<detail::task_receiver<T>>(alloc, std::move(rec));
 
@@ -67,7 +67,7 @@ struct async_initiate
     if (a.receiver_.done)
       return asio::post(asio::append(h, a.receiver_.exception));
 
-    auto alloc = asio::get_associated_allocator(h, container::pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()});
+    auto alloc = asio::get_associated_allocator(h, pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()});
     auto recs = allocate_unique<detail::task_receiver<void>>(alloc, std::move(a.receiver_));
 
     if (recs->done)
