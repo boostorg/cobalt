@@ -20,14 +20,8 @@
 #define BOOST_ASYNC_DECL
 #endif
 
-#if !defined(BOOST_ASYNC_EXECUTOR)
-# if defined(BOOST_ASYNC_USE_ANY_IO_EXECUTOR)
-#  include <boost/asio/any_io_executor.hpp>
-#  define BOOST_ASYNC_EXECUTOR boost::asio::any_io_executor
-# else
-#  include <boost/asio/io_context.hpp>
-#  define BOOST_ASYNC_EXECUTOR boost::asio::io_context::executor_type
-# endif
+#if !defined(BOOST_ASYNC_CUSTOM_EXECUTOR)
+# include <boost/asio/any_io_executor.hpp>
 #endif
 
 #if BOOST_VERSION < 108200
@@ -61,7 +55,9 @@
 namespace boost::async
 {
 
-using executor = BOOST_ASYNC_EXECUTOR;
+#if !defined(BOOST_ASYNC_CUSTOM_EXECUTOR)
+using executor = boost::asio::any_io_executor;
+#endif
 
 #if defined(BOOST_ASYNC_USE_BOOST_CONTAINER_PMR)
 namespace pmr = boost::container::pmr;

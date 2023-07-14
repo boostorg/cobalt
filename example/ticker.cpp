@@ -231,7 +231,6 @@ async::promise<void> run_session(beast::websocket::stream<socket_type> st,
                                  async::channel<subscription> & subc)
 try
 {
-    BOOST_ASSERT(st.get_executor().running_in_this_thread());
     http::request<http::empty_body> req;
     beast::flat_buffer buf;
     co_await http::async_read(st.next_layer(), buf, req); // <1>
