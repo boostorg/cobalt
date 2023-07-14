@@ -10,15 +10,16 @@
 using namespace boost;
 
 // tag::timer_example[]
-struct wait_op : async::op<system::error_code> // <1>
+struct wait_op final : async::op<system::error_code> // <1>
 {
   asio::steady_timer & tim;
   wait_op(asio::steady_timer & tim) : tim(tim) {}
-  bool ready(system::error_code & ) // <2>
+  void ready(async::handler<system::error_code> h ) override // <2>
   {
-    return tim.expiry() < std::chrono::steady_clock::now();
+    if (tim.expiry() < std::chrono::steady_clock::now())
+      h(system::error_code{});
   }
-  void initiate(async::completion_handler<system::error_code> complete) // <3>
+  void initiate(async::completion_handler<system::error_code> complete) override // <3>
   {
     tim.async_wait(std::move(complete));
   }
