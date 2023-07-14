@@ -18,8 +18,8 @@
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/cancellation_signal.hpp>
 #include <boost/asio/associated_cancellation_slot.hpp>
-#include <boost/container/pmr/monotonic_buffer_resource.hpp>
-#include <boost/container/pmr/vector.hpp>
+
+
 #include <boost/intrusive_ptr.hpp>
 #include <boost/core/span.hpp>
 #include <boost/variant2/variant.hpp>
@@ -110,9 +110,9 @@ struct select_variadic_impl
     std::size_t index{std::numeric_limits<std::size_t>::max()};
     std::size_t spawned = 0u;
     char storage[256 * tuple_size];
-    container::pmr::monotonic_buffer_resource res{storage, sizeof(storage),
+    pmr::monotonic_buffer_resource res{storage, sizeof(storage),
                                                   this_thread::get_default_resource()};
-    container::pmr::polymorphic_allocator<void> alloc{&res};
+    pmr::polymorphic_allocator<void> alloc{&res};
 
     select_shared_state sss;
 
@@ -337,20 +337,20 @@ struct select_ranged_impl
     std::size_t index{std::numeric_limits<std::size_t>::max()};
     std::size_t spawned = 0u;
 
-    container::pmr::monotonic_buffer_resource res;
-    container::pmr::polymorphic_allocator<void> alloc{&res};
+    pmr::monotonic_buffer_resource res;
+    pmr::polymorphic_allocator<void> alloc{&res};
 
     std::conditional_t<awaitable_type<type>, Range &,
-        container::pmr::vector<co_awaitable_type<type>>> aws;
+        pmr::vector<co_awaitable_type<type>>> aws;
 
     /* all below `reorder` is reordered
      *
      * cancel[idx] is for aws[reorder[idx]]
     */
-    container::pmr::vector<std::size_t> reorder{std::size(aws), alloc};
-    container::pmr::vector<bool> ready{std::size(aws), alloc};
-    container::pmr::vector<asio::cancellation_signal> cancel_{std::size(aws), alloc};
-    container::pmr::vector<asio::cancellation_signal*> cancel{std::size(aws), alloc};
+    pmr::vector<std::size_t> reorder{std::size(aws), alloc};
+    pmr::vector<bool> ready{std::size(aws), alloc};
+    pmr::vector<asio::cancellation_signal> cancel_{std::size(aws), alloc};
+    pmr::vector<asio::cancellation_signal*> cancel{std::size(aws), alloc};
 
     bool has_result() const {return index != std::numeric_limits<std::size_t>::max(); }
 

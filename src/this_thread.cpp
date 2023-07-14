@@ -9,8 +9,8 @@
 #include <boost/asio/any_io_executor.hpp>
 
 #include <boost/asio/executor.hpp>
-#include <boost/container/pmr/memory_resource.hpp>
-#include <boost/container/pmr/global_resource.hpp>
+
+
 
 #include <optional>
 
@@ -19,25 +19,25 @@ namespace boost::async::this_thread
 
 namespace detail
 {
-thread_local container::pmr::memory_resource *default_coro_memory_resource = container::pmr::get_default_resource();
+thread_local pmr::memory_resource *default_coro_memory_resource = pmr::get_default_resource();
 thread_local std::optional<executor> executor;
 }
 
-container::pmr::memory_resource* get_default_resource() noexcept
+pmr::memory_resource* get_default_resource() noexcept
 {
   return detail::default_coro_memory_resource;
 }
 
-container::pmr::memory_resource* set_default_resource(container::pmr::memory_resource* r) noexcept
+pmr::memory_resource* set_default_resource(pmr::memory_resource* r) noexcept
 {
   auto pre = get_default_resource();
   detail::default_coro_memory_resource = r;
   return pre;
 }
 
-container::pmr::polymorphic_allocator<void> get_allocator()
+pmr::polymorphic_allocator<void> get_allocator()
 {
-  return container::pmr::polymorphic_allocator<void>{get_default_resource()};
+  return pmr::polymorphic_allocator<void>{get_default_resource()};
 }
 
 bool has_executor()

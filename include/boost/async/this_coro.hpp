@@ -13,7 +13,7 @@
 #include <boost/asio/associated_executor.hpp>
 #include <boost/asio/this_coro.hpp>
 #include <boost/asio/cancellation_state.hpp>
-#include <boost/container/pmr/monotonic_buffer_resource.hpp>
+
 
 #include <coroutine>
 #include <optional>
@@ -249,30 +249,30 @@ struct promise_throw_if_cancelled_base
 
 struct promise_memory_resource_base
 {
-    using allocator_type = container::pmr::polymorphic_allocator<void>;
+    using allocator_type = pmr::polymorphic_allocator<void>;
     allocator_type get_allocator() const {return allocator_type{resource};}
 
     template<typename ... Args>
     void * operator new(const std::size_t size, Args & ... args)
     {
         auto res = detail::get_memory_resource_from_args(args...);
-        const auto p = res->allocate(size + sizeof(container::pmr::memory_resource *), alignof(container::pmr::memory_resource *));
-        auto pp = static_cast<container::pmr::memory_resource**>(p);
+        const auto p = res->allocate(size + sizeof(pmr::memory_resource *), alignof(pmr::memory_resource *));
+        auto pp = static_cast<pmr::memory_resource**>(p);
         *pp = res;
         return pp + 1;
     }
 
     void operator delete(void * raw, const std::size_t size) noexcept
     {
-        const auto p = static_cast<container::pmr::memory_resource**>(raw) - 1;
-        container::pmr::memory_resource * res = *p;
-        res->deallocate(p, size + sizeof(container::pmr::memory_resource *), alignof(container::pmr::memory_resource *));
+        const auto p = static_cast<pmr::memory_resource**>(raw) - 1;
+        pmr::memory_resource * res = *p;
+        res->deallocate(p, size + sizeof(pmr::memory_resource *), alignof(pmr::memory_resource *));
     }
 
-    promise_memory_resource_base(container::pmr::memory_resource * resource = this_thread::get_default_resource()) : resource(resource) {}
+    promise_memory_resource_base(pmr::memory_resource * resource = this_thread::get_default_resource()) : resource(resource) {}
 
 private:
-    container::pmr::memory_resource * resource = this_thread::get_default_resource();
+    pmr::memory_resource * resource = this_thread::get_default_resource();
 };
 
 /// Allocate the memory and put the allocator behind the async memory
@@ -302,12 +302,6 @@ void deallocate_coroutine(void *raw_, const std::size_t size)
     const auto align_offset = align_needed != 0 ? alignof(alloc_type) - align_needed : 0ull;
     const auto alloc_size = size + sizeof(alloc_type) + align_offset;
     auto alloc_p = reinterpret_cast<alloc_type *>(raw + size + align_offset);
-
-
-    if constexpr(std::same_as<alloc_type , container::pmr::polymorphic_allocator<unsigned char>>)
-      if (alloc_p->resource() == nullptr)
-        return ;
-
 
     auto alloc = std::move(*alloc_p);
     alloc_p->~alloc_type();

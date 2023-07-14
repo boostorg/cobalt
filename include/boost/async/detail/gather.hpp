@@ -20,8 +20,8 @@
 #include <boost/asio/associated_cancellation_slot.hpp>
 #include <boost/asio/bind_cancellation_slot.hpp>
 #include <boost/asio/cancellation_signal.hpp>
-#include <boost/container/pmr/monotonic_buffer_resource.hpp>
-#include <boost/container/pmr/vector.hpp>
+
+
 #include <boost/core/ignore_unused.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/system/result.hpp>
@@ -102,9 +102,9 @@ struct gather_variadic_impl
     };
     std::array<asio::cancellation_signal, tuple_size> cancel;
     char storage[256 * tuple_size];
-    container::pmr::monotonic_buffer_resource res{storage, sizeof(storage),
+    pmr::monotonic_buffer_resource res{storage, sizeof(storage),
                                                   this_thread::get_default_resource()};
-    container::pmr::polymorphic_allocator<void> alloc{&res};
+    pmr::polymorphic_allocator<void> alloc{&res};
 
     gather_shared_state wss;
 
@@ -214,15 +214,15 @@ struct gather_ranged_impl
   struct awaitable
   {
     using type = std::decay_t<decltype(*std::begin(std::declval<Range>()))>;
-    container::pmr::monotonic_buffer_resource res;
-    container::pmr::polymorphic_allocator<void> alloc{&res};
+    pmr::monotonic_buffer_resource res;
+    pmr::polymorphic_allocator<void> alloc{&res};
 
     std::conditional_t<awaitable_type<type>, Range &,
-                       container::pmr::vector<co_awaitable_type<type>>> aws;
+                       pmr::vector<co_awaitable_type<type>>> aws;
 
-    container::pmr::vector<bool> ready{std::size(aws), alloc};
-    container::pmr::vector<asio::cancellation_signal> cancel{std::size(aws), alloc};
-    container::pmr::vector<result_type> result{
+    pmr::vector<bool> ready{std::size(aws), alloc};
+    pmr::vector<asio::cancellation_signal> cancel{std::size(aws), alloc};
+    pmr::vector<result_type> result{
           cancel.size(),
           result_type{system::in_place_error, std::exception_ptr()},
           this_thread::get_allocator()};
@@ -314,7 +314,7 @@ struct gather_ranged_impl
 
     asio::cancellation_slot sl;
 
-    container::pmr::vector<result_type> await_resume()
+    pmr::vector<result_type> await_resume()
     {
       sl.clear();
       ignore_unused(wss.h.release());

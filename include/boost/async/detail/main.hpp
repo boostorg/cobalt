@@ -14,7 +14,7 @@
 
 
 #include <boost/config.hpp>
-#include <boost/container/pmr/monotonic_buffer_resource.hpp>
+
 
 namespace boost::asio
 {
@@ -51,7 +51,7 @@ struct main_promise : signal_helper,
         [[maybe_unused]] volatile auto p = &detail::main;
     }
 
-    inline static container::pmr::memory_resource * my_resource = container::pmr::get_default_resource();
+    inline static pmr::memory_resource * my_resource = pmr::get_default_resource();
     void * operator new(const std::size_t size)
     {
         return my_resource->allocate(size);
@@ -80,18 +80,18 @@ struct main_promise : signal_helper,
 
     friend int main(int argc, char * argv[])
     {
-      container::pmr::unsynchronized_pool_resource root_resource;
+      pmr::unsynchronized_pool_resource root_resource;
       struct reset_res
       {
-        void operator()(container::pmr::memory_resource * res)
+        void operator()(pmr::memory_resource * res)
         {
           this_thread::set_default_resource(res);
         }
       };
-      std::unique_ptr<container::pmr::memory_resource, reset_res> pr{
+      std::unique_ptr<pmr::memory_resource, reset_res> pr{
         boost::async::this_thread::set_default_resource(&root_resource)};
       char buffer[8096];
-      container::pmr::monotonic_buffer_resource main_res{buffer, 8096, &root_resource};
+      pmr::monotonic_buffer_resource main_res{buffer, 8096, &root_resource};
       my_resource = &main_res;
       return run_main(co_main(argc, argv));
     }
@@ -99,8 +99,8 @@ struct main_promise : signal_helper,
     using executor_type = executor;
     executor_type get_executor() const {return exec->get_executor();}
 
-    using allocator_type = container::pmr::polymorphic_allocator<void>;
-    using resource_type  = container::pmr::unsynchronized_pool_resource;
+    using allocator_type = pmr::polymorphic_allocator<void>;
+    using resource_type  = pmr::unsynchronized_pool_resource;
 
     mutable resource_type resource{my_resource};
     allocator_type get_allocator() const { return allocator_type(&resource); }

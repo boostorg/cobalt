@@ -20,8 +20,8 @@
 #include <boost/asio/associated_cancellation_slot.hpp>
 #include <boost/asio/bind_cancellation_slot.hpp>
 #include <boost/asio/cancellation_signal.hpp>
-#include <boost/container/pmr/monotonic_buffer_resource.hpp>
-#include <boost/container/pmr/vector.hpp>
+
+
 #include <boost/core/ignore_unused.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/system/result.hpp>
@@ -107,9 +107,9 @@ struct join_variadic_impl
 
 
     char storage[256 * tuple_size];
-    container::pmr::monotonic_buffer_resource res{storage, sizeof(storage),
+    pmr::monotonic_buffer_resource res{storage, sizeof(storage),
                                                   this_thread::get_default_resource()};
-    container::pmr::polymorphic_allocator<void> alloc{&res};
+    pmr::polymorphic_allocator<void> alloc{&res};
 
     join_shared_state wss;
 
@@ -287,16 +287,16 @@ struct join_ranged_impl
   struct awaitable
   {
     using type = std::decay_t<decltype(*std::begin(std::declval<Range>()))>;
-    container::pmr::monotonic_buffer_resource res;
-    container::pmr::polymorphic_allocator<void> alloc{&res};
+    pmr::monotonic_buffer_resource res;
+    pmr::polymorphic_allocator<void> alloc{&res};
 
     std::conditional_t<awaitable_type<type>, Range &,
-                       container::pmr::vector<co_awaitable_type<type>>> aws;
+                       pmr::vector<co_awaitable_type<type>>> aws;
 
-    container::pmr::vector<bool> ready{std::size(aws), alloc};
-    container::pmr::vector<asio::cancellation_signal> cancel_{std::size(aws), alloc};
-    container::pmr::vector<asio::cancellation_signal*> cancel{std::size(aws), alloc};
-    container::pmr::vector<system::result<result_type, std::exception_ptr>> result{
+    pmr::vector<bool> ready{std::size(aws), alloc};
+    pmr::vector<asio::cancellation_signal> cancel_{std::size(aws), alloc};
+    pmr::vector<asio::cancellation_signal*> cancel{std::size(aws), alloc};
+    pmr::vector<system::result<result_type, std::exception_ptr>> result{
           cancel.size(),
           system::result<result_type, std::exception_ptr>{system::in_place_error, std::exception_ptr()},
           alloc};
@@ -432,7 +432,7 @@ struct join_ranged_impl
         std::rethrow_exception(error);
       if constexpr (!std::is_void_v<result_type>)
       {
-        container::pmr::vector<result_type> rr{this_thread::get_allocator()};
+        pmr::vector<result_type> rr{this_thread::get_allocator()};
         rr.reserve(result.size());
         for (auto & t : result)
           rr.push_back(std::move(t).value());
