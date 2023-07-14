@@ -690,6 +690,10 @@ pre.rouge {
 <li><a href="#memory_resource">Memory Resource</a></li>
 <li><a href="#main-promise">Promise</a></li>
 <li><a href="#specification">Specification</a></li>
+</ul>
+</li>
+<li><a href="#promise">async/promise.hpp</a>
+<ul class="sectlevel3">
 <li><a href="#executor_2">Executor</a></li>
 <li><a href="#memory_resource_2">Memory Resource</a></li>
 <li><a href="#promise-outline">Outline</a></li>
@@ -752,9 +756,14 @@ pre.rouge {
 <li><a href="#select">async/select.hpp</a>
 <ul class="sectlevel3">
 <li><a href="#interrupt_await">Interrupt Wait</a></li>
+</ul>
+</li>
+<li><a href="#race">async/race.hpp</a>
+<ul class="sectlevel3">
 <li><a href="#interrupt_await_race">Interrupt Wait</a></li>
 </ul>
 </li>
+<li><a href="#gather">async/gather.hpp</a></li>
 <li><a href="#join">async/join.hpp</a></li>
 <li><a href="#wait_group">async/wait_group.hpp</a></li>
 <li><a href="#spawn">async/spawn.hpp</a>
@@ -802,7 +811,7 @@ Run the tests to check if compiler supports coroutines correctly.</p>
 </colgroup>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#promise">[promise]</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#promise">async/promise.hpp</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">An eager coroutine returning a single result- consider it the default</p></td>
 </tr>
 <tr>
@@ -811,7 +820,7 @@ Run the tests to check if compiler supports coroutines correctly.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#task">async/task.hpp</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A lazy version of <a href="#promise">[promise]</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A lazy version of <a href="#promise">async/promise.hpp</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#detached">async/detached.hpp</a></p></td>
@@ -835,11 +844,11 @@ Run the tests to check if compiler supports coroutines correctly.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">A function that waits for a set of coroutines and returns all of them as value or throws an exception if any awaitable does so.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#gather">[gather]</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#gather">async/gather.hpp</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">A function that waits for a set of coroutines and returns all of them as <code>result</code>, capturing all exceptions individually.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#race">[race]</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#race">async/race.hpp</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">A deterministic <code>select</code> that evaluates left-to-right.</p></td>
 </tr>
 </tbody>
@@ -1854,11 +1863,14 @@ Depending on the coroutine properties different things can be <code>co_await</co
 <p><code>main</code> is only present when <code>co_main</code> is defined.</p>
 </li>
 <li>
-<p><code>SIGINT</code> and <code>SIGTERM</code> will cause cancellation of the internal task.
-== async/promise.hpp</p>
+<p><code>SIGINT</code> and <code>SIGTERM</code> will cause cancellation of the internal task.</p>
 </li>
 </ol>
 </div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="promise">async/promise.hpp</h3>
 <div class="paragraph">
 <p>A promise is an eager coroutine that can <code>co_await</code> and <code>co_return</code> values. That is, it cannot be resumed.</p>
 </div>
@@ -1899,7 +1911,6 @@ Depending on the coroutine properties different things can be <code>co_await</co
 <td>By using <code>` the task gets detached. Without the `</code> it would generate a <code>nodiscard</code> warning.</td>
 </tr>
 </table>
-</div>
 </div>
 <div class="sect3">
 <h4 id="executor_2">Executor</h4>
@@ -3166,11 +3177,14 @@ with two exceptions:</p>
 <p>A call to <code>await_ready</code> might not be followed by <code>await_suspend</code> when returning false.</p>
 </li>
 <li>
-<p>A call to <code>operator co_await</code> may not be followed by a call to any <code>await_*</code> function.
-== async/race.hpp</p>
+<p>A call to <code>operator co_await</code> may not be followed by a call to any <code>await_*</code> function.</p>
 </li>
 </ol>
 </div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="race">async/race.hpp</h3>
 <div class="paragraph">
 <p>The <code>race</code> function can be used to <code>co_await</code> one <a href="#awaitable">Awaitable</a>s out of a set of them.</p>
 </div>
@@ -3206,7 +3220,6 @@ This can lead to starvation which is why <a href="#select">async/select.hpp</a> 
 <td>wait for a vector of <a href="#awaitable">Awaitable</a>s</td>
 </tr>
 </table>
-</div>
 </div>
 <div class="sect3">
 <h4 id="interrupt_await_race">Interrupt Wait</h4>
@@ -3254,11 +3267,14 @@ with two exceptions:</p>
 <p>A call to <code>await_ready</code> might not be followed by <code>await_suspend</code> when returning false.</p>
 </li>
 <li>
-<p>A call to <code>operator co_await</code> may not be followed by a call to any <code>await_*</code> function.
-== async/gather.hpp</p>
+<p>A call to <code>operator co_await</code> may not be followed by a call to any <code>await_*</code> function.</p>
 </li>
 </ol>
 </div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="gather">async/gather.hpp</h3>
 <div class="paragraph">
 <p>The <code>gather</code> function can be used to <code>co_await</code> multiple <a href="#awaitable">Awaitable</a>s at once with properly connected cancellations.</p>
 </div>
@@ -3296,7 +3312,6 @@ i.e. capture conceptions as values. One awaitable throwing an exception will not
 </div>
 <div class="paragraph">
 <p>The <code>gather</code> will invoke the functions of the <code>awaitable</code> as if used in a <code>co_await</code> expression.</p>
-</div>
 </div>
 </div>
 <div class="sect2">
@@ -3669,7 +3684,7 @@ C++20 coroutines are stackless, i.e. they only allocate their own frame and use 
 <div id="footnotes">
 <hr>
 <div class="footnote" id="_footnotedef_1">
-<a href="#_footnoteref_1">1</a>. the promise the C++ name for a coroutine state. Not to be confused with <a href="#promise">[promise]</a>
+<a href="#_footnoteref_1">1</a>. the promise the C++ name for a coroutine state. Not to be confused with <a href="#promise">async/promise.hpp</a>
 </div>
 </div>
 <div id="footer">
