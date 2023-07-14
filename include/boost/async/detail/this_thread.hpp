@@ -35,7 +35,7 @@ executor get_executor_from_args(Args &&... args)
 }
 
 template<typename ... Args>
-container::pmr::memory_resource * get_memory_resource_from_args(Args &&... args)
+pmr::memory_resource * get_memory_resource_from_args(Args &&... args)
 {
   using args_type = mp11::mp_list<std::decay_t<Args>...>;
   constexpr static auto I = mp11::mp_find<args_type, std::allocator_arg_t>::value;

@@ -7,7 +7,7 @@
 
 #include <boost/async/spawn.hpp>
 #include <boost/async/task.hpp>
-#include <boost/container/pmr/unsynchronized_pool_resource.hpp>
+
 #include <boost/asio/use_future.hpp>
 
 namespace boost::async
@@ -16,15 +16,15 @@ namespace boost::async
 template<typename T>
 T run(task<T> t)
 {
-    container::pmr::unsynchronized_pool_resource root_resource{this_thread::get_default_resource()};
+    pmr::unsynchronized_pool_resource root_resource{this_thread::get_default_resource()};
     struct reset_res
     {
-        void operator()(container::pmr::memory_resource * res)
+        void operator()(pmr::memory_resource * res)
         {
             this_thread::set_default_resource(res);
         }
     };
-    std::unique_ptr<container::pmr::memory_resource, reset_res> pr{
+    std::unique_ptr<pmr::memory_resource, reset_res> pr{
             boost::async::this_thread::set_default_resource(&root_resource)};
 
     asio::io_context ctx{BOOST_ASIO_CONCURRENCY_HINT_1};

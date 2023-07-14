@@ -116,7 +116,7 @@ unless a `std::allocator_arg` is used in any position followed by a `polymorphic
 
 [source, cpp]
 ----
-async::generator<int> my_gen(std::allocator_arg_t, container::pmr::polymorphic_allocator<void> alloc);
+async::generator<int> my_gen(std::allocator_arg_t, pmr::polymorphic_allocator<void> alloc);
 ----
 
 [#generator-outline]

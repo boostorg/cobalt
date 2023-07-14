@@ -41,6 +41,13 @@ else()
     set(BOOST_ASYNC_BUILD_TESTS ${BUILD_TESTING})
 endif()
 
+set(BOOST_ASYNC_SHOULD_USE_CONTAINER OFF)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CLANG_VERSION_MAJOR LESS 16)
+    set(BOOST_ASYNC_SHOULD_USE_CONTAINER ON)
+endif()
+
+option(BOOST_ASYNC_USE_BOOST_CONTAINER "Use boost.container instead of std::pmr" ${BOOST_ASYNC_SHOULD_USE_CONTAINER})
+
 
 if(BOOST_ASYNC_IS_ROOT AND BOOST_ASYNC_BUILD_INLINE)
     #
@@ -58,7 +65,10 @@ endif()
 if (NOT BOOST_ASYNC_BUILD_INLINE)
     find_package(Threads REQUIRED)
     # Boost 1.82 is the first with a Boost.ASIO with necessary support
-    find_package(Boost  1.82 REQUIRED container system OPTIONAL_COMPONENTS json)
+    find_package(Boost 1.82 REQUIRED ${BOOST_ASYNC_CONTAINER} system OPTIONAL_COMPONENTS json)
+    if (BOOST_ASYNC_USE_BOOST_CONTAINER)
+        find_package(Boost REQUIRED container)
+    endif()
     include_directories(include)
 endif()
 
@@ -75,9 +85,14 @@ add_library(boost_async
             src/this_thread.cpp)
 target_include_directories(boost_async PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(boost_async PUBLIC
-        Boost::container Boost::system
+        Boost::system
         Threads::Threads)
-target_compile_definitions(boost_async PRIVATE -DBOOST_ASYNC_SOURCE)
+target_compile_definitions(boost_async PRIVATE BOOST_ASYNC_SOURCE=1 )
+
+if (BOOST_ASYNC_USE_BOOST_CONTAINER)
+    target_link_libraries(boost_async PUBLIC Boost::container)
+    target_compile_definitions(boost_async PUBLIC BOOST_ASYNC_USE_BOOST_CONTAINER_PMR=1 )
+endif()
 
 add_library(Boost::async ALIAS boost_async)
 

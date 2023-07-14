@@ -31,7 +31,7 @@ struct channel
 {
   channel(std::size_t limit = 0u,
           executor executor = this_thread::get_executor(),
-          container::pmr::memory_resource * resource = this_thread::get_default_resource())
+          pmr::memory_resource * resource = this_thread::get_default_resource())
             : buffer_(limit, resource), executor_(executor) {}
   channel(channel && ) = default;
 
@@ -43,7 +43,7 @@ struct channel
   void close();
 
  private:
-  boost::circular_buffer<T, container::pmr::polymorphic_allocator<T>> buffer_;
+  boost::circular_buffer<T, pmr::polymorphic_allocator<T>> buffer_;
   executor_type executor_;
   bool is_closed_{false};
 

@@ -34,7 +34,7 @@ inline void test_run(boost::async::task<void> (*func) ())
   using namespace boost;
   asio::io_context ctx;
   async::this_thread::set_executor(ctx.get_executor());
-  container::pmr::unsynchronized_pool_resource res;
+  async::pmr::unsynchronized_pool_resource res;
   async::this_thread::set_default_resource(&res);
   spawn(ctx, func(),
         +[](std::exception_ptr e)
@@ -57,7 +57,7 @@ inline void test_run(boost::async::task<void> (*func) ())
         ctx.run_one();
     }
 
-  async::this_thread::set_default_resource(container::pmr::get_default_resource());
+  async::this_thread::set_default_resource(async::pmr::get_default_resource());
 }
 
 // tag::test_case_macro[]
