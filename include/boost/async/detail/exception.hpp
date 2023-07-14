@@ -21,6 +21,7 @@ BOOST_ASYNC_DECL std::exception_ptr detached_exception();
 BOOST_ASYNC_DECL std::exception_ptr completed_unexpected();
 BOOST_ASYNC_DECL std::exception_ptr wait_not_ready();
 BOOST_ASYNC_DECL std::exception_ptr already_awaited();
+BOOST_ASYNC_DECL std::exception_ptr allocation_failed();
 
 template<typename >
 std::exception_ptr wait_not_ready() { return boost::async::detail::wait_not_ready();}
