@@ -17,3 +17,8 @@ It takes a collection of concepts from other languages and provides them based o
  - an <<with, async scope>>
  - <<select, select>>
  - <<channel, channel>>
+
+Unlike `asio::awaitable` and `asio::experimental::coro`, `async` coroutines are open.
+That is, an `asio::awaitable` can only await other `asio::awaitable` and does not provide
+coroutine specific synchronization mechanisms. `async` on the other hand provices `channel`
+and different wait types (`select`, `gather` etc.) that are optimized for awaitables.

@@ -24,7 +24,7 @@ async::promise<void> do_wait()
 <1> Wait for a variadic set of <<awaitable>>s
 <2> wait for a vector of <<awaitable>>s
 
-[#interrupt_await]
+[#interrupt_await_race]
 === Interrupt Wait
 
 When arguments are passed as rvalue reference, the race will attempt to use `.interrupt_await`

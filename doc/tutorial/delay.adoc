@@ -1,8 +1,6 @@
 == delay
 Let's start with the simplest example possible: a simple delay.
 
-=== simple delay
-
 .example/delay.cpp
 [example]
 [source,cpp]
@@ -13,7 +11,7 @@ include::../../example/delay.cpp[tag=timer_example]
 and is the easiest way to enter asynchronous code.
 <2> Take the executor from the current coroutine promise.
 <3> Use an argument to set the timeout
-<4> Perform the wait by using asio::deferred.
+<4> Perform the wait by using <<use_op, async::use_op>>.
 <5> Return a value that gets returns from the implicit main.
 
 In this example we use the <<main>> header, which provides us with a main coroutine if `co_main`
@@ -29,24 +27,3 @@ the <<this_coro, this_coro>> namespace.
 
 We can then construct a timer and initiate the `async_wait` with <<use_op>>.
 `async` provides multiple ways to `co_await` to interact with asio, of which <<use_op>> is the easiest.
-
-=== delay op
-
-The problem with this interaction with asio is that asio doesn't do a pre-suspend check.
-That is, the coroutine will suspend even if the timer is ready (because the delay is zero).
-
-To leverage the coroutine properties, `async` provides an easy way to create a skipable operation:
-
-.example/delay_op.cpp
-[example]
-[source,cpp]
-----
-include::../../example/delay_op.cpp[tag=timer_example]
-----
-<1> Declare the op. We inherit `op` to make it awaitable.
-<2> The pre-suspend check is implemented here
-<3> Do the wait if we need to
-<4> Use the <<op, op>> just like any other awaitable.
-
-This way we can minimize the amounts of coroutine suspensions.
-

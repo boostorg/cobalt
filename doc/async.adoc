@@ -1,5 +1,4 @@
-Documentation boost.async
-==========================
+= Documentation boost.async
 Klemens Morgenstern <klemens.morgenstern@gmx.net>
 Version 0.1, 29.01.2023
 :source-highlighter: rouge
@@ -18,6 +17,7 @@ WARN: Some if not all MSVC versions have a broken coroutine implementation, that
 Run the tests to check if compiler supports coroutines correctly.
 
 
+include::overview.adoc[]
 include::motivation.adoc[]
 
 = Coroutine Primer
@@ -38,6 +38,7 @@ include::reference/main.adoc[]
 include::reference/promise.adoc[]
 include::reference/generators.adoc[]
 include::reference/task.adoc[]
+include::reference/detached.adoc[]
 include::reference/op.adoc[]
 include::reference/concepts.adoc[]
 include::reference/this_coro.adoc[]

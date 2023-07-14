@@ -8,4 +8,4 @@ outstanding events and resume a co_await coroutine.
 This pattern is very common and is used in a similar way 
 by node.js or python's `asyncio`.
 
-`async` uses an `asio::io_context` as it's main event loop.
+`async` uses an `asio::io_context` as it's default event loop.

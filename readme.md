@@ -29,7 +29,7 @@ async::main co_main(int argc, char ** argv)
 }
 ```
 
-That is, [`main`](doc/reference/main.adoc) runs on a single threaded `io_context`, you can however add more threads. Threads can be cancelled or stopped (as in calling io_context::stop) on destruction.
+That is, [`main`](doc/reference/main.adoc) runs on a single threaded `io_context`.
 
 It also hooks up signals, so that things like `Ctrl+C` get forwarded as cancellations automatically
 
