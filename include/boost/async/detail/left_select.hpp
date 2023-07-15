@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_ASYNC_DETAIL_RACEa_HPP
-#define BOOST_ASYNC_DETAIL_RACEa_HPP
+#ifndef BOOST_ASYNC_DETAIL_LEFT_SELECT_HPP
+#define BOOST_ASYNC_DETAIL_LEFT_SELECT_HPP
 
 #include <boost/async/detail/await_result_helper.hpp>
 #include <boost/async/detail/forward_cancellation.hpp>
@@ -30,13 +30,13 @@ namespace boost::async::detail
 {
 
 
-struct race_shared_state
+struct left_select_shared_state
 {
   std::unique_ptr<void, coro_deleter<>> h;
   std::size_t use_count = 0u;
 
-  friend void intrusive_ptr_add_ref(race_shared_state * st) {st->use_count++;}
-  friend void intrusive_ptr_release(race_shared_state * st) {if (st->use_count-- == 1u) st->h.reset();}
+  friend void intrusive_ptr_add_ref(left_select_shared_state * st) {st->use_count++;}
+  friend void intrusive_ptr_release(left_select_shared_state * st) {if (st->use_count-- == 1u) st->h.reset();}
 
   void complete()
   {
@@ -46,8 +46,8 @@ struct race_shared_state
 
   struct completer
   {
-    intrusive_ptr<race_shared_state> ptr;
-    completer(race_shared_state * wss) : ptr{wss} {}
+    intrusive_ptr<left_select_shared_state> ptr;
+    completer(left_select_shared_state * wss) : ptr{wss} {}
 
     void operator()()
     {
@@ -70,11 +70,11 @@ struct race_shared_state
 };
 
 template<asio::cancellation_type Ct, typename ... Args>
-struct race_variadic_impl
+struct left_select_variadic_impl
 {
   using tuple_type = std::tuple<decltype(get_awaitable_type(std::declval<Args>()))...>;
 
-  race_variadic_impl(Args && ... args)
+  left_select_variadic_impl(Args && ... args)
       : args{std::forward<Args>(args)...}
   {
   }
@@ -106,7 +106,7 @@ struct race_variadic_impl
                                        this_thread::get_default_resource()};
     pmr::polymorphic_allocator<void> alloc{&res};
 
-    race_shared_state sss;
+    left_select_shared_state sss;
 
     bool has_result() const
     {
@@ -304,10 +304,10 @@ struct race_variadic_impl
 
 
 template<asio::cancellation_type Ct, typename Range>
-struct race_ranged_impl
+struct left_select_ranged_impl
 {
   using result_type = co_await_result_t<std::decay_t<decltype(*std::begin(std::declval<Range>()))>>;
-  race_ranged_impl(Range && rng)
+  left_select_ranged_impl(Range && rng)
       : range{std::forward<Range>(rng)}
   {
   }
@@ -357,7 +357,7 @@ struct race_ranged_impl
     {
     }
 
-    race_shared_state sss;
+    left_select_shared_state sss;
 
     void cancel_all()
     {
@@ -508,4 +508,4 @@ struct race_ranged_impl
 
 }
 
-#endif //BOOST_ASYNC_DETAIL_RACEa_HPP
+#endif //BOOST_ASYNC_DETAIL_LEFT_SELECT_HPP

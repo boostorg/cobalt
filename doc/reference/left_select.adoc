@@ -1,11 +1,11 @@
-[#race]
-== async/race.hpp
+[#left_select]
+== async/left_select.hpp
 
-The `race` function can be used to `co_await` one <<awaitable>>s out of a set of them.
+The `left_select` function can be used to `co_await` one <<awaitable>>s out of a set of them.
 
-`race` gets evaluated strictly from left to right,
+`left_select` gets evaluated strictly from left to right,
 i.e. the left-most awaitable that is ready will be used.
-This can lead to starvation which is why <<select>> shoud be considered as a sound default.
+This can lead to starvation which is why <<select>> should be considered as a sound default.
 
 It can be called as a variadic function with multiple <<awaitable>> or as on a range of <<awaitable>>s.
 
@@ -16,22 +16,22 @@ async::promise<void> task2();
 
 async::promise<void> do_wait()
 {
-  co_await async::race(task1(), task2()); // <1>
+  co_await async::left_select(task1(), task2()); // <1>
   std::vector<async::promise<void>> aws {task1(), task2()};
-  co_await async::race(aws); // <2>
+  co_await async::left_select(aws); // <2>
 }
 ----
 <1> Wait for a variadic set of <<awaitable>>s
 <2> wait for a vector of <<awaitable>>s
 
-[#interrupt_await_race]
+[#interrupt_await_left_select]
 === Interrupt Wait
 
-When arguments are passed as rvalue reference, the race will attempt to use `.interrupt_await`
+When arguments are passed as rvalue reference, the left_select will attempt to use `.interrupt_await`
 on the awaitable to detach the not completed <<awaitable>>s. If supported, the <<awaitable>> must complete immediately.
-If the `race` doesn't detect the immediate completion, it will send a cancellation.
+If the `left_select` doesn't detect the immediate completion, it will send a cancellation.
 
-This means that you can reuse race like this:
+This means that you can reuse left_select like this:
 
 [source,cpp]
 ----
@@ -40,8 +40,8 @@ async::promise<void> do_wait()
 {
   auto t1 = task1();
   auto t2 = task2();
-  co_await async::race(t1, t2); // <1>
-  co_await async::race(t1, t2); // <2>
+  co_await async::left_select(t1, t2); // <1>
+  co_await async::left_select(t1, t2); // <2>
 }
 ----
 <1> Wait for the first task to complete
@@ -49,7 +49,7 @@ async::promise<void> do_wait()
 
 This is supported by <<promise, promise>>, <<generator, generator>> and <<gather, gather>>.
 
-The `race` will invoke the functions of the `awaitable` as if used in a `co_await` expression,
+The `left_select` will invoke the functions of the `awaitable` as if used in a `co_await` expression,
 with two exceptions:
 
  1. A call to `await_ready` might not be followed by `await_suspend` when returning false.

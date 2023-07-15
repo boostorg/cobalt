@@ -147,7 +147,6 @@ struct promise_receiver : promise_value_holder<T>
     ~awaitable ()
     {
     }
-    // the race is fine -> if we miss it, we'll get it in resume.
     bool await_ready() const { return self->done; }
 
     template<typename Promise>
