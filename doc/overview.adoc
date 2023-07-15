@@ -33,7 +33,7 @@ Here's a list of relevant featuers in async:
 |<<gather>>
 |A function that waits for a set of coroutines and returns all of them as `result`, capturing all exceptions individually.
 
-|<<race>>
+|<<left_select>>
 |A deterministic `select` that evaluates left-to-right.
 |===
 

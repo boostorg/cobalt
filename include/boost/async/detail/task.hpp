@@ -146,7 +146,6 @@ struct task_receiver : task_value_holder<T>
     {
     }
 
-    // the race is fine -> if we miss it, we'll get it in resume.
     bool await_ready() const { return self->done; }
 
     template<typename Promise>

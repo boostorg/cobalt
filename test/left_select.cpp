@@ -5,7 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/race.hpp>
+#include <boost/async/left_select.hpp>
 #include <boost/async/generator.hpp>
 #include <boost/async/promise.hpp>
 #include <boost/async/op.hpp>
@@ -33,7 +33,7 @@ static async::generator<int> gen(asio::any_io_executor exec)
   co_return 123;
 }
 
-TEST_SUITE_BEGIN("race");
+TEST_SUITE_BEGIN("left_select");
 
 CO_TEST_CASE("variadic")
 {
@@ -41,7 +41,7 @@ CO_TEST_CASE("variadic")
   auto d1 = dummy(exec, std::chrono::milliseconds(100));
   auto d2 = dummy(exec, std::chrono::milliseconds( 50));
   auto g = gen(exec);
-  auto c = co_await race(d1, d2, dummy(exec, std::chrono::milliseconds(100000)), g);
+  auto c = co_await left_select(d1, d2, dummy(exec, std::chrono::milliseconds(100000)), g);
   CHECK(c.index() == 1u);
   CHECK(boost::variant2::get<1>(c) == 50);
   CHECK(d1);
@@ -65,7 +65,7 @@ CO_TEST_CASE("list")
   vec.push_back(dummy(exec, std::chrono::milliseconds( 50)));
   vec.push_back(dummy(exec, std::chrono::milliseconds(100000)));
 
-  auto c = co_await race(vec);
+  auto c = co_await left_select(vec);
   CHECK(c.first == 1u);
   CHECK(c.second == 50);
   CHECK(!vec[0].ready());
@@ -84,7 +84,7 @@ CO_TEST_CASE("empty-list")
 {
   auto exec = co_await asio::this_coro::executor;
   std::vector<async::promise<std::size_t>> vec;
-  CHECK_THROWS(co_await race(vec));
+  CHECK_THROWS(co_await left_select(vec));
 }
 
 
@@ -92,7 +92,7 @@ CO_TEST_CASE("stop")
 {
   auto d = dummy(co_await asio::this_coro::executor,
                  std::chrono::milliseconds(10));
-  CHECK((co_await race(d, stop())).index() == 0);
+  CHECK((co_await left_select(d, stop())).index() == 0);
 }
 
 CO_TEST_CASE("compliance")
@@ -101,29 +101,29 @@ CO_TEST_CASE("compliance")
   auto d = dummy(exec, std::chrono::milliseconds(100000));
   {
     immediate i;
-    CHECK((co_await race(d, i)).index() == 1);
+    CHECK((co_await left_select(d, i)).index() == 1);
   }
 
   {
     immediate_bool i;
-    CHECK((co_await race(d, i)).index() == 1);
+    CHECK((co_await left_select(d, i)).index() == 1);
   }
 
   {
     immediate_handle i;
-    CHECK((co_await race(d, i)).index() == 1);
+    CHECK((co_await left_select(d, i)).index() == 1);
   }
   {
     posted p;
-    CHECK((co_await race(d, p)).index() == 1);
+    CHECK((co_await left_select(d, p)).index() == 1);
   }
   {
     posted_bool p;
-    CHECK((co_await race(d, p)).index() == 1);
+    CHECK((co_await left_select(d, p)).index() == 1);
   }
   {
     posted_handle p;
-    CHECK((co_await race(d, p)).index() == 1);
+    CHECK((co_await left_select(d, p)).index() == 1);
   }
   d.cancel();
   CHECK_THROWS(co_await d);
@@ -131,12 +131,12 @@ CO_TEST_CASE("compliance")
 
 CO_TEST_CASE("compliance_ranged")
 {
-  CHECK(co_await async::race(std::vector<immediate>(3u))        == 0);
-  CHECK(co_await async::race(std::vector<immediate_bool>(1u))   == 0);
-  CHECK(co_await async::race(std::vector<immediate_handle>(1u)) == 0);
-  CHECK(co_await async::race(std::vector<posted>(3u))           == 0);
-  CHECK(co_await async::race(std::vector<posted_bool>(1u))      == 0);
-  CHECK(co_await async::race(std::vector<posted_handle>(1u))    == 0);
+  CHECK(co_await async::left_select(std::vector<immediate>(3u))        == 0);
+  CHECK(co_await async::left_select(std::vector<immediate_bool>(1u))   == 0);
+  CHECK(co_await async::left_select(std::vector<immediate_handle>(1u)) == 0);
+  CHECK(co_await async::left_select(std::vector<posted>(3u))           == 0);
+  CHECK(co_await async::left_select(std::vector<posted_bool>(1u))      == 0);
+  CHECK(co_await async::left_select(std::vector<posted_handle>(1u))    == 0);
 }
 
 TEST_SUITE_END();
