@@ -8,7 +8,9 @@
 #ifndef BOOST_ASYNC_DETAIL_FORWARD_CANCELLATION_HPP
 #define BOOST_ASYNC_DETAIL_FORWARD_CANCELLATION_HPP
 
+#include <boost/async/config.hpp>
 #include <boost/asio/cancellation_signal.hpp>
+#include <boost/asio/post.hpp>
 
 namespace boost::async
 {
@@ -36,6 +38,19 @@ struct forward_cancellation
   void operator()(asio::cancellation_type ct) const
   {
     cancel_signal.emit(ct);
+  }
+};
+
+struct forward_post_cancellation
+{
+  asio::cancellation_signal &cancel_signal;
+  executor exec;
+
+  forward_post_cancellation(asio::cancellation_signal &cancel_signal,
+                            executor exec) : cancel_signal(cancel_signal), exec(exec) {}
+  void operator()(asio::cancellation_type ct) const
+  {
+    asio::post(exec, [this, ct]{cancel_signal.emit(ct);});
   }
 };
 

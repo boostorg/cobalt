@@ -101,10 +101,10 @@ async::generator<int> delay_gen(std::chrono::milliseconds tick)
 
 CO_TEST_CASE("generator-race")
 {
-  asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::milliseconds(50)};
-  auto g1 = delay_gen(std::chrono::milliseconds(200));
+  asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::milliseconds(5)};
+  auto g1 = delay_gen(std::chrono::milliseconds(20));
   co_await tim.async_wait(asio::deferred);
-  auto g2 = delay_gen(std::chrono::milliseconds(100));
+  auto g2 = delay_gen(std::chrono::milliseconds(10));
 
   std::vector<std::size_t> seq{
     0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1

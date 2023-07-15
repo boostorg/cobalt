@@ -13,15 +13,18 @@
 #include <boost/asio/uses_executor.hpp>
 #include <boost/mp11/algorithm.hpp>
 
+#include <optional>
+
 namespace boost::async::detail
 {
 
 inline executor
 extract_executor(executor exec) { return exec; }
 
+#if defined(BOOST_ASYNC_CUSTOM_EXECUTOR)
 executor
 extract_executor(asio::any_io_executor exec);
-
+#endif
 
 template<typename ... Args>
 executor get_executor_from_args(Args &&... args)
@@ -33,6 +36,18 @@ executor get_executor_from_args(Args &&... args)
   else  //
     return extract_executor(std::get<I + 1u>(std::tie(args...)));
 }
+
+template<typename ... Args>
+std::optional<executor> try_get_executor_from_args(Args &&... args)
+{
+  using args_type = mp11::mp_list<std::decay_t<Args>...>;
+  constexpr static auto I = mp11::mp_find<args_type, asio::executor_arg_t>::value;
+  if constexpr (sizeof...(Args) == I)
+    return std::nullopt;
+  else  //
+    return extract_executor(std::get<I + 1u>(std::tie(args...)));
+}
+
 
 template<typename ... Args>
 pmr::memory_resource * get_memory_resource_from_args(Args &&... args)

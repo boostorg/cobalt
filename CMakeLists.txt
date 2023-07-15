@@ -84,7 +84,8 @@ add_library(boost_async
             src/error.cpp
             src/channel.cpp
             src/main.cpp
-            src/this_thread.cpp)
+            src/this_thread.cpp
+            src/thread.cpp)
 target_include_directories(boost_async PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(boost_async PUBLIC
         Boost::system

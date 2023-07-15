@@ -30,6 +30,7 @@ alias async_sources
      error.cpp
      main.cpp
      this_thread.cpp
+     thread.cpp
    ;
 
 explicit async_sources ;

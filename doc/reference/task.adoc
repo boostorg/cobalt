@@ -25,6 +25,10 @@ Since a `task` it lazy, it does not need to have an executor on construction.
 It rather attempts to take it from the caller or awaiter if present.
 Otherwise, it'll default to the thread_local executor.
 
+Additionally, you can pass an executor in throught arguments using `asio::executor_arg`.
+
+NOTE: Task is executor and thus thread-aware. I.e. it is safe to await from another thread.
+
 === Memory Resource
 [#task-allocator]
 

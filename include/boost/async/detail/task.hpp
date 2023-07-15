@@ -91,7 +91,7 @@ struct task_receiver : task_value_holder<T>
     set_done();
   }
 
-  bool done = false;
+  std::atomic<bool> done = false;
   std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
 
   void set_done()
@@ -102,7 +102,7 @@ struct task_receiver : task_value_holder<T>
   task_receiver() = default;
   task_receiver(task_receiver && lhs)
       : task_value_holder<T>(std::move(lhs)),
-        exception(std::move(lhs.exception)), done(lhs.done), awaited_from(std::move(lhs.awaited_from)),
+        exception(std::move(lhs.exception)), done(lhs.done.load()), awaited_from(std::move(lhs.awaited_from)),
         promise(lhs.promise)
   {
     if (!done && !exception)
@@ -155,18 +155,42 @@ struct task_receiver : task_value_holder<T>
       if (self->done) // ok, so we're actually done already, so noop
         return std::coroutine_handle<void>::from_address(h.address());
 
-      if constexpr (requires (Promise p) {p.get_cancellation_slot();})
-        if ((cl = h.promise().get_cancellation_slot()).is_connected())
-          cl.emplace<forward_cancellation>(self->promise->signal);
 
+      bool crossing_threads = false;
 
-      if constexpr (requires (Promise p) {p.get_executor();})
-        self->promise->exec.emplace(h.promise().get_executor());
+      auto ee = asio::get_associated_executor(h.promise(), this_thread::get_executor());
+      if (!self->promise->exec)
+        self->promise->exec.emplace(ee);
       else
-        self->promise->exec.emplace(this_thread::get_executor());
-      self->awaited_from.reset(h.address());
+        crossing_threads = ee != self->promise->exec->get_executor();
 
-      return std::coroutine_handle<task_promise<T>>::from_promise(*self->promise);
+
+      if (crossing_threads)
+      {
+        if constexpr (requires (Promise p) {p.get_cancellation_slot();})
+          if ((cl = h.promise().get_cancellation_slot()).is_connected())
+            cl.emplace<forward_post_cancellation>(self->promise->signal, ee);
+
+
+       return detail::post_coroutine(
+            ee,
+            [this,
+             hh = std::unique_ptr<void, coro_deleter<>>(h.address())]() mutable
+            {
+              self->awaited_from = std::move(hh);
+              std::coroutine_handle<task_promise<T>>::from_promise(*self->promise).resume();
+            });
+      }
+      else
+      {
+        if constexpr (requires (Promise p) {p.get_cancellation_slot();})
+          if ((cl = h.promise().get_cancellation_slot()).is_connected())
+            cl.emplace<forward_cancellation>(self->promise->signal);
+
+        self->awaited_from.reset(h.address());
+
+        return std::coroutine_handle<task_promise<T>>::from_promise(*self->promise);
+      }
     }
 
     T await_resume()
@@ -273,7 +297,11 @@ struct task_promise
   template<typename ... Args>
   task_promise(Args & ...args)
       : promise_memory_resource_base(detail::get_memory_resource_from_args(args...))
-  {}
+  {
+    auto ee = try_get_executor_from_args(args...);
+    if (ee)
+      exec.emplace(std::move(*ee));
+  }
 
   auto initial_suspend()
   {
