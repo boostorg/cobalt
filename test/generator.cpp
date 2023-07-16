@@ -90,7 +90,7 @@ async::generator<int> delay_gen(std::chrono::milliseconds tick)
   asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::steady_clock::now()};
   for (int i = 0; i < 10; i ++)
   {
-    co_await tim.async_wait(asio::deferred);
+    co_await tim.async_wait(async::use_op);
     tim.expires_at(tim.expiry() + tick);
     co_yield i;
   }
@@ -103,7 +103,7 @@ CO_TEST_CASE("generator-left_select")
 {
   asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::milliseconds(50)};
   auto g1 = delay_gen(std::chrono::milliseconds(200));
-  co_await tim.async_wait(asio::deferred);
+  co_await tim.async_wait(async::use_op);
   auto g2 = delay_gen(std::chrono::milliseconds(100));
 
   std::vector<std::size_t> seq{

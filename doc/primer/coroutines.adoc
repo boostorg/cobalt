@@ -89,7 +89,7 @@ async::generator<int, bool> iota()
 
 .Stackless
 ****
-C++ coroutine are stack-less, which means they don't have a deep stack, but only allocate their own function frame.
+C++ coroutine are stack-less, which means they only allocate their own function frame.
 
 See <<stackless>> for more details.
 ****

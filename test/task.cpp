@@ -130,7 +130,7 @@ async::task<void> throw_()
 
 async::task<void> throw_post()
 {
-  co_await asio::post(async::this_thread::get_executor(), asio::deferred);
+  co_await asio::post(async::this_thread::get_executor(), async::use_op);
   throw std::runtime_error("throw_");
   co_return ;
 }
@@ -167,7 +167,7 @@ TEST_CASE("cancel-void")
 static async::task<void> delay_v(asio::io_context &ctx, std::size_t ms)
 {
   asio::steady_timer tim(ctx, std::chrono::milliseconds{ms});
-  co_await tim.async_wait(asio::deferred);
+  co_await tim.async_wait(async::use_op);
 }
 
 

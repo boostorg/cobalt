@@ -24,14 +24,14 @@ static async::promise<std::size_t> wdummy(asio::any_io_executor exec,
     throw std::runtime_error("wdummy_throw");
 
   asio::steady_timer tim{exec, ms};
-  co_await tim.async_wait(asio::deferred);
+  co_await tim.async_wait(async::use_op);
   co_return ms.count();
 }
 
 static async::generator<int> wgen(asio::any_io_executor exec)
 {
   asio::steady_timer tim{exec, std::chrono::milliseconds(25)};
-  co_await tim.async_wait(asio::deferred);
+  co_await tim.async_wait(async::use_op);
   co_return 123;
 }
 

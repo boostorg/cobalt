@@ -10,7 +10,6 @@
 
 #include <boost/async/main.hpp>
 #include <boost/async/this_coro.hpp>
-#include <boost/async/detail/async_operation.hpp>
 
 
 #include <boost/config.hpp>
@@ -41,7 +40,6 @@ struct main_promise : signal_helper,
                       promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>,
                       promise_throw_if_cancelled_base,
                       enable_awaitables<main_promise>,
-                      enable_async_operation,
                       enable_await_allocator<main_promise>,
                       enable_await_executor<main_promise>
 {
@@ -108,7 +106,6 @@ struct main_promise : signal_helper,
     using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
     using promise_throw_if_cancelled_base::await_transform;
     using enable_awaitables<main_promise>::await_transform;
-    using enable_async_operation::await_transform;
     using enable_await_allocator<main_promise>::await_transform;
     using enable_await_executor<main_promise>::await_transform;
 

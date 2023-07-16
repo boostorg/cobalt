@@ -8,7 +8,6 @@
 #ifndef BOOST_ASYNC_DETAIL_TASK_HPP
 #define BOOST_ASYNC_DETAIL_TASK_HPP
 
-#include <boost/async/detail/async_operation.hpp>
 #include <boost/async/detail/exception.hpp>
 #include <boost/async/detail/forward_cancellation.hpp>
 #include <boost/async/detail/wrapper.hpp>
@@ -239,7 +238,6 @@ struct task_promise
       enable_awaitables<task_promise<Return>>,
       enable_await_allocator<task_promise<Return>>,
       enable_await_executor<task_promise<Return>>,
-      enable_async_operation,
       task_promise_result<Return>
 {
   using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
@@ -247,7 +245,6 @@ struct task_promise
   using enable_awaitables<task_promise<Return>>::await_transform;
   using enable_await_allocator<task_promise<Return>>::await_transform;
   using enable_await_executor<task_promise<Return>>::await_transform;
-  using enable_async_operation::await_transform;
 
   [[nodiscard]] task<Return> get_return_object()
   {

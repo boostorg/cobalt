@@ -10,6 +10,7 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl.hpp>
+#include <boost/asio/as_tuple.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/core/flat_buffer.hpp>

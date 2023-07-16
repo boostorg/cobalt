@@ -8,7 +8,6 @@
 #ifndef BOOST_ASYNC_DETAIL_GENERATOR_HPP
 #define BOOST_ASYNC_DETAIL_GENERATOR_HPP
 
-#include <boost/async/detail/async_operation.hpp>
 #include <boost/async/concepts.hpp>
 #include <boost/async/detail/exception.hpp>
 #include <boost/async/detail/forward_cancellation.hpp>
@@ -229,13 +228,11 @@ struct generator_promise
       promise_throw_if_cancelled_base,
       enable_awaitables<generator_promise<Yield, Push>>,
       enable_await_allocator<generator_promise<Yield, Push>>,
-      enable_await_executor< generator_promise<Yield, Push>>,
-      enable_async_operation
+      enable_await_executor< generator_promise<Yield, Push>>
 {
   using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
   using promise_throw_if_cancelled_base::await_transform;
   using enable_awaitables<generator_promise<Yield, Push>>::await_transform;
-  using enable_async_operation::await_transform;
   using enable_await_allocator<generator_promise<Yield, Push>>::await_transform;
   using enable_await_executor<generator_promise<Yield, Push>>::await_transform;
 

@@ -8,9 +8,12 @@
 #ifndef BOOST_ASYNC_TASK_HPP
 #define BOOST_ASYNC_TASK_HPP
 
+#include <boost/async/detail/handler.hpp>
 #include <boost/async/detail/task.hpp>
+#include <boost/async/op.hpp>
 
 #include <boost/asio/append.hpp>
+#include <boost/asio/deferred.hpp>
 
 namespace boost::async
 {
@@ -117,9 +120,9 @@ struct async_result<boost::async::use_task_t, void(Args...)>
 
   {
     co_return co_await async_initiate<
-          const asio::deferred_t&, void(Args...)>(
+          const async::use_op_t&, void(Args...)>(
               std::move(initiation),
-              asio::deferred, std::move(args)...);
+              async::use_op, std::move(args)...);
   }
 };
 

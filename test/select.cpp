@@ -22,14 +22,14 @@ static  async::promise<std::size_t> dummy(asio::any_io_executor exec,
                                   std::chrono::milliseconds ms = std::chrono::milliseconds(50))
 {
   asio::steady_timer tim{exec, ms};
-  co_await tim.async_wait(asio::deferred);
+  co_await tim.async_wait(async::use_op);
   co_return ms.count();
 }
 
 static async::generator<int> gen(asio::any_io_executor exec)
 {
   asio::steady_timer tim{exec, std::chrono::milliseconds(50000)};
-  co_await tim.async_wait(asio::deferred);
+  co_await tim.async_wait(async::use_op);
   co_return 123;
 }
 

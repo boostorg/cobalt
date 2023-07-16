@@ -5,8 +5,8 @@
 #ifndef BOOST_ASYNC_DETAIL_WITH_HPP
 #define BOOST_ASYNC_DETAIL_WITH_HPP
 
-#include <boost/async/detail/async_operation.hpp>
 #include <boost/async/concepts.hpp>
+#include <boost/async/this_coro.hpp>
 
 #include <boost/asio/cancellation_signal.hpp>
 
@@ -30,11 +30,9 @@ struct [[nodiscard]] with_impl
 
 struct with_impl::promise_type
         : enable_awaitables<promise_type>,
-          enable_async_operation,
           enable_await_allocator<promise_type>
 {
     using enable_awaitables<promise_type>::await_transform;
-    using enable_async_operation::await_transform;
     using enable_await_allocator<promise_type>::await_transform;
 
 
