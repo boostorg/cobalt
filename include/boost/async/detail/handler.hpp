@@ -248,7 +248,12 @@ const executor &
 get_executor(std::coroutine_handle<Promise> h)
 {
   if constexpr (requires {h.promise().get_executor();})
+  {
+    static_assert(std::same_as<decltype(h.promise().get_executor()),
+                               const executor &>,
+                  "for performance reasons, the get_executor function on a promise must return a const reference");
     return h.promise().get_executor();
+  }
   else
     return this_thread::get_executor();
 }

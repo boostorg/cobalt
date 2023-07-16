@@ -215,7 +215,7 @@ struct left_select_variadic_impl
     template<typename H>
     auto await_suspend(std::coroutine_handle<H> h)
     {
-      auto exec = get_executor(h);
+      const auto & exec = get_executor(h);
       std::size_t idx = 0u;
       mp11::tuple_for_each(
           aws,
