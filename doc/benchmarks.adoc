@@ -1,0 +1,113 @@
+= Benchmarks
+
+__Run on 11th Gen Intel(R) Core(TM) i7-1185G7 @ 3.00GHz__
+
+== Raw posting to an executor
+
+The benchmark is running the following code, with async's task, `asio::awaitable` and `asio`'s
+stackful coroutine (boost.context) based.
+
+[source,cpp]
+----
+async::task<void> atest()
+{
+  for (std::size_t i = 0u; i < n; i++)
+    co_await asio::post(async::use_op);
+}
+----
+
+.results for 50M times in ms
+[cols="1,1,1"]
+|===
+| |gcc |clang
+
+|async     | 3284 | 2098
+|awaitable | 3284 | 2253
+|stackful  | 4897 | 3725
+|===
+
+== Running noop coroutine in parallel
+
+This benchmark uses an `asio::experimental::channel` that has a size of zero,
+to read & write in parallel to it. It uses <<gather, gather>> with async
+and an `awaitable_operator` in the `asio::awaitable`.
+
+[source,cpp]
+----
+async::task<void> atest()
+{
+  asio::experimental::channel<void(system::error_code)> chan{co_await async::this_coro::executor, 0u};
+  for (std::size_t i = 0u; i < n; i++)
+    co_await async::gather(
+              chan.async_send(system::error_code{}, async::use_task),
+              chan.async_receive(async::use_task));
+}
+
+asio::awaitable<void> awtest()
+{
+  asio::experimental::channel<void(system::error_code)> chan{co_await async::this_coro::executor, 0u};
+  using boost::asio::experimental::awaitable_operators::operator&&;
+  for (std::size_t i = 0u; i < n; i++)
+    co_await (
+        chan.async_send(system::error_code{}, asio::use_awaitable)
+        &&
+        chan.async_receive(asio::use_awaitable));
+}
+----
+
+
+.results for 3M times in ms
+[cols="1,1,1"]
+|===
+| |gcc |clang
+
+|async     | 1563 | 1468
+|awaitable | 2800 | 2805
+|===
+
+== Immediate
+
+This benchmark utilizes the immediate completion, by using a channel
+with a size of 1, so that every operation is immediate.
+
+[source,cpp]
+----
+async::task<void> atest()
+{
+  asio::experimental::channel<void(system::error_code)> chan{co_await async::this_coro::executor, 1u};
+  for (std::size_t i = 0u; i < n; i++)
+  {
+    co_await chan.async_send(system::error_code{}, async::use_op);
+    co_await chan.async_receive(async::use_op);
+  }
+}
+----
+
+
+.result for 10M times in ms
+[cols="1,1,1"]
+|===
+| |gcc |clang
+
+|async     | 1810 | 1864
+|awaitable | 3109 | 4110
+|stackful  | 3922 | 4705
+
+|===
+
+== Channels
+
+As In this benchmark asio::experimental::channel and async::channel get compared.
+
+This si similar to the parallel test, but uses the `async::channel` instead.
+
+.result of running the test 3M times in ms
+[cols="1,1,1"]
+|===
+| |gcc |clang
+
+|async     | 500 | 350
+|awaitable | 790 | 770
+|stackful  | 867 | 907
+
+|===
