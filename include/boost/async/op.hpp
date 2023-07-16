@@ -26,13 +26,11 @@ struct op
   struct awaitable
   {
     op<Args...> &op_;
-    std::exception_ptr error;
     std::optional<std::tuple<Args...>> result;
 
     awaitable(op<Args...> * op_) : op_(*op_) {}
     awaitable(awaitable && lhs)
         : op_(lhs.op_)
-        , error(std::move(lhs.error))
         , result(std::move(lhs.result))
     {
       BOOST_ASSERT(!lhs.resource);
@@ -48,7 +46,7 @@ struct op
     std::optional<pmr::monotonic_buffer_resource> resource;
     bool completed_immediately = false;
     template<typename Promise>
-    bool await_suspend(std::coroutine_handle<Promise> h)
+    bool await_suspend(std::coroutine_handle<Promise> h) noexcept
     {
       try
       {
@@ -59,15 +57,14 @@ struct op
       }
       catch(...)
       {
-        error = std::current_exception();
-        return false;
+        asio::post(async::this_thread::get_executor(),
+                   [e = std::current_exception()]{std::rethrow_exception(e);});
+        return true;
       }
     }
 
     auto await_resume()
     {
-      if (error)
-        std::rethrow_exception(std::exchange(error, nullptr));
       return interpret_result(*std::move(result));
     }
 
