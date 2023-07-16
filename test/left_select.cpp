@@ -34,6 +34,7 @@ static async::generator<int> gen(asio::any_io_executor exec)
 }
 
 TEST_SUITE_BEGIN("left_select");
+#if !defined(BOOST_ASYNC_NO_SELF_DELETE)
 
 CO_TEST_CASE("variadic")
 {
@@ -55,7 +56,7 @@ CO_TEST_CASE("variadic")
   g.cancel();
   CHECK_THROWS(co_await g);
 }
-
+#endif
 
 CO_TEST_CASE("list")
 {
