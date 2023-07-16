@@ -19,6 +19,7 @@ Run the tests to check if compiler supports coroutines correctly.
 
 include::overview.adoc[]
 include::motivation.adoc[]
+include::benchmarks.adoc[]
 
 = Coroutine Primer
 
