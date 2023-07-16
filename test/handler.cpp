@@ -12,7 +12,7 @@
 struct dummy_promise
 {
     using executor_type = boost::asio::any_io_executor;
-     executor_type get_executor() const;
+    executor_type get_executor() const;
 
 };
 
