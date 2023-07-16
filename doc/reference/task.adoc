@@ -69,7 +69,6 @@ The task promise has the following properties.
 - <<promise_cancellation_base>>
 - <<promise_throw_if_cancelled_base>>
 - <<enable_awaitables>>
-- <<enable_async_operation>>
 - <<enable_await_allocator>>
 - <<enable_await_executor>>
 
