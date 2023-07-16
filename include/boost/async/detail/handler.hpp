@@ -79,8 +79,8 @@ struct completion_handler_base
   }
 
   using executor_type = executor;
-  executor_type executor_ ;
-  executor_type get_executor() const noexcept
+  const executor_type & executor_ ;
+  const executor_type & get_executor() const noexcept
   {
     return executor_ ;
   }
@@ -101,7 +101,7 @@ struct completion_handler_base
 
   completion_handler_base(
       cancellation_slot_type cancellation_slot,
-      executor_type executor,
+      const executor_type & executor,
       allocator_type allocator)
           : cancellation_slot(cancellation_slot)
           , executor_(executor)
@@ -110,33 +110,25 @@ struct completion_handler_base
   }
 
   template<typename Promise>
+    requires (requires (Promise p) {{p.get_executor()} -> std::same_as<const executor&>;})
   completion_handler_base(std::coroutine_handle<Promise> h, bool * completed_immediately = nullptr)
           : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
-            executor_(asio::get_associated_executor(h.promise(), this_thread::get_executor())),
+            executor_(h.promise().get_executor()),
             allocator(asio::get_associated_allocator(h.promise(), this_thread::get_allocator())),
             completed_immediately(completed_immediately)
 
   {}
 
   template<typename Promise>
+    requires (requires (Promise p) {{p.get_executor()} -> std::same_as<const executor&>;})
   completion_handler_base(std::coroutine_handle<Promise> h,
                           pmr::memory_resource * resource,
                           bool * completed_immediately = nullptr)
           : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
-            executor_(asio::get_associated_executor(h.promise(), this_thread::get_executor())),
+            executor_(h.promise().get_executor()),
             allocator(resource),
             completed_immediately(completed_immediately) {}
 
-  completion_handler_base(std::coroutine_handle<void> h)
-      : executor_(this_thread::get_executor()),
-        allocator(this_thread::get_allocator()) {}
-
-  completion_handler_base(std::coroutine_handle<void> h,
-                          pmr::memory_resource * resource,
-                          bool * completed_immediately = nullptr)
-      : executor_(this_thread::get_executor()),
-        allocator(resource),
-        completed_immediately(completed_immediately) {}
 };
 
 template<typename Handler,typename ... Args>
@@ -197,6 +189,7 @@ struct completion_handler_wrapper
 
 };
 
+
 template<typename Func>
 struct bound_completion_handler : completion_handler_base, Func
 {
@@ -204,16 +197,23 @@ struct bound_completion_handler : completion_handler_base, Func
   template<typename Func_>
   bound_completion_handler(
       completion_handler_base::cancellation_slot_type cancellation_slot,
-      completion_handler_base::executor_type executor,
+      const completion_handler_base::executor_type & executor,
       completion_handler_base::allocator_type allocator,
       Func_ && func) : completion_handler_base(cancellation_slot, executor, allocator),
                       Func(std::forward<Func_>(func)) {}
+
+  template<typename Func_>
+  bound_completion_handler(
+      completion_handler_base::cancellation_slot_type cancellation_slot,
+      completion_handler_base::executor_type && executor,
+      completion_handler_base::allocator_type allocator,
+      Func_ && func) = delete;
 };
 
 template<typename Func>
 auto bind_completion_handler(
     completion_handler_base::cancellation_slot_type cancellation_slot,
-    completion_handler_base::executor_type executor,
+    const completion_handler_base::executor_type & executor,
     completion_handler_base::allocator_type allocator,
     Func && func) -> bound_completion_handler<std::decay_t<Func>>
 {
@@ -224,6 +224,13 @@ auto bind_completion_handler(
       std::forward<Func>(func));
 }
 
+
+template<typename Func>
+auto bind_completion_handler(
+    completion_handler_base::cancellation_slot_type cancellation_slot,
+    completion_handler_base::executor_type && executor,
+    completion_handler_base::allocator_type allocator,
+    Func && func) -> bound_completion_handler<std::decay_t<Func>> = delete;
 
 template<typename Handler>
 void assign_cancellation(std::coroutine_handle<void>, Handler &&) {}
@@ -237,7 +244,7 @@ void assign_cancellation(std::coroutine_handle<Promise> h, Handler && func)
 }
 
 template<typename Promise>
-executor
+const executor &
 get_executor(std::coroutine_handle<Promise> h)
 {
   if constexpr (requires {h.promise().get_executor();})

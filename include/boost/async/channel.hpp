@@ -36,7 +36,7 @@ struct channel
   channel(channel && ) = default;
 
   using executor_type = executor;
-  executor_type get_executor() {return executor_;}
+  const executor_type & get_executor() {return executor_;}
 
   ~channel();
   bool is_open() const {return !is_closed_;}
@@ -132,7 +132,7 @@ struct channel<void>
   channel(channel && ) = default;
 
   using executor_type = executor;
-  executor_type get_executor() {return executor_;}
+  const executor_type & get_executor() {return executor_;}
 
   BOOST_ASYNC_DECL ~channel();
 

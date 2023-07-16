@@ -163,6 +163,7 @@ struct task_receiver : task_value_holder<T>
         self->promise->exec.emplace(h.promise().get_executor());
       else
         self->promise->exec.emplace(this_thread::get_executor());
+      self->promise->exec_ = self->promise->exec->get_executor();
       self->awaited_from.reset(h.address());
 
       return std::coroutine_handle<task_promise<T>>::from_promise(*self->promise);
@@ -262,11 +263,13 @@ struct task_promise
 
   using executor_type = executor;
   std::optional<asio::executor_work_guard<executor_type>> exec;
-  executor_type get_executor() const
+  std::optional<executor_type> exec_;
+  const executor_type & get_executor() const
   {
       if (!exec)
           throw_exception(asio::bad_executor());
-      return exec->get_executor();
+      BOOST_ASSERT(exec_);
+      return *exec_;
   }
 
   template<typename ... Args>

@@ -97,7 +97,7 @@ struct main_promise : signal_helper,
     }
 
     using executor_type = executor;
-    executor_type get_executor() const {return exec->get_executor();}
+    const executor_type & get_executor() const {return *exec_;}
 
     using allocator_type = pmr::polymorphic_allocator<void>;
     using resource_type  = pmr::unsynchronized_pool_resource;
@@ -115,6 +115,7 @@ struct main_promise : signal_helper,
   private:
     int * result;
     std::optional<asio::executor_work_guard<executor_type>> exec;
+    std::optional<executor_type> exec_;
     asio::basic_signal_set<executor_type> * signal_set;
     ::boost::async::main get_return_object()
     {

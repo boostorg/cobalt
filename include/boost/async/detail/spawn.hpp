@@ -41,6 +41,7 @@ struct async_initiate
     auto p = recs.get();
 
     p->promise->exec.emplace(exec);
+    p->promise->exec_ = exec;
     p->awaited_from.reset(detail::post_coroutine(
         asio::bind_executor(
             asio::get_associated_executor(h, exec),
@@ -80,6 +81,7 @@ struct async_initiate
     auto p = recs.get();
 
     p->promise->exec.emplace(exec);
+    p->promise->exec_ = exec;
     p->awaited_from.reset(detail::post_coroutine(
         asio::bind_executor(
             asio::get_associated_executor(h, exec),

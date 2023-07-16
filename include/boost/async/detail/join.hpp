@@ -174,8 +174,11 @@ struct join_variadic_impl
     bool await_ready(){return std::find(ready.begin(), ready.end(), false) == ready.end();};
 
     template<std::size_t Idx, typename Aw>
+    void await_suspend_step(executor && exec, Aw && aw) = delete;
+
+    template<std::size_t Idx, typename Aw>
     void await_suspend_step(
-        executor exec, Aw && aw)
+        const executor & exec, Aw && aw)
     {
       using type= std::tuple_element_t<Idx, tuple_type>;
       using t = std::conditional_t<
@@ -364,7 +367,7 @@ struct join_ranged_impl
     auto await_suspend(std::coroutine_handle<H> h)
     {
       // default cb
-      auto exec = get_executor(h);
+      const auto & exec = get_executor(h);
 
       for(std::size_t idx = 0u; idx < std::size(aws); idx++)
       {

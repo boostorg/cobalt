@@ -39,7 +39,7 @@ struct with_impl::promise_type
 
 
     using executor_type = executor;
-    executor_type get_executor() const {return exec;}
+    const executor_type & get_executor() const {return exec;}
     executor_type exec{this_thread::get_executor()};
 
     with_impl get_return_object()

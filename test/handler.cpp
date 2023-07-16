@@ -26,16 +26,4 @@ void test(boost::async::completion_handler<> ch)
 
 TEST_SUITE_BEGIN("handler");
 
-TEST_CASE("testing")
-{
-  boost::asio::io_context ctx;
-  boost::async::this_thread::set_executor(ctx.get_executor());
-  int res = 0;
-  boost::async::completion_handler<int> ch{[&](int i ){ res = i;}};
-
-  CHECK(res == 0);
-  ch(42);
-  CHECK(res == 42);
-}
-
 TEST_SUITE_END();

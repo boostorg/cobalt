@@ -142,6 +142,9 @@ struct gather_variadic_impl
     bool await_ready(){return std::find(ready.begin(), ready.end(), false) == ready.end();};
 
     template<std::size_t Idx, typename Aw>
+    void await_suspend_step(executor && exec, Aw && aw) = delete;
+
+    template<std::size_t Idx, typename Aw>
     void await_suspend_step(
         const executor & exec,
         Aw && aw)
@@ -167,7 +170,7 @@ struct gather_variadic_impl
     template<typename H>
     auto await_suspend(std::coroutine_handle<H> h)
     {
-      auto exec = get_executor(h);
+      const auto & exec = get_executor(h);
       mp11::mp_for_each<mp11::mp_iota_c<sizeof...(Args)>>
           ([&](auto idx)
           {
@@ -273,8 +276,7 @@ struct gather_ranged_impl
     template<typename H>
     auto await_suspend(std::coroutine_handle<H> h)
     {
-      // default cb
-      auto exec = get_executor(h);
+      const auto & exec = get_executor(h);
 
       std::size_t idx = 0u;
       for (auto && aw : aws)

@@ -175,7 +175,7 @@ struct immediate_coroutine_promise :
 
   executor exec;
   using executor_type = executor;
-  executor_type get_executor() const
+  const executor_type & get_executor() const
   {
     return exec;
   }
@@ -264,7 +264,7 @@ struct transactable_coroutine_promise :
 
   executor exec;
   using executor_type = executor;
-  executor_type get_executor() const
+  const executor_type & get_executor() const
   {
     return exec;
   }
