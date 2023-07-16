@@ -1,14 +1,13 @@
 [#async_operation]
 == async/op.hpp
 
-An async operation is an expression that can get called with a completion handler,
-i.e. implements the `asio::async_operation` concept.
+An async operation is an <<awaitable, awaitable>> wrapping an `asio` operation.
 
 E.g. this is an `async_operation` with the completion signature  `void()`.
 
 [source,cpp]
 ----
-auto op = asio::post(ctx, asio::deferred);
+auto op = asio::post(ctx, async::use_op);
 ----
 
 Or the async_operation can be templated like this:
@@ -18,35 +17,11 @@ Or the async_operation can be templated like this:
 auto op = [&ctx](auto token) {return asio::post(ctx, std::move(token)); };
 ----
 
-Note that `async_operations` will never complete immediately but always suspend the coroutine.
-
-Depending on the completion signature the `co_await` statement may throw.
-
-[cols="1,1,1"]
-|===
-| Signature | Return type | Exception
-
-| `void()`                         | `void`             | `noexcept`
-| `void(T)`                        | `T`                | `noexcept`
-| `void(T...)`                     | `std::tuple<T...>` | `noexcept`
-| `void(system::error_code, T)`    | `T`                | `system::system_error`
-| `void(system::error_code, T...)` | `std::tuple<T...>` | `system::system_error`
-| `void(std::exception_ptr, T)`    | `T`                | _any exception_
-| `void(std::exception_ptr, T...)` | `std::tuple<T...>` | _any exception_
-|===
-
-[#enable_async_operation]
-=== Enable async operation
-
-Coroutines with this property will enable such coroutines to `co_await` asio-compatible coroutines.
-
-Custom promised can add this functionality (through `await_transform`) by inheriting from `async::enable_async_operation`.
-
-
 [#use_op]
 === use_op
 
-The `use_op` token is an alternative to using `asio::deferred` when interacting with asio, that's easier to compile.
+The `use_op` token is the direct to create an op,
+i.e. using `async::use_op` as the completion token will create the required awaitable.
 
 It also supports `defaults_on` so that async_ops can be awaited without the token:
 
@@ -71,13 +46,17 @@ Depending on the completion signature the `co_await` statement may throw.
 | `void(std::exception_ptr, T...)` | `std::tuple<T...>` | _any exception_
 |===
 
+NOTE:  `use_op` will never complete immediately, i.e. `await_ready` will always return false, but always suspend the coroutine.
+
+
+
 [#op]
-=== Custom Operations
+=== Hand coded Operations
 
 Operations are a more advanced implementation of the <<async_operation>> feature.
 
-asio does not support immediate completion of operations due to concerns about starvation.
-This library makes it exceedingly easy to create asynchronous operations with an early completion condition.
+This library makes it easy to create asynchronous operations with an early completion condition,
+i.e. a condition that avoids suspension of coroutines altogether.
 
 We can for example create a `wait_op` that does nothing if the timer is already expired.
 
@@ -103,3 +82,4 @@ struct wait_op : async::op<system::error_code> // <1>
 <1> Inherit `op` with the matching signature `await_transform` picks it up
 <2> Check if the operation is ready - called from `await_ready`
 <3> Initiate the async operation if it's not ready.
+

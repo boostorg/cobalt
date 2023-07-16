@@ -87,19 +87,32 @@ CO_TEST_CASE("op")
   co_await tim.async_wait(async::use_op);
 }
 
-TEST_CASE("op-throw")
+struct op_throw_op
 {
-  auto throw_ = []<typename Token>(Token && tk)
+  template<typename Handler>
+  void operator()(Handler &&h)
   {
     throw std::runtime_error("test-exception");
-    return boost::asio::post(std::forward<Token>(tk));
-  };
 
-  auto val = [&]() -> async::task<void> {co_await throw_;};
+  }
+};
+
+template<typename CompletionToken>
+auto op_throw(CompletionToken&& token)
+{
+  return asio::async_initiate<CompletionToken, void(std::exception_ptr)>(
+      op_throw_op{}, token);
+}
+
+
+TEST_CASE("op-throw")
+{
+
+  auto val = [&]() -> async::task<void> {co_await op_throw(async::use_op);};
 
   asio::io_context ctx;
   async::this_thread::set_executor(ctx.get_executor());
-  spawn(ctx, val(), asio::detached);
+  CHECK_NOTHROW(spawn(ctx, val(), asio::detached));
 
   CHECK_THROWS(ctx.run());
 }

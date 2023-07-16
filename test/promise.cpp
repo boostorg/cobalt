@@ -39,7 +39,7 @@ async::promise<int> test1(asio::any_io_executor exec)
 
     CHECK(test2(42).get() == 42);
 
-    co_await asio::post(exec, asio::deferred);
+    co_await asio::post(exec, async::use_op);
     co_return 452;
 }
 
@@ -98,7 +98,7 @@ async::promise<void> throw_()
 
 async::promise<void> throw_post()
 {
-  co_await asio::post(async::this_thread::get_executor(), asio::deferred);
+  co_await asio::post(async::this_thread::get_executor(), async::use_op);
   throw std::runtime_error("throw_");
   co_return ;
 }
@@ -118,7 +118,7 @@ CO_TEST_CASE("get")
 async::promise<void> delay_v(asio::io_context &ctx, std::size_t ms)
 {
   asio::steady_timer tim(ctx, std::chrono::milliseconds{ms});
-  co_await tim.async_wait(asio::deferred);
+  co_await tim.async_wait(boost::async::use_op);
 }
 
 

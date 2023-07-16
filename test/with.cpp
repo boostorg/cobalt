@@ -6,6 +6,7 @@
 //
 
 #include <boost/async/promise.hpp>
+#include <boost/async/op.hpp>
 #include <boost/async/with.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/this_coro.hpp>
@@ -33,7 +34,7 @@ struct finalizer_test
     {
         exit_called = true;
         e = ee;
-        return asio::post(exec, asio::deferred);
+        return asio::post(exec, boost::async::use_op);
     }
 
     ~finalizer_test()

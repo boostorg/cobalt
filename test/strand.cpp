@@ -25,7 +25,7 @@ async::promise<void> do_the_thing()
   static std::atomic<int> unique = 0;
 
   asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::milliseconds(50)};
-  co_await tim.async_wait(asio::deferred);
+  co_await tim.async_wait(async::use_op);
 
 
   unique++;

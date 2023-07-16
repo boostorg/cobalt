@@ -25,7 +25,7 @@ async::promise<void> gdelay(asio::any_io_executor exec,
     throw std::runtime_error("wdummy_throw");
 
   asio::steady_timer tim{exec, ms};
-  co_await tim.async_wait(asio::deferred);
+  co_await tim.async_wait(async::use_op);
 }
 
 
@@ -43,7 +43,7 @@ CO_TEST_CASE("grp")
   wg.push_back(gdelay(e, 10ms));
   wg.push_back(gdelay(e, 20ms));
 
-  co_await asio::post(e, asio::deferred);
+  co_await asio::post(e, async::use_op);
   CHECK(wg.size() == 4u);
   CHECK(wg.reap() == 1u);
   CHECK(wg.size() == 3u);
