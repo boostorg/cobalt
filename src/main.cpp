@@ -30,6 +30,7 @@ int main_promise::run_main(::boost::async::main mn)
   int res = -1;
   mn.promise->result = &res;
   mn.promise->exec.emplace(ctx.get_executor());
+  mn.promise->exec_ = mn.promise->exec->get_executor();
   auto p = std::coroutine_handle<detail::main_promise>::from_promise(*mn.promise);
   asio::basic_signal_set<executor_type> ss{ctx, SIGINT, SIGTERM};
   mn.promise->signal_set = &ss;

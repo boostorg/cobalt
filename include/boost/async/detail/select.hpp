@@ -172,7 +172,7 @@ struct select_variadic_impl
 
     template<typename Aw>
     void await_suspend_step(
-        executor exec,
+        const executor & exec,
         Aw && aw, std::size_t idx)
     {
       if (has_result() && interruptible<Aw&&>)
@@ -222,7 +222,7 @@ struct select_variadic_impl
     template<typename H>
     auto await_suspend(std::coroutine_handle<H> h)
     {
-      auto exec = get_executor(h);
+      const auto & exec = get_executor(h);
       std::size_t idx = 0u;
       for (auto rdx : reorder)
         mp11::mp_with_index<tuple_size>(
@@ -431,9 +431,14 @@ struct select_ranged_impl
       return found_ready;
     }
 
+
+    template<typename Aw>
+    void await_suspend_step(executor && exec, Aw && aw, std::size_t ) = delete;
+
+
     template<typename Aw>
     void await_suspend_step(
-        executor exec,
+        const executor & exec,
         Aw && aw, std::size_t idx)
     {
       this->cancel[idx] = &this->cancel_[idx];

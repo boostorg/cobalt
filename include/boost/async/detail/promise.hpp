@@ -268,7 +268,7 @@ struct async_promise
 
   using executor_type = executor;
   executor_type exec{boost::async::this_thread::get_executor()};
-  executor_type get_executor() const {return exec;}
+  const executor_type & get_executor() const {return exec;}
 
   template<typename ... Args>
   async_promise(Args & ...args)

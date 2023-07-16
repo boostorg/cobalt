@@ -8,6 +8,10 @@
 #include <boost/asio/strand.hpp>
 #include <boost/asio/io_context_strand.hpp>
 
+#if defined(BOOST_ASYNC_USE_BOOST_CONTAINER_PMR)
+#include <boost/container/pmr/synchronized_pool_resource.hpp>
+#endif
+
 #include "doctest.h"
 #include "test.hpp"
 
