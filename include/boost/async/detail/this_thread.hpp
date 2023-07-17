@@ -19,9 +19,10 @@ namespace boost::async::detail
 inline executor
 extract_executor(executor exec) { return exec; }
 
+#if defined(BOOST_ASYNC_CUSTOM_EXECUTOR)
 executor
 extract_executor(asio::any_io_executor exec);
-
+#endif
 
 template<typename ... Args>
 executor get_executor_from_args(Args &&... args)

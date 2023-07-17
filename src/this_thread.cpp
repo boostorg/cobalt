@@ -77,6 +77,7 @@ void set_executor(executor exec) noexcept
 namespace boost::async::detail
 {
 
+#if defined(BOOST_ASYNC_CUSTOM_EXECUTOR)
 executor
 extract_executor(asio::any_io_executor exec)
 {
@@ -86,5 +87,5 @@ extract_executor(asio::any_io_executor exec)
 
   return *t;
 }
-
+#endif
 }
