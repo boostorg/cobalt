@@ -144,4 +144,5 @@ CO_TEST_CASE("stop")
         }());
 }
 
+
 TEST_SUITE_END();

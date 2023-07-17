@@ -115,6 +115,7 @@ struct promise_receiver : promise_value_holder<T>
     }
 
     lhs.done = true;
+
   }
 
   ~promise_receiver()
@@ -257,11 +258,6 @@ struct async_promise
   }
 
   mutable asio::cancellation_signal signal;
-  using cancellation_slot_type = asio::cancellation_slot;
-  cancellation_slot_type get_cancellation_slot() const
-  {
-    return signal.slot();
-  }
 
   using executor_type = executor;
   executor_type exec{boost::async::this_thread::get_executor()};
@@ -271,7 +267,9 @@ struct async_promise
   async_promise(Args & ...args)
       : promise_memory_resource_base(detail::get_memory_resource_from_args(args...)),
         exec{detail::get_executor_from_args(args...)}
-  {}
+  {
+    this->reset_cancellation_source(signal.slot());
+  }
 
   std::suspend_never initial_suspend()        {return {};}
   auto final_suspend() noexcept

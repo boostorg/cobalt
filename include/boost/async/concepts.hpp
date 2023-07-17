@@ -9,8 +9,10 @@
 #include <concepts>
 #include <utility>
 
+#include <boost/asio/error.hpp>
 #include <boost/asio/is_executor.hpp>
 #include <boost/asio/execution/executor.hpp>
+#include <boost/system/system_error.hpp>
 
 namespace boost::async
 {
@@ -30,13 +32,27 @@ concept awaitable =
     || requires (Awaitable && aw) { {operator co_await(std::forward<Awaitable>(aw))} -> awaitable_type<Promise>;};
 
 
-
+struct promise_throw_if_cancelled_base;
 template<typename Promise = void>
 struct enable_awaitables
 {
     template<awaitable<Promise> Aw>
-    Aw && await_transform(Aw && aw)
+    Aw && await_transform(Aw && aw,
+                          const boost::source_location & loc = BOOST_CURRENT_LOCATION)
     {
+        if constexpr (std::derived_from<Promise, promise_throw_if_cancelled_base>)
+        {
+          // a promise inheriting promise_throw_if_cancelled_base needs to also have a .cancelled() function
+          auto c = static_cast<Promise*>(this)->cancelled();
+          if (!!c)
+          {
+            constexpr boost::source_location here{BOOST_CURRENT_LOCATION};
+            boost::throw_exception(system::system_error(
+                {asio::error::operation_aborted, &here},
+                "throw_if_cancelled"), loc);
+          }
+
+        }
         return static_cast<Aw&&>(aw);
     }
 };

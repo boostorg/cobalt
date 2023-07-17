@@ -240,4 +240,27 @@ CO_TEST_CASE("stop")
           }());
 }
 
+
+async::task<void> throw_if_test(asio::cancellation_signal & sig)
+{
+
+  CHECK(co_await async::this_coro::cancelled
+        == asio::cancellation_type::none);
+  sig.emit(asio::cancellation_type::terminal);
+  CHECK(co_await async::this_coro::cancelled
+        == asio::cancellation_type::terminal);
+  CHECK_THROWS(co_await asio::post(async::use_op));
+}
+
+
+TEST_CASE("throw_if_cancelled")
+{
+  asio::cancellation_signal sig;
+
+  asio::io_context ctx;
+  async::spawn(ctx, throw_if_test(sig),
+               asio::bind_cancellation_slot(sig.slot(), asio::detached));
+  ctx.run();
+}
+
 TEST_SUITE_END();

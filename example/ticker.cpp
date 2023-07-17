@@ -294,7 +294,7 @@ async::main co_main(int argc, char * argv[])
             asio::cancellation_type::all),
         [&](async::wait_group & sessions) -> async::promise<void>
         {
-          while (!(co_await async::this_coro::cancellation_state).cancelled()) // <4>
+          while (!co_await async::this_coro::cancelled) // <4>
           {
             if (sessions.size() >= limit) // <5>
               co_await sessions.wait_one();

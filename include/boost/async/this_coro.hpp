@@ -30,6 +30,9 @@ using namespace asio::this_coro;
 struct allocator_t {};
 constexpr allocator_t allocator;
 
+struct cancelled_t {};
+constexpr cancelled_t cancelled;
+
 enum class pro_active : bool {};
 
 }
@@ -45,6 +48,31 @@ struct promise_cancellation_base
     promise_cancellation_base(CancellationSlot slot = {}, InitialFilter filter = {})
         : source_(slot), state_{source_, filter} {}
 
+
+
+    // This await transformation resets the associated cancellation state.
+    auto await_transform(async::this_coro::cancelled_t) noexcept
+    {
+      struct result
+      {
+        asio::cancellation_type state;
+
+        bool await_ready() const noexcept
+        {
+          return true;
+        }
+
+        void await_suspend(std::coroutine_handle<void>) noexcept
+        {
+        }
+
+        auto await_resume() const
+        {
+          return state;
+        }
+      };
+      return result{state_.cancelled()};
+    }
 
     // This await transformation resets the associated cancellation state.
     auto await_transform(asio::this_coro::cancellation_state_t) noexcept

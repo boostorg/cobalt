@@ -252,11 +252,6 @@ struct task_promise
   }
 
   mutable asio::cancellation_signal signal;
-  using cancellation_slot_type = asio::cancellation_slot;
-  cancellation_slot_type get_cancellation_slot() const
-  {
-    return signal.slot();
-  }
 
   using executor_type = executor;
   std::optional<asio::executor_work_guard<executor_type>> exec;
@@ -272,7 +267,9 @@ struct task_promise
   template<typename ... Args>
   task_promise(Args & ...args)
       : promise_memory_resource_base(detail::get_memory_resource_from_args(args...))
-  {}
+  {
+    this->reset_cancellation_source(signal.slot());
+  }
 
   auto initial_suspend()
   {
