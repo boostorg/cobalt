@@ -13,6 +13,7 @@
 #include <boost/asio/is_executor.hpp>
 #include <boost/asio/execution/executor.hpp>
 #include <boost/system/system_error.hpp>
+#include <boost/throw_exception.hpp>
 
 namespace boost::async
 {
