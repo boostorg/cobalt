@@ -34,6 +34,13 @@ include::tutorial/echo_server.adoc[]
 include::tutorial/ticker.adoc[]
 include::tutorial/delay_op.adoc[]
 
+= Design
+
+include::design/concepts.adoc[]
+include::design/thread_local.adoc[]
+include::design/promise.adoc[]
+include::design/select.adoc[]
+
 = Reference
 
 include::reference/main.adoc[]

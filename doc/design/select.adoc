@@ -1,0 +1,85 @@
+[#design:select]
+== Select
+
+The most important synchronization mechanism is the `select` function.
+
+It awaits multiple <<awaitable,awaitable>>s in a pseudo-random order
+and will return the result of the first one to complete.
+The random ordering applies when multiple awaitables are already ready.
+
+[source,cpp]
+----
+async::generator<int> gen1();
+async::generator<double> gen2();
+
+async::promise<double> p()
+{
+  auto g1 = gen1();
+  auto g2 = gen2();
+  while (!co_await async::this_coro::cancelled)
+  {
+    switch(auto v = co_await select(g1, g2); v.index())
+    {
+    case 0:
+      printf("Got int %d\n", get<0>(v));
+      break;
+    case 1:
+      printf("Got double %f\n", get<1>(v));
+      break;
+    }
+  }
+}
+----
+
+The `select` must however wait for all awaitable to complete
+once it initiates the awaiting operation.
+
+The select is the preferred way to trigger cancellations, e.g:
+
+[source,cpp]
+----
+async::promise<void> timeout();
+async::promise<void> work();
+
+select(timeout(), work());
+----
+
+[#design:interrupt_await]
+== interrupt_await
+
+If it naively cancelled it would however lose data.
+Thus, the concept of  `interrupt_await` is introduced,
+which tells the awaitable (that supports it)
+to immediately resume the awaiter and return or throw an ignored value.
+
+.Example of an interruptible awaitable
+[source,cpp]
+----
+struct awaitable
+{
+   bool await_ready() const;
+
+   template<typename Promise>
+   std::coroutine_handle<void> await_suspend(std::coroutine_handle<Promise> h);
+
+   T await_resume();
+
+   void interrupt_await() &;
+};
+----
+
+If the `interrupt_await` doesn't result in immediate resumption,
+`select` will send a cancel signal.
+
+`select` applies these with the correct reference qualification:
+
+[source,cpp]
+----
+auto g = gen1();
+select(g, gen2());
+----
+
+The above will call a `interrupt_await() &` function for `g1` and `interrupt_await() &&` for `g2` if available.
+
+NOTE: Generally speaking, the coroutines in async support lvalue interruption, ie. `interrupt_await() &`.
+<<channel,channel>> operations are unqualified, i.e. work in both cases.

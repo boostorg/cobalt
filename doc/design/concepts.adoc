@@ -1,0 +1,39 @@
+[#design:concepts]
+== Concepts
+
+This library has two fundamental concepts:
+
+ - <<awaitable,awaitable>>
+ - coroutine
+
+An <<awaitable, awaitable>> is an expression that can be used with `co_await`
+from within a coroutine, e.g.:
+
+[source,cpp]
+----
+co_await delay(50ms);
+----
+
+An *actual awaitable* is a type that can be `co_await`-ed from within any coroutine,
+like a `delay` operation.
+A `pseudo-awaitable` is one that can only be used in coroutines adding special
+functionality for it. It is akin to a contextual pseudo-keyword.
+
+All the verbs in the <<this_coro, this_coro>> namespace are such pseudo-awaitables.
+
+[source,cpp]
+----
+auto exec = co_await this_coro::executor;
+----
+
+NOTE: This library exposed a set of `enable_*` base classes for promises,
+to make the creation of custom coroutines easy.
+
+
+A coroutine in the context of this documentation refers
+to an asynchronous coroutine, i.e. synchronous coroutines like
+link:https://en.cppreference.com/w/cpp/coroutine/generator[generator]
+are not considered.
+
+All coroutines except  <<main, main>> are also actual awaitables.
+

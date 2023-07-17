@@ -1,0 +1,34 @@
+== Executors
+
+Since everything is asynchronous the library needs to use an event-loop.
+Because everything is single-threaded, it can be assumed that there is exactly one executor
+per thread, which will suffice for 97% of use-cases.
+Therefore, there is a `thread_local` executor that gets used as default
+by the coroutine objects (although stored by copy in the coroutine promise).
+
+Likewise, there is one `executor` type used by the library,
+which defaults to `asio::any_io_executor`.
+
+NOTE: If you write your own coroutine, it should hold a copy of the executor,
+and have a `get_executor` function returning it by const reference.
+
+== polymoprhic memory resource
+
+Similarly, the library uses a thread_local `pmr::memory_resource` to allocate
+coroutine frames & to use as allocator on asynchronous operations.
+This allows the usage of a single `pmr::unsynchronized_pool_resource` per thread.
+
+NOTE: If you write your own coroutine, it should have a get_allocator function
+returning a `pmr::polymorphic_allocator<void>`.
+
+== cancellation
+
+async uses implicit cancellation based on `asio::cancellation_signal`.
+This is mostly used implicitly (e.g. with <<select, select>>),
+so that there is very little explicit use in the examples.
+
+NOTE: If you write custom coroutine it must return a `cancellation_slot` from a
+`get_cancellation_slot` function in order to be able to cancel other operations.
+
+NOTE: If you write a custom awaitable, it can use that function in await_suspend to receive cancellation signals.
+
