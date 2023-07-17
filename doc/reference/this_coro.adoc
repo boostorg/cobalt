@@ -3,6 +3,46 @@
 
 The `this_coro` namespace provides utilities to access the internal state of a coroutine promise.
 
+Pseudo-awaitables:
+
+[source,cpp,subs="+quotes"]
+----
+
+// Awaitable type that returns the executor of the current coroutine.
+struct executor_t {}
+constexpr executor_t executor;
+
+// Awaitable type that returns the cancellation state of the current coroutine.
+struct cancellation_state_t {};
+constexpr cancellation_state_t cancellation_state;
+
+// Reset the cancellation state with custom or default filters.
+constexpr __unspecified__ reset_cancellation_state();
+template<typename Filter>
+constexpr __unspecified__ reset_cancellation_state(
+    Filter && filter);
+template<typename InFilter, typename OutFilter>
+constexpr __unspecified__ reset_cancellation_state(
+    InFilter && in_filter,
+    OutFilter && out_filter);
+
+// get & set the throw_if_cancelled setting.
+__unspecified__ throw_if_cancelled();
+__unspecified__ throw_if_cancelled(bool value);
+
+// get the allocator the promise
+struct allocator_t {};
+constexpr allocator_t allocator;
+
+// get the current cancellation state-type
+struct cancelled_t {};
+constexpr cancelled_t cancelled;
+
+// set the over-eager mode of a generator
+enum class pro_active : bool {};
+----
+
+
 [#allocator]
 [#enable_await_allocator]
 === Await Allocator
@@ -62,7 +102,7 @@ Likewise, it will add `operator new` overloads so the coroutine uses the same me
 === Throw if cancelled
 
 The `promise_throw_if_cancelled_base` provides the basic options to allow operation to enable a coroutines
-to turn a set cancellation state into a cancellation.
+to turn throw an exception when another actual <<awaitable, awaitable>> is awaited.
 
 [source,cpp]
 ----
@@ -80,3 +120,12 @@ https://www.boost.org/doc/libs/master/doc/html/boost_asio/reference/this_coro__r
 ----
 co_await async::this_coro::reset_cancellation_state();
 ----
+
+For convenience there is also a short-cut to check the current cancellation status:
+
+[source,cpp]
+----
+asio::cancellation_type ct = (co_await async::this_coro::cancellation_state).cancelled();
+asio::cancellation_type ct = co_await async::this_coro::cancelled; // same as above
+----
+

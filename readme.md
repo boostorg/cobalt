@@ -248,5 +248,3 @@ async::main co_main(int argc, char ** argv)
 }
 ```
 
-`async` has a special cancellation_type, `interrupt_await`, that can stop the select without cancelling. 
-It is supported by [`channel`](doc/reference/channel.adoc), [`promise`](doc/reference/promise.adoc) & [`generator`](doc/reference/generator.adoc). 

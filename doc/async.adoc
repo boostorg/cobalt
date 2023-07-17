@@ -13,8 +13,8 @@ Version 0.1, 29.01.2023
 
 :leveloffset: +1
 
-WARN: Some if not all MSVC versions have a broken coroutine implementation, that causes UB (double deletes).
-Run the tests to check if compiler supports coroutines correctly.
+WARNING: Some if not all MSVC versions have a broken coroutine implementation,
+that this library needs to workaround. This may cause non-deterministic behaviour and overhead.
 
 
 include::overview.adoc[]
@@ -32,6 +32,7 @@ include::primer/event-loops.adoc[]
 include::tutorial/delay.adoc[]
 include::tutorial/echo_server.adoc[]
 include::tutorial/ticker.adoc[]
+include::tutorial/delay_op.adoc[]
 
 = Reference
 
@@ -58,5 +59,9 @@ include::reference/config.adoc[]
 
 include::background/stackless.adoc[]
 include::background/lazy_eager.adoc[]
+
+
+[index]
+== Index
 
 :leveloffset: -1

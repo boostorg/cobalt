@@ -23,6 +23,9 @@ concept awaitable =
     || requires (Awaitable && aw) { {operator co_await(std::forward<Awaitable>(aw))} -> awaitable_type<Promise>;};
 ----
 
+WARNING: <<awaitable,awaitables>> in this library require that the coroutine promise
+return their executor by const reference if they provide one. Otherwise it'll use `this_thread::get_executor()`.
+
 [#enable_awaitables]
 === Enable awaitables
 

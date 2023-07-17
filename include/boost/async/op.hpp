@@ -46,8 +46,12 @@ struct op
     std::optional<pmr::monotonic_buffer_resource> resource;
     bool completed_immediately = false;
     template<typename Promise>
-    bool await_suspend(std::coroutine_handle<Promise> h) noexcept
+    bool await_suspend(std::coroutine_handle<Promise> h,
+                       const boost::source_location & loc = BOOST_CURRENT_LOCATION) noexcept
     {
+      std::optional<executor> exec;
+      if (!this_thread::has_executor())
+        exec = get_executor(h);
       try
       {
         auto & res = resource.emplace(buffer, sizeof(buffer),
@@ -57,7 +61,7 @@ struct op
       }
       catch(...)
       {
-        asio::post(async::this_thread::get_executor(),
+        asio::post(exec.value_or(async::this_thread::get_executor()),
                    [e = std::current_exception()]{std::rethrow_exception(e);});
         return true;
       }

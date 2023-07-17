@@ -2,7 +2,7 @@
 
 __Run on 11th Gen Intel(R) Core(TM) i7-1185G7 @ 3.00GHz__
 
-== Raw posting to an executor
+== Posting to an executor
 
 The benchmark is running the following code, with async's task, `asio::awaitable` and `asio`'s
 stackful coroutine (boost.context) based.
@@ -19,11 +19,11 @@ async::task<void> atest()
 .results for 50M times in ms
 [cols="1,1,1"]
 |===
-| |gcc |clang
+| |gcc 12 |clang 16
 
-|async     | 3284 | 2098
-|awaitable | 3284 | 2253
-|stackful  | 4897 | 3725
+|async     | 2472 | 2098
+|awaitable | 2432 | 2253
+|stackful  | 3655 | 3725
 |===
 
 == Running noop coroutine in parallel
@@ -59,7 +59,7 @@ asio::awaitable<void> awtest()
 .results for 3M times in ms
 [cols="1,1,1"]
 |===
-| |gcc |clang
+| |gcc 12 |clang 16
 
 |async     | 1563 | 1468
 |awaitable | 2800 | 2805
@@ -87,7 +87,7 @@ async::task<void> atest()
 .result for 10M times in ms
 [cols="1,1,1"]
 |===
-| |gcc |clang
+| |gcc 12 |clang 16
 
 |async     | 1810 | 1864
 |awaitable | 3109 | 4110

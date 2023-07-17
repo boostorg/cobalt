@@ -19,3 +19,7 @@ void set_executor(asio::io_context::executor_type exec) noexcept; // <5>
 <4> Get the executor of the thread - throws if not set
 <5> Set the executor of the current thread.
 
+The coroutines will use these as defaults, but keep a copy just in case.
+
+NOTE: The only exception is the initialization of an async-operation,
+which will use the this_thread::executor to rethrow from.
