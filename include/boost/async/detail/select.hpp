@@ -72,6 +72,8 @@ struct select_shared_state
   }
 };
 
+struct left_select_tag {};
+
 template<asio::cancellation_type Ct, typename URBG, typename ... Args>
 struct select_variadic_impl
 {
@@ -96,7 +98,8 @@ struct select_variadic_impl
     {
       std::generate(reorder.begin(), reorder.end(),
                     [i = std::size_t(0u)]() mutable {return i++;});
-      std::shuffle(reorder.begin(), reorder.end(), g);
+      if constexpr (!std::is_same_v<URBG, left_select_tag>)
+        std::shuffle(reorder.begin(), reorder.end(), g);
 
     }
 
@@ -154,7 +157,7 @@ struct select_variadic_impl
 
     bool await_ready()
     {
-      bool found_ready = false;
+      bool found_ready = false, all_ready = true;;
       std::size_t idx = 0ul;
       for (auto rdx : reorder)
         mp11::mp_with_index<tuple_size>(
@@ -162,13 +165,17 @@ struct select_variadic_impl
             [&]( auto rdx )
             {
               if (!found_ready || !interruptible<std::tuple_element_t<rdx, tuple_type>>)
-                found_ready |= ready[idx] = std::get<rdx>(aws).await_ready();
+              {
+                auto r = ready[idx] = std::get<rdx>(aws).await_ready();
+                found_ready |= r;
+                all_ready &= r;
+              }
               else
                 ready[idx] = false;
               idx++;
             });
 
-      return found_ready;
+      return all_ready;
     }
 
     template<typename Aw>
@@ -187,6 +194,7 @@ struct select_variadic_impl
           aw,
           [this, idx]
           {
+            fprintf(stderr, "Has_result %d\n", has_result());
             if (has_result())
               boost::throw_exception(std::logic_error("Another transaction already started"),
                                      BOOST_CURRENT_LOCATION);
@@ -371,7 +379,8 @@ struct select_ranged_impl
         aws.emplace_back(awaitable_type_getter<decltype(a)>(std::forward<decltype(a)>(a)));
 
       std::generate(reorder.begin(), reorder.end(), [i = std::size_t(0u)]() mutable {return i++;});
-      std::shuffle(reorder.begin(), reorder.end(), g);
+      if constexpr (!std::is_same_v<URBG, left_select_tag>)
+        std::shuffle(reorder.begin(), reorder.end(), g);
     }
 
     awaitable(Range & aws, URBG & g, std::true_type /* needs co_await */)
@@ -380,7 +389,8 @@ struct select_ranged_impl
         , aws(aws)
     {
       std::generate(reorder.begin(), reorder.end(), [i = std::size_t(0u)]() mutable {return i++;});
-      std::shuffle(reorder.begin(), reorder.end(), g);
+      if constexpr (!std::is_same_v<URBG, left_select_tag>)
+        std::shuffle(reorder.begin(), reorder.end(), g);
     }
 
     awaitable(Range & aws, URBG & g)
@@ -409,7 +419,7 @@ struct select_ranged_impl
 
     bool await_ready()
     {
-      bool found_ready = false;
+      bool found_ready = false, all_ready = true;
       std::transform(
           std::begin(reorder), std::end(reorder), std::begin(ready),
           [&](std::size_t idx)
@@ -423,13 +433,14 @@ struct select_ranged_impl
             {
               auto r = aw.await_ready();
               found_ready |= r;
+              all_ready &= r;
               return r;
             }
             else
               return false;
           });
 
-      return found_ready;
+      return all_ready ;
     }
 
 

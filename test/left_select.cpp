@@ -5,7 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/left_select.hpp>
+#include <boost/async/select.hpp>
 #include <boost/async/generator.hpp>
 #include <boost/async/promise.hpp>
 #include <boost/async/op.hpp>
@@ -125,7 +125,13 @@ CO_TEST_CASE("compliance")
   {
     posted_handle p;
     CHECK((co_await left_select(d, p)).index() == 1);
+  }/*  {
+    immediate i;
+    asio::steady_timer tim{exec, std::chrono::steady_clock::time_point::max()};
+    CHECK((co_await left_select(tim.async_wait(async::use_op), i)) == 1);
   }
+*/
+
   d.cancel();
   CHECK_THROWS(co_await d);
 }

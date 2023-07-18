@@ -13,7 +13,6 @@
 #include <boost/async/generator.hpp>
 #include <boost/async/op.hpp>
 #include <boost/async/promise.hpp>
-#include <boost/async/left_select.hpp>
 #include <boost/async/run.hpp>
 #include <boost/async/select.hpp>
 #include <boost/async/spawn.hpp>
