@@ -82,6 +82,27 @@ auto select(PromiseRange && p) -> detail::select_ranged_impl<Ct, std::mt19937&, 
   return select<Ct>(detail::random_device(), static_cast<PromiseRange&&>(p));
 }
 
+template<asio::cancellation_type Ct = asio::cancellation_type::all,
+    awaitable<detail::transactable_coroutine_promise<>> ... Promise>
+auto left_select(Promise && ... p) -> detail::select_variadic_impl<Ct, detail::left_select_tag, Promise ...>
+{
+  return detail::select_variadic_impl<Ct, detail::left_select_tag, Promise ...>(
+      detail::left_select_tag{}, static_cast<Promise&&>(p)...);
+}
+
+
+template<asio::cancellation_type Ct = asio::cancellation_type::all, typename PromiseRange>
+requires awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>,
+    detail::transactable_coroutine_promise<>>
+auto left_select(PromiseRange && p)  -> detail::select_ranged_impl<Ct, detail::left_select_tag, PromiseRange>
+{
+  if (std::empty(p))
+    throw_exception(std::invalid_argument("empty range left_selected"));
+
+  return detail::select_ranged_impl<Ct, detail::left_select_tag, PromiseRange>{
+      detail::left_select_tag{}, static_cast<PromiseRange&&>(p)};
+}
+
 
 
 
