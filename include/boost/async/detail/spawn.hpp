@@ -51,7 +51,9 @@ struct async_initiate
                  h = std::move(h)]() mutable
                 {
                   auto ex = r->exception;
-                  auto rr = std::move(r->get_result());
+                  T rr;
+                  if (r->result)
+                     rr = r->get_result();
                   r.reset();
                   h(ex, std::move(rr));
                 }

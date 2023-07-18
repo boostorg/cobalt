@@ -42,6 +42,7 @@ struct task_value_holder
   T get_result()
   {
     result_taken = true;
+    BOOST_ASSERT(result);
     return std::move(*result);
   }
 
