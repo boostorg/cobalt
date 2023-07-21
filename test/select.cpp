@@ -54,7 +54,8 @@ CO_TEST_CASE("variadic")
   auto d1 = dummy(exec, std::chrono::milliseconds(100));
   auto d2 = dummy(exec, std::chrono::milliseconds( 50));
   auto g = gen(exec);
-  auto c = co_await select(d1, d2, dummy(exec, std::chrono::milliseconds(100000)), g);
+  std::mt19937 src{1u};
+  auto c = co_await select(src, d1, d2, dummy(exec, std::chrono::milliseconds(100000)), g);
   CHECK(c.index() == 1u);
   CHECK(boost::variant2::get<1>(c) == 50);
   CHECK(d1);
