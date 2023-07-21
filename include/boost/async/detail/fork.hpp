@@ -93,9 +93,9 @@ struct fork
       return st.resource.allocate(size);
     }
 
-    void operator delete(void * raw, const std::size_t size) noexcept
-    {
-    }
+    template<typename ... Rest>
+    void operator delete(void * raw, const std::size_t size, Rest && ...) noexcept;
+    void operator delete(void * raw, const std::size_t size) noexcept {}
 
     template<typename ... Rest>
     promise_type(shared_state & st, Rest & ...)
@@ -131,7 +131,13 @@ struct fork
         std::coroutine_handle<void> await_suspend(std::coroutine_handle<promise_type> h) noexcept
         {
           auto pp = h.promise().state.detach();
-          h.promise().~promise_type(); // mem is in a monotonic_resource, so no need to free anything
+
+#if defined(BOOST_ASYNC_NO_SELF_DELETE)
+          h.promise().~promise_type();
+#else
+          // mem is in a monotonic_resource, this is fine on msvc- gcc doesn't like it though
+          h.destroy();
+#endif
           pp->use_count--;
           BOOST_ASSERT(pp->use_count == 0u);
           if (pp->coro)
