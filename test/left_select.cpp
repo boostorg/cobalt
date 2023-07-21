@@ -100,39 +100,48 @@ CO_TEST_CASE("compliance")
 {
   auto exec = co_await asio::this_coro::executor;
   auto d = dummy(exec, std::chrono::milliseconds(100000));
+  SUBCASE("immediate")
   {
     immediate i;
     CHECK((co_await left_select(d, i)).index() == 1);
   }
+  SUBCASE("immediate_bool")
 
   {
     immediate_bool i;
     CHECK((co_await left_select(d, i)).index() == 1);
   }
 
+  SUBCASE("immediate_handle")
   {
     immediate_handle i;
     CHECK((co_await left_select(d, i)).index() == 1);
   }
+
+  SUBCASE("posted")
   {
     posted p;
     CHECK((co_await left_select(d, p)).index() == 1);
   }
+  SUBCASE("posted_bool")
   {
     posted_bool p;
     CHECK((co_await left_select(d, p)).index() == 1);
   }
+  SUBCASE("posted_handle")
   {
     posted_handle p;
     CHECK((co_await left_select(d, p)).index() == 1);
   }
-  {
-    immediate i;
-    asio::steady_timer tim{exec, std::chrono::steady_clock::time_point::max()};
-    CHECK((co_await left_select(tim.async_wait(async::use_op), i)) == 1);
-  }
   d.cancel();
   CHECK_THROWS(co_await d);
+}
+CO_TEST_CASE("immediate timer")
+{
+  immediate i;
+  asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::steady_clock::time_point::max()};
+  CHECK((co_await left_select(tim.async_wait(async::use_op), i)) == 1);
+
 }
 
 CO_TEST_CASE("compliance_ranged")
