@@ -125,13 +125,12 @@ CO_TEST_CASE("compliance")
   {
     posted_handle p;
     CHECK((co_await left_select(d, p)).index() == 1);
-  }/*  {
+  }
+  {
     immediate i;
     asio::steady_timer tim{exec, std::chrono::steady_clock::time_point::max()};
     CHECK((co_await left_select(tim.async_wait(async::use_op), i)) == 1);
   }
-*/
-
   d.cancel();
   CHECK_THROWS(co_await d);
 }

@@ -258,7 +258,7 @@ get_executor(std::coroutine_handle<Promise> h)
     return this_thread::get_executor();
 }
 
-inline executor
+inline const executor &
 get_executor(std::coroutine_handle<>)
 {
   return this_thread::get_executor();

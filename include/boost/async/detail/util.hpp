@@ -8,10 +8,16 @@
 #include <boost/async/config.hpp>
 
 #include <boost/system/result.hpp>
+#include <boost/variant2/variant.hpp>
 
 #include <limits>
 #include <type_traits>
 #include <coroutine>
+
+namespace boost::variant2
+{
+struct monostate;
+}
 
 namespace boost::async::detail
 {
@@ -155,6 +161,14 @@ inline void self_destroy(std::coroutine_handle<T> h) noexcept
   h.destroy();
 }
 #endif
+
+template<typename T>
+using void_as_monostate = std::conditional_t<std::is_void_v<T>, variant2::monostate, T>;
+
+template<typename T>
+using monostate_as_void = std::conditional_t<std::is_same_v<T, variant2::monostate>, void, T>;
+
+
 }
 
 #endif //BOOST_ASYNC_UTIL_HPP
