@@ -406,8 +406,6 @@ struct join_ranged_impl
       return true;
     }
 
-    asio::cancellation_slot sl;
-
     auto await_resume()
     {
       if (error)
