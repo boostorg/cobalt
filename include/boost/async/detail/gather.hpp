@@ -10,6 +10,7 @@
 
 #include <boost/async/detail/await_result_helper.hpp>
 #include <boost/async/detail/exception.hpp>
+#include <boost/async/detail/fork.hpp>
 #include <boost/async/detail/forward_cancellation.hpp>
 #include <boost/async/detail/ref.hpp>
 #include <boost/async/detail/util.hpp>
@@ -33,45 +34,6 @@
 namespace boost::async::detail
 {
 
-struct gather_shared_state
-{
-  std::unique_ptr<void, coro_deleter<>> h;
-  std::size_t use_count = 0u;
-
-  friend void intrusive_ptr_add_ref(gather_shared_state * st) {st->use_count++;}
-  friend void intrusive_ptr_release(gather_shared_state * st) {if (st->use_count-- == 1u) st->h.reset();}
-
-  void complete()
-  {
-    if (use_count == 0u && h != nullptr)
-      std::coroutine_handle<void>::from_address(h.release()).resume();
-  }
-
-  struct completer
-  {
-    intrusive_ptr<gather_shared_state> ptr;
-    completer(gather_shared_state * wss) : ptr{wss} {}
-
-    void operator()()
-    {
-      auto p = std::move(ptr);
-      if (p->use_count == 1u)
-      {
-        auto pp = p.detach();
-        pp->use_count--;
-        pp->complete();
-      }
-      else
-        p->complete();
-    }
-  };
-
-  completer get_completer()
-  {
-    return {this};
-  }
-};
-
 
 template<typename ... Args>
 struct gather_variadic_impl
@@ -87,34 +49,25 @@ struct gather_variadic_impl
 
   constexpr static std::size_t tuple_size = sizeof...(Args);
 
-  struct awaitable
+  struct awaitable : fork::static_shared_state<256 * tuple_size>
   {
     template<std::size_t ... Idx>
-    awaitable(std::tuple<Args...> & args, std::index_sequence<Idx...>) :
-        aws(awaitable_type_getter<Args>(std::get<Idx>(args))...)
+    awaitable(std::tuple<Args...> & args, std::index_sequence<Idx...>)
+      : aws(awaitable_type_getter<Args>(std::get<Idx>(args))...)
     {
     }
 
     tuple_type aws;
-
-    std::array<bool, tuple_size> ready{
-        std::apply([](auto && ... aw) {return std::array<bool, tuple_size>{aw.await_ready() ... };}, aws)
-    };
     std::array<asio::cancellation_signal, tuple_size> cancel;
-    char storage[256 * tuple_size];
-    pmr::monotonic_buffer_resource res{storage, sizeof(storage),
-                                                  this_thread::get_default_resource()};
-    pmr::polymorphic_allocator<void> alloc{&res};
-
-    gather_shared_state wss;
 
     template<typename T>
-    using result_part = system::result<co_await_result_t<T>, std::exception_ptr>;
+    using result_store_part = variant2::variant<
+        variant2::monostate,
+        void_as_monostate<co_await_result_t<T>>,
+        std::exception_ptr>;
 
-    std::tuple<result_part<Args> ...> result
-        {
-          result_part<Args>{system::in_place_error, std::exception_ptr()}...
-        };
+    std::tuple<result_store_part<Args>...> result;
+
 
     template<std::size_t Idx>
     void interrupt_await_step()
@@ -128,7 +81,6 @@ struct gather_variadic_impl
       if constexpr (interruptible<t>)
           static_cast<t>(std::get<Idx>(aws)).interrupt_await();
     }
-
     void interrupt_await()
     {
       mp11::mp_for_each<mp11::mp_iota_c<sizeof...(Args)>>
@@ -138,65 +90,114 @@ struct gather_variadic_impl
            });
     }
 
-
-    bool await_ready(){return std::find(ready.begin(), ready.end(), false) == ready.end();};
-
-    template<std::size_t Idx, typename Aw>
-    void await_suspend_step(executor && exec, Aw && aw) = delete;
-
-    template<std::size_t Idx, typename Aw>
-    void await_suspend_step(
-        const executor & exec,
-        Aw && aw)
+    // GCC doesn't like member funs
+    template<std::size_t Idx>
+    static detail::fork await_impl(awaitable & this_)
+    try
     {
-      if (!ready[Idx])
-        suspend_for_callback(
-          aw,
-          bind_completion_handler(
-              cancel[Idx].slot(),
-              exec,
-              alloc,
-              [this, &aw, c = wss.get_completer()]() mutable
-              {
-                std::get<Idx>(result) = get_resume_result(aw);
-                c();
-              }
-            )
-          );
+      auto & aw = std::get<Idx>(this_.aws);
+      // check manually if we're ready
+      auto rd = aw.await_ready();
+      if (!rd)
+      {
+        co_await this_.cancel[Idx].slot();
+        // make sure the executor is set
+        co_await detail::fork::wired_up;
+        // do the await - this doesn't call await-ready again
+
+        if constexpr (std::is_void_v<decltype(aw.await_resume())>)
+        {
+          co_await aw;
+          std::get<Idx>(this_.result).template emplace<1u>();
+        }
+        else
+          std::get<Idx>(this_.result).template emplace<1u>(co_await aw);
+      }
       else
-        std::get<Idx>(result) = get_resume_result(aw);
+      {
+        if constexpr (std::is_void_v<decltype(aw.await_resume())>)
+        {
+          aw.await_resume();
+          std::get<Idx>(this_.result).template emplace<1u>();
+        }
+        else
+          std::get<Idx>(this_.result).template emplace<1u>(aw.await_resume());
+      }
+    }
+    catch(...)
+    {
+      std::get<Idx>(this_.result).template emplace<2u>(std::current_exception());
+    }
+
+    std::array<detail::fork(*)(awaitable&), tuple_size> impls {
+      []<std::size_t ... Idx>(std::index_sequence<Idx...>)
+      {
+        return std::array<detail::fork(*)(awaitable&), tuple_size>{&await_impl<Idx>...};
+      }(std::make_index_sequence<tuple_size>{})
+    };
+
+    detail::fork last_forked;
+    std::size_t last_index = 0u;
+
+    bool await_ready()
+    {
+      while (last_index < tuple_size)
+      {
+        last_forked = impls[last_index++](*this);
+        if (!last_forked.done())
+          return false; // one coro didn't immediately complete!
+      }
+      last_forked.release();
+      return true;
     }
 
     template<typename H>
     auto await_suspend(std::coroutine_handle<H> h)
     {
-      const auto & exec = get_executor(h);
-      mp11::mp_for_each<mp11::mp_iota_c<sizeof...(Args)>>
-          ([&](auto idx)
-          {
-            await_suspend_step<idx>(exec, std::get<idx>(aws));
-          });
+      this->exec = &get_executor(h);
+      last_forked.release().resume();
+      while (last_index < tuple_size)
+        impls[last_index++](*this).release();
 
-      if (wss.use_count == 0) // already done, no need to suspend
+      if (!this->outstanding_work()) // already done, resume rightaway.
         return false;
 
       // arm the cancel
       assign_cancellation(
-              h,
-              [&](asio::cancellation_type ct)
-              {
-                for (auto & cs : cancel)
-                  cs.emit(ct);
-              });
+          h,
+          [&](asio::cancellation_type ct)
+          {
+            for (auto & cs : cancel)
+              cs.emit(ct);
+          });
 
-      wss.h.reset(h.address());
+
+      this->coro.reset(h.address());
       return true;
     }
 
-    auto await_resume()
+    template<typename T>
+    using result_part = system::result<co_await_result_t<T>, std::exception_ptr>;
+
+    std::tuple<result_part<Args> ...> await_resume()
     {
-      wss.h.release();
-      return std::move(result);
+      return mp11::tuple_transform(
+          []<typename T>(variant2::variant<variant2::monostate, T, std::exception_ptr> & var)
+              -> system::result<monostate_as_void<T>, std::exception_ptr>
+          {
+            BOOST_ASSERT(var.index() != 0u);
+            if (var.index() == 1u)
+            {
+              if constexpr (std::is_same_v<T, variant2::monostate>)
+                return {system::in_place_value};
+              else
+                return {system::in_place_value, std::move(get<1>(var))};
+            }
+            else
+              return {system::in_place_error, std::move(get<2>(var))};
+
+          }
+          , result);
     }
   };
   awaitable operator co_await() &&
@@ -214,26 +215,28 @@ struct gather_ranged_impl
       co_await_result_t<std::decay_t<decltype(*std::begin(std::declval<Range>()))>>,
       std::exception_ptr>;
 
-  struct awaitable
+  using result_storage_type = variant2::variant<
+      variant2::monostate,
+      void_as_monostate<
+          co_await_result_t<std::decay_t<decltype(*std::begin(std::declval<Range>()))>>
+        >,
+      std::exception_ptr>;
+
+  struct awaitable : fork::shared_state
   {
     using type = std::decay_t<decltype(*std::begin(std::declval<Range>()))>;
-    pmr::monotonic_buffer_resource res;
-    pmr::polymorphic_allocator<void> alloc{&res};
+    pmr::polymorphic_allocator<void> alloc{&resource};
 
     std::conditional_t<awaitable_type<type>, Range &,
                        pmr::vector<co_awaitable_type<type>>> aws;
 
     pmr::vector<bool> ready{std::size(aws), alloc};
     pmr::vector<asio::cancellation_signal> cancel{std::size(aws), alloc};
-    pmr::vector<result_type> result{
-          cancel.size(),
-          result_type{system::in_place_error, std::exception_ptr()},
-          this_thread::get_allocator()};
+    pmr::vector<result_storage_type> result{cancel.size(), alloc};
 
 
     awaitable(Range & aws_, std::false_type /* needs operator co_await */)
-      : res((256 + sizeof(co_awaitable_type<type>)) * std::size(aws_),
-            this_thread::get_default_resource())
+      : fork::shared_state((512 + sizeof(co_awaitable_type<type>)) * std::size(aws_))
       , aws{alloc}
       , ready{std::size(aws_), alloc}
       , cancel{std::size(aws_), alloc}
@@ -248,8 +251,7 @@ struct gather_ranged_impl
                      [](auto & aw) {return aw.await_ready();});
     }
     awaitable(Range & aws, std::true_type /* needs operator co_await */)
-        : res((256 + sizeof(co_awaitable_type<type>)) * std::size(aws),
-              this_thread::get_default_resource())
+        : fork::shared_state((512 + sizeof(co_awaitable_type<type>)) * std::size(aws))
         , aws(aws)
     {
       std::transform(std::begin(aws), std::end(aws), std::begin(ready), [](auto & aw) {return aw.await_ready();});
@@ -260,7 +262,6 @@ struct gather_ranged_impl
     {
     }
 
-    gather_shared_state wss;
     void interrupt_await()
     {
       using t = std::conditional_t<std::is_reference_v<Range>,
@@ -272,33 +273,65 @@ struct gather_ranged_impl
           static_cast<t>(aw).interrupt_await();
     }
 
-    bool await_ready(){return std::find(ready.begin(), ready.end(), false) == ready.end();};
+    static detail::fork await_impl(awaitable & this_, std::size_t idx)
+    try
+    {
+      auto & aw = *std::next(std::begin(this_.aws), idx);
+      auto rd = aw.await_ready();
+      if (!rd)
+      {
+        co_await this_.cancel[idx].slot();
+        co_await detail::fork::wired_up;
+        if constexpr (std::is_void_v<decltype(aw.await_resume())>)
+        {
+          co_await aw;
+          this_.result[idx].template emplace<1u>();
+        }
+        else
+          this_.result[idx].template emplace<1u>(co_await aw);
+      }
+      else
+      {
+        if constexpr (std::is_void_v<decltype(aw.await_resume())>)
+        {
+          aw.await_resume();
+          this_.result[idx].template emplace<1u>();
+        }
+        else
+          this_.result[idx].template emplace<1u>(aw.await_resume());
+      }
+    }
+    catch(...)
+    {
+      this_.result[idx].template emplace<2u>(std::current_exception());
+
+    }
+
+    detail::fork last_forked;
+    std::size_t last_index = 0u;
+
+    bool await_ready()
+    {
+      while (last_index < cancel.size())
+      {
+        last_forked = await_impl(*this, last_index++);
+        if (!last_forked.done())
+          return false; // one coro didn't immediately complete!
+      }
+      last_forked.release();
+      return true;
+    }
+
     template<typename H>
     auto await_suspend(std::coroutine_handle<H> h)
     {
-      const auto & exec = get_executor(h);
+      exec = &detail::get_executor(h);
 
-      std::size_t idx = 0u;
-      for (auto && aw : aws)
-      {
-        if (!ready[idx])
-          suspend_for_callback(
-            aw,
-            bind_completion_handler(
-              cancel[idx].slot(),
-              exec, alloc,
-              [this, c = wss.get_completer(), idx]() mutable
-              {
-                result[idx] = get_resume_result(aws[idx]);
-                c();
-              }
-            )
-          );
-        else
-          result[idx] = get_resume_result(aws[idx]);
-        idx ++;
-      }
-      if (wss.use_count == 0) // already done, no need to suspend
+      last_forked.release().resume();
+      while (last_index < cancel.size())
+        await_impl(*this, last_index++).release();
+
+      if (!this->outstanding_work()) // already done, resume rightaway.
         return false;
 
       // arm the cancel
@@ -310,17 +343,30 @@ struct gather_ranged_impl
               cs.emit(ct);
           });
 
-      wss.h.reset(h.address());
+      this->coro.reset(h.address());
       return true;
     }
 
-    asio::cancellation_slot sl;
-
     pmr::vector<result_type> await_resume()
     {
-      sl.clear();
-      ignore_unused(wss.h.release());
-      return std::move(result);
+      pmr::vector<result_type> res{result.size(), this_thread::get_allocator()};
+      std::transform(
+          result.begin(), result.end(), res.begin(),
+          [](result_storage_type & res) -> result_type
+          {
+            BOOST_ASSERT(res.index() != 0u);
+            if (res.index() == 1u)
+            {
+              if constexpr (std::is_void_v<typename result_type::value_type>)
+                return system::in_place_value;
+              else
+                return {system::in_place_value, std::move(get<1u>(res))};
+            }
+            else
+              return {system::in_place_error, get<2u>(res)};
+          });
+
+      return res;
     }
   };
   awaitable operator co_await() && {return awaitable{aws};}

@@ -258,6 +258,7 @@ TEST_CASE("throw_if_cancelled")
   asio::cancellation_signal sig;
 
   asio::io_context ctx;
+  boost::async::this_thread::set_executor(ctx.get_executor());
   async::spawn(ctx, throw_if_test(sig),
                asio::bind_cancellation_slot(sig.slot(), asio::detached));
   ctx.run();

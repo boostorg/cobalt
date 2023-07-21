@@ -43,7 +43,7 @@ template<typename G>
 
 template<asio::cancellation_type Ct = asio::cancellation_type::all,
     uniform_random_bit_generator URBG,
-    awaitable<detail::transactable_coroutine_promise<>> ... Promise>
+    awaitable<detail::fork::promise_type> ... Promise>
 auto select(URBG && g, Promise && ... p) -> detail::select_variadic_impl<Ct, URBG, Promise ...>
 {
   return detail::select_variadic_impl<Ct, URBG, Promise ...>(std::forward<URBG>(g), static_cast<Promise&&>(p)...);
@@ -54,7 +54,7 @@ template<asio::cancellation_type Ct = asio::cancellation_type::all,
     uniform_random_bit_generator URBG,
     typename PromiseRange>
 requires awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>,
-    detail::transactable_coroutine_promise<>>
+    detail::fork::promise_type>
 auto select(URBG && g, PromiseRange && p) -> detail::select_ranged_impl<Ct, URBG, PromiseRange>
 {
   if (std::empty(p))
@@ -64,7 +64,7 @@ auto select(URBG && g, PromiseRange && p) -> detail::select_ranged_impl<Ct, URBG
 }
 
 template<asio::cancellation_type Ct = asio::cancellation_type::all,
-         awaitable<detail::transactable_coroutine_promise<>> ... Promise>
+         awaitable<detail::fork::promise_type> ... Promise>
 auto select(Promise && ... p) -> detail::select_variadic_impl<Ct, std::mt19937&, Promise ...>
 {
   return select<Ct>(detail::random_device(), static_cast<Promise&&>(p)...);
@@ -73,7 +73,7 @@ auto select(Promise && ... p) -> detail::select_variadic_impl<Ct, std::mt19937&,
 
 template<asio::cancellation_type Ct = asio::cancellation_type::all, typename PromiseRange>
   requires awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>,
-                     detail::transactable_coroutine_promise<>>
+      detail::fork::promise_type>
 auto select(PromiseRange && p) -> detail::select_ranged_impl<Ct, std::mt19937&, PromiseRange>
 {
   if (std::empty(p))
@@ -83,7 +83,7 @@ auto select(PromiseRange && p) -> detail::select_ranged_impl<Ct, std::mt19937&, 
 }
 
 template<asio::cancellation_type Ct = asio::cancellation_type::all,
-    awaitable<detail::transactable_coroutine_promise<>> ... Promise>
+    awaitable<detail::fork::promise_type> ... Promise>
 auto left_select(Promise && ... p) -> detail::select_variadic_impl<Ct, detail::left_select_tag, Promise ...>
 {
   return detail::select_variadic_impl<Ct, detail::left_select_tag, Promise ...>(
@@ -93,7 +93,7 @@ auto left_select(Promise && ... p) -> detail::select_variadic_impl<Ct, detail::l
 
 template<asio::cancellation_type Ct = asio::cancellation_type::all, typename PromiseRange>
 requires awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>,
-    detail::transactable_coroutine_promise<>>
+    detail::fork::promise_type>
 auto left_select(PromiseRange && p)  -> detail::select_ranged_impl<Ct, detail::left_select_tag, PromiseRange>
 {
   if (std::empty(p))

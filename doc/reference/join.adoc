@@ -27,3 +27,4 @@ async::promise<void> do_join()
 <2> Wait for a vector of <<awaitable>>s
 
 The `join` will invoke the functions of the `awaitable` as if used in a `co_await` expression.
+

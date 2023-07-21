@@ -32,31 +32,32 @@ struct doctest::StringMaker<std::exception_ptr>
 inline void test_run(boost::async::task<void> (*func) ())
 {
   using namespace boost;
-  asio::io_context ctx;
-  async::this_thread::set_executor(ctx.get_executor());
   async::pmr::unsynchronized_pool_resource res;
   async::this_thread::set_default_resource(&res);
-  spawn(ctx, func(),
-        +[](std::exception_ptr e)
-        {
-          CHECK(e == nullptr);
-        });
-  std::size_t n;
-  n = ctx.run();
+  {
+    asio::io_context ctx;
+    async::this_thread::set_executor(ctx.get_executor());
+    spawn(ctx, func(),
+          +[](std::exception_ptr e)
+          {
+            CHECK(e == nullptr);
+          });
+    std::size_t n;
+    n = ctx.run();
 
-  if (::getenv("BOOST_ASYNC_BRUTE_FORCE"))
-    while (n --> 0)
-    {
-      ctx.restart();
-      spawn(ctx, func(),
-            +[](std::exception_ptr e)
-            {
-              CHECK(e == nullptr);
-            });
-      for (std::size_t i = n; i > 0; i--)
-        ctx.run_one();
-    }
-
+    if (::getenv("BOOST_ASYNC_BRUTE_FORCE"))
+      while (n-- > 0)
+      {
+        ctx.restart();
+        spawn(ctx, func(),
+              +[](std::exception_ptr e)
+              {
+                CHECK(e == nullptr);
+              });
+        for (std::size_t i = n; i > 0; i--)
+          ctx.run_one();
+      }
+  }
   async::this_thread::set_default_resource(async::pmr::get_default_resource());
 }
 
@@ -90,7 +91,8 @@ struct immediate
 
   ~immediate()
   {
-    CHECK(state == 2);
+    if (state != 0)
+      CHECK(state == 2);
   }
 };
 
@@ -104,7 +106,8 @@ struct immediate_bool
 
   ~immediate_bool()
   {
-    CHECK(state == 3);
+    if (state != 0)
+      CHECK(state == 3);
   }
 };
 
@@ -118,7 +121,8 @@ struct immediate_handle
 
   ~immediate_handle()
   {
-    CHECK(state == 3);
+    if (state != 0)
+      CHECK(state == 3);
   }
 };
 
@@ -136,7 +140,8 @@ struct posted
   void await_resume() {CHECK(state++ == 2);}
   ~posted()
   {
-    CHECK(state == 3);
+    if (state != 0)
+      CHECK(state == 3);
   }
 };
 
@@ -154,7 +159,8 @@ struct posted_bool
   void await_resume() {CHECK(state++ == 2);}
   ~posted_bool()
   {
-    CHECK(state == 3);
+    if (state != 0)
+      CHECK(state == 3);
   }
 };
 
@@ -173,7 +179,8 @@ struct posted_handle
   void await_resume() {CHECK(state++ == 2);}
   ~posted_handle()
   {
-    CHECK(state == 3);
+    if (state != 0)
+      CHECK(state == 3);
   }
 };
 

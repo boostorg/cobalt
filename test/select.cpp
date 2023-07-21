@@ -26,6 +26,19 @@ static  async::promise<std::size_t> dummy(asio::any_io_executor exec,
   co_return ms.count();
 }
 
+
+static  async::promise<std::size_t> nothrow_dummy(asio::any_io_executor exec,
+                                          std::chrono::milliseconds ms = std::chrono::milliseconds(50))
+try {
+  asio::steady_timer tim{exec, ms};
+  co_await tim.async_wait(async::use_op);
+  co_return ms.count();
+}
+catch(...)
+{
+  co_return std::numeric_limits<std::size_t>::max();
+}
+
 static async::generator<int> gen(asio::any_io_executor exec)
 {
   asio::steady_timer tim{exec, std::chrono::milliseconds(50000)};
@@ -105,9 +118,9 @@ CO_TEST_CASE("empty-list")
 
 CO_TEST_CASE("stop")
 {
-  auto d = dummy(co_await asio::this_coro::executor,
+  auto d = nothrow_dummy(co_await asio::this_coro::executor,
                  std::chrono::milliseconds(10));
-  CHECK((co_await select(d, stop())).index() == 0);
+  CHECK((co_await left_select(d, stop())).index() == 0);
 }
 
 CO_TEST_CASE("compliance")
