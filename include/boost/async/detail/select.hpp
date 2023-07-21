@@ -212,10 +212,10 @@ struct select_variadic_impl
            idx < tuple_size; idx++) // we'
       {
         auto l = impls[idx](*this);
-        if (l.done())
+        const auto d = l.done();
+        l.release();
+        if (d)
           break;
-        else
-          l.release();
       }
 
       if (!this->outstanding_work()) // already done, resume rightaway.
@@ -426,10 +426,10 @@ struct select_ranged_impl
            itr < reorder.end(); std::advance(itr, 1)) // we'
       {
         auto l = await_impl(*this, *itr);
-        if (l.done())
+        auto d = l.done();
+        l.release();
+        if (d)
           break;
-        else
-          l.release();
       }
 
       if (!this->outstanding_work()) // already done, resume rightaway.
