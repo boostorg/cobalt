@@ -7,6 +7,9 @@
 
 #include <boost/async/io/resolver.hpp>
 
+#include <boost/asio/deferred.hpp>
+#include <boost/system/result.hpp>
+
 namespace boost::async::io
 {
 

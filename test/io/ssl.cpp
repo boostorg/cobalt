@@ -26,7 +26,6 @@ CO_TEST_CASE("ssl")
   CHECK_MESSAGE(conn, conn.error().message());
 
   CHECK_NOTHROW(co_await ss.async_handshake(async::io::ssl_stream::handshake_type::client).value());
-  co_await ss;
-
+  co_await ss.write_some("GET");
   CHECK_NOTHROW(co_await ss.async_shutdown());
 }

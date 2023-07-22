@@ -15,6 +15,10 @@
 #include <boost/async/io/buffers/mutable_buffer_span.hpp>
 #include <boost/async/io/buffers/range.hpp>
 #include <boost/async/io/buffers/concepts.hpp>
+
+#include <boost/asio/detail/socket_types.hpp>
+
+
 #include <cstdlib>
 
 namespace boost::async::io::buffers {

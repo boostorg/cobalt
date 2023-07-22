@@ -127,6 +127,7 @@ target_link_libraries(boost_async PUBLIC
         Boost::system
         Threads::Threads)
 target_compile_definitions(boost_async PRIVATE BOOST_ASYNC_SOURCE=1 )
+target_compile_definitions(boost_async PUBLIC BOOST_PROCESS_USE_STD_FS=1)
 
 if (BOOST_ASYNC_USE_BOOST_CONTAINER)
     target_link_libraries(boost_async PUBLIC Boost::container)

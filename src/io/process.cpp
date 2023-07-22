@@ -81,7 +81,7 @@ system::result<bool> process::running()
 {
   system::error_code ec;
   auto res = process_.running(ec);
-  return ec ? ec : system::result<bool>(res);
+  return ec ? system::result<bool>(system::in_place_error, ec) : system::result<bool>(res);
 }
 
 }

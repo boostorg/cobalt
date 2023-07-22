@@ -16,6 +16,8 @@
 #include <boost/static_string.hpp>
 #include <boost/system/result.hpp>
 
+#include <span>
+
 namespace boost::async::detail
 {
 
@@ -32,7 +34,7 @@ struct endpoint;
 struct stream_socket;
 
 
-#if __GNUC__
+#if __GNUC__ && !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsubobject-linkage"
 #endif
@@ -185,7 +187,7 @@ struct endpoint
   protocol_type::type_t         type_ = static_cast<protocol_type::type_t>(0);
 };
 
-#if __GNUC__
+#if __GNUC__ && !defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
 

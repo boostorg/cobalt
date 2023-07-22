@@ -86,20 +86,22 @@ system::result <std::size_t> socket::bytes_readable()
   return ec ? ec : system::result<std::size_t>(opt.get());
 }
 
-#define DEFINE_OPTION(Name, Type)                         \
-system::result<void> socket::set_##Name(Type value)       \
-{                                                         \
-  system::error_code ec;                                  \
-  socket_.set_option(asio::socket_base::Name(value), ec); \
-  return ec ? ec : system::result<void>{};                \
-}                                                         \
-                                                          \
-system::result<Type> socket::get_##Name() const           \
-{                                                         \
-  system::error_code ec;                                  \
-  asio::socket_base::Name opt;                            \
-  socket_.get_option(opt, ec);                            \
-  return ec ? ec : system::result<Type>(opt.value());     \
+#define DEFINE_OPTION(Name, Type)                                               \
+system::result<void> socket::set_##Name(Type value)                             \
+{                                                                               \
+  system::error_code ec;                                                        \
+  socket_.set_option(asio::socket_base::Name(value), ec);                       \
+  return ec ? ec : system::result<void>{};                                      \
+}                                                                               \
+                                                                                \
+system::result<Type> socket::get_##Name() const                                 \
+{                                                                               \
+  system::error_code ec;                                                        \
+  asio::socket_base::Name opt;                                                  \
+  socket_.get_option(opt, ec);                                                  \
+  return ec                                                                     \
+       ? system::result<Type>(system::in_place_error, ec)                       \
+       : system::result<Type>(system::in_place_value, opt.value());             \
 }
 
 DEFINE_OPTION(debug, bool);
