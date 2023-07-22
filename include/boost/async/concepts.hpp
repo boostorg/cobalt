@@ -43,9 +43,9 @@ struct enable_awaitables
     {
         if constexpr (std::derived_from<Promise, promise_throw_if_cancelled_base>)
         {
+          auto p = static_cast<Promise*>(this);
           // a promise inheriting promise_throw_if_cancelled_base needs to also have a .cancelled() function
-          auto c = static_cast<Promise*>(this)->cancelled();
-          if (!!c)
+          if (!!p->cancelled() && p->throw_if_cancelled())
           {
             constexpr boost::source_location here{BOOST_CURRENT_LOCATION};
             boost::throw_exception(system::system_error(
