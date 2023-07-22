@@ -10,6 +10,9 @@ auto spawn(asio::io_context & context, task<T>    && t, CompletionToken&& token)
 auto spawn(Executor executor,          task<T>    && t, CompletionToken&& token);
 ----
 
+Spawn will post both ways, so it is safe to use task to run the task
+on another executor and consume the result on the current one with <<use_op>>.
+
 === Example
 
 [source,cpp]

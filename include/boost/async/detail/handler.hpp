@@ -185,7 +185,6 @@ struct completion_handler : detail::completion_handler_base
             : completion_handler_base(h, completed_immediately),
               self(h.address()), result(result)
     {
-        BOOST_ASSERT(completed_immediately);
     }
 
     template<typename Promise>

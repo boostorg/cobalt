@@ -39,7 +39,7 @@ struct async_initiate
 
     auto sl = asio::get_associated_cancellation_slot(h);
     if (sl.is_connected())
-      sl.template emplace<detail::forward_cancellation>(recs->promise->signal);
+      sl.template emplace<detail::forward_dispatch_cancellation>(recs->promise->signal, exec);
 
     auto p = recs.get();
 
@@ -53,6 +53,7 @@ struct async_initiate
                 [r = std::move(recs),
                  h = std::move(h)]() mutable
                 {
+
                   auto ex = r->exception;
                   T rr{};
                   if (r->result)
@@ -84,7 +85,7 @@ struct async_initiate
 
     auto sl = asio::get_associated_cancellation_slot(h);
     if (sl.is_connected())
-      sl.template emplace<detail::forward_cancellation>(recs->promise->signal);
+      sl.template emplace<detail::forward_dispatch_cancellation>(recs->promise->signal, exec);
 
     auto p = recs.get();
 
