@@ -46,8 +46,9 @@ async::promise<void> do_wait()
 This is supported by <<promise, promise>>, <<generator, generator>> and <<gather, gather>>.
 
 The `select` will invoke the functions of the `awaitable` as if used in a `co_await` expression,
-with two exceptions:
+with one exceptions:
 
- 1. A call to `await_ready` might not be followed by `await_suspend` when returning false.
- 2. A call to `operator co_await` may not be followed by a call to any `await_*` function.
+WARNING: A call to `operator co_await` may not be followed by a call to any `await_*` function.
+
+That is to say: the select statement may not evaluate some awaitables..
 

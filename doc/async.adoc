@@ -40,6 +40,7 @@ include::design/concepts.adoc[]
 include::design/thread_local.adoc[]
 include::design/promise.adoc[]
 include::design/select.adoc[]
+include::design/associators.adoc[]
 
 = Reference
 

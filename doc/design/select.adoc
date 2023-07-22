@@ -5,14 +5,14 @@ The most important synchronization mechanism is the `select` function.
 
 It awaits multiple <<awaitable,awaitable>>s in a pseudo-random order
 and will return the result of the first one to complete.
-The random ordering applies when multiple awaitables are already ready.
+The random ordering applies when multiple awaitables are ready.
 
 [source,cpp]
 ----
 async::generator<int> gen1();
 async::generator<double> gen2();
 
-async::promise<double> p()
+async::promise<void> p()
 {
   auto g1 = gen1();
   auto g2 = gen2();
@@ -68,7 +68,7 @@ struct awaitable
 };
 ----
 
-If the `interrupt_await` doesn't result in immediate resumption,
+If the `interrupt_await` doesn't result in immediate resumption (of `h`),
 `select` will send a cancel signal.
 
 `select` applies these with the correct reference qualification:
@@ -83,3 +83,13 @@ The above will call a `interrupt_await() &` function for `g1` and `interrupt_awa
 
 NOTE: Generally speaking, the coroutines in async support lvalue interruption, ie. `interrupt_await() &`.
 <<channel,channel>> operations are unqualified, i.e. work in both cases.
+
+<<join,join>> and <<gather, gather>> will forward interruptions,
+i.e. this will only interrupt `g1` and `g2` if `gen2()` completes first:
+
+[source,cpp]
+----
+auto g = gen1(), g2 = gen1();
+select(join(g, g2), gen2());
+----
+

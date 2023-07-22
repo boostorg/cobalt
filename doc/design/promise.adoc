@@ -13,5 +13,6 @@ async::promise<void> noop()
 }
 ----
 
-Awaiting the above operation is in theory a noop.
+Awaiting the above operation is in theory a noop,
+but practically speaking, compilers aren't there as of 2023.
 
