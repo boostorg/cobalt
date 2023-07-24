@@ -48,8 +48,6 @@ This is supported by <<promise, promise>>, <<generator, generator>> and <<gather
 The `select` will invoke the functions of the `awaitable` as if used in a `co_await` expression
 or not evaluate them at all.
 
-That is to say: the select statement may not evaluate some awaitables.
-
 [#left_select]
 === `left_select`
 

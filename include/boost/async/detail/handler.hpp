@@ -10,7 +10,6 @@
 
 #include <boost/asio/bind_allocator.hpp>
 #include <boost/asio/post.hpp>
-#include <boost/core/demangle.hpp>
 
 #include <memory>
 #include <optional>
