@@ -46,7 +46,7 @@ include::../../example/ticker.cpp[tag=ws_upgrade]
 <2> Perform the websocket handshake.
 
 Once the websocket is connected, we want to continuously receive json messages,
-for which a generator is a good choice. Note that we'll set it to `pro_active` so it
+for which a generator is a good choice. Note that we'll set it to <<pro_active,pro_active>> so it
 eagerly resumes after a `co_yield`.
 
 .example/ticker.cpp json_read
