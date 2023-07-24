@@ -23,6 +23,7 @@
 
 
 #include <boost/intrusive_ptr.hpp>
+#include <boost/core/demangle.hpp>
 #include <boost/core/span.hpp>
 #include <boost/variant2/variant.hpp>
 
@@ -35,10 +36,53 @@ namespace boost::async::detail
 
 struct left_select_tag {};
 
+// helpers it determining the type of things;
+template<typename Base, // range of aw
+         typename Awaitable = Base>
+struct select_traits
+{
+  // for a ranges select this is based on the range, not the AW in it.
+  constexpr static bool is_lvalue = std::is_lvalue_reference_v<Base>;
+
+  // what the value is supposed to be cast to before the co_await_operator
+  using awaitable = std::conditional_t<is_lvalue, std::decay_t<Awaitable> &, Awaitable &&>;
+
+  // do we need operator co_await
+  constexpr static bool is_actual = awaitable_type<awaitable>;
+
+  // the type with .await_ functions & interrupt_await
+  using actual_awaitable
+        = std::conditional_t<
+            is_actual,
+              awaitable,
+              decltype(get_awaitable_type(std::declval<awaitable>()))>;
+
+  // the type to be used with interruptible
+  using interruptible_type
+        = std::conditional_t<
+              std::is_lvalue_reference_v<Base>,
+              std::decay_t<actual_awaitable> &,
+              std::decay_t<actual_awaitable> &&>;
+
+  constexpr static bool interruptible =
+      async::interruptible<interruptible_type>;
+
+  static void do_interrupt(std::decay_t<actual_awaitable> & aw)
+  {
+    if constexpr (interruptible)
+        static_cast<interruptible_type>(aw).interrupt_await();
+  }
+
+};
+
+struct interruptible_base
+{
+  virtual void interrupt_await() = 0;
+};
+
 template<asio::cancellation_type Ct, typename URBG, typename ... Args>
 struct select_variadic_impl
 {
-  using tuple_type = std::tuple<decltype(get_awaitable_type(std::declval<Args>()))...>;
 
   template<typename URBG_>
   select_variadic_impl(URBG_ && g, Args && ... args)
@@ -55,18 +99,20 @@ struct select_variadic_impl
   {
     template<std::size_t ... Idx>
     awaitable(std::tuple<Args...> & args, URBG & g, std::index_sequence<Idx...>) :
-        aws{awaitable_type_getter<Args>(std::get<Idx>(args))...}
+        aws{args}
     {
       if constexpr (!std::is_same_v<URBG, left_select_tag>)
         std::shuffle(impls.begin(), impls.end(), g);
-
+      std::fill(working.begin(), working.end(), nullptr);
     }
 
-    tuple_type aws;
+    std::tuple<Args...> & aws;
     std::array<asio::cancellation_signal, tuple_size> cancel_;
 
     template<typename > constexpr static auto make_null() {return nullptr;};
     std::array<asio::cancellation_signal*, tuple_size> cancel = {make_null<Args>()...};
+
+    std::array<interruptible_base*, tuple_size> working;
 
     std::size_t index{std::numeric_limits<std::size_t>::max()};
     pmr::polymorphic_allocator<void> alloc{&this->resource};
@@ -88,33 +134,37 @@ struct select_variadic_impl
           std::exchange(r, nullptr)->emit(Ct);
     }
 
-
-    template<std::size_t Idx>
-    void interrupt_await_step()
-    {
-      using type= std::tuple_element_t<Idx, tuple_type>;
-      using t = std::conditional_t<std::is_reference_v<std::tuple_element_t<Idx, std::tuple<Args...>>>,
-          type &,
-          type &&>;
-
-      if constexpr (interruptible<t>)
-        static_cast<t>(std::get<Idx>(aws)).interrupt_await();
-    }
-
     void interrupt_await()
     {
-      mp11::mp_for_each<mp11::mp_iota_c<sizeof...(Args)>>
-          ([&](auto idx)
-           {
-             interrupt_await_step<idx>();
-           });
+      for (auto i : working)
+        if (i)
+          i->interrupt_await();
     }
 
     template<std::size_t Idx>
     static detail::fork await_impl(awaitable & this_)
     try
     {
-      auto & aw = std::get<Idx>(this_.aws);
+      using traits = select_traits<mp11::mp_at_c<mp11::mp_list<Args...>, Idx>>;
+
+      typename traits::actual_awaitable aw{
+          get_awaitable_type(
+              static_cast<typename traits::awaitable>(std::get<Idx>(this_.aws))
+              )
+      };
+
+      struct interruptor final : interruptible_base
+      {
+        std::decay_t<typename traits::actual_awaitable> & aw;
+        interruptor(std::decay_t<typename traits::actual_awaitable> &  aw) : aw(aw) {}
+        void interrupt_await() override
+        {
+          traits::do_interrupt(aw);
+        }
+      };
+      interruptor in{aw};
+      //if constexpr (traits::interruptible)
+        this_.working[Idx] = &in;
 
       auto transaction = [&this_, idx = Idx] {
         if (this_.has_result())
@@ -175,6 +225,7 @@ struct select_variadic_impl
         this_.cancel[Idx] = nullptr;
       }
       this_.cancel_all();
+      this_.working[Idx] = nullptr;
     }
     catch(...)
     {
@@ -182,6 +233,7 @@ struct select_variadic_impl
         this_.index = Idx;
       if (this_.index == Idx)
         this_.error = std::current_exception();
+      this_.working[Idx] = nullptr;
     }
 
     std::array<detail::fork(*)(awaitable&), tuple_size> impls {
@@ -266,6 +318,8 @@ struct select_ranged_impl
   struct awaitable : fork::shared_state
   {
     using type = std::decay_t<decltype(*std::begin(std::declval<Range>()))>;
+    using traits = select_traits<Range, type>;
+
     std::size_t index{std::numeric_limits<std::size_t>::max()};
 
     std::conditional_t<
@@ -278,8 +332,18 @@ struct select_ranged_impl
     pmr::monotonic_buffer_resource res;
     pmr::polymorphic_allocator<void> alloc{&resource};
 
-    std::conditional_t<awaitable_type<type>, Range &,
-        pmr::vector<co_awaitable_type<type>>> aws;
+
+    Range &aws;
+
+    struct dummy
+    {
+      template<typename ... Args>
+      dummy(Args && ...) {}
+    };
+
+    std::conditional_t<traits::interruptible,
+      pmr::vector<std::decay_t<typename traits::actual_awaitable>*>,
+      dummy> working{std::size(aws), alloc};
 
     /* all below `reorder` is reordered
      *
@@ -291,36 +355,16 @@ struct select_ranged_impl
 
     bool has_result() const {return index != std::numeric_limits<std::size_t>::max(); }
 
-    awaitable(Range & aws_,
-              URBG & g,
-              std::false_type /* needs co_await */)
-        : fork::shared_state((256 + sizeof(co_awaitable_type<type>) + sizeof(std::size_t)) * std::size(aws_))
-        , aws{alloc}
-        , reorder{std::size(aws_), alloc}
-        , cancel_{std::size(aws_), alloc}
-        , cancel{std::size(aws_), alloc}
-    {
-      aws.reserve(std::size(aws_));
-      for (auto && a : aws_)
-        aws.emplace_back(awaitable_type_getter<decltype(a)>(std::forward<decltype(a)>(a)));
 
-      std::generate(reorder.begin(), reorder.end(), [i = std::size_t(0u)]() mutable {return i++;});
-      if constexpr (!std::is_same_v<URBG, left_select_tag>)
-        std::shuffle(reorder.begin(), reorder.end(), g);
-    }
-
-    awaitable(Range & aws, URBG & g, std::true_type /* needs co_await */)
+    awaitable(Range & aws, URBG & g)
         : fork::shared_state((256 + sizeof(co_awaitable_type<type>) + sizeof(std::size_t)) * std::size(aws))
         , aws(aws)
     {
       std::generate(reorder.begin(), reorder.end(), [i = std::size_t(0u)]() mutable {return i++;});
+      if constexpr (traits::interruptible)
+        std::fill(working.begin(), working.end(), nullptr);
       if constexpr (!std::is_same_v<URBG, left_select_tag>)
         std::shuffle(reorder.begin(), reorder.end(), g);
-    }
-
-    awaitable(Range & aws, URBG & g)
-        : awaitable(aws, g, std::bool_constant<awaitable_type<type>>{})
-    {
     }
 
     void cancel_all()
@@ -332,18 +376,22 @@ struct select_ranged_impl
     }
     void interrupt_await()
     {
-      using t = std::conditional_t<std::is_reference_v<Range>,
-          co_awaitable_type<type> &,
-          co_awaitable_type<type> &&>;
-      if constexpr (interruptible<t>)
-        for (auto & aw : aws)
-          static_cast<t>(aw).interrupt_await();
+      if constexpr (traits::interruptible)
+        for (auto aw : working)
+          if (aw)
+            traits::do_interrupt(*aw);
     }
 
     static detail::fork await_impl(awaitable & this_, std::size_t idx)
     try
     {
-      auto & aw = *std::next(std::begin(this_.aws), idx);
+      typename traits::actual_awaitable aw{
+          get_awaitable_type(
+              static_cast<typename traits::awaitable>(*std::next(std::begin(this_.aws), idx))
+              )};
+      if constexpr (traits::interruptible)
+        this_.working[idx] = &aw;
+
       auto transaction = [&this_, idx = idx] {
         if (this_.has_result())
           boost::throw_exception(std::logic_error("Another transaction already started"));
@@ -396,6 +444,8 @@ struct select_ranged_impl
         this_.cancel[idx] = nullptr;
       }
       this_.cancel_all();
+      if constexpr (traits::interruptible)
+        this_.working[idx] = nullptr;
     }
     catch(...)
     {
@@ -403,6 +453,8 @@ struct select_ranged_impl
         this_.index = idx;
       if (this_.index == idx)
         this_.error = std::current_exception();
+      if constexpr (traits::interruptible)
+        this_.working[idx] = nullptr;
     }
 
     detail::fork last_forked;

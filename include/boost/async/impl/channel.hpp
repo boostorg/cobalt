@@ -11,7 +11,6 @@
 #include <boost/async/channel.hpp>
 
 #include <boost/asio/post.hpp>
-#include <boost/core/demangle.hpp>
 
 namespace boost::async
 {
