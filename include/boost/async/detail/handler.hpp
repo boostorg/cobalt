@@ -20,34 +20,21 @@ namespace boost::async
 namespace detail
 {
 
-struct completion_handler_noop_executor //: executor_type
+struct completion_handler_noop_executor : executor
 {
-
-  executor inner;
   bool * completed_immediately = nullptr;
 
   template <typename Function, typename Allocator>
   void dispatch(Function && f, const Allocator& a) const
   {
     if (completed_immediately == nullptr)
-      asio::post(inner,  asio::bind_allocator(a, std::forward<Function>(f)));
+      asio::post(*this,  asio::bind_allocator(a, std::forward<Function>(f)));
     else
     {
       *completed_immediately = true;
       std::forward<Function>(f)();
     }
   }
-
-  template <typename Function, typename Allocator>
-  void post(Function && f, const Allocator& a) const;
-
-  template <typename Function, typename Allocator>
-  void defer(Function && f, const Allocator& a) const;
-
-  asio::execution_context & context();
-
-  void on_work_started();
-  void on_work_finished();
 
   friend bool operator==(const completion_handler_noop_executor& a, const completion_handler_noop_executor& b) noexcept
   {
@@ -60,8 +47,8 @@ struct completion_handler_noop_executor //: executor_type
   }
 
   completion_handler_noop_executor(const completion_handler_noop_executor & rhs) noexcept = default;
-  completion_handler_noop_executor(async::executor inner,
-                                   bool * completed_immediately) : inner(inner), completed_immediately(completed_immediately)
+  completion_handler_noop_executor(async::executor inner, bool * completed_immediately)
+        : async::executor(std::move(inner)), completed_immediately(completed_immediately)
   {
   }
 
