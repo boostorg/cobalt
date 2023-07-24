@@ -24,7 +24,6 @@ copy(stream & source, stream & sink)
                   w = {};
 
   buf.commit(r.transferred);
-  printf("Copy 1 %ld/%ld ==> \n", r.transferred, w.transferred, 1024 * 1024);
 
   while (!r.has_error() && !w.has_error())
   {
@@ -46,7 +45,6 @@ copy(stream & source, stream & sink)
     w.transferred = w2.transferred;
     w.error       = w2.error;
   }
-  printf("Copy %ld/%ld ==> \n", r.transferred, w.transferred, 1024 * 1024);
   co_return {r, w};
 }
 
@@ -78,7 +76,6 @@ copy(stream & source, stream & sink, buffers::dynamic_buffer_view buf, std::size
     w.transferred = w2.transferred;
     w.error       = w2.error;
   }
-  printf("Copy %ld/%ld\n", r.transferred, w.transferred);
   co_return {r, w};
 }
 
