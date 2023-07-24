@@ -45,10 +45,15 @@ async::promise<void> do_wait()
 
 This is supported by <<promise, promise>>, <<generator, generator>> and <<gather, gather>>.
 
-The `select` will invoke the functions of the `awaitable` as if used in a `co_await` expression,
-with one exceptions:
+The `select` will invoke the functions of the `awaitable` as if used in a `co_await` expression
+or not evaluate them at all.
 
-WARNING: A call to `operator co_await` may not be followed by a call to any `await_*` function.
+That is to say: the select statement may not evaluate some awaitables.
 
-That is to say: the select statement may not evaluate some awaitables..
+[#left_select]
+=== `left_select`
+
+The `left_select` functions are like `select` but follow a strict left-to-right scan.
+This can lead to starvation issues, which is why this is not the recommended default, but can
+be useful for prioritization if proper care is taken.
 
