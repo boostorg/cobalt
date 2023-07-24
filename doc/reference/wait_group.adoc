@@ -2,9 +2,13 @@
 == async/wait_group.hpp
 
 The `wait_group` function can be used to manage multiple tasks of type `promise<void>`.
-It works out of the box with <<with>>, by having the matching `exit` member.
+It works out of the box with <<with>>, by having the matching `await_exit` member.
 
-[source,cpp]
+Essentially, a `wait_group` is a dynamic list of
+tasks that has a  `select` function (`wait_one`),
+a `gather` function (`wait_all`) and will clean up on scope exit.
+
+[source,cpp,subs="+quotes"]
 ----
 struct wait_group
 {
@@ -14,20 +18,23 @@ struct wait_group
 
   // insert a task into the group
   void push_back(promise<void> p);
-  // wait for one tasks to complete
+  // wait for one task to complete.
   __wait_one_op__ wait_one();
   // wait for all tasks to complete
   __wait_op__ wait();
   // wait for all tasks to complete
   __wait_op__ operator co_await ();
-  // swallow the exception here, and wait for the completion
+  // when used with `with` , this will receive the exception
+  // and wait for the completion
+  // if `ep` is set, this will use the `exception_cancel` level,
+  // otherwise the `normal_cancel` to cancell all promises.
   __wait_op__ await_exit(std::exception_ptr ep);
-
   // the number of tasks in the group
   std::size_t size() const;
-  // remove completed tasks
+  // remove completed tasks without waiting (i.e. zombie tasks)
   std::size_t reap()
   // cancel all tasks
   void cancel(asio::cancellation_type ct = asio::cancellation_type::all);
 };
 ----
+
