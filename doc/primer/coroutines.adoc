@@ -5,7 +5,8 @@ Resumable means that a function can suspend,
 i.e. pass the control back to the caller multiple times.
 
 A regular function yields control back to the caller with the `return` function, where it also returns the value. 
-A function is a coroutine 
+
+A coroutine on the other hand might yield control to the caller and get resumed multiple times.
 
 A coroutine has three control keywords akin to co_return 
 (of which only `co_return` has to be supported). 
@@ -14,6 +15,8 @@ A coroutine has three control keywords akin to co_return
  - `co_yield`
  - `co_await`
 
+
+
 === `co_return`
 
 This is similar to `return`, but marks the function as a coroutine.
@@ -21,7 +24,7 @@ This is similar to `return`, but marks the function as a coroutine.
 === `co_await`
 
 The `co_await` expression suspends for an <<awaitable>>, 
-i.e. stop execution until the `awaitable` resumes it. 
+i.e. stops execution until the `awaitable` resumes it.
 
 E.g.: 
 
@@ -35,7 +38,7 @@ async::task<void> example()
 }
 ----
 
-A `co_await` value can yield a value, depending on what it is awaiting.
+A `co_await` expression can yield a value, depending on what it is awaiting.
 
 [source,cpp]
 ----

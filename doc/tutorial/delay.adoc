@@ -12,7 +12,7 @@ and is the easiest way to enter asynchronous code.
 <2> Take the executor from the current coroutine promise.
 <3> Use an argument to set the timeout
 <4> Perform the wait by using <<use_op, async::use_op>>.
-<5> Return a value that gets returns from the implicit main.
+<5> Return a value that gets returned from the implicit main.
 
 In this example we use the <<main>> header, which provides us with a main coroutine if `co_main`
 is defined as above. This has a few advantages:
@@ -21,9 +21,10 @@ is defined as above. This has a few advantages:
  - asio is signaled that the context is single threaded
  - an `asio::signal_set` with `SIGINT` & `SIGTERM` is automatically connected to cancellations (i.e. `Ctrl+C` causes cancellations)
 
-This coroutine then has an executor in it's promisefootnote:[the promise the C++ name for a coroutine state.
+This coroutine then has an executor in its promisefootnote:[the promise the C++ name for a coroutine state.
 Not to be confused with <<promise>>] which we can obtain through the dummy-<<awaitable, awaitable>>s in
 the <<this_coro, this_coro>> namespace.
 
 We can then construct a timer and initiate the `async_wait` with <<use_op>>.
 `async` provides multiple ways to `co_await` to interact with asio, of which <<use_op>> is the easiest.
+

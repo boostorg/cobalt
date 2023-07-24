@@ -19,7 +19,6 @@ that this library needs to workaround. This may cause non-deterministic behaviou
 
 include::overview.adoc[]
 include::motivation.adoc[]
-include::benchmarks.adoc[]
 
 = Coroutine Primer
 
@@ -66,6 +65,8 @@ include::reference/config.adoc[]
 
 include::background/stackless.adoc[]
 include::background/lazy_eager.adoc[]
+
+include::benchmarks.adoc[]
 
 
 [index]

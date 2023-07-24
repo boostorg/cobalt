@@ -1,7 +1,7 @@
 == echo server
 
-We'll be using the `use_op` token everywhere,
-so we're using a default completion token, so that we can skip the last parameters.
+We'll be using the `use_op` (https://www.boost.org/doc/libs/master/doc/html/boost_asio/overview/model/completion_tokens.html[asio completion]) token everywhere,
+so we're using a https://www.boost.org/doc/libs/master/doc/html/boost_asio/reference/asynchronous_operations.html#boost_asio.reference.asynchronous_operations.default_completion_tokens[default completion token], so that we can skip the last parameters.
 
 .example/echo_server.cpp declarations
 [example]
@@ -20,8 +20,9 @@ in case a lazy coro is needed, <<task, task>> is available.
 ----
 include::../../example/echo_server.cpp[tag=echo]
 ----
-<1> The operation is wrapped a `try-catch` block, because it should just stop & close the socket
-for any error (including cancellation).
+<1> When using the use_op completion token, I/O errors are translated into C++ exceptions. Additionally,
+if the coroutine gets cancelled (e.g. because the user hit Ctrl-C),
+an exception will be raised, too. Under these conditions, we print the error and exit the loop.
 <2> We run the loop until we get cancelled (exception) or the user closes the connection.
 <3> Read as much as is available.
 <4> Write all the read bytes.
@@ -30,7 +31,7 @@ Note that promise is eager. Calling `echo` will immediately execute code until `
 and then return control to the caller.
 
 Next, we also need an acceptor function. Since this is a tutorial, we're using a <<generator,generator>>.
-This is a coroutine that can be co_awaited multiple times, until `co_return`.
+This is a coroutine that can be co_awaited multiple times, until a `co_return` statement is reached.
 
 .example/echo_server.cpp listen function
 [example]
@@ -50,14 +51,15 @@ With those two functions we can now write the server:
 ----
 include::../../example/echo_server.cpp[tag=run_server]
 ----
-<1> Constructor the listener (destruction will cause cancellation!)
+<1> Construct the listener generator coroutine. When the object is destroyed,
+    the coroutine will be cancelled, performing all required cleanup.
 <2> When we have more than 10 workers, we wait for one to finish
 <3> Accept a new connection & launch it.
 
 The <<wait_group, wait_group>> is used to manage the running echo functions.
 This class will cancel & await the running `echo` coroutines.
 
-We do not need to do the same for the `listener`, because it will just stop on it's own, when `l` gets destroyed.
+We do not need to do the same for the `listener`, because it will just stop on its own, when `l` gets destroyed.
 The destructor of a generator will cancel it.
 
 Since the `promise` is eager, just calling it is enough to launch.
