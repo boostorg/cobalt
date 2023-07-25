@@ -8,9 +8,17 @@
 #ifndef BOOST_ASYNC_HPP
 #define BOOST_ASYNC_HPP
 
+#include <boost/async/async_for.hpp>
 #include <boost/async/channel.hpp>
+#include <boost/async/concepts.hpp>
+#include <boost/async/config.hpp>
 #include <boost/async/detached.hpp>
+#include <boost/async/error.hpp>
+#include <boost/async/gather.hpp>
 #include <boost/async/generator.hpp>
+#include <boost/async/join.hpp>
+#include <boost/async/leaf.hpp>
+#include <boost/async/main.hpp>
 #include <boost/async/op.hpp>
 #include <boost/async/promise.hpp>
 #include <boost/async/run.hpp>
@@ -19,7 +27,6 @@
 #include <boost/async/task.hpp>
 #include <boost/async/this_coro.hpp>
 #include <boost/async/this_thread.hpp>
-#include <boost/async/gather.hpp>
 #include <boost/async/wait_group.hpp>
 #include <boost/async/with.hpp>
 
