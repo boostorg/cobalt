@@ -5,9 +5,9 @@ C++20 coroutines are stackless, meaning they don't have their own stack.
 
 A stack in C++ describes the callstack, i.e. all the function frames stacked.
 A function frame is the memory a function needs to operate, i.e. a slice of memory
-to store it's variables and information such as the return address.
+to store its variables and information such as the return address.
 
-NOTE: The size of a function frame is known at compile time, but not outside the compile unit containing it's definition.
+NOTE: The size of a function frame is known at compile time, but not outside the compile unit containing its definition.
 
 [source, cpp]
 ----

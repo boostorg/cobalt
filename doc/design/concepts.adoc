@@ -26,7 +26,7 @@ All the verbs in the <<this_coro, this_coro>> namespace are such pseudo-awaitabl
 auto exec = co_await this_coro::executor;
 ----
 
-NOTE: This library exposed a set of `enable_*` base classes for promises,
+NOTE: This library exposes a set of `enable_*` base classes for promises,
 to make the creation of custom coroutines easy.
 
 

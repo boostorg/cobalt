@@ -1,7 +1,7 @@
 [#promise]
 == async/promise.hpp
 
-A promise is an eager coroutine that can `co_await` and `co_return` values. That is, it cannot be resumed.
+A promise is an eager coroutine that can `co_await` and `co_return` values. That is, it cannot use `co_yield`.
 
 [source,cpp]
 ----
@@ -20,6 +20,11 @@ async::main co_main(int argc, char *argv[])
 
 Promises can also be used to spawn tasks easily.
 
+Promises are by default attached.
+This means, that a cancellation is sent when the `promise` handles goes out of scope.
+
+A promise can be detached by calling `detach` or by using the prefix `+` operator.
+
 [source,cpp]
 ----
 async::promise<void> my_task();
@@ -31,7 +36,7 @@ async::main co_main(int argc, char *argv[])
   co_return 0;
 }
 ----
-<1> By using `+` the task gets detached. Without the `+` it would generate a `nodiscard` warning.
+<1> By using `+` the task gets detached. Without it, the compiler would generate a `nodiscard` warning.
 
 === Executor
 [#promise-executor]
@@ -84,7 +89,7 @@ struct [[nodiscard]] promise
   Return get();
 
   // Detach or attach properties
-  bool attached();
+  bool attached() const;
   void detach();
   void attach();
 
@@ -92,13 +97,13 @@ struct [[nodiscard]] promise
 };
 ----
 <1> Supports <<interrupt_await>>
-<2> This allows to spawn promised with a simple `+`, e.g. `+my_task()`.
-<3> This allows code like `while (p) co_await p:`
+<2> This allows to spawn promised with a simple `+my_task()` expression.
+<3> This allows code like `while (p) co_await p;`
 
 [#promise-promise]
 === Promise
 
-The thread promise has the following properties.
+The coroutine promise (`promise::promise_type`) has the following properties.
 
 - <<promise_memory_resource_base>>
 - <<promise_cancellation_base>>

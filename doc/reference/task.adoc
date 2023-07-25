@@ -1,7 +1,7 @@
 [#task]
 == async/task.hpp
 
-A task is a lazy coroutine that can `co_await` and `co_return` values. That is, it cannot be resumed.
+A task is a lazy coroutine that can `co_await` and `co_return` values. That is, it cannot use `co_yield`.
 
 [source,cpp]
 ----
@@ -50,7 +50,7 @@ struct [[nodiscard]] task
   task& operator=(task &&) noexcept = default;
 
   // enable `co_await` only for rvalues.
-  auto operator co_await () **;
+  auto operator co_await () &&;
 
   ~task();
 };

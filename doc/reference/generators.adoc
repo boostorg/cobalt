@@ -1,7 +1,7 @@
 [#generator]
 == async/generator.hpp
 
-A generator is an eager coroutine that can not only be resumed but yield values to the caller.
+A generator is an eager coroutine that can `co_await` and `co_yield` values to the caller.
 
 [source,cpp]
 ----
@@ -45,7 +45,7 @@ sequenceDiagram
     Note left of main: "In main 4"
 ----
 
-Values can be pushed into the generator, when `Push` is set to non-void:
+Values can be pushed into the generator, when `Push` (the second template parameter) is set to non-void:
 
 
 [source,cpp]
@@ -92,10 +92,11 @@ If this is desired behaviour the generator can be set to `pro_active` mode:
 co_await this_coro::pro_active(true);
 ----
 
-This will cause the generator to `post` it's own continuation onto the executor
+This will cause the generator to `post` its own continuation onto the executor
 and thus resume when the caller suspends for some async operation.
 
-NOTE: this is inefficient for synchronous generators.
+NOTE: this is inefficient for synchronous generators,
+i.e. generators that don't `co_await` between `co_yield` statements..
 
 [#generator-executor]
 === Executor
@@ -122,7 +123,7 @@ async::generator<int> my_gen(std::allocator_arg_t, pmr::polymorphic_allocator<vo
 [#generator-outline]
 === Outline
 
-[source,cpp]
+[source,cpp,subs=+quotes]
 ----
 template<typename Yield, typename Push = void>
 struct [[nodiscard]] generator
@@ -145,12 +146,15 @@ struct [[nodiscard]] generator
   // Cancel & detach the generator.
   ~generator();
 
+  // an awaitable that results in value of `Yield`.
+  using __generator_awaitable__ = __unspecified__;
+
   // Present when `Push` != `void`
-  auto operator()(      Push && push);
-  auto operator()(const Push &  push);
+  __generator_awaitable__ operator()(      Push && push);
+  __generator_awaitable__ operator()(const Push &  push);
 
   // Present when `Push` == `void`, i.e. can `co_await` the generator directly.
-  auto operator co_await (); // <2>
+  __generator_awaitable__ operator co_await (); // <2>
 }
 ----
 <1> This allows code like `while (gen) co_await gen:`
@@ -160,7 +164,7 @@ struct [[nodiscard]] generator
 [#generator-promise]
 === Promise
 
-The thread promise has the following properties.
+The generator promise has the following properties.
 
 - <<promise_memory_resource_base>>
 - <<promise_cancellation_base>>

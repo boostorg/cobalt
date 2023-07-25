@@ -6,7 +6,7 @@ on a single thread.
 
 === Outline
 
-[source,cpp]
+[source,cpp, subs=+quotes]
 ----
 template<typename T>
 struct channel
@@ -29,6 +29,12 @@ struct channel
   // close the operation, will cancel all pending ops, too
   void close();
 
+  // an awaitable that yields T
+  using __read_op__ = __unspecified__;
+
+  // an awaitable that yields void
+  using __write_op__ = __unspecified__;
+
   // read a value to a channel
   __read_op__  read();
 
@@ -46,7 +52,7 @@ struct channel
 
 === Description
 
-Channels are a tool to have two coroutines communicate and synchronize
+Channels are a tool for two coroutines to communicate and synchronize.
 
 [source,cpp]
 ----
@@ -73,7 +79,7 @@ likewise if the buffer is not empty, the read operation will not suspend.
 If two operations complete at once (as is always the case with an empty buffer),
 the second operation gets posted to the executor for later completion.
 
-NOTE: A channel type be `void`, in which case `write` takes no parameter.
+NOTE: A channel type can be `void`, in which case `write` takes no parameter.
 
 The channel operations can be cancelled without losing data.
 This makes them usable with <<select, select>>.

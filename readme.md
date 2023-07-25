@@ -222,7 +222,7 @@ struct wait_op : async::op<system::error_code> // enable_op is to use ADL
 async::main co_main(int argc, char ** argv)
 {
   async::steady_timer tim{co_await async::this_coro::executor}; // already expired
-  co_await wait_op(tim); // will not suspend, since it's ready
+  co_await wait_op(tim); // will not suspend, since its ready
 }
 
 ```

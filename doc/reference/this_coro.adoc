@@ -96,7 +96,7 @@ NOTE: If available the executor gets used by <<use_op>>
 
 The `promise_memory_resource_base` base of a promise will provide a `get_allocator` in the promise taken from
 either the default resource or one passed following a `std::allocator_arg` argument.
-Likewise, it will add `operator new` overloads so the coroutine uses the same memory resource for it's frame allocation.
+Likewise, it will add `operator new` overloads so the coroutine uses the same memory resource for its frame allocation.
 
 [#promise_throw_if_cancelled_base]
 === Throw if cancelled

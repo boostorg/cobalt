@@ -83,11 +83,11 @@ include::../../example/ticker.cpp[tag=run_blockchain_info]
 <2> Instantiate the json_reader
 <3> Run as long as the websocket is open
 <4> Select, i.e. wait for either a new json message or subscription
-<5> When it's a json handle an update or a rejection
+<5> When its a json handle an update or a rejection
 <6> Handle new subscription messages
 
 The `handle_*` function's contents are not as important for the `async` functionality,
-so it's skipped in this tutorial.
+so its skipped in this tutorial.
 
 The `handle_new_subscription` function sends a message to the `blockchain.info`,
 which will send a confirmation or rejection back.

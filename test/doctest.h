@@ -2298,7 +2298,7 @@ int registerReporter(const char* name, int priority, bool isReporter) {
     static_assert(true, "")
 
 // clang-format off
-// for logging - disabling formatting because it's important to have these on 2 separate lines - see PR #557
+// for logging - disabling formatting because its important to have these on 2 separate lines - see PR #557
 #define DOCTEST_INFO(...)                                                                          \
     DOCTEST_INFO_IMPL(DOCTEST_ANONYMOUS(DOCTEST_CAPTURE_),                                         \
                       DOCTEST_ANONYMOUS(DOCTEST_CAPTURE_OTHER_),                                   \

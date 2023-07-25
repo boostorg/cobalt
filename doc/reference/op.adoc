@@ -81,5 +81,5 @@ struct wait_op : async::op<system::error_code> // <1>
 ----
 <1> Inherit `op` with the matching signature `await_transform` picks it up
 <2> Check if the operation is ready - called from `await_ready`
-<3> Initiate the async operation if it's not ready.
+<3> Initiate the async operation if its not ready.
 

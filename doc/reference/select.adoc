@@ -1,9 +1,9 @@
 [#select]
 == async/select.hpp
 
-The `select` function can be used to `co_await` one <<awaitable>>s out of a set of them.
+The `select` function can be used to `co_await` one <<awaitable, awaitable>> out of a set of them.
 
-It can be called as a variadic function with multiple <<awaitable>> or as on a range of <<awaitable>>s.
+It can be called as a variadic function with multiple <<awaitable, awaitable>> or as on a range of <<awaitable, awaitables>>.
 
 [source,cpp]
 ----
@@ -17,14 +17,14 @@ async::promise<void> do_wait()
   co_await async::select(aws); // <2>
 }
 ----
-<1> Wait for a variadic set of <<awaitable>>s
-<2> wait for a vector of <<awaitable>>s
+<1> Wait for a variadic set of <<awaitable, awaitables>>
+<2> wait for a vector of <<awaitable, awaitables>>
 
 [#interrupt_await]
 === Interrupt Wait
 
 When arguments are passed as rvalue reference, the select will attempt to use `.interrupt_await`
-on the awaitable to detach the not completed <<awaitable>>s. If supported, the <<awaitable>> must complete immediately.
+on the awaitable to detach the not completed <<awaitable, awaitables>>. If supported, the <<awaitable>> must complete immediately.
 If the `select` doesn't detect the immediate completion, it will send a cancellation.
 
 This means that you can reuse select like this:
