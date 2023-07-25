@@ -49,7 +49,5 @@ inline auto async_sleep(
 
 CO_TEST_CASE("sleep_any_cpl_token")
 {
-
-
   co_await async_sleep(co_await async::this_coro::executor, std::chrono::milliseconds(1), async::use_op);
 }

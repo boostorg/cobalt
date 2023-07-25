@@ -9,8 +9,7 @@ project(boost_async VERSION "${BOOST_ASYNC_VERSION}" LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 
 set(BOOST_ASYNC_IS_ROOT OFF)
-#add_compile_options(-fsanitize=address)
-#add_link_options(-fsanitize=address)
+
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     set(BOOST_ASYNC_IS_ROOT ON)
 endif()

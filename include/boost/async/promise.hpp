@@ -21,8 +21,18 @@ struct [[nodiscard]] promise
     promise(const promise &) = delete;
     promise& operator=(const promise &) = delete;
 
-    promise(promise &&lhs) noexcept = default;
-    promise& operator=(promise &&) noexcept = default;
+    promise(promise &&lhs) noexcept
+        : receiver_(std::move(lhs.receiver_)), attached_(std::exchange(lhs.attached_, false))
+    {
+    }
+
+    promise& operator=(promise && lhs) noexcept
+    {
+      if (attached_)
+        cancel();
+      receiver_ = std::move(lhs.receiver_);
+      attached_ = std::exchange(lhs.attached_, false);
+    }
 
     auto operator co_await () {return receiver_.get_awaitable();}
 
@@ -56,7 +66,7 @@ struct [[nodiscard]] promise
 
     ~promise()
     {
-      if (attached_ && receiver_.reference == &receiver_)
+      if (attached_)
         cancel();
     }
   private:
