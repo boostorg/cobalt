@@ -43,13 +43,6 @@ struct finalizer_test
     }
 };
 
-auto tag_invoke(const boost::async::with_exit_tag & wet , finalizer_test * ft,
-                std::exception_ptr e)
-{
-
-    return ft->exit(e);
-}
-
 CO_TEST_CASE("sync")
 {
     finalizer_test ft{co_await boost::async::this_coro::executor};
@@ -60,6 +53,10 @@ CO_TEST_CASE("sync")
             [](finalizer_test * ft)
             {
                 throw std::runtime_error("42");
+            },
+            [](finalizer_test * ft, std::exception_ptr e)
+            {
+              return ft->exit(e);
             }));
 
 
@@ -77,6 +74,10 @@ CO_TEST_CASE("async")
                     {
                       throw std::runtime_error("42");
                       co_return;
+                    },
+                    [](finalizer_test * ft, std::exception_ptr e)
+                    {
+                      return ft->exit(e);
                     }));
 
 
