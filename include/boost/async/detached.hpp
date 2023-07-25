@@ -8,14 +8,14 @@
 #ifndef BOOST_ASYNC_DETACHED_HPP
 #define BOOST_ASYNC_DETACHED_HPP
 
-#include <boost/async/detail/promise.hpp>
+#include <boost/async/promise.hpp>
 
 namespace boost::async
 {
 
 struct detached
 {
-  using promise_type = detail::async_promise<void>;
+  using promise_type = typename promise<void>::promise_type;
 
   detached(const detached &) = delete;
   detached& operator=(const detached &) = delete;
@@ -45,13 +45,13 @@ struct detached
     return receiver_.get_result();
   }
 
+  detached(promise<void> && promise) : receiver_(std::move(promise.receiver_))
+  {
+  }
  private:
   template<typename>
   friend struct detail::async_promise;
 
-  detached(detail::async_promise<void> * promise) : receiver_(promise->receiver, promise->signal)
-  {
-  }
 
   detail::promise_receiver<void> receiver_;
   friend struct detail::async_initiate;

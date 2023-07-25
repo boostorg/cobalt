@@ -56,7 +56,7 @@ struct [[nodiscard]] promise
 
     ~promise()
     {
-      if (attached_)
+      if (attached_ && receiver_.reference == &receiver_)
         cancel();
     }
   private:
@@ -70,6 +70,8 @@ struct [[nodiscard]] promise
     detail::promise_receiver<Return> receiver_;
     bool attached_;
     friend struct detail::async_initiate;
+
+    friend struct detached;
 };
 
 
