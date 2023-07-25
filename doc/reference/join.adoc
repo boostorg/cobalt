@@ -28,3 +28,20 @@ async::promise<void> do_join()
 
 The `join` will invoke the functions of the `awaitable` as if used in a `co_await` expression.
 
+
+.Signatures of join
+[source, cpp]
+----
+extern promise<void> pv1, pv2;
+/* void */ co_await join(pv1, pv2);
+
+std::vector<promise<void>> pvv;
+/* void */ co_await join(pvv);
+
+extern promise<int> pi1, pi2;
+std::tuple<monostate, monostate, int, int> r1 = co_await join(pv1, pv2, pi1, pi2);
+
+std::vector<promise<int>> piv;
+pmr::vector<int> r2 = co_await join(piv);
+----
+
