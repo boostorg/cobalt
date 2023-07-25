@@ -73,6 +73,7 @@ async::promise<void> run_server(async::wait_group & workers)
 // tag::main[]
 async::main co_main(int argc, char ** argv)
 {
+  auto x = &async::detail::invoke_await_exit<async::wait_group>;
   co_await async::with(async::wait_group(), &run_server); // <1>
   co_return 0u;
 }

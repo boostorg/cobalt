@@ -17,37 +17,30 @@
 namespace boost::async
 {
 
-struct with_exit_tag { };
-
-// tag_invoke(with_exit_tag, value, std::exception_ptr)
-
-/// default tag_invoke for any thing with an `await_exit` method
-template<typename T>
-    requires (requires (T &t) {{t.await_exit()}  -> awaitable<detail::with_impl::promise_type>; })
-auto tag_invoke(const boost::async::with_exit_tag & wet , T && t, std::exception_ptr)
+namespace detail
 {
-    return std::forward<T>(t).await_exit();
-}
 
 template<typename T>
-requires (requires (T &t, std::exception_ptr e) {{t.await_exit(e)}  -> awaitable<detail::with_impl::promise_type>; })
-auto tag_invoke(const boost::async::with_exit_tag & wet , T && t, std::exception_ptr e)
+auto invoke_await_exit(T && t, std::exception_ptr & e)
 {
-    return std::forward<T>(t).await_exit(e);
+  return std::forward<T>(t).await_exit(e);
 }
 
-template<typename Arg, typename Func>
-    requires (requires (Func func, Arg & arg)
+}
+
+
+template<typename Arg, typename Func, typename Teardown>
+    requires (requires (Func func, Arg & arg, Teardown & teardown, std::exception_ptr ep)
     {
         {std::move(func)(arg)} -> awaitable<detail::with_impl::promise_type>;
+        {std::move(teardown)(std::move(arg), ep)} -> awaitable<detail::with_impl::promise_type>;
     })
-auto with(Arg arg, Func func) -> detail::with_impl
+auto with(Arg arg, Func func, Teardown teardown) -> detail::with_impl
 {
     std::exception_ptr e;
     try
     {
         co_await std::move(func)(arg);
-        co_await tag_invoke(with_exit_tag{}, std::move(arg), e);
     }
     catch (...)
     {
@@ -56,7 +49,40 @@ auto with(Arg arg, Func func) -> detail::with_impl
 
     try
     {
-        co_await tag_invoke(with_exit_tag{}, std::move(arg), e);
+        co_await std::move(teardown)(std::move(arg), e);
+    }
+    catch (...)
+    {
+        if (!e)
+            e = std::current_exception();
+    }
+    if (e)
+        std::rethrow_exception(e);
+}
+
+
+template<typename Arg, typename Func, typename Teardown>
+    requires (requires (Func func, Arg & arg, Teardown & teardown, std::exception_ptr e)
+    {
+        {std::move(func)(arg)} -> std::convertible_to<void>;
+        {std::move(teardown)(std::move(arg), e)} -> awaitable<detail::with_impl::promise_type>;
+
+    })
+auto with(Arg arg, Func func, Teardown teardown) -> detail::with_impl
+{
+    std::exception_ptr e;
+    try
+    {
+        std::move(func)(arg);
+    }
+    catch (...)
+    {
+        e = std::current_exception();
+    }
+
+    try
+    {
+        co_await std::move(teardown)(arg, e);
     }
     catch (...)
     {
@@ -69,34 +95,10 @@ auto with(Arg arg, Func func) -> detail::with_impl
 
 
 template<typename Arg, typename Func>
-    requires (requires (Func func, Arg & arg)
-    {
-        {std::move(func)(arg)} -> std::convertible_to<void>;
-    })
-auto with(Arg arg, Func func) -> detail::with_impl
+  requires requires  (Arg args, std::exception_ptr ep) {{std::move(args).await_exit(ep)} -> awaitable<detail::with_impl::promise_type>;}
+auto with(Arg && arg, Func && func) -> detail::with_impl
 {
-    std::exception_ptr e;
-    try
-    {
-        std::move(func)(arg);
-        co_await tag_invoke(with_exit_tag{}, arg, e);
-    }
-    catch (...)
-    {
-        e = std::current_exception();
-    }
-
-    try
-    {
-        co_await tag_invoke(with_exit_tag{}, arg, e);
-    }
-    catch (...)
-    {
-        if (!e)
-            e = std::current_exception();
-    }
-    if (e)
-        std::rethrow_exception(e);
+  return with(std::forward<Arg>(arg), std::forward<Func>(func), &detail::invoke_await_exit<Arg>);
 }
 
 }
