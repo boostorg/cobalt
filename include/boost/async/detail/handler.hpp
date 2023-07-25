@@ -24,16 +24,19 @@ struct completion_handler_noop_executor : executor
 {
   bool * completed_immediately = nullptr;
 
-  template <typename Function, typename Allocator>
-  void dispatch(Function && f, const Allocator& a) const
+  template<typename Fn>
+  void execute(Fn && fn) const
   {
-    if (completed_immediately == nullptr)
-      asio::post(*this,  asio::bind_allocator(a, std::forward<Function>(f)));
-    else
+    if (completed_immediately)
     {
       *completed_immediately = true;
-      std::forward<Function>(f)();
+      fn();
     }
+    else
+    {
+      asio::post(*this, std::forward<Fn>(fn));
+    }
+
   }
 
   friend bool operator==(const completion_handler_noop_executor& a, const completion_handler_noop_executor& b) noexcept
@@ -85,16 +88,6 @@ struct completion_handler_base
     return {get_executor(), completed_immediately};
   }
 
-  completion_handler_base(
-      cancellation_slot_type cancellation_slot,
-      const executor_type & executor,
-      allocator_type allocator)
-          : cancellation_slot(cancellation_slot)
-          , executor_(executor)
-          , allocator(allocator)
-  {
-  }
-
   template<typename Promise>
     requires (requires (Promise p) {{p.get_executor()} -> std::same_as<const executor&>;})
   completion_handler_base(std::coroutine_handle<Promise> h, bool * completed_immediately = nullptr)
@@ -102,8 +95,8 @@ struct completion_handler_base
             executor_(h.promise().get_executor()),
             allocator(asio::get_associated_allocator(h.promise(), this_thread::get_allocator())),
             completed_immediately(completed_immediately)
-
-  {}
+  {
+  }
 
   template<typename Promise>
     requires (requires (Promise p) {{p.get_executor()} -> std::same_as<const executor&>;})
@@ -113,110 +106,13 @@ struct completion_handler_base
           : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
             executor_(h.promise().get_executor()),
             allocator(resource),
-            completed_immediately(completed_immediately) {}
-
-};
-
-template<typename Handler,typename ... Args>
-struct completion_handler_wrapper
-{
-  struct promise_type : promise_memory_resource_base
+            completed_immediately(completed_immediately)
   {
-    Handler &handler;
-    std::optional<std::tuple<Args...>> & res;
-    using cancellation_slot_type = asio::cancellation_slot;
-    cancellation_slot_type get_cancellation_slot() const noexcept
-    {
-      return asio::get_associated_cancellation_slot(handler) ;
-    }
-
-    using executor_type = executor;
-    executor_type get_executor() const noexcept
-    {
-      return asio::get_associated_executor(handler, this_thread::get_executor()) ;
-    }
-
-    using allocator_type = pmr::polymorphic_allocator<void>;
-    allocator_type get_allocator() const noexcept
-    {
-      return asio::get_associated_allocator(handler, this_thread::get_allocator()) ;
-    }
-
-    using immediate_executor_type = executor_type;
-    immediate_executor_type get_immediate_executor() const noexcept
-    {
-      return asio::get_associated_immediate_executor(handler, this_thread::get_executor());
-    }
-
-
-    promise_type(Handler & handler,
-                 std::optional<std::tuple<Args...>> & res) : handler(handler), res(res) {}
-
-
-
-    std::suspend_always initial_suspend() {return {};}
-    std::suspend_never final_suspend() noexcept {return {};}
-
-    void unhandled_exception() {throw;}
-
-    completion_handler_wrapper get_return_object() { return {std::coroutine_handle<promise_type>::from_promise(*this)}; }
-
-    void return_void() {}
-  };
-
-  std::coroutine_handle<promise_type> promise;
-
-  static auto run(Handler handler,
-                  std::optional<std::tuple<Args...>> res = std::nullopt) -> completion_handler_wrapper<Handler, Args...>
-  {
-    std::apply(std::move(handler), std::move(*res));
-    co_return ;
   }
 
 };
 
 
-template<typename Func>
-struct bound_completion_handler : completion_handler_base, Func
-{
-  using Func::operator();
-  template<typename Func_>
-  bound_completion_handler(
-      completion_handler_base::cancellation_slot_type cancellation_slot,
-      const completion_handler_base::executor_type & executor,
-      completion_handler_base::allocator_type allocator,
-      Func_ && func) : completion_handler_base(cancellation_slot, executor, allocator),
-                      Func(std::forward<Func_>(func)) {}
-
-  template<typename Func_>
-  bound_completion_handler(
-      completion_handler_base::cancellation_slot_type cancellation_slot,
-      completion_handler_base::executor_type && executor,
-      completion_handler_base::allocator_type allocator,
-      Func_ && func) = delete;
-};
-
-template<typename Func>
-auto bind_completion_handler(
-    completion_handler_base::cancellation_slot_type cancellation_slot,
-    const completion_handler_base::executor_type & executor,
-    completion_handler_base::allocator_type allocator,
-    Func && func) -> bound_completion_handler<std::decay_t<Func>>
-{
-  return bound_completion_handler<std::decay_t<Func>>(
-      cancellation_slot,
-      executor,
-      allocator,
-      std::forward<Func>(func));
-}
-
-
-template<typename Func>
-auto bind_completion_handler(
-    completion_handler_base::cancellation_slot_type cancellation_slot,
-    completion_handler_base::executor_type && executor,
-    completion_handler_base::allocator_type allocator,
-    Func && func) -> bound_completion_handler<std::decay_t<Func>> = delete;
 
 template<typename Handler>
 void assign_cancellation(std::coroutine_handle<void>, Handler &&) {}
@@ -278,8 +174,8 @@ struct completion_handler : detail::completion_handler_base
                        bool * completed_immediately = nullptr)
             : completion_handler_base(h, completed_immediately),
               self(h.address()), result(result)
-
     {
+        BOOST_ASSERT(completed_immediately);
     }
 
     template<typename Promise>
@@ -292,18 +188,6 @@ struct completion_handler : detail::completion_handler_base
     {
     }
 
-
-  template<typename Handler>
-    completion_handler(detail::completion_handler_wrapper<Handler, Args...> w)
-            : completion_handler(w.promise, w.promise.promise().res)
-    {}
-
-    template<std::invocable<Args...> CompletionHandler>
-    completion_handler(CompletionHandler && ch)
-      : completion_handler(detail::completion_handler_wrapper<std::decay_t<CompletionHandler>, Args...>::run(std::forward<CompletionHandler>(ch)))
-    {
-
-    }
     void operator()(Args ... args)
     {
         result.emplace(std::move(args)...);

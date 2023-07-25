@@ -6,8 +6,11 @@
 #include <boost/async/detail/handler.hpp>
 
 #include "doctest.h"
+#include "test.hpp"
 #include <boost/asio/any_io_executor.hpp>
 #include <boost/asio/post.hpp>
+
+using namespace boost;
 
 struct dummy_promise
 {
@@ -25,5 +28,75 @@ void test(boost::async::completion_handler<> ch)
 }
 
 TEST_SUITE_BEGIN("handler");
+
+struct immediate_aw
+{
+  bool await_ready() {return false;}
+
+  std::optional<std::tuple<>> result;
+  bool completed_immediately;
+
+  template<typename T>
+  bool await_suspend(std::coroutine_handle<T> h)
+  {
+    async::completion_handler<> ch{h, result,
+                                   async::this_thread::get_default_resource(),
+                                   &completed_immediately};
+
+    auto exec = asio::get_associated_immediate_executor(ch, h.promise().get_executor());
+    asio::dispatch(exec, std::move(ch));
+
+    CHECK(result);
+    CHECK(completed_immediately);
+
+    return !completed_immediately;
+  }
+
+  void await_resume()
+  {
+    CHECK(completed_immediately);
+    CHECK(result);
+  }
+};
+
+
+struct non_immediate_aw
+{
+  bool await_ready() {return false;}
+
+  std::optional<std::tuple<>> result;
+  bool completed_immediately;
+
+  template<typename T>
+  bool await_suspend(std::coroutine_handle<T> h)
+  {
+    async::completion_handler<> ch{h, result,
+                                   async::this_thread::get_default_resource(),
+                                   nullptr};
+
+    auto exec = asio::get_associated_immediate_executor(ch, h.promise().get_executor());
+    asio::dispatch(exec, std::move(ch));
+
+    CHECK(!result);
+    CHECK(!completed_immediately);
+
+    return !completed_immediately;
+  }
+
+  void await_resume()
+  {
+    CHECK(!completed_immediately);
+    CHECK(result);
+  }
+};
+
+
+
+
+CO_TEST_CASE("immediate completion")
+{
+  co_await immediate_aw{};
+  co_await non_immediate_aw{};
+}
 
 TEST_SUITE_END();
