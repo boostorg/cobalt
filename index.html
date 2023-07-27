@@ -3557,20 +3557,23 @@ This makes them usable with <a href="#select">select</a>.</p>
 <h4 id="example">Example</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">producer</span><span class="p">(</span><span class="n">channel</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="o">&amp;</span> <span class="n">chan</span><span class="p">)</span>
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">producer</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">channel</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="o">&amp;</span> <span class="n">chan</span><span class="p">)</span>
 <span class="p">{</span>
   <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
     <span class="k">co_await</span> <span class="n">chan</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+
   <span class="n">chan</span><span class="p">.</span><span class="n">close</span><span class="p">();</span>
 <span class="p">}</span>
 
 <span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="n">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
 <span class="p">{</span>
-  <span class="n">async</span><span class="o">::</span><span class="n">channel</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">c</span><span class="p">{</span><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">executor</span><span class="p">};</span>
+  <span class="n">async</span><span class="o">::</span><span class="n">channel</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">c</span><span class="p">;</span>
 
+  <span class="k">auto</span> <span class="n">p</span> <span class="o">=</span> <span class="n">producer</span><span class="p">(</span><span class="n">c</span><span class="p">);</span>
   <span class="k">while</span> <span class="p">(</span><span class="n">c</span><span class="p">.</span><span class="n">is_open</span><span class="p">())</span>
     <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="k">co_await</span> <span class="n">c</span><span class="p">.</span><span class="n">read</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
 
+  <span class="k">co_await</span> <span class="n">p</span><span class="p">;</span>
   <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span></code></pre>
 </div>
