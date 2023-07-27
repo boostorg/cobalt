@@ -100,21 +100,6 @@ generator<variant2::variant<int, double>> merge(
 
 [source,cpp]
 ----
-async::promise<void> producer(channel<int> & chan)
-{
-  for (int i = 0; i < 4; i++)
-    co_await chan.write(i);
-  chan.close();
-}
-
-async::main co_main(int argc, char * argv[])
-{
-  async::channel<int> c{co_await async::this_coro::executor};
-
-  while (c.is_open())
-    std::cout << co_await c.read() << std::endl;
-
-  co_return 0;
-}
+include::../../example/channel.cpp.cpp[tag=channel_example]
 ----
 
