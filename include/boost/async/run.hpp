@@ -48,7 +48,7 @@ T run(task<T> t)
 
       reset_exec re;
       this_thread::set_executor(ctx.get_executor());
-      f = spawn(ctx, std::move(t), asio::use_future);
+      f = spawn(ctx, std::move(t), asio::bind_executor(ctx.get_executor(), asio::use_future));
       ctx.run();
     }
     return f.get();
