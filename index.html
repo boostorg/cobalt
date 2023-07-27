@@ -1430,7 +1430,6 @@ We then put those promises into a <a href="#wait_group">wait_group</a> which wil
 <div class="content">
 <pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="nf">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
 <span class="p">{</span>
-  <span class="k">auto</span> <span class="n">x</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">async</span><span class="o">::</span><span class="n">detail</span><span class="o">::</span><span class="n">invoke_await_exit</span><span class="o">&lt;</span><span class="n">async</span><span class="o">::</span><span class="n">wait_group</span><span class="o">&gt;</span><span class="p">;</span>
   <span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">with</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">wait_group</span><span class="p">(),</span> <span class="o">&amp;</span><span class="n">run_server</span><span class="p">);</span> <i class="conum" data-value="1"></i><b>(1)</b>
   <span class="k">co_return</span> <span class="mi">0u</span><span class="p">;</span>
 <span class="p">}</span></code></pre>
@@ -4427,7 +4426,7 @@ with a size of 1, so that every operation is immediate.</p>
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2023-07-26 11:41:40 +0800
+Last updated 2023-07-28 01:29:28 +0800
 </div>
 </div>
 </body>
