@@ -13,7 +13,7 @@ foreach(SRC ${ALL_EXAMPLES})
         continue()
     endif()
 
-    add_executable(boost_async_example_${NAME} ${SRC} channel.cpp)
+    add_executable(boost_async_example_${NAME} ${SRC})
     target_link_libraries(boost_async_example_${NAME} PUBLIC Boost::async)
     target_compile_definitions(boost_async_example_${NAME} PUBLIC)
 endforeach()
