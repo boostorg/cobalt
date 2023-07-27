@@ -9,6 +9,7 @@
 #define BOOST_ASYNC_DETAIL_SPAWN_HPP
 
 #include <boost/async/task.hpp>
+#include <boost/asio/dispatch.hpp>
 
 #include <boost/smart_ptr/allocate_unique.hpp>
 
@@ -28,7 +29,9 @@ struct async_initiate
   {
     auto & rec = a.receiver_;
     if (rec.done)
-      return asio::post(asio::append(h, rec.exception, rec.exception ? T() : rec.get_result()));
+      return asio::dispatch(
+          asio::get_associated_immediate_executor(h, exec),
+          asio::append(std::forward<Handler>(h), rec.exception, rec.exception ? T() : rec.get_result()));
 
     auto dalloc = pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()};
     auto alloc = asio::get_associated_allocator(h, dalloc);
@@ -61,20 +64,23 @@ struct async_initiate
         )
     ).address());
 
-    asio::post(exec, std::coroutine_handle<detail::task_promise<T>>::from_promise(*p->promise));
+    asio::dispatch(exec, std::coroutine_handle<detail::task_promise<T>>::from_promise(*p->promise));
   }
 
   template<typename Handler>
   void operator()(Handler && h, task<void> a, executor exec)
   {
     if (a.receiver_.done)
-      return asio::post(asio::append(h, a.receiver_.exception));
+      return asio::dispatch(
+          asio::get_associated_immediate_executor(h, exec),
+          asio::append(std::forward<Handler>(h), a.receiver_.exception));
 
     auto alloc = asio::get_associated_allocator(h, pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()});
     auto recs = allocate_unique<detail::task_receiver<void>>(alloc, std::move(a.receiver_));
 
     if (recs->done)
-      return asio::post(asio::append(h, recs->exception));
+      return asio::dispatch(asio::get_associated_immediate_executor(h, exec),
+                            asio::append(std::forward<Handler>(h), recs->exception));
 
     auto sl = asio::get_associated_cancellation_slot(h);
     if (sl.is_connected())
@@ -100,16 +106,8 @@ struct async_initiate
         )
     ).address());
     
-    asio::post(exec, std::coroutine_handle<detail::task_promise<void>>::from_promise(*p->promise));
+    asio::dispatch(exec, std::coroutine_handle<detail::task_promise<void>>::from_promise(*p->promise));
   }
-
-
-  template<typename Handler, typename T>
-  struct task_type
-  {
-    auto initial_suspend() noexcept { return std::suspend_never(); }
-    auto final_suspend() noexcept { return std::suspend_never(); }
-  };
 };
 
 }
