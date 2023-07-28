@@ -243,7 +243,13 @@ struct gather_ranged_impl
     {
       aws.reserve(std::size(aws_));
       for (auto && a : aws_)
-        aws.emplace_back(awaitable_type_getter<decltype(a)>(std::forward<decltype(a)>(a)));
+      {
+        using a_0 = std::decay_t<decltype(a)>;
+        using a_t = std::conditional_t<
+            std::is_lvalue_reference_v<Range>, a_0 &, a_0 &&>;
+        aws.emplace_back(awaitable_type_getter<a_t>(static_cast<a_t>(a)));
+      }
+
 
       std::transform(std::begin(this->aws),
                      std::end(this->aws),
