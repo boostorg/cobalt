@@ -1,7 +1,7 @@
 enable_testing()
 
 add_library(static_tests concepts.cpp util.cpp )
-target_link_libraries(static_tests Boost::container)
+target_link_libraries(static_tests Boost::headers)
 
 add_executable(boost_async_main         main.cpp)
 add_executable(boost_async_main_compile main_compile.cpp)
@@ -10,9 +10,9 @@ add_executable(boost_async_basic_tests
       channel.cpp generator.cpp run.cpp task.cpp gather.cpp wait_group.cpp wrappers.cpp async_for.cpp left_select.cpp
       strand.cpp fork.cpp thread.cpp any_completion_handler.cpp detached.cpp)
 
-target_link_libraries(boost_async_main         Boost::container Boost::async OpenSSL::SSL)
-target_link_libraries(boost_async_main_compile Boost::container Boost::async OpenSSL::SSL)
-target_link_libraries(boost_async_basic_tests  Boost::container Boost::async OpenSSL::SSL)
+target_link_libraries(boost_async_main         Boost::async OpenSSL::SSL)
+target_link_libraries(boost_async_main_compile Boost::async OpenSSL::SSL)
+target_link_libraries(boost_async_basic_tests  Boost::async OpenSSL::SSL)
 
 add_test(NAME boost_async-main COMMAND boost_async_main)
 add_test(NAME boost_async-basic_tests COMMAND boost_async_basic_tests)
