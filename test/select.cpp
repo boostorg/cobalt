@@ -59,7 +59,7 @@ CO_TEST_CASE("variadic")
   CHECK(c.index() == 1u);
   CHECK(boost::variant2::get<1>(c) == 50);
   CHECK(d1);
-  CHECK(!d1.ready());
+  //CHECK(!d1.ready()); NOTE: Inderministic on msvc, due to the additional post!
   CHECK( d2.ready());
   CHECK(100 == co_await d1);
   CHECK(!d1);
