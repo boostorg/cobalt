@@ -61,21 +61,7 @@ public:
           {seq.size()} -> std::same_as<std::size_t>;
         }
     mutable_buffer_span(
-        MutableBufferSequence const& bs) noexcept
-        : p_(bs.data())
-        , n_(bs.size())
-    {
-    }
-
-    template<mutable_buffer_sequence MutableBufferSequence>
-      requires requires (const MutableBufferSequence & seq)
-        {
-          {seq.data()} -> std::same_as<const mutable_buffer*>;
-          {seq.size()} -> std::same_as<std::size_t>;
-        }
-    explicit
-    mutable_buffer_span(
-        MutableBufferSequence const& bs) noexcept
+        const MutableBufferSequence & bs) noexcept
         : p_(bs.data())
         , n_(bs.size())
     {

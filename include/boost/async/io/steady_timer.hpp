@@ -48,7 +48,10 @@ struct steady_timer
  private:
   struct wait_op_ final : result_op<void>
   {
-    void ready(async::handler<system::error_code> h) {if (timer_->expired()) h({});}
+    void ready(async::handler<system::error_code> h) override
+    {
+      if (timer_->expired()) h({});
+    }
     BOOST_ASYNC_DECL void initiate(completion_handler<system::error_code> handler) override;
     wait_op_(steady_timer * timer) : timer_(timer) {}
    private:

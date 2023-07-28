@@ -45,8 +45,14 @@ concept const_buffer_sequence =
       {buf.end()}   -> std::same_as<typename T::const_iterator>;
 
     } &&
-    (std::same_as<typename std::iterator_traits<typename T::const_iterator>::value_type, const_buffer> ||
-     std::same_as<typename std::iterator_traits<typename T::const_iterator>::value_type, mutable_buffer>))
+    (std::same_as<std::remove_const_t<
+        typename std::iterator_traits<typename T::const_iterator>::value_type>,
+        const_buffer>
+      ||
+     std::same_as<std::remove_const_t<
+         typename std::iterator_traits<typename T::const_iterator>::value_type>,
+         mutable_buffer>)
+     )
 ;
 
 
@@ -69,7 +75,10 @@ concept mutable_buffer_sequence =
        {buf.begin()} -> std::same_as<typename T::const_iterator>;
        {buf.end()}  -> std::same_as<typename T::const_iterator>;
      } &&
-     std::same_as<typename std::iterator_traits<typename T::const_iterator>::value_type, mutable_buffer>)
+    std::same_as<
+        std::remove_const_t<typename std::iterator_traits<typename T::const_iterator>::value_type>,
+        mutable_buffer>
+    )
 ;
 
 

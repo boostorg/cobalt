@@ -59,7 +59,7 @@ public:
           {std::size(ct)} -> std::convertible_to<std::size_t>;
         }
         && std::is_trivial_v<typename Container::value_type>)
-    mutable_buffer(Container & ct) : mutable_buffer(std::data(ct), sizeof(typename Container::value_type) * std::size(ct)) {}
+      mutable_buffer(Container & ct) : mutable_buffer(std::data(ct), sizeof(typename Container::value_type) * std::size(ct)) {}
 
     /** Constructor for arrays */
     template<typename T, std::size_t N>

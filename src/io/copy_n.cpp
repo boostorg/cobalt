@@ -20,7 +20,7 @@ copy_n(stream & source, stream & sink, std::size_t n)
   char mem[chunk_size * 2];
   buffers::circular_buffer buf{mem, sizeof(mem)};
 
-  transfer_result r = co_await source.read_some(buffers::mutable_buffer_span(buf.prepare(chunk_size))),
+  transfer_result r = co_await source.read_some(buf.prepare(chunk_size)),
                   w = {};
 
   buf.commit(r.transferred);
@@ -28,7 +28,7 @@ copy_n(stream & source, stream & sink, std::size_t n)
   while (!r.has_error() && !w.has_error() && (n > 0u))
   {
     auto [r2, w2] = co_await join(
-        source.read_some(buffers::mutable_buffer_span(buf.prepare((std::min)(chunk_size, n)))),
+        source.read_some(buf.prepare((std::min)(chunk_size, n))),
         sink.write_some(buffers::const_buffer_span(buf.data())));
     buf.commit(r2.transferred);
     n -= r2.transferred;
@@ -55,7 +55,7 @@ promise<std::pair<transfer_result, transfer_result>>
 copy_n(stream & source, stream & sink, buffers::dynamic_buffer_view buf,
        std::size_t n, std::size_t chunk_size)
 {
-  transfer_result r = co_await source.read_some(buffers::mutable_buffer_span(buf.prepare(chunk_size))),
+  transfer_result r = co_await source.read_some(buf.prepare(chunk_size)),
       w = {};
 
   buf.commit(r.transferred);
@@ -63,7 +63,7 @@ copy_n(stream & source, stream & sink, buffers::dynamic_buffer_view buf,
   while (!r.has_error() && !w.has_error())
   {
     auto [r2, w2] = co_await join(
-        source.read_some(buffers::mutable_buffer_span(buf.prepare((std::min)(chunk_size, n)))),
+        source.read_some(buf.prepare((std::min)(chunk_size, n))),
         sink.write_some(buffers::const_buffer_span(buf.data())));
     buf.commit(r2.transferred);
     buf.consume(w2.transferred);

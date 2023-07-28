@@ -26,6 +26,7 @@ promise<transfer_result> read_until(stream & source, buffers::dynamic_buffer_vie
   do
   {
     auto buf = buffer.prepare((std::min)(chunk_size, buffer.max_size() - buffer.size()));
+    async::io::buffers::mutable_buffer_span cb{buf};
     auto rd = co_await source.read_some(buf);
 
     auto begin = asio::buffers_begin(buf);

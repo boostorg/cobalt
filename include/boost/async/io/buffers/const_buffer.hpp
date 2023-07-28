@@ -48,7 +48,7 @@ public:
             {ct.size()} -> std::convertible_to<std::size_t>;
           }
           && std::is_trivial_v<typename Container::value_type>)
-    const_buffer(Container & ct) : const_buffer(ct.data(), sizeof(typename Container::value_type) * ct.size()) {}
+    const_buffer(const Container & ct) : const_buffer(ct.data(), sizeof(typename Container::value_type) * ct.size()) {}
 
     /** Constructor for strings */
     template<std::size_t N>

@@ -20,7 +20,7 @@ copy(stream & source, stream & sink)
   char mem[chunk_size * 2];
   buffers::circular_buffer buf{mem, sizeof(mem)};
 
-  transfer_result r = co_await source.read_some(buffers::mutable_buffer_span(buf.prepare(chunk_size))),
+  transfer_result r = co_await source.read_some(buf.prepare(chunk_size)),
                   w = {};
 
   buf.commit(r.transferred);
@@ -28,8 +28,8 @@ copy(stream & source, stream & sink)
   while (!r.has_error() && !w.has_error())
   {
     auto [r2, w2] = co_await join(
-        source.read_some(buffers::mutable_buffer_span(buf.prepare(chunk_size))),
-        sink.write_some(buffers::const_buffer_span(buf.data())));
+        source.read_some(buf.prepare(chunk_size)),
+        sink.write_some(buf.data()));
     buf.commit(r2.transferred);
     buf.consume(w2.transferred);
     r.transferred += r2.transferred;
