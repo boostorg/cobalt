@@ -71,7 +71,7 @@ boost::async::thread detail::thread_promise::get_return_object()
       {
         run_thread(std::move(st), std::move(h));
       }
-     }, std::move(st)
+     }, st
     };
 
   return res;
