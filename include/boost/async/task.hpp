@@ -29,7 +29,7 @@ struct [[nodiscard]] task
     task(task &&lhs) noexcept = default;
     task& operator=(task &&) noexcept = default;
 
-    auto operator co_await () && {return receiver_.get_awaitable();}
+    auto operator co_await () {return receiver_.get_awaitable();}
 
     ~task() {}
   private:

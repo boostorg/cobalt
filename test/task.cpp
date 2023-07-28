@@ -264,4 +264,11 @@ TEST_CASE("throw_if_cancelled")
   ctx.run();
 }
 
+CO_TEST_CASE("reawait")
+{
+  auto t = test0();
+  co_await std::move(t);
+  CHECK_NOTHROW(co_await std::move(t));
+}
+
 TEST_SUITE_END();
