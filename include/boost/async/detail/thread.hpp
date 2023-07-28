@@ -15,7 +15,6 @@
 #include <boost/async/this_coro.hpp>
 
 #include <boost/asio/cancellation_signal.hpp>
-#include <boost/container/pmr/unsynchronized_pool_resource.hpp>
 
 #include <thread>
 
