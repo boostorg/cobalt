@@ -1,0 +1,13 @@
+== Threading
+
+This library is single-threaded by design, because this simplifies resumption
+and thus more performant handling of synchronizations like <<select, select>>.
+
+Or put another way: using primitives likes this in a multi-threaded environment,
+will require a lot of locks which will cause a significant performance overhead.
+
+That is to say: you can't have any coroutines be resumed on multiple threads,
+except when using <<spawn, spawn>>.
+
+
+

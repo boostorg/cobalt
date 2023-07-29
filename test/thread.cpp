@@ -27,6 +27,7 @@ TEST_CASE("run")
   auto t = thr();
 
   t.join();
+  CHECK_THROWS(t.get_executor());
 }
 
 

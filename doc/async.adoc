@@ -41,6 +41,7 @@ include::design/thread_local.adoc[]
 include::design/promise.adoc[]
 include::design/select.adoc[]
 include::design/associators.adoc[]
+include::design/thread.adoc[]
 
 = Reference
 
