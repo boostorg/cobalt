@@ -120,6 +120,7 @@ endif()
 
 if(BOOST_ASYNC_BUILD_EXAMPLES)
     add_subdirectory(example)
+    set_target_properties(boost_async PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
 if(BOOST_ASYNC_BUILD_BENCHMARKS)
