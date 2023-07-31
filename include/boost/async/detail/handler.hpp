@@ -20,23 +20,34 @@ namespace boost::async
 namespace detail
 {
 
+enum class completed_immediately_t
+{
+  no, maybe, yes
+};
+
 struct completion_handler_noop_executor : executor
 {
-  bool * completed_immediately = nullptr;
+  completed_immediately_t * completed_immediately = nullptr;
 
   template<typename Fn>
   void execute(Fn && fn) const
   {
-    if (completed_immediately)
+    if (completed_immediately &&
+        //avoid recursion. i.e. don't let multiple sup operations complete immediately.
+       *completed_immediately != completed_immediately_t::maybe)
     {
-      *completed_immediately = true;
+      // only use this indicator if the fn will actually call our completion-handler
+      // otherwise this was a single op in a composed operation
+      *completed_immediately = completed_immediately_t::maybe;
       fn();
+      // yes means completion_handler::operator() was called, so we're good.
+      if (*completed_immediately != completed_immediately_t::yes)
+        *completed_immediately = completed_immediately_t::no;
     }
     else
     {
       asio::post(*this, std::forward<Fn>(fn));
     }
-
   }
 
   friend bool operator==(const completion_handler_noop_executor& a, const completion_handler_noop_executor& b) noexcept
@@ -50,7 +61,7 @@ struct completion_handler_noop_executor : executor
   }
 
   completion_handler_noop_executor(const completion_handler_noop_executor & rhs) noexcept = default;
-  completion_handler_noop_executor(async::executor inner, bool * completed_immediately)
+  completion_handler_noop_executor(async::executor inner, completed_immediately_t * completed_immediately)
         : async::executor(std::move(inner)), completed_immediately(completed_immediately)
   {
   }
@@ -82,7 +93,7 @@ struct completion_handler_base
   }
 
   using immediate_executor_type = completion_handler_noop_executor;
-  bool * completed_immediately = nullptr;
+  completed_immediately_t * completed_immediately = nullptr;
   immediate_executor_type get_immediate_executor() const noexcept
   {
     return {get_executor(), completed_immediately};
@@ -90,7 +101,8 @@ struct completion_handler_base
 
   template<typename Promise>
     requires (requires (Promise p) {{p.get_executor()} -> std::same_as<const executor&>;})
-  completion_handler_base(std::coroutine_handle<Promise> h, bool * completed_immediately = nullptr)
+  completion_handler_base(std::coroutine_handle<Promise> h,
+                          completed_immediately_t * completed_immediately = nullptr)
           : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
             executor_(h.promise().get_executor()),
             allocator(asio::get_associated_allocator(h.promise(), this_thread::get_allocator())),
@@ -102,16 +114,14 @@ struct completion_handler_base
     requires (requires (Promise p) {{p.get_executor()} -> std::same_as<const executor&>;})
   completion_handler_base(std::coroutine_handle<Promise> h,
                           pmr::memory_resource * resource,
-                          bool * completed_immediately = nullptr)
+                          completed_immediately_t * completed_immediately = nullptr)
           : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
             executor_(h.promise().get_executor()),
             allocator(resource),
             completed_immediately(completed_immediately)
   {
   }
-
 };
-
 
 
 template<typename Handler>
@@ -171,7 +181,7 @@ struct completion_handler : detail::completion_handler_base
     template<typename Promise>
     completion_handler(std::coroutine_handle<Promise> h,
                        std::optional<std::tuple<Args...>> &result,
-                       bool * completed_immediately = nullptr)
+                       detail::completed_immediately_t * completed_immediately = nullptr)
             : completion_handler_base(h, completed_immediately),
               self(h.address()), result(result)
     {
@@ -182,7 +192,7 @@ struct completion_handler : detail::completion_handler_base
     completion_handler(std::coroutine_handle<Promise> h,
                        std::optional<std::tuple<Args...>> &result,
                        pmr::memory_resource * resource,
-                       bool * completed_immediately = nullptr)
+                       detail::completed_immediately_t * completed_immediately = nullptr)
             : completion_handler_base(h, resource, completed_immediately),
               self(h.address()), result(result)
     {
@@ -193,8 +203,13 @@ struct completion_handler : detail::completion_handler_base
         result.emplace(std::move(args)...);
         BOOST_ASSERT(this->self != nullptr);
         auto p = this->self.release();
-        if (completed_immediately != nullptr && *completed_immediately)
+        if (completed_immediately != nullptr
+        && *completed_immediately == detail::completed_immediately_t::maybe)
+        {
+          *completed_immediately = detail::completed_immediately_t::yes;
           return;
+        }
+
         std::coroutine_handle<void>::from_address(p).resume();
     }
     using result_type = std::optional<std::tuple<Args...>>;

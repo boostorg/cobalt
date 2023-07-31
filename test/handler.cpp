@@ -34,7 +34,7 @@ struct immediate_aw
   bool await_ready() {return false;}
 
   std::optional<std::tuple<>> result;
-  bool completed_immediately;
+  async::detail::completed_immediately_t completed_immediately;
 
   template<typename T>
   bool await_suspend(std::coroutine_handle<T> h)
@@ -47,9 +47,9 @@ struct immediate_aw
     asio::dispatch(exec, std::move(ch));
 
     CHECK(result);
-    CHECK(completed_immediately);
+    CHECK(completed_immediately == async::detail::completed_immediately_t::yes);
 
-    return !completed_immediately;
+    return completed_immediately != async::detail::completed_immediately_t::yes;
   }
 
   void await_resume()
@@ -65,27 +65,32 @@ struct non_immediate_aw
   bool await_ready() {return false;}
 
   std::optional<std::tuple<>> result;
-  bool completed_immediately;
+  async::detail::completed_immediately_t completed_immediately;
 
   template<typename T>
   bool await_suspend(std::coroutine_handle<T> h)
   {
     async::completion_handler<> ch{h, result,
                                    async::this_thread::get_default_resource(),
-                                   nullptr};
+                                   &completed_immediately};
 
     auto exec = asio::get_associated_immediate_executor(ch, h.promise().get_executor());
-    asio::dispatch(exec, std::move(ch));
+    asio::dispatch(exec,
+                   asio::deferred(
+                       [exec = h.promise().get_executor()]()
+                       {
+                         return asio::post(exec, asio::deferred);
+                       }))(std::move(ch));
 
     CHECK(!result);
-    CHECK(!completed_immediately);
+    CHECK(completed_immediately != async::detail::completed_immediately_t::yes);
 
-    return !completed_immediately;
+    return completed_immediately != async::detail::completed_immediately_t::yes;
   }
 
   void await_resume()
   {
-    CHECK(!completed_immediately);
+    CHECK(completed_immediately != async::detail::completed_immediately_t::yes);
     CHECK(result);
   }
 };

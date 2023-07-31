@@ -161,7 +161,6 @@ CO_TEST_CASE("immediate_executor")
   asio::experimental::channel<void(system::error_code)> chn{co_await asio::this_coro::executor, 2u};
   CHECK(chn.try_send(system::error_code()));
 
-
   co_await chn.async_receive(async::use_op);
 
   CHECK(!called);

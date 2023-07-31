@@ -44,7 +44,7 @@ struct op
 
     char buffer[2048];
     std::optional<pmr::monotonic_buffer_resource> resource;
-    bool completed_immediately = false;
+    detail::completed_immediately_t completed_immediately = detail::completed_immediately_t::no;
     template<typename Promise>
     bool await_suspend(std::coroutine_handle<Promise> h,
                        const boost::source_location & loc = BOOST_CURRENT_LOCATION) noexcept
@@ -57,7 +57,7 @@ struct op
         auto & res = resource.emplace(buffer, sizeof(buffer),
                                       asio::get_associated_allocator(h.promise(), this_thread::get_allocator()).resource());
         op_.initiate(completion_handler<Args...>{h, result, &res, &completed_immediately});
-        return !completed_immediately;
+        return completed_immediately != detail::completed_immediately_t::yes;
       }
       catch(...)
       {
