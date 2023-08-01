@@ -49,7 +49,7 @@ struct result_op
       auto & res = resource.emplace(buffer, sizeof(buffer),
                                     asio::get_associated_allocator(h.promise(), this_thread::get_allocator()).resource());
       initiate(completion_handler<Error, T>{h, result, &res, &completed_immediately});
-      return !completed_immediately;
+      return completed_immediately != detail::completed_immediately_t::yes;
     }
     catch(...)
     {
@@ -94,7 +94,7 @@ struct result_op
   std::optional<std::tuple<Error, T>> result;
   char buffer[2048];
   std::optional<container::pmr::monotonic_buffer_resource> resource;
-  bool completed_immediately = false;
+  detail::completed_immediately_t completed_immediately = detail::completed_immediately_t::no;
 };
 
 
@@ -131,7 +131,7 @@ struct result_op<void, Error>
       auto & res = resource.emplace(buffer, sizeof(buffer),
                                     asio::get_associated_allocator(h.promise(), this_thread::get_allocator()).resource());
       initiate(completion_handler<Error>{h, result, &res, &completed_immediately});
-      return !completed_immediately;
+      return completed_immediately != detail::completed_immediately_t::yes;
     }
     catch(...)
     {
@@ -178,7 +178,7 @@ struct result_op<void, Error>
   std::optional<std::tuple<Error>> result;
   char buffer[2048];
   std::optional<container::pmr::monotonic_buffer_resource> resource;
-  bool completed_immediately = false;
+  detail::completed_immediately_t completed_immediately = detail::completed_immediately_t::no;
 };
 
 

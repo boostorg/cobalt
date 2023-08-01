@@ -13,7 +13,7 @@ namespace boost::async::io
 
 system::result<stream_socket> stream_socket::duplicate()
 {
-  auto res = detail::duplicate_socket(stream_socket_.native_handle());
+  auto res = detail::io::duplicate_handle(stream_socket_.native_handle());
   if (!res)
     return res.error();
 

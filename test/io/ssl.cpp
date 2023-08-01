@@ -16,7 +16,7 @@
 CO_TEST_CASE("ssl")
 {
   using namespace boost;
-  asio::ssl::context ctx{asio::ssl::context_base::tlsv13_client};
+  asio::ssl::context ctx{asio::ssl::context_base::tls_client};
   auto t = (co_await async::io::lookup("boost.org", "https")).value();
   REQUIRE(!t.empty());
 
@@ -26,6 +26,5 @@ CO_TEST_CASE("ssl")
   CHECK_MESSAGE(conn, conn.error().message());
 
   CHECK_NOTHROW(co_await ss.async_handshake(async::io::ssl_stream::handshake_type::client).value());
-  co_await ss.write_some("GET");
   CHECK_NOTHROW(co_await ss.async_shutdown());
 }

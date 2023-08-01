@@ -13,7 +13,7 @@ namespace boost::async::io
 
 system::result<seq_packet_socket> seq_packet_socket::duplicate()
 {
-  auto res = detail::duplicate_socket(seq_packet_socket_.native_handle());
+  auto res = detail::io::duplicate_handle(seq_packet_socket_.native_handle());
   if (!res)
     return res.error();
 

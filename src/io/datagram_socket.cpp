@@ -13,7 +13,7 @@ namespace boost::async::io
 
 system::result<datagram_socket> datagram_socket::duplicate()
 {
-  auto res = detail::duplicate_socket(datagram_socket_.native_handle());
+  auto res = detail::io::duplicate_handle(datagram_socket_.native_handle());
   if (!res)
     return res.error();
 

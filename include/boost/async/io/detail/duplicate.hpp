@@ -12,7 +12,7 @@
 #include <boost/async/config.hpp>
 #include <boost/system/result.hpp>
 
-namespace boost::async::io::detail
+namespace boost::async::detail::io
 {
 
 #if defined(BOOST_ASIO_WINDOWS)

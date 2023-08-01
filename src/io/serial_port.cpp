@@ -145,7 +145,7 @@ auto serial_port::release() -> system::result<native_handle_type>
 }
 auto serial_port::duplicate() -> system::result<serial_port>
 {
-  auto fd = detail::duplicate_handle(serial_port_.native_handle());
+  auto fd = detail::io::duplicate_handle(serial_port_.native_handle());
   if (fd.has_error())
     return fd.error();
   return serial_port(*fd);

@@ -15,7 +15,7 @@ namespace boost::async::io
 
 system::result<random_access_file> random_access_file::duplicate()
 {
-  auto res = detail::duplicate_handle(random_access_file_.native_handle());
+  auto res = detail::io::duplicate_handle(random_access_file_.native_handle());
   if (!res)
     return res.error();
 

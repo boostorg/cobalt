@@ -15,7 +15,7 @@ namespace boost::async::io
 
 system::result<stream_file> stream_file::duplicate()
 {
-  auto res = detail::duplicate_handle(stream_file_.native_handle());
+  auto res = detail::io::duplicate_handle(stream_file_.native_handle());
   if (!res)
     return res.error();
 

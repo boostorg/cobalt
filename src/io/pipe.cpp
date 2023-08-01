@@ -49,7 +49,7 @@ void readable_pipe::async_write_some_impl_(
   system::error_code ec{asio::error::operation_not_supported, &loc};
   if (h.completed_immediately)
   {
-    *h.completed_immediately = true;
+    *h.completed_immediately = detail::completed_immediately_t::maybe;
     h(ec, 0ul);
   }
   else
@@ -75,7 +75,7 @@ auto readable_pipe::release() -> system::result<native_handle_type>
 
 system::result<readable_pipe> readable_pipe::duplicate()
 {
-  auto res = detail::duplicate_handle(pipe_.native_handle());
+  auto res = detail::io::duplicate_handle(pipe_.native_handle());
   if (!res)
     return res.error();
 
@@ -119,7 +119,7 @@ void writable_pipe::async_read_some_impl_(
   system::error_code ec{asio::error::operation_not_supported, &loc};
   if (h.completed_immediately)
   {
-    *h.completed_immediately = true;
+    *h.completed_immediately = detail::completed_immediately_t::maybe;
     h(ec, 0ul);
   }
   else
@@ -144,7 +144,7 @@ auto writable_pipe::release() -> system::result<native_handle_type>
 
 system::result<writable_pipe> writable_pipe::duplicate()
 {
-  auto res = detail::duplicate_handle(pipe_.native_handle());
+  auto res = detail::io::duplicate_handle(pipe_.native_handle());
   if (!res)
     return res.error();
 

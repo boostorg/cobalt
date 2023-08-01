@@ -15,7 +15,7 @@ namespace boost::async::io
 system::result<ssl_stream> ssl_stream::duplicate()
 {
   SSL_dup(ssl_stream_.native_handle());
-  auto res = detail::duplicate_socket(ssl_stream_.native_handle());
+  auto res = detail::io::duplicate_handle(ssl_stream_.native_handle());
   if (!res)
     return res.error();
 
