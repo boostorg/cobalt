@@ -28,7 +28,8 @@ Otherwise, it'll default to the thread_local executor.
 === Memory Resource
 [#task-allocator]
 
-The memory resource is taken from the `thread_local` <<this_thread, get_default_resource>> function,
+The memory resource is *NOT* taken from the `thread_local` <<this_thread, get_default_resource>> function,
+but `pmr::get_default_resource(),
 unless a `std::allocator_arg` is used in any position followed by a `polymorphic_allocator` argument.
 
 [source, cpp]
@@ -57,7 +58,6 @@ struct [[nodiscard]] task
 ----
 
 NOTE: Tasks can be used synchronously from a sync function by calling `run(my_task())`.
-
 
 
 [#task-task]
