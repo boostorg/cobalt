@@ -106,20 +106,18 @@ async::task<int> return_(std::size_t ms, asio::executor_arg_t,
   co_return 1234u;
 }
 
-async::task<std::size_t> delay_r(asio::io_context &ctx, std::size_t ms,
+async::task<void> delay_r(asio::io_context &ctx, std::size_t ms,
                                     asio::executor_arg_t, asio::any_io_executor )
 {
   auto tim = async::use_op.as_default_on(asio::steady_timer(ctx, std::chrono::milliseconds{ms}));
   co_await tim.async_wait();
-  co_return ms;
 }
 
 
-async::task<std::size_t> delay_r(asio::io_context &ctx, std::size_t ms)
+async::task<void> delay_r(asio::io_context &ctx, std::size_t ms)
 {
   auto tim = async::use_op.as_default_on(asio::steady_timer(ctx, std::chrono::milliseconds{ms}));
   co_await tim.async_wait();
-  co_return ms;
 }
 
 async::task<void> throw_()
@@ -144,9 +142,10 @@ TEST_CASE("cancel-void")
   async::this_thread::set_executor(ctx.get_executor());
   asio::cancellation_signal signal;
 
+
   spawn(ctx, delay_r(ctx, 10000u), asio::bind_cancellation_slot(
       signal.slot(),
-      [](std::exception_ptr ep, std::size_t n)
+      [](std::exception_ptr ep)
       {
         CHECK(ep != nullptr);
       }));
