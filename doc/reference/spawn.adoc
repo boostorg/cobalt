@@ -26,3 +26,7 @@ int main(int argc, char *argv[])
 }
 ----
 
+WARNING: The caller needs to make sure tha the executor is not running on multiple threads
+concurrently, by either using a single-threaded context or a strand.
+
+
