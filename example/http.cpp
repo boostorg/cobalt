@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Matthijs Moehllmann
+// Copyright (c) 2023 Matthijs Möhlmann
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -60,6 +60,7 @@ async::main co_main(int argc, char **argv)
   auto conn = co_await connect("boost.org", ctx);
   printf("connected\n");
   beast::http::request<beast::http::empty_body> req{beast::http::verb::get, "/index.html", 11};
+  req.set(beast::http::field::host, "boost.org");
   co_await beast::http::async_write(conn, req, async::use_op);
 
   // read the response
