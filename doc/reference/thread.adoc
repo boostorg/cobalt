@@ -44,8 +44,9 @@ async::main co_main(int argc, char * argv[])
 NOTE: Destructing a detached thread will cause a hard stop (`io_context::stop`) and join the thread.
 
 WARNING: Nothing in this library, except for awaiting a <<thread>> and <<spawn>>, is thread-safe.
-If you need to transfer data across threads, you'll need a thread-safe class,
-e.g. https://www.boost.org/doc/libs/master/doc/html/boost_asio/reference/experimental__basic_concurrent_channel.html[`asio::conrurrenct_channel`].
+If you need to transfer data across threads, you'll need a thread-safe utility like https://www.boost.org/doc/libs/master/doc/html/boost_asio/reference/experimental__basic_concurrent_channel.html[`asio::conrurrenct_channel`].
+You cannot share any async primitives between threads,
+with the sole exception of being able to <<spawn, spawn>> a <<task, task>> onto another thread's executor.
 
 === Executor
 [#thread-executor]
