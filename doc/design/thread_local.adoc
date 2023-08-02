@@ -12,6 +12,41 @@ which defaults to `asio::any_io_executor`.
 NOTE: If you write your own coroutine, it should hold a copy of the executor,
 and have a `get_executor` function returning it by const reference.
 
+=== Using Strands
+
+While strands can be used, they are not compatible with the `thread_local` executor.
+This is because they might switch threads, thus they can't be `thread_local`.
+
+If you wish to use strands (e.g. through a <<spawn, spawn>>)
+the executor for any <<promise, promise>>, <<generator, generator>> or <<channel, channel>>
+must be assigned manually.
+
+In the case of a <<channel, channel>> this is a constructor argument,
+but for the other coroutine types, `asio::executor_arg` needs to be used.
+This is done by having `asio::executor_arg_t` (somewhere) in the argument
+list directly followed by the executor to be used in the argument list of the coroutine, e.g.:
+
+[source,cpp]
+----
+async::promise<void> example_with_executor(int some_arg, asio::executor_arg_t, async::executor);
+----
+
+This way the coroutine-promise can pick up the executor from the third argument,
+instead of defaulting to the thread_local one.
+
+The arguments can of course be defaulted, to make them less inconvenient,
+if they are sometimes with a thread_local executor.
+
+[source,cpp]
+----
+async::promise<void> example_with_executor(int some_arg,
+                                           asio::executor_arg_t = asio::executor_arg,
+                                           async::executor = async::this_thread::get_executor());
+----
+
+If this gets omitted on a strand an exception of type `asio::bad_allocator` is thrown,
+or - worse - the wrong executor is used.
+
 == polymoprhic memory resource
 
 Similarly, the library uses a thread_local `pmr::memory_resource` to allocate
