@@ -15,7 +15,7 @@ namespace boost::async
 {
 
 
-template<awaitable<detail::immediate_coroutine_promise<>> ... Promise>
+template<awaitable ... Promise>
 auto gather(Promise && ... p)
 {
   return detail::gather_variadic_impl<Promise ...>(
@@ -24,8 +24,7 @@ auto gather(Promise && ... p)
 
 
 template<typename PromiseRange>
-  requires awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>,
-                     detail::immediate_coroutine_promise<>>
+  requires awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>>
 auto gather(PromiseRange && p)
 {
   return detail::gather_ranged_impl<PromiseRange>{static_cast<PromiseRange&&>(p)};
