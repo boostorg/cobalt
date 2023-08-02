@@ -33,7 +33,6 @@ struct op
         : op_(lhs.op_)
         , result(std::move(lhs.result))
     {
-      BOOST_ASSERT(!lhs.resource);
     }
 
     bool await_ready()
@@ -144,6 +143,8 @@ namespace boost::asio
 template<typename ... Args>
 struct async_result<boost::async::use_op_t, void(Args...)>
 {
+  using return_type = decltype(boost::async::interpret_result(std::declval<std::tuple<Args...>&&>()));
+
   template <typename Initiation, typename... InitArgs>
   struct op_impl final : boost::async::op<Args...>
   {
