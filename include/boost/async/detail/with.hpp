@@ -37,8 +37,8 @@ struct with_impl::promise_type
 
 
     using executor_type = executor;
-    const executor_type & get_executor() const {return exec;}
-    executor_type exec{this_thread::get_executor()};
+    const executor_type & get_executor() const {return *exec;}
+    std::optional<executor_type> exec;
 
     with_impl get_return_object()
     {
@@ -96,7 +96,9 @@ template<typename Promise>
 auto with_impl::await_suspend(std::coroutine_handle<Promise> h) -> std::coroutine_handle<promise_type>
 {
     if constexpr (requires (Promise p) {p.get_executor();})
-        promise.exec = h.promise().get_executor();
+        promise.exec.emplace(h.promise().get_executor());
+    else
+        promise.exec.emplace(this_thread::get_executor());
 
     if constexpr (requires (Promise p) {p.get_cancellation_slot();})
         promise.slot_ = h.promise().get_cancellation_slot();
