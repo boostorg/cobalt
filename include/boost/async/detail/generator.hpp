@@ -63,6 +63,9 @@ struct generator_receiver_base<Yield, void>
 };
 
 template<typename Yield, typename Push>
+struct generator_promise;
+
+template<typename Yield, typename Push>
 struct generator_receiver : generator_receiver_base<Yield, Push>
 {
   std::exception_ptr exception;
@@ -70,7 +73,8 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
   Yield get_result() {return *std::exchange(result, std::nullopt);}
   bool done = false;
   std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
-  std::unique_ptr<void, detail::coro_deleter<>> yield_from{nullptr};
+  std::unique_ptr<generator_promise<Yield, Push>,
+                  detail::coro_deleter<generator_promise<Yield, Push>>> yield_from{nullptr};
 
   bool pro_active = false;
 
@@ -160,7 +164,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 
       std::coroutine_handle<void> res = std::noop_coroutine();
       if (self->yield_from != nullptr)
-        res = std::coroutine_handle<void>::from_address(self->yield_from.release());
+        res = std::coroutine_handle<generator_promise<Yield, Push>>::from_promise(*self->yield_from.release());
       return std::coroutine_handle<void>::from_address(res.address());
     }
 
@@ -190,12 +194,16 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 
       // now we also want to resume the coroutine, so it starts work
       if (self->yield_from != nullptr && self->pro_active)
+      {
+        auto exec = self->yield_from->get_executor();
         asio::post(
-            this_thread::get_executor(),
+            std::move(exec),
             [h = std::exchange(self->yield_from, nullptr)]() mutable
             {
-              std::coroutine_handle<void>::from_address(h.release()).resume();
+              std::coroutine_handle<generator_promise<Yield, Push>>::from_promise(*h.release()).resume();
             });
+      }
+
       return self->get_result();
     }
 
@@ -398,7 +406,7 @@ struct generator_yield_awaitable
     std::coroutine_handle<void> res = std::noop_coroutine();
     if (self->awaited_from.get() != nullptr)
       res = std::coroutine_handle<void>::from_address(self->awaited_from.release());
-    self->yield_from.reset(h.address());
+    self->yield_from.reset(&h.promise());
     return res;
   }
 
@@ -432,8 +440,8 @@ struct generator_yield_awaitable<Yield, void>
     }
     std::coroutine_handle<void> res = std::noop_coroutine();
     if (self->awaited_from.get() != nullptr)
-      res= std::coroutine_handle<void>::from_address(self->awaited_from.release());
-    self->yield_from.reset(h.address());
+      res = std::coroutine_handle<void>::from_address(self->awaited_from.release());
+    self->yield_from.reset(&h.promise());
     return std::coroutine_handle<>::from_address(res.address());
   }
 
