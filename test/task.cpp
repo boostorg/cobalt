@@ -9,6 +9,7 @@
 #include <boost/async/main.hpp>
 #include <boost/async/op.hpp>
 #include <boost/async/spawn.hpp>
+#include <boost/async/join.hpp>
 
 #include "doctest.h"
 #include "test.hpp"
@@ -17,6 +18,9 @@
 #include <boost/asio/awaitable.hpp>
 #include <boost/asio/bind_cancellation_slot.hpp>
 #include <boost/asio/co_spawn.hpp>
+#include <boost/asio/strand.hpp>
+#include <boost/asio/thread_pool.hpp>
+
 #include <boost/core/ignore_unused.hpp>
 
 #include <new>
@@ -40,13 +44,13 @@ async::task<double> test2(int i)
 }
 
 
-async::task<int> test1(asio::any_io_executor exec)
+async::task<int> test1()
 {
     co_await test2(42);
     co_await test2(42);
 
 
-    co_await asio::post(exec, async::use_task);
+    co_await asio::post(co_await async::this_coro::executor, async::use_task);
     co_return 452;
 }
 }
@@ -62,7 +66,7 @@ TEST_CASE("test-1")
 
     async::spawn(
           ctx.get_executor(),
-          test1(ctx.get_executor()),
+          test1(),
           [&](std::exception_ptr ex, int res)
           {
             CHECK(ex == nullptr);
@@ -76,7 +80,7 @@ TEST_CASE("test-1")
 
 CO_TEST_CASE("async-1")
 {
-    co_await test1(co_await asio::this_coro::executor);
+    co_await test1();
     co_return;
 }
 
@@ -269,5 +273,28 @@ CO_TEST_CASE("reawait")
   co_await std::move(t);
   CHECK_NOTHROW(co_await std::move(t));
 }
+
+
+async::task<void> test_strand()
+{
+  co_await async::join(test1(), test1(), test1(), test1());
+}
+
+TEST_CASE("stranded")
+{
+
+  asio::thread_pool ctx;
+  boost::async::this_thread::set_executor(ctx.get_executor());
+  async::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
+  async::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
+  async::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
+  async::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
+  async::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
+  async::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
+  async::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
+  async::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
+  ctx.join();
+}
+
 
 TEST_SUITE_END();
