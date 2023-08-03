@@ -688,13 +688,18 @@ pre.rouge {
 <li><a href="#design">Design</a>
 <ul class="sectlevel2">
 <li><a href="#design:concepts">Concepts</a></li>
-<li><a href="#executors">Executors</a></li>
+<li><a href="#executors">Executors</a>
+<ul class="sectlevel3">
+<li><a href="#strands">Strands</a></li>
+</ul>
+</li>
 <li><a href="#polymoprhic_memory_resource">polymoprhic memory resource</a></li>
 <li><a href="#cancellation">cancellation</a></li>
 <li><a href="#design:promise">Promise</a></li>
 <li><a href="#design:select">Select</a></li>
 <li><a href="#design:interrupt_await">interrupt_await</a></li>
 <li><a href="#associators">Associators</a></li>
+<li><a href="#threading">Threading</a></li>
 </ul>
 </li>
 <li><a href="#reference">Reference</a>
@@ -783,6 +788,14 @@ pre.rouge {
 <li><a href="#spawn">async/spawn.hpp</a>
 <ul class="sectlevel3">
 <li><a href="#example_2">Example</a></li>
+</ul>
+</li>
+<li><a href="#thread">async/thread.hpp</a>
+<ul class="sectlevel3">
+<li><a href="#executor_5">Executor</a></li>
+<li><a href="#memory_resource_5">Memory Resource</a></li>
+<li><a href="#thread-outline">Outline</a></li>
+<li><a href="#thread-promise">Promise</a></li>
 </ul>
 </li>
 <li><a href="#config">async/config.hpp</a>
@@ -2045,6 +2058,42 @@ and have a <code>get_executor</code> function returning it by const reference.
 </tr>
 </table>
 </div>
+<div class="sect3">
+<h4 id="strands">Strands</h4>
+<div class="paragraph">
+<p>Note that while strands can be used, they are not compatible with the <code>thread_local</code> executor.
+This is because they might switch threads. If you wish to use strands (e.g. through a <a href="#spawn">spawn</a>)
+the executor for any <a href="#promise">promise</a>, <a href="#generator">generator</a> or <a href="#channel">channel</a> must be set manually.
+In the case of a <a href="#channel">channel</a> this is a constructor argument,
+but for the other two, <code>asio::executor_arg</code> needs to be used. That is,
+<code>asio::executor_arg_t</code> must appear (somewhere) in the argument
+list directly followed by the executor to be used in the argument list of the coroutine, e.g.:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">example_with_executor</span><span class="p">(</span><span class="kt">int</span> <span class="n">some_arg</span><span class="p">,</span> <span class="n">asio</span><span class="o">::</span><span class="n">executor_arg_t</span><span class="p">,</span> <span class="n">async</span><span class="o">::</span><span class="n">executor</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This way the coroutine-promise can pick up the executor from the third argument,
+instead of defaulting to the thread_local one.</p>
+</div>
+<div class="paragraph">
+<p>The arguments can of course be defaulted, to make them less inconvenient,
+if they are sometimes with a thread_local executor.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">example_with_executor</span><span class="p">(</span><span class="kt">int</span> <span class="n">some_arg</span><span class="p">,</span>
+                                           <span class="n">asio</span><span class="o">::</span><span class="n">executor_arg_t</span> <span class="o">=</span> <span class="n">asio</span><span class="o">::</span><span class="n">executor_arg</span><span class="p">,</span>
+                                           <span class="n">async</span><span class="o">::</span><span class="n">executor</span> <span class="o">=</span> <span class="n">async</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">get_executor</span><span class="p">());</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If this gets omitted on a strand an exception of type <code>asio::bad_allocator</code> is thrown,
+or - worse - the wrong executor is used.</p>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="polymoprhic_memory_resource">polymoprhic memory resource</h3>
@@ -2280,6 +2329,21 @@ That is, it has three associators that are member functions of an awaiting promi
     <span class="kt">void</span> <span class="n">await_resume</span><span class="p">();</span>
 <span class="p">};</span></code></pre>
 </div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="threading">Threading</h3>
+<div class="paragraph">
+<p>This library is single-threaded by design, because this simplifies resumption
+and thus more performant handling of synchronizations like <a href="#select">select</a>.</p>
+</div>
+<div class="paragraph">
+<p>Or put another way: using primitives likes this in a multi-threaded environment,
+will require a lot of locks which will cause a significant performance overhead.</p>
+</div>
+<div class="paragraph">
+<p>That is to say: you can&#8217;t have any coroutines be resumed on multiple threads,
+except when using <a href="#spawn">spawn</a>.</p>
 </div>
 </div>
 </div>
@@ -2806,8 +2870,9 @@ Otherwise, it&#8217;ll default to the thread_local executor.</p>
 <div class="sect3">
 <h4 id="memory_resource_3">Memory Resource</h4>
 <div id="task-allocator" class="paragraph">
-<p>The memory resource is taken from the <code>thread_local</code> <a href="#this_thread">get_default_resource</a> function,
-unless a <code>std::allocator_arg</code> is used in any position followed by a <code>polymorphic_allocator</code> argument.</p>
+<p>The memory resource is <strong>NOT</strong> taken from the <code>thread_local</code> <a href="#this_thread">get_default_resource</a> function,
+but <code>pmr::get_default_resource(),
+unless a `std::allocator_arg</code> is used in any position followed by a <code>polymorphic_allocator</code> argument.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -3957,6 +4022,10 @@ a <code>gather</code> function (<code>wait_all</code>) and will clean up on scop
 <span class="k">auto</span> <span class="nf">spawn</span><span class="p">(</span><span class="n">Executor</span> <span class="n">executor</span><span class="p">,</span>          <span class="n">task</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span>    <span class="o">&amp;&amp;</span> <span class="n">t</span><span class="p">,</span> <span class="n">CompletionToken</span><span class="o">&amp;&amp;</span> <span class="n">token</span><span class="p">);</span></code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>Spawn will post both ways, so it is safe to use task to run the task
+on another executor and consume the result on the current one with <a href="#use_op">use_op</a>.</p>
+</div>
 <div class="sect3">
 <h4 id="example_2">Example</h4>
 <div class="listingblock">
@@ -3972,6 +4041,182 @@ a <code>gather</code> function (<code>wait_all</code>) and will clean up on scop
   <span class="k">return</span> <span class="n">f</span><span class="p">.</span><span class="n">get</span><span class="p">();</span>
 <span class="p">}</span></code></pre>
 </div>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+The caller needs to make sure that the executor is not running on multiple threads
+concurrently, e,g, by using a single-threaded context.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="thread">async/thread.hpp</h3>
+<div class="paragraph">
+<p>The thread type is another way to create an environment that is similar to <code>main</code>, but doesn&#8217;t use a <code>signal_set</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="kr">thread</span> <span class="nf">my_thread</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="k">auto</span> <span class="n">exec</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">executor</span><span class="p">;</span>             <i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="n">asio</span><span class="o">::</span><span class="n">steady_timer</span> <span class="n">tim</span><span class="p">{</span><span class="n">exec</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">milliseconds</span><span class="p">(</span><span class="mi">50</span><span class="p">)};</span> <i class="conum" data-value="2"></i><b>(2)</b>
+  <span class="k">co_await</span> <span class="n">tim</span><span class="p">.</span><span class="n">async_wait</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">use_op</span><span class="p">);</span>                      <i class="conum" data-value="3"></i><b>(3)</b>
+  <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>get the executor <code>thread</code> running on</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Use it with an asio object</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td><code>co_await</code> an async operation</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>To use a thread you can use it like a <code>std::thread</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="k">auto</span> <span class="n">thr</span> <span class="o">=</span> <span class="n">my_thread</span><span class="p">();</span>
+  <span class="n">thr</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A thread is also an <code>awaitable</code> (including cancellation).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="nf">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="k">auto</span> <span class="n">thr</span> <span class="o">=</span> <span class="n">my_thread</span><span class="p">();</span>
+  <span class="k">co_await</span> <span class="n">thr</span><span class="p">;</span>
+  <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Destructing a detached thread will cause a hard stop (<code>io_context::stop</code>) and join the thread.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Nothing in this library, except for awaiting a <a href="#thread">async/thread.hpp</a> and <a href="#spawn">async/spawn.hpp</a>, is thread-safe.
+If you need to transfer data across threads, you&#8217;ll need a thread-safe utility like <a href="https://www.boost.org/doc/libs/master/doc/html/boost_asio/reference/experimental__basic_concurrent_channel.html"><code>asio::conrurrenct_channel</code></a>.
+You cannot share any async primitives between threads,
+with the sole exception of being able to <a href="#spawn">spawn</a> a <a href="#task">task</a> onto another thread&#8217;s executor.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="executor_5">Executor</h4>
+<div id="thread-executor" class="paragraph">
+<p>It will also create an <code>asio::io_context</code> to run on, which you can get through the <code>this_coro::executor</code>.
+It will be assigned to the <code>async::this_thread::get_executor()</code> .</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="memory_resource_5">Memory Resource</h4>
+<div id="thread-allocator" class="paragraph">
+<p>It also creates a memory resource that will be used as a default for internal memory allocations.
+It will be assigned to the <code>thread_local</code> to the  <code>async::this_thread::get_default_resoruce()</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="thread-outline">Outline</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">struct</span> <span class="nc">thread</span>
+<span class="p">{</span>
+  <span class="c1">// Send a cancellation signal</span>
+  <span class="kt">void</span> <span class="n">cancel</span><span class="p">(</span><span class="n">asio</span><span class="o">::</span><span class="n">cancellation_type</span> <span class="n">type</span> <span class="o">=</span> <span class="n">asio</span><span class="o">::</span><span class="n">cancellation_type</span><span class="o">::</span><span class="n">all</span><span class="p">);</span>
+
+  <span class="c1">// Add the functions similar to `std::thread`</span>
+  <span class="kt">void</span> <span class="n">join</span><span class="p">();</span>
+  <span class="kt">bool</span> <span class="n">joinable</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+  <span class="kt">void</span> <span class="n">detach</span><span class="p">();</span>
+
+  <span class="c1">// Allow the thread to be awaited</span>
+  <span class="k">auto</span> <span class="k">operator</span> <span class="k">co_await</span><span class="p">()</span> <span class="o">&amp;-&gt;</span> <span class="n">detail</span><span class="o">::</span><span class="n">thread_awaitable</span><span class="p">;</span>   <i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="k">auto</span> <span class="k">operator</span> <span class="k">co_await</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="o">-&gt;</span> <span class="n">detail</span><span class="o">::</span><span class="n">thread_awaitable</span><span class="p">;</span> <i class="conum" data-value="2"></i><b>(2)</b>
+
+  <span class="c1">/// Move constructible</span>
+  <span class="kr">thread</span><span class="p">(</span><span class="kr">thread</span> <span class="o">&amp;&amp;</span><span class="p">)</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+  <span class="c1">// Stops the io_context &amp; joins the executor</span>
+    <span class="o">~</span><span class="kr">thread</span><span class="p">();</span>
+<span class="p">};</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Supports <a href="#interrupt_await">Interrupt Wait</a></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Always forward cancel</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="thread-promise">Promise</h4>
+<div class="paragraph">
+<p>The thread promise has the following properties.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#promise_cancellation_base">Cancellation state</a></p>
+</li>
+<li>
+<p><a href="#promise_throw_if_cancelled_base">Throw if cancelled</a></p>
+</li>
+<li>
+<p><a href="#enable_awaitables">Enable awaitables</a></p>
+</li>
+<li>
+<p><a href="#enable_await_allocator">Await Allocator</a></p>
+</li>
+<li>
+<p><a href="#enable_await_executor">Await Executor</a></p>
+</li>
+</ul>
 </div>
 </div>
 </div>
@@ -4426,7 +4671,7 @@ with a size of 1, so that every operation is immediate.</p>
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2023-07-28 01:29:28 +0800
+Last updated 2023-08-02 20:43:58 +0800
 </div>
 </div>
 </body>
