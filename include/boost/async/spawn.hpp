@@ -30,8 +30,8 @@ auto spawn(Executor executor, task<T> && t,
             detail::async_initiate{}, token, std::move(t), executor);
 }
 
-template<typename CompletionToken>
-auto spawn(asio::io_context & context,
+template<with_get_executor Context, typename CompletionToken>
+auto spawn(Context & context,
            task<void> && t,
            CompletionToken&& token)
 {
@@ -39,7 +39,7 @@ auto spawn(asio::io_context & context,
             detail::async_initiate{}, token, std::move(t), context.get_executor());
 }
 
-template<std::derived_from<executor> Executor, typename CompletionToken>
+template<std::convertible_to<executor> Executor, typename CompletionToken>
 auto spawn(Executor executor, task<void> && t,
            CompletionToken&& token BOOST_ASIO_DEFAULT_COMPLETION_TOKEN(Executor))
 {
