@@ -6,6 +6,7 @@
 #define BOOST_ASYNC_UTIL_HPP
 
 #include <boost/async/config.hpp>
+#include <boost/async/this_thread.hpp>
 
 #include <boost/system/result.hpp>
 #include <boost/variant2/variant.hpp>
@@ -153,10 +154,26 @@ auto get_resume_result(Awaitable & aw) -> system::result<decltype(aw.await_resum
 }
 
 #if BOOST_ASYNC_NO_SELF_DELETE
-BOOST_ASYNC_DECL void self_destroy(std::coroutine_handle<void> h) noexcept;
+BOOST_ASYNC_DECL void self_destroy(std::coroutine_handle<void> h, const async::executor & exec) noexcept;
+template<typename T>
+BOOST_ASYNC_DECL void self_destroy(std::coroutine_handle<T> h) noexcept
+{
+  if constexpr (requires {h.promise().get_executor();})
+    self_destroy(h, h.promise().get_executor());
+  else
+    self_destroy(h, this_thread::get_executor());
+}
+
+
 #else
 template<typename T>
 inline void self_destroy(std::coroutine_handle<T> h) noexcept
+{
+  h.destroy();
+}
+
+template<typename T, typename Executor>
+inline void self_destroy(std::coroutine_handle<T> h, const Executor &) noexcept
 {
   h.destroy();
 }

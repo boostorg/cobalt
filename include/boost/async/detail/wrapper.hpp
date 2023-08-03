@@ -16,7 +16,9 @@
 
 #include <coroutine>
 #include <utility>
-
+#if BOOST_ASYNC_NO_SELF_DELETE
+#include <boost/asio/consign.hpp>
+#endif
 namespace boost::async::detail
 {
 
@@ -81,10 +83,14 @@ struct post_coroutine_promise : partial_promise<Allocator>
             CompletionToken cpl;
             constexpr bool await_ready() noexcept { return false; }
             BOOST_NOINLINE
-            void await_suspend(std::coroutine_handle<void> h) noexcept
+            auto await_suspend(std::coroutine_handle<void> h) noexcept
             {
                 auto c = std::move(cpl);
-                detail::self_destroy(h);
+                if (this_thread::has_executor())
+                  detail::self_destroy(h, asio::get_associated_executor(c, this_thread::get_executor()));
+                else
+                  detail::self_destroy(h, asio::get_associated_executor(c));
+
                 asio::post(std::move(c));
             }
 
