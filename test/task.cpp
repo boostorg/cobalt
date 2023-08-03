@@ -43,7 +43,6 @@ async::task<double> test2(int i)
     co_return i;
 }
 
-
 async::task<int> test1()
 {
     co_await test2(42);
@@ -275,9 +274,17 @@ CO_TEST_CASE("reawait")
 }
 
 
+async::task<int> test_strand1(asio::any_io_executor exec)
+{
+  REQUIRE(exec == co_await async::this_coro::executor);
+  co_await asio::post(co_await async::this_coro::executor, async::use_task);
+  co_return 31;
+}
+
 async::task<void> test_strand()
 {
-  co_await async::join(test1(), test1(), test1(), test1());
+  auto e = co_await async::this_coro::executor;
+  co_await async::join(test_strand1(e), test_strand1(e), test_strand1(e), test_strand1(e));
 }
 
 TEST_CASE("stranded")

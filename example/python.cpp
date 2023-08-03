@@ -106,7 +106,7 @@ struct python_executor
   bool
   operator==(python_executor const &other) const noexcept
   {
-    return m_ptr == m_ptr;
+    return m_ptr == other.m_ptr;
   }
 
   bool
@@ -388,6 +388,7 @@ NB_MODULE(boost_async_example_python, m)
         {
             BOOST_ASYNC_FOR(auto v, test_generator())
               co_yield v;
+            co_return py::none();
         });
 
   m.def("test_promise",
@@ -399,6 +400,7 @@ NB_MODULE(boost_async_example_python, m)
         [](py::object obj) -> py_coroutine
         {
           co_await await_py_coroutine(std::move(obj));
+          co_return py::none();
         });
 }
 
