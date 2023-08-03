@@ -261,7 +261,7 @@ struct async_promise
   mutable asio::cancellation_signal signal;
 
   using executor_type = executor;
-  executor_type exec{boost::async::this_thread::get_executor()};
+  executor_type exec;
   const executor_type & get_executor() const {return exec;}
 
   template<typename ... Args>

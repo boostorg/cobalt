@@ -22,7 +22,7 @@ namespace detail
 
 enum class completed_immediately_t
 {
-  no, maybe, yes
+  no, maybe, yes, initiating
 };
 
 struct completion_handler_noop_executor : executor
@@ -212,6 +212,14 @@ struct completion_handler : detail::completion_handler_base
         std::coroutine_handle<void>::from_address(p).resume();
     }
     using result_type = std::optional<std::tuple<Args...>>;
+
+    ~completion_handler()
+    {
+      if (self && completed_immediately
+        && *completed_immediately == detail::completed_immediately_t::initiating
+        && std::uncaught_exceptions() > 0u)
+        self.release();
+    }
  private:
     std::unique_ptr<void, detail::coro_deleter<void>> self;
     std::optional<std::tuple<Args...>> &result;

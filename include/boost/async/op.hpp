@@ -44,28 +44,31 @@ struct op
     char buffer[2048];
     pmr::monotonic_buffer_resource resource{buffer, sizeof(buffer)};
     detail::completed_immediately_t completed_immediately = detail::completed_immediately_t::no;
+    std::exception_ptr init_ep;
+
     template<typename Promise>
     bool await_suspend(std::coroutine_handle<Promise> h,
                        const boost::source_location & loc = BOOST_CURRENT_LOCATION) noexcept
     {
-      std::optional<executor> exec;
-      if (!this_thread::has_executor())
-        exec = get_executor(h);
       try
       {
+        completed_immediately = detail::completed_immediately_t::initiating;
         op_.initiate(completion_handler<Args...>{h, result, &resource, &completed_immediately});
+        if (completed_immediately == detail::completed_immediately_t::initiating)
+          completed_immediately = detail::completed_immediately_t::no;
         return completed_immediately != detail::completed_immediately_t::yes;
       }
       catch(...)
       {
-        asio::post(exec.value_or(async::this_thread::get_executor()),
-                   [e = std::current_exception()]{std::rethrow_exception(e);});
-        return true;
+        init_ep = std::current_exception();
+        return false;
       }
     }
 
     auto await_resume()
     {
+      if (init_ep)
+        std::rethrow_exception(init_ep);
       return interpret_result(*std::move(result));
     }
 

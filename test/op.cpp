@@ -108,13 +108,13 @@ auto op_throw(CompletionToken&& token)
 TEST_CASE("op-throw")
 {
 
-  auto val = [&]() -> async::task<void> {co_await op_throw(async::use_op);};
+  auto val = [&]() -> async::task<void> {CHECK_THROWS(co_await op_throw(async::use_op));};
 
   asio::io_context ctx;
   async::this_thread::set_executor(ctx.get_executor());
   CHECK_NOTHROW(spawn(ctx, val(), asio::detached));
 
-  CHECK_THROWS(ctx.run());
+  CHECK_NOTHROW(ctx.run());
 }
 
 struct throw_op : async::op<std::exception_ptr>
@@ -160,7 +160,6 @@ CO_TEST_CASE("immediate_executor")
   asio::post(co_await asio::this_coro::executor, [&]{called = true;});
   asio::experimental::channel<void(system::error_code)> chn{co_await asio::this_coro::executor, 2u};
   CHECK(chn.try_send(system::error_code()));
-
   co_await chn.async_receive(async::use_op);
 
   CHECK(!called);
