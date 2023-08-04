@@ -48,7 +48,10 @@ struct result_op
     {
       auto & res = resource.emplace(buffer, sizeof(buffer),
                                     asio::get_associated_allocator(h.promise(), this_thread::get_allocator()).resource());
+      completed_immediately = detail::completed_immediately_t::initiating;
       initiate(completion_handler<Error, T>{h, result, &res, &completed_immediately});
+      if (completed_immediately == detail::completed_immediately_t::initiating)
+        completed_immediately = detail::completed_immediately_t::no;
       return completed_immediately != detail::completed_immediately_t::yes;
     }
     catch(...)

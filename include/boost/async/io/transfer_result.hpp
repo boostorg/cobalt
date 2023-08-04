@@ -87,7 +87,10 @@ struct transfer_op
     {
       auto & res = resource.emplace(buffer, sizeof(buffer),
                                     asio::get_associated_allocator(h.promise(), this_thread::get_allocator()).resource());
+      completed_immediately = detail::completed_immediately_t::initiating;
       initiate(completion_handler<system::error_code, std::size_t>{h, result, &res, &completed_immediately});
+      if (completed_immediately == detail::completed_immediately_t::initiating)
+        completed_immediately = detail::completed_immediately_t::no;
       return completed_immediately != detail::completed_immediately_t::yes;
     }
     catch(...)
