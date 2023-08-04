@@ -40,15 +40,18 @@ struct process
 
   BOOST_ASYNC_DECL process(boost::process::v2::filesystem::path executable,
                            std::initializer_list<core::string_view> args,
-                           process_initializer initializer = {});
+                           process_initializer initializer = {},
+                           const async::executor & executor = this_thread::get_executor());
 
 
   BOOST_ASYNC_DECL process(boost::process::v2::filesystem::path executable,
                            std::span<core::string_view> args,
-                           process_initializer initializer = {});
+                           process_initializer initializer = {},
+                           const async::executor & executor = this_thread::get_executor());
 
-  BOOST_ASYNC_DECL process(pid_type pid);
-  BOOST_ASYNC_DECL process(pid_type pid, native_handle_type native_handle);
+  BOOST_ASYNC_DECL process(pid_type pid, const async::executor & executor = this_thread::get_executor());
+  BOOST_ASYNC_DECL process(pid_type pid, native_handle_type native_handle,
+                           const async::executor & executor = this_thread::get_executor());
 
   [[nodiscard]] BOOST_ASYNC_DECL system::result<void> interrupt();
   [[nodiscard]] BOOST_ASYNC_DECL system::result<void> request_exit();

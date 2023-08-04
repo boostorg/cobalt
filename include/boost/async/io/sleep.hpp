@@ -8,37 +8,49 @@
 #ifndef BOOST_ASYNC_IO_SLEEP_HPP
 #define BOOST_ASYNC_IO_SLEEP_HPP
 
-#include <boost/async/io/steady_timer.hpp>
-#include <boost/async/io/system_timer.hpp>
 
-#include <boost/async/promise.hpp>
+#include <boost/async/io/system_timer.hpp>
+#include <boost/async/io/result.hpp>
+
+#include <boost/asio/basic_waitable_timer.hpp>
+
+#include <chrono>
 
 namespace boost::async::detail::io
 {
 
-struct steady_sleep
-{
-  steady_sleep(const std::chrono::steady_clock::time_point & tp) : tim{tp} {}
-  steady_sleep(const std::chrono::steady_clock::duration & du)   : tim{du} {}
 
-  async::io::steady_timer::wait_op_ operator co_await() { return tim.wait(); }
-  async::io::steady_timer::wait_op_::vawaitable value() { return std::move(op_.emplace(tim.wait())).value(); }
+struct steady_sleep final : async::io::result_op<>
+{
+  steady_sleep(const std::chrono::steady_clock::time_point & tp) : time_{tp} {}
+  steady_sleep(const std::chrono::steady_clock::duration & du)
+      : time_{std::chrono::steady_clock::now() + du} {}
+
+  BOOST_ASYNC_DECL void ready(async::handler<system::error_code> h);
+  BOOST_ASYNC_DECL void initiate(async::completion_handler<system::error_code> complete);
+
  private:
-  async::io::steady_timer tim;
-  std::optional<async::io::steady_timer::wait_op_> op_;
+  std::chrono::steady_clock::time_point time_;
+  std::optional<boost::asio::basic_waitable_timer<std::chrono::steady_clock,
+      asio::wait_traits<std::chrono::steady_clock>,
+      executor>> timer_;
 };
 
 
-struct system_sleep
+struct system_sleep final : async::io::result_op<>
 {
-  system_sleep(const std::chrono::system_clock::time_point & tp) : tim{tp} {}
-  system_sleep(const std::chrono::system_clock::duration & du)   : tim{du} {}
+  system_sleep(const std::chrono::system_clock::time_point & tp) : time_{tp} {}
+  system_sleep(const std::chrono::system_clock::duration & du)
+      : time_{std::chrono::system_clock::now() + du} {}
 
-  async::io::system_timer::wait_op_ operator co_await() { return tim.wait(); }
-  async::io::system_timer::wait_op_::vawaitable value() { return std::move(op_.emplace(tim.wait())).value(); }
- private:
-  async::io::system_timer tim;
-  std::optional<async::io::system_timer::wait_op_> op_;
+  BOOST_ASYNC_DECL void ready(async::handler<system::error_code> h);
+  BOOST_ASYNC_DECL void initiate(async::completion_handler<system::error_code> complete);
+
+  private:
+  std::chrono::system_clock::time_point time_;
+  std::optional<boost::asio::basic_waitable_timer<std::chrono::system_clock,
+      asio::wait_traits<std::chrono::system_clock>,
+      executor>> timer_;
 };
 
 }

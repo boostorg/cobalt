@@ -20,12 +20,14 @@ namespace boost::async::io
 struct [[nodiscard]] datagram_socket final : socket
 {
   // duplicate onto another thread
-  system::result<datagram_socket> duplicate();
+  system::result<datagram_socket> duplicate(const async::executor & executor = this_thread::get_executor());
 
-  datagram_socket();
+  datagram_socket(const async::executor & executor = this_thread::get_executor());
   datagram_socket(datagram_socket && lhs);
-  datagram_socket(native_handle_type h, protocol_type protocol = protocol_type());
-  datagram_socket(endpoint ep);
+  datagram_socket(native_handle_type h, protocol_type protocol = protocol_type(),
+                  const async::executor & executor = this_thread::get_executor());
+  datagram_socket(endpoint ep,
+                  const async::executor & executor = this_thread::get_executor());
  private:
   struct receive_op_;
   struct receive_op_seq_;

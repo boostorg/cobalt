@@ -25,7 +25,7 @@ struct resolver
 {
   using resolve_result = system::result<container::pmr::vector<endpoint>>;
 
-  BOOST_ASYNC_DECL resolver();
+  BOOST_ASYNC_DECL resolver(const async::executor & executor = this_thread::get_executor());
   BOOST_ASYNC_DECL resolver(resolver && ) = delete;
 
   BOOST_ASYNC_DECL void cancel();
@@ -42,32 +42,29 @@ struct resolver
     asio::ip::basic_resolver<protocol_type, executor> & resolver_;
     core::string_view host_;
     core::string_view service_;
-
-
   };
-
  public:
 
   [[nodiscard]] resolve_op_ resolve(core::string_view host, core::string_view service)
   {
     return resolve_op_{resolver_, host, service};
   }
-
-
  private:
   asio::ip::basic_resolver<protocol_type, executor> resolver_;
 };
 
-struct lookup
+struct lookup final : result_op<resolver::resolve_result::value_type>
 {
   lookup(core::string_view host, core::string_view service)
         : host_(host), service_(service) {}
-  auto operator co_await() {return resolver_.resolve(host_, service_);}
- private:
+
+  BOOST_ASYNC_DECL
+  void initiate(completion_handler<system::error_code, resolver::resolve_result::value_type>);
+
+  private:
   core::string_view host_;
   core::string_view service_;
-  resolver resolver_;
-
+  std::optional<asio::ip::basic_resolver<protocol_type, executor>> resolver_;
 };
 
 }

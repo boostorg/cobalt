@@ -23,13 +23,15 @@ struct popen : stream
   using native_handle_type = typename boost::process::v2::basic_process<executor>::native_handle_type;
 
   BOOST_ASYNC_DECL popen(boost::process::v2::filesystem::path executable,
-                           std::initializer_list<core::string_view> args,
-                           process_initializer initializer = {});
+                         std::initializer_list<core::string_view> args,
+                         process_initializer initializer = {},
+                         const async::executor & executor = this_thread::get_executor());
 
 
   BOOST_ASYNC_DECL popen(boost::process::v2::filesystem::path executable,
-                           std::span<core::string_view> args,
-                           process_initializer initializer = {});
+                         std::span<core::string_view> args,
+                         process_initializer initializer = {},
+                         const async::executor & executor = this_thread::get_executor());
 
   [[nodiscard]] BOOST_ASYNC_DECL system::result<void> interrupt();
   [[nodiscard]] BOOST_ASYNC_DECL system::result<void> request_exit();

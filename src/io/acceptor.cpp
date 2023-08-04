@@ -9,8 +9,10 @@
 
 namespace boost::async::io
 {
-acceptor::acceptor() : acceptor_{this_thread::get_executor()} {}
-acceptor::acceptor(endpoint ep) : acceptor_{this_thread::get_executor(), ep} {}
+acceptor::acceptor(const async::executor & exec)
+  : acceptor_{exec} {}
+acceptor::acceptor(endpoint ep, const async::executor & exec)
+  : acceptor_{exec, ep} {}
 
 
 system::result<void> acceptor::bind(endpoint ep)

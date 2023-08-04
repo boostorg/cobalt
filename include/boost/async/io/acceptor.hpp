@@ -19,8 +19,8 @@ namespace boost::async::io
 
 struct acceptor
 {
-  BOOST_ASYNC_DECL acceptor();
-  BOOST_ASYNC_DECL acceptor(endpoint ep);
+  BOOST_ASYNC_DECL acceptor(const async::executor & executor = this_thread::get_executor());
+  BOOST_ASYNC_DECL acceptor(endpoint ep, const async::executor & executor = this_thread::get_executor());
   BOOST_ASYNC_DECL system::result<void> bind(endpoint ep);
   BOOST_ASYNC_DECL system::result<void> listen(int backlog = asio::socket_base::max_listen_connections); // int backlog = asio::max_backlog()
   BOOST_ASYNC_DECL endpoint local_endpoint();

@@ -11,25 +11,27 @@ namespace boost::async::io
 {
 
 popen::popen(boost::process::v2::filesystem::path executable,
-                 std::initializer_list<core::string_view> args,
-                 process_initializer initializer)
-    : popen_(this_thread::get_executor(),
-               executable,
-               args,
-               initializer.stdio,
-               initializer.start_dir,
-               initializer.env) {}
+             std::initializer_list<core::string_view> args,
+             process_initializer initializer,
+             const async::executor & exec)
+    : popen_(exec,
+             executable,
+             args,
+             initializer.stdio,
+             initializer.start_dir,
+             initializer.env) {}
 
 
 popen::popen(boost::process::v2::filesystem::path executable,
-                 std::span<core::string_view> args,
-                 process_initializer initializer)
-    : popen_(this_thread::get_executor(),
-               executable,
-               args,
-               initializer.stdio,
-               initializer.start_dir,
-               initializer.env) {}
+             std::span<core::string_view> args,
+             process_initializer initializer,
+             const async::executor & exec)
+    : popen_(exec,
+             executable,
+             args,
+             initializer.stdio,
+             initializer.start_dir,
+             initializer.env) {}
 
 pid_type popen::id() const {return popen_.id();}
 

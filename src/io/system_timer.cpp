@@ -12,9 +12,12 @@
 namespace boost::async::io
 {
 
-system_timer::system_timer() : timer_(this_thread::get_executor()) {}
-system_timer::system_timer(const time_point &expiry_time) : timer_(this_thread::get_executor(), expiry_time) {}
-system_timer::system_timer(const duration &expiry_time) : timer_(this_thread::get_executor(), expiry_time) {}
+system_timer::system_timer(const async::executor & exec)
+    : timer_(exec) {}
+system_timer::system_timer(const time_point &expiry_time, const async::executor & exec)
+    : timer_(exec, expiry_time) {}
+system_timer::system_timer(const duration &expiry_time, const async::executor & exec)
+    : timer_(exec, expiry_time) {}
 
 void system_timer::cancel()
 {

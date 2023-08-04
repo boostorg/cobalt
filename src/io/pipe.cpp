@@ -14,9 +14,9 @@
 namespace boost::async::io
 {
 
-readable_pipe::readable_pipe() : pipe_(this_thread::get_executor()) {}
-readable_pipe::readable_pipe(native_handle_type native_handle)
-  : pipe_(this_thread::get_executor(), native_handle) {}
+readable_pipe::readable_pipe(const async::executor & exec) : pipe_(exec) {}
+readable_pipe::readable_pipe(native_handle_type native_handle, const async::executor & exec)
+  : pipe_(exec, native_handle) {}
 
 system::result<void> readable_pipe::close()
 {
@@ -73,19 +73,19 @@ auto readable_pipe::release() -> system::result<native_handle_type>
     return h;
 }
 
-system::result<readable_pipe> readable_pipe::duplicate()
+system::result<readable_pipe> readable_pipe::duplicate(const async::executor & exec)
 {
   auto res = detail::io::duplicate_handle(pipe_.native_handle());
   if (!res)
     return res.error();
 
-  return readable_pipe(*res);
+  return readable_pipe(*res, std::move(exec));
 }
 
 
-writable_pipe::writable_pipe() : pipe_(this_thread::get_executor()) {}
-writable_pipe::writable_pipe(native_handle_type native_handle)
-  : pipe_(this_thread::get_executor(), native_handle) {}
+writable_pipe::writable_pipe(const async::executor & exec) : pipe_(std::move(exec)) {}
+writable_pipe::writable_pipe(native_handle_type native_handle, const async::executor & exec)
+  : pipe_(std::move(exec), native_handle) {}
 
 system::result<void> writable_pipe::close()
 {
@@ -142,19 +142,19 @@ auto writable_pipe::release() -> system::result<native_handle_type>
     return h;
 }
 
-system::result<writable_pipe> writable_pipe::duplicate()
+system::result<writable_pipe> writable_pipe::duplicate(const async::executor & exec)
 {
   auto res = detail::io::duplicate_handle(pipe_.native_handle());
   if (!res)
     return res.error();
 
-  return writable_pipe(*res);
+  return writable_pipe(*res, std::move(exec));
 }
 
-system::result<std::pair<readable_pipe, writable_pipe>> make_pipe()
+system::result<std::pair<readable_pipe, writable_pipe>> make_pipe(const async::executor & exec)
 {
-  readable_pipe rp{};
-  writable_pipe wp{};
+  readable_pipe rp{exec};
+  writable_pipe wp{exec};
 
   system::error_code ec;
   asio::connect_pipe(rp.pipe_, wp.pipe_, ec);

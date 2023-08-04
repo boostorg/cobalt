@@ -19,16 +19,18 @@ namespace boost::async::io
 
 struct stream_file : file, stream
 {
-  BOOST_ASYNC_DECL system::result<stream_file> duplicate();
+  BOOST_ASYNC_DECL
+  system::result<stream_file> duplicate(const async::executor & executor = this_thread::get_executor());
 
   [[nodiscard]] BOOST_ASYNC_DECL system::result<void> close() override;
   [[nodiscard]] BOOST_ASYNC_DECL system::result<void> cancel() override;
   [[nodiscard]] BOOST_ASYNC_DECL bool is_open() const override;
 
-  BOOST_ASYNC_DECL stream_file();
+  BOOST_ASYNC_DECL stream_file(const async::executor & executor = this_thread::get_executor());
   BOOST_ASYNC_DECL stream_file(stream_file && lhs);
-  BOOST_ASYNC_DECL stream_file(native_handle_type h);
-  BOOST_ASYNC_DECL stream_file(core::string_view file, flags open_flags = flags::read_write);
+  BOOST_ASYNC_DECL stream_file(native_handle_type h, const async::executor & executor = this_thread::get_executor());
+  BOOST_ASYNC_DECL stream_file(core::string_view file, flags open_flags = flags::read_write,
+                               const async::executor & executor = this_thread::get_executor());
  private:
   BOOST_ASYNC_DECL void async_read_some_impl_(buffers::mutable_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;
   BOOST_ASYNC_DECL void async_write_some_impl_(buffers::const_buffer_subspan buffer, async::completion_handler<system::error_code, std::size_t> h) override;

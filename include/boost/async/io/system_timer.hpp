@@ -33,9 +33,9 @@ struct system_timer final
   /// The time point type of the clock.
   typedef typename clock_type::time_point time_point;
 
-  BOOST_ASYNC_DECL system_timer();
-  BOOST_ASYNC_DECL system_timer(const time_point& expiry_time);
-  BOOST_ASYNC_DECL system_timer(const duration& expiry_time);
+  BOOST_ASYNC_DECL system_timer(const async::executor & executor = this_thread::get_executor());
+  BOOST_ASYNC_DECL system_timer(const time_point& expiry_time, const async::executor & executor = this_thread::get_executor());
+  BOOST_ASYNC_DECL system_timer(const duration& expiry_time,   const async::executor & executor = this_thread::get_executor());
 
   BOOST_ASYNC_DECL void cancel();
 

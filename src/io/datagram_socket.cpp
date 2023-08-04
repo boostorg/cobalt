@@ -11,24 +11,23 @@
 namespace boost::async::io
 {
 
-system::result<datagram_socket> datagram_socket::duplicate()
+system::result<datagram_socket> datagram_socket::duplicate(const async::executor & exec)
 {
   auto res = detail::io::duplicate_handle(datagram_socket_.native_handle());
   if (!res)
     return res.error();
-
-  return {system::in_place_value, datagram_socket(*res)};
+  return {system::in_place_value, datagram_socket(*res, local_endpoint()->protocol(), exec)};
 }
 
 
 
-datagram_socket::datagram_socket()
-  : socket(datagram_socket_), datagram_socket_(this_thread::get_executor())
+datagram_socket::datagram_socket(const async::executor & exec)
+  : socket(datagram_socket_), datagram_socket_(exec)
 {
 }
 
-datagram_socket::datagram_socket(native_handle_type h, protocol_type protocol)
-    : socket(datagram_socket_), datagram_socket_(this_thread::get_executor(), protocol, h)
+datagram_socket::datagram_socket(native_handle_type h, protocol_type protocol, const async::executor & exec)
+    : socket(datagram_socket_), datagram_socket_(exec, protocol, h)
 {
 }
 
@@ -36,8 +35,8 @@ datagram_socket::datagram_socket(datagram_socket && lhs)
   : socket(datagram_socket_), datagram_socket_(std::move(lhs.datagram_socket_))
 {
 }
-datagram_socket::datagram_socket(endpoint ep)
-  : socket(datagram_socket_), datagram_socket_(this_thread::get_executor(), ep)
+datagram_socket::datagram_socket(endpoint ep, const async::executor & exec)
+  : socket(datagram_socket_), datagram_socket_(exec, ep)
 {
 }
 

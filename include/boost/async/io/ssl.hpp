@@ -38,11 +38,11 @@ struct ssl_stream : private detail::ssl_stream_base, stream, socket
   [[nodiscard]] BOOST_ASYNC_DECL system::result<void> cancel() override;
   [[nodiscard]] BOOST_ASYNC_DECL bool is_open() const override;
 
-  BOOST_ASYNC_DECL ssl_stream();
+  BOOST_ASYNC_DECL ssl_stream(const async::executor & executor = this_thread::get_executor());
   BOOST_ASYNC_DECL ssl_stream(ssl_stream && steam);
   BOOST_ASYNC_DECL ssl_stream(stream_socket && socket);
 
-  BOOST_ASYNC_DECL ssl_stream(asio::ssl::context & ctx);
+  BOOST_ASYNC_DECL ssl_stream(asio::ssl::context & ctx, const async::executor & executor = this_thread::get_executor());
   BOOST_ASYNC_DECL ssl_stream(asio::ssl::context & ctx, stream_socket && socket);
 
  private:

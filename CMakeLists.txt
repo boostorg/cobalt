@@ -29,6 +29,7 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/doc/index.html
 
 add_custom_target(boost_async_doc DEPENDS  ${CMAKE_CURRENT_BINARY_DIR}/doc/index.html)
 
+add_compile_definitions(BOOST_ASIO_HAS_IO_URING=1)
 
 if(BOOST_ASYNC_IS_ROOT)
     #include(CTest)
@@ -120,7 +121,8 @@ add_library(boost_async
         src/io/write_at.cpp
         src/io/detail/random_access_device.cpp
         src/io/copy.cpp
-        src/io/copy_n.cpp)
+        src/io/copy_n.cpp
+        src/io/sleep.cpp)
 
 target_include_directories(boost_async PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(boost_async PUBLIC

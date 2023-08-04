@@ -13,24 +13,24 @@
 namespace boost::async::io
 {
 
-system::result<stream_file> stream_file::duplicate()
+system::result<stream_file> stream_file::duplicate(const async::executor & exec)
 {
   auto res = detail::io::duplicate_handle(stream_file_.native_handle());
   if (!res)
     return res.error();
 
-  return {system::in_place_value, stream_file(*res)};
+  return {system::in_place_value, stream_file(*res, exec)};
 }
 
 
 
-stream_file::stream_file()
-    : file(stream_file_), stream_file_(this_thread::get_executor())
+stream_file::stream_file(const async::executor & exec)
+    : file(stream_file_), stream_file_(exec)
 {
 }
 
-stream_file::stream_file(native_handle_type h)
-    : file(stream_file_), stream_file_(this_thread::get_executor())
+stream_file::stream_file(native_handle_type h, const async::executor & exec)
+    : file(stream_file_), stream_file_(exec)
 {
 }
 
@@ -39,8 +39,8 @@ stream_file::stream_file(stream_file && lhs)
 {
 }
 
-stream_file::stream_file(core::string_view file_, flags open_flags)
-    : file(stream_file_), stream_file_(this_thread::get_executor(), std::string(file_), open_flags)
+stream_file::stream_file(core::string_view file_, flags open_flags, const async::executor & exec)
+    : file(stream_file_), stream_file_(exec, std::string(file_), open_flags)
 {
 }
 

@@ -12,8 +12,9 @@ namespace boost::async::io
 
 process::process(boost::process::v2::filesystem::path executable,
                  std::initializer_list<core::string_view> args,
-                 process_initializer initializer)
-    : process_(this_thread::get_executor(),
+                 process_initializer initializer,
+                 const async::executor & exec)
+    : process_(exec,
                executable,
                args,
                initializer.stdio,
@@ -23,8 +24,9 @@ process::process(boost::process::v2::filesystem::path executable,
 
 process::process(boost::process::v2::filesystem::path executable,
                  std::span<core::string_view> args,
-                 process_initializer initializer)
-    : process_(this_thread::get_executor(),
+                 process_initializer initializer,
+                 const async::executor & exec)
+    : process_(exec,
                executable,
                args,
                initializer.stdio,
@@ -32,9 +34,9 @@ process::process(boost::process::v2::filesystem::path executable,
                initializer.env) {}
 
 
-process::process(pid_type pid) : process_(this_thread::get_executor(), pid) {}
-process::process(pid_type pid, native_handle_type native_handle)
-                : process_(this_thread::get_executor(), pid, native_handle) {}
+process::process(pid_type pid, const async::executor & exec) : process_(exec, pid) {}
+process::process(pid_type pid, native_handle_type native_handle, const async::executor & exec)
+                : process_(exec, pid, native_handle) {}
 
 void process::wait_op_::initiate(completion_handler<system::error_code, int> handler)
 {

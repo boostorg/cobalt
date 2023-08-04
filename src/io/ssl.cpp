@@ -29,8 +29,8 @@ static asio::ssl::context & get_ssl_context()
 }
 
 
-ssl_stream::ssl_stream()
-  : ssl_stream_base(this_thread::get_executor(), get_ssl_context()), socket(ssl_stream_.next_layer())
+ssl_stream::ssl_stream(const async::executor & exec)
+  : ssl_stream_base(exec, get_ssl_context()), socket(ssl_stream_.next_layer())
 {
 }
 
@@ -42,8 +42,8 @@ ssl_stream::ssl_stream(ssl_stream && lhs)
 ssl_stream::ssl_stream(stream_socket && socket_)
     : ssl_stream_base(std::move(socket_.stream_socket_), get_ssl_context()), socket(ssl_stream_.next_layer()) {}
 
-ssl_stream::ssl_stream(asio::ssl::context & ctx)
-    : ssl_stream_base(this_thread::get_executor(), ctx), socket(ssl_stream_.next_layer()) {}
+ssl_stream::ssl_stream(asio::ssl::context & ctx, const async::executor & exec)
+    : ssl_stream_base(exec, ctx), socket(ssl_stream_.next_layer()) {}
 
 ssl_stream::ssl_stream(asio::ssl::context & ctx, stream_socket && socket_)
     : ssl_stream_base(std::move(socket_.stream_socket_), ctx), socket(ssl_stream_.next_layer()) {}

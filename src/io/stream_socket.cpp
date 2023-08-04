@@ -11,24 +11,24 @@
 namespace boost::async::io
 {
 
-system::result<stream_socket> stream_socket::duplicate()
+system::result<stream_socket> stream_socket::duplicate(const async::executor & exec)
 {
   auto res = detail::io::duplicate_handle(stream_socket_.native_handle());
   if (!res)
     return res.error();
 
-  return {system::in_place_value, stream_socket(*res)};
+  return {system::in_place_value, stream_socket(*res, local_endpoint()->protocol(), exec)};
 }
 
 
 
-stream_socket::stream_socket()
-  : socket(stream_socket_), stream_socket_(this_thread::get_executor())
+stream_socket::stream_socket(const async::executor & exec)
+  : socket(stream_socket_), stream_socket_(exec)
 {
 }
 
-stream_socket::stream_socket(native_handle_type h, protocol_type protocol)
-    : socket(stream_socket_), stream_socket_(this_thread::get_executor(), protocol, h)
+stream_socket::stream_socket(native_handle_type h, protocol_type protocol, const async::executor & exec)
+    : socket(stream_socket_), stream_socket_(exec, protocol, h)
 {
 }
 
@@ -36,8 +36,8 @@ stream_socket::stream_socket(stream_socket && lhs)
   : socket(stream_socket_), stream_socket_(std::move(lhs.stream_socket_))
 {
 }
-stream_socket::stream_socket(endpoint ep)
-  : socket(stream_socket_), stream_socket_(this_thread::get_executor(), ep)
+stream_socket::stream_socket(endpoint ep, const async::executor & exec)
+  : socket(stream_socket_), stream_socket_(exec, ep)
 {
 }
 
