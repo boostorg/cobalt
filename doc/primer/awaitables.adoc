@@ -53,7 +53,7 @@ The return type of the `await_suspend` can be three things:
 - `std::coroutine_handle<U>`
 
 If it is void the awaiting coroutine remains suspended. If it is `bool`,
-the value will be checked, and if falls, the awaiting coroutine will resume right away.
+the value will be checked, and if false, the awaiting coroutine will resume right away.
 
 If a `std::coroutine_handle` is returned, this coroutine will be resumed.
 The latter allows `await_suspend` to return the handle passed in,
