@@ -17,7 +17,7 @@ namespace boost::async::io::buffers
 {
 
 using buffer_registration = asio::buffer_registration<buffers::mutable_buffer_subspan,
-                                                      container::pmr::polymorphic_allocator<void>>;
+                                                      pmr::polymorphic_allocator<void>>;
 
 BOOST_ASYNC_DECL buffer_registration register_(buffers::mutable_buffer mutable_buffer);
 BOOST_ASYNC_DECL buffer_registration register_(buffers::mutable_buffer_span mutable_buffers);

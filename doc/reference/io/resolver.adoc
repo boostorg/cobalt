@@ -62,7 +62,7 @@ To make it type-safe, the library provides a `static_protocol` template:
 
 struct resolver
 {
-  using resolve_result = system::result<container::pmr::vector<endpoint>>;
+  using resolve_result = system::result<pmr::vector<endpoint>>;
   resolver();
   resolver(resolver && ) = delete;
 

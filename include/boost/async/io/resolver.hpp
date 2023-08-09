@@ -23,7 +23,7 @@ namespace boost::async::io
 
 struct resolver
 {
-  using resolve_result = system::result<container::pmr::vector<endpoint>>;
+  using resolve_result = system::result<pmr::vector<endpoint>>;
 
   BOOST_ASYNC_DECL resolver(const async::executor & executor = this_thread::get_executor());
   BOOST_ASYNC_DECL resolver(resolver && ) = delete;

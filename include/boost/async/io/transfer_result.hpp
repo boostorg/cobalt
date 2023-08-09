@@ -133,7 +133,7 @@ struct transfer_op
   std::exception_ptr error;
   std::optional<std::tuple<system::error_code, std::size_t>> result;
   char buffer[2048];
-  std::optional<container::pmr::monotonic_buffer_resource> resource;
+  std::optional<pmr::monotonic_buffer_resource> resource;
   detail::completed_immediately_t completed_immediately = detail::completed_immediately_t::no;
 };
 

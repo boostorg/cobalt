@@ -27,7 +27,7 @@ void do_initiate(asio::ip::basic_resolver<protocol_type, executor> & resolver_,
       async::io::ip, host, service,
       asio::deferred([](system::error_code ec, results_type res)
                      {
-                       container::pmr::vector<endpoint> r{this_thread::get_allocator()};
+                       pmr::vector<endpoint> r{this_thread::get_allocator()};
                        r.assign(res.begin(), res.end());
                        return asio::deferred.values(ec, std::move(r));
                      }))(std::move(h));

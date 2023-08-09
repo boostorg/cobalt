@@ -25,8 +25,8 @@ template<buffers::const_buffer_sequence MutableBufferSequence>
 promise<transfer_result> write(random_access_device & source, std::uint64_t offset, MutableBufferSequence && buffer)
 {
   buffers::const_buffer buf[32];
-  container::pmr::monotonic_buffer_resource res{buf, sizeof(buf), this_thread::get_default_resource()};
-  container::pmr::vector<buffers::const_buffer> buf_span{buffer.begin(), buffer.end(), &res};
+  pmr::monotonic_buffer_resource res{buf, sizeof(buf), this_thread::get_default_resource()};
+  pmr::vector<buffers::const_buffer> buf_span{buffer.begin(), buffer.end(), &res};
   co_return co_await write_at(source, offset, buffers::const_buffer_span{buf_span});
 }
 

@@ -96,7 +96,7 @@ struct result_op
   std::exception_ptr error;
   std::optional<std::tuple<Error, T>> result;
   char buffer[2048];
-  std::optional<container::pmr::monotonic_buffer_resource> resource;
+  std::optional<pmr::monotonic_buffer_resource> resource;
   detail::completed_immediately_t completed_immediately = detail::completed_immediately_t::no;
 };
 
@@ -180,7 +180,7 @@ struct result_op<void, Error>
   std::exception_ptr error;
   std::optional<std::tuple<Error>> result;
   char buffer[2048];
-  std::optional<container::pmr::monotonic_buffer_resource> resource;
+  std::optional<pmr::monotonic_buffer_resource> resource;
   detail::completed_immediately_t completed_immediately = detail::completed_immediately_t::no;
 };
 
