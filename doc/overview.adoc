@@ -1,6 +1,6 @@
 = Overview
 
-Here's a list of relevant featuers in async:
+Here's a list of relevant features in async:
 
 .Coroutine types
 [cols="1,5"]
