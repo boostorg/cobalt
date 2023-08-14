@@ -44,6 +44,7 @@ struct immediate_aw
                                    &completed_immediately};
 
     auto exec = asio::get_associated_immediate_executor(ch, h.promise().get_executor());
+    completed_immediately = async::detail::completed_immediately_t::initiating;
     asio::dispatch(exec, std::move(ch));
 
     CHECK(result);

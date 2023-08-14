@@ -32,9 +32,10 @@ struct completion_handler_noop_executor : executor
   template<typename Fn>
   void execute(Fn && fn) const
   {
+    // only allow it when we're still initializing
     if (completed_immediately &&
-        //avoid recursion. i.e. don't let multiple sup operations complete immediately.
-       *completed_immediately != completed_immediately_t::maybe)
+        ((*completed_immediately == completed_immediately_t::initiating)
+      || (*completed_immediately == completed_immediately_t::maybe)))
     {
       // only use this indicator if the fn will actually call our completion-handler
       // otherwise this was a single op in a composed operation
@@ -42,7 +43,7 @@ struct completion_handler_noop_executor : executor
       fn();
       // yes means completion_handler::operator() was called, so we're good.
       if (*completed_immediately != completed_immediately_t::yes)
-        *completed_immediately = completed_immediately_t::no;
+        *completed_immediately = completed_immediately_t::initiating;
     }
     else
     {
