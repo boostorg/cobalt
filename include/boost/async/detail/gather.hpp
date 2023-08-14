@@ -12,7 +12,6 @@
 #include <boost/async/detail/exception.hpp>
 #include <boost/async/detail/fork.hpp>
 #include <boost/async/detail/forward_cancellation.hpp>
-#include <boost/async/detail/ref.hpp>
 #include <boost/async/detail/util.hpp>
 #include <boost/async/detail/wrapper.hpp>
 #include <boost/async/task.hpp>
