@@ -154,18 +154,17 @@ struct async_result<boost::async::use_op_t, void(Args...)>
     Initiation initiation;
     std::tuple<InitArgs...> args;
     template<typename Initiation_, typename ...InitArgs_>
-    op_impl(Initiation_ initiation,
+    op_impl(Initiation_ && initiation,
             InitArgs_   && ... args)
-            : initiation(std::move(initiation))
-            , args(std::move(args)...) {}
+            : initiation(std::forward<Initiation_>(initiation))
+            , args(std::forward<InitArgs_>(args)...) {}
 
     void initiate(async::completion_handler<Args...> complete) final override
     {
       std::apply(
           [&](InitArgs && ... args)
           {
-            std::move(initiation)(std::move(complete),
-                                  std::move(args)...);
+            std::move(initiation)(std::move(complete), static_cast<InitArgs&&>(args)...);
           }, std::move(args));
     }
   };
