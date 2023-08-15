@@ -82,7 +82,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 
   generator_receiver() = default;
   generator_receiver(generator_receiver && lhs)
-  : exception(std::move(lhs.exception)), done(lhs.done), awaited_from(lhs.awaited_from),
+  : exception(std::move(lhs.exception)), done(lhs.done), awaited_from(std::move(lhs.awaited_from)),
     reference(lhs.reference), cancel_signal(lhs.cancel_signal)
   {
     if (!lhs.done && !lhs.exception)

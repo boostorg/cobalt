@@ -173,6 +173,8 @@ CO_TEST_CASE("stop")
   auto g = gen_stop();
   while (g)
     co_await g;
+
+  auto gg =std::move(g);
 }
 
 TEST_SUITE_END();
