@@ -62,7 +62,7 @@ struct [[nodiscard]] promise
 
     bool attached() const {return attached_;}
     void detach() {attached_ = false;}
-    void attach() {attached_ = false;}
+    void attach() {attached_ = true;}
 
     ~promise()
     {
