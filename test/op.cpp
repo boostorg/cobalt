@@ -167,6 +167,34 @@ CO_TEST_CASE("immediate_executor")
   CHECK(called);
 }
 
+struct test_async_initiate
+{
+
+  template<typename Handler>
+  void operator()(Handler && h, std::shared_ptr<int> ptr)
+  {
+    CHECK(ptr);
+    asio::dispatch(
+        asio::get_associated_immediate_executor(
+            h, asio::get_associated_executor(h)),
+        std::move(h));
+  }
+};
+
+template<typename Token>
+auto test_async(std::shared_ptr<int> & ptr, Token && token)
+{
+  return asio::async_initiate<Token, void()>(test_async_initiate{}, token, ptr);
+}
+
+CO_TEST_CASE("no-move-from")
+{
+  std::shared_ptr<int> p = std::make_shared<int>();
+  CHECK(p);
+  co_await test_async(p, async::use_op);
+  CHECK(p);
+}
+
 
 
 

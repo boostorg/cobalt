@@ -156,8 +156,8 @@ struct async_result<boost::async::use_op_t, void(Args...)>
     template<typename Initiation_, typename ...InitArgs_>
     op_impl(Initiation_ initiation,
             InitArgs_   && ... args)
-            : initiation(std::move(initiation))
-            , args(std::move(args)...) {}
+            : initiation(std::forward<Initiation_>(initiation))
+            , args(std::forward<InitArgs_>(args)...) {}
 
     void initiate(async::completion_handler<Args...> complete) final override
     {
