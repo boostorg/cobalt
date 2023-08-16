@@ -52,12 +52,12 @@ struct use_task_t
   {
   }
 
-  /// Adapts an executor to add the @c deferred_t completion token as the
+  /// Adapts an executor to add the @c use_task_t completion token as the
   /// default.
   template <typename InnerExecutor>
   struct executor_with_default : InnerExecutor
   {
-    /// Specify @c deferred_t as the default completion token type.
+    /// Specify @c use_task_t as the default completion token type.
     typedef use_task_t default_completion_token_type;
 
     executor_with_default(const InnerExecutor& ex) noexcept
@@ -79,13 +79,13 @@ struct use_task_t
     }
   };
 
-  /// Type alias to adapt an I/O object to use @c deferred_t as its
+  /// Type alias to adapt an I/O object to use @c use_task_t as its
   /// default completion token type.
   template <typename T>
   using as_default_on_t = typename T::template rebind_executor<
       executor_with_default<typename T::executor_type> >::other;
 
-  /// Function helper to adapt an I/O object to use @c deferred_t as its
+  /// Function helper to adapt an I/O object to use @c use_task_t as its
   /// default completion token type.
   template <typename T>
   static typename std::decay_t<T>::template rebind_executor<
