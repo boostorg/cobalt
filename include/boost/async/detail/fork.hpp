@@ -87,8 +87,8 @@ struct fork
   };
   struct promise_type
   {
-    template<typename ... Rest>
-    void * operator new(const std::size_t size, shared_state & st, Rest &&...)
+    template<std::derived_from<shared_state> St, typename ... Rest>
+    void * operator new(const std::size_t size, St & st, Rest &&...)
     {
       return st.resource.allocate(size);
     }
@@ -97,8 +97,8 @@ struct fork
     void operator delete(void * raw, const std::size_t size, Rest && ...) noexcept;
     void operator delete(void * raw, const std::size_t size) noexcept {}
 
-    template<typename ... Rest>
-    promise_type(shared_state & st, Rest & ...)
+    template<std::derived_from<shared_state> St, typename ... Rest>
+    promise_type(St & st, Rest & ...)
          : state(&st)
     {
     }
