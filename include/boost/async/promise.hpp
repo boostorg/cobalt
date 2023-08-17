@@ -18,6 +18,20 @@ struct [[nodiscard]] promise
 {
     using promise_type = detail::async_promise<Return>;
 
+    template<typename ... Args>
+        requires (std::constructible_from<Return, Args...>
+              || (std::is_void_v<Return> && sizeof...(Args) == 0))
+    static promise<Return> immediate(Args && ... args)
+    {
+        detail::promise_receiver<Return> * hack1 = nullptr;
+        asio::cancellation_signal hack2;
+        detail::promise_receiver<Return> rec{hack1, hack2};
+        if constexpr (!std::is_void_v<Return>)
+            rec.result.emplace(std::forward<Args>(args)...);
+        rec.set_done();
+        return promise<Return>(std::move(rec));
+    }
+
     promise(const promise &) = delete;
     promise& operator=(const promise &) = delete;
 
@@ -74,6 +88,10 @@ struct [[nodiscard]] promise
     friend struct detail::async_promise;
 
     promise(detail::async_promise<Return> * promise) : receiver_(promise->receiver, promise->signal), attached_{true}
+    {
+    }
+
+    promise(detail::promise_receiver<Return> && rec) : receiver_(std::move(rec)), attached_{false}
     {
     }
 

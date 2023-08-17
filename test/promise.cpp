@@ -144,5 +144,17 @@ CO_TEST_CASE("stop")
         }());
 }
 
+CO_TEST_CASE("immediate")
+{
+  auto pv = async::promise<void>::immediate();
+  CHECK(pv.ready());
+  co_await pv;
+
+
+  auto pi = async::promise<int>::immediate(42);
+  CHECK(pi.ready());
+  CHECK(42 == co_await pi);
+}
+
 
 TEST_SUITE_END();
