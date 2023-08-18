@@ -13,33 +13,34 @@
 namespace boost::async
 {
 
+// tag::outline[]
 struct detached
 {
-  using promise_type = typename promise<void>::promise_type;
 
+  // movable
   detached(const detached &) = delete;
   detached& operator=(const detached &) = delete;
 
   detached(detached &&lhs) noexcept = default;
 
-  auto operator co_await () {return receiver_.get_awaitable();}
+  // enable `co_await`. <1>
+  auto operator co_await ();
 
-  void cancel(asio::cancellation_type ct = asio::cancellation_type{0b111u})
-  {
-    if (!receiver_.done && receiver_.reference == &receiver_)
-      receiver_.cancel_signal.emit(ct);
-  }
+  // Cancel the detached coroutine.
+  void cancel(asio::cancellation_type ct = asio::cancellation_type::all);
 
-  bool ready() const  { return receiver_.done; }
-  explicit operator bool () const
-  {
-    return !receiver_.done || !receiver_.result_taken;
-  }
+  // Check if the result is ready
+  bool ready() const;
+  // end::outline[]
+  /* tag::outline[]
+  // Get the return value if ready - otherwise throw
+  void get();
+     end::outline[] */
 
   void get(const boost::source_location & loc = BOOST_CURRENT_LOCATION)
   {
     if (!ready())
-      boost::throw_exception(std::logic_error("promise not ready"), loc);
+      boost::throw_exception(std::logic_error("detached not ready"), loc);
 
     receiver_.rethrow_if();
     return receiver_.get_result();
@@ -48,6 +49,7 @@ struct detached
   detached(promise<void> && promise) : receiver_(std::move(promise.receiver_))
   {
   }
+  using promise_type = typename promise<void>::promise_type;
  private:
   template<typename>
   friend struct detail::async_promise;
@@ -55,9 +57,23 @@ struct detached
 
   detail::promise_receiver<void> receiver_;
   friend struct detail::async_initiate;
+  // tag::outline[]
+
 };
+// end::outline[]
 
+inline
+bool detached::ready() const  { return receiver_.done; }
 
+inline
+auto detached::operator co_await () {return receiver_.get_awaitable();}
+
+inline
+void detached::cancel(asio::cancellation_type ct)
+{
+  if (!receiver_.done && receiver_.reference == &receiver_)
+    receiver_.cancel_signal.emit(ct);
+}
 
 }
 

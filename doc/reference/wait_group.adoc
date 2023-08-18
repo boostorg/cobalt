@@ -10,31 +10,6 @@ a `gather` function (`wait_all`) and will clean up on scope exit.
 
 [source,cpp,subs="+quotes"]
 ----
-struct wait_group
-{
-  // create a wait_group
-  wait_group(asio::cancellation_type normal_cancel = asio::cancellation_type::none,
-             asio::cancellation_type exception_cancel = asio::cancellation_type::all);
-
-  // insert a task into the group
-  void push_back(promise<void> p);
-  // wait for one task to complete.
-  __wait_one_op__ wait_one();
-  // wait for all tasks to complete
-  __wait_op__ wait();
-  // wait for all tasks to complete
-  __wait_op__ operator co_await ();
-  // when used with `with` , this will receive the exception
-  // and wait for the completion
-  // if `ep` is set, this will use the `exception_cancel` level,
-  // otherwise the `normal_cancel` to cancell all promises.
-  __wait_op__ await_exit(std::exception_ptr ep);
-  // the number of tasks in the group
-  std::size_t size() const;
-  // remove completed tasks without waiting (i.e. zombie tasks)
-  std::size_t reap()
-  // cancel all tasks
-  void cancel(asio::cancellation_type ct = asio::cancellation_type::all);
-};
+include::../../include/boost/async/wait_group.hpp[tag=outline]
 ----
 

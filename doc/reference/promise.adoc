@@ -66,35 +66,7 @@ async::promise<int> my_gen(std::allocator_arg_t, pmr::polymorphic_allocator<void
 
 [source,cpp]
 ----
-template<typename Return>
-struct [[nodiscard]] promise
-{
-  // movable
-  promise(promise &&lhs) noexcept = default;
-  promise& operator=(promise &&) noexcept = default;
-
-  // enable `co_await`. <1>
-  auto operator co_await ();
-
-  // Ignore the return value, i.e. detach it. <2>
-  void operator +() &&;
-  // Cancel the promise.
-  void cancel(asio::cancellation_type ct = asio::cancellation_type{0b111u});
-
-  // Check if the result is ready
-  bool ready() const;
-  // Check if the promise can be awaited.
-  explicit operator bool () const; // <3>
-  // Get the return value if ready - otherwise throw
-  Return get();
-
-  // Detach or attach properties
-  bool attached() const;
-  void detach();
-  void attach();
-
-  ~promise();
-};
+include::../../include/boost/async/promise.hpp[tag=outline]
 ----
 <1> Supports <<interrupt_await>>
 <2> This allows to spawn promised with a simple `+my_task()` expression.
