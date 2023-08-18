@@ -17,6 +17,8 @@ async::main co_main(int argc, char * argv[])
 {
   printf("In main 0\n");
   auto f = example(); // call and let it run until the first co_yield
+  printf("In main 1\n");
+  printf("In main %d\n", co_await f);
   printf("In main %d\n", co_await f);
   return 0;
 }
@@ -26,6 +28,7 @@ Which will generate the following output
 
  In main 0
  In coro 1
+ In main 1
  In main 2
  In coro 3
  In main 4
@@ -82,7 +85,7 @@ Which will generate the following output
 === Pro-Active mode
 
 By default, the generator is eager until the first resumption,
-and then lazily waits to be resumed. This can however be undesired,
+and then waits to be resumed. This can however be undesired,
 e.g. if the generator does some async work, like polling a website.
 
 If this is desired behaviour the generator can be set to `pro_active` mode:
@@ -96,7 +99,61 @@ This will cause the generator to `post` its own continuation onto the executor
 and thus resume when the caller suspends for some async operation.
 
 NOTE: this is inefficient for synchronous generators,
-i.e. generators that don't `co_await` between `co_yield` statements..
+i.e. generators that don't `co_await` between `co_yield` statements.
+
+[#initial]
+=== Lazy
+
+A generator can be turned lazy by awaiting initial.
+This `co_await` statement will statement will return the `Push` value.
+This means the generator will wait until it's awaited for the first time,
+and then process the newly pushed value and resume at the next co_yield.
+
+[source,cpp]
+----
+async::generator<int, int> example()
+{
+  int v = co_await async::this_coro::initial;
+  printf("In coro %d\n", v);
+  co_yield 2;
+  printf("In coro %d\n", v);
+  co_return 4;
+}
+
+async::main co_main(int argc, char * argv[])
+{
+  printf("In main 0\n");
+  auto f = example(); // call and let it run until the first co_yield
+  printf("In main 1\n"); // < this is now before the co_await initial
+  printf("In main %d\n", co_await f(1));
+  printf("In main %d\n", co_await f(3));
+  return 0;
+}
+----
+
+Which will generate the following output
+
+ In main 0
+ In main 1
+ In coro 1
+ In main 2
+ In coro 3
+ In main 4
+
+[mermaid]
+----
+sequenceDiagram
+    participant main;
+    Note left of main: "In main 0"
+    main->>+example: example()
+    Note right of example: "In coro 1"
+    example-->>main: co_yield 2
+    Note left of main: "In main 2"
+    main-->>+example: co_await f
+    Note right of example: "In coro 3"
+    example->>main: co_return 3
+    Note left of main: "In main 4"
+----
 
 [#generator-executor]
 === Executor
