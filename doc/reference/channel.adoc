@@ -6,48 +6,11 @@ on a single thread.
 
 === Outline
 
-[source,cpp, subs=+quotes]
+.channel outline
+[example]
+[source,cpp,subs=+quotes]
 ----
-template<typename T>
-struct channel
-{
-  // create a channel with a buffer limit, executor & resource.
-  channel(std::size_t limit = 0u,
-          asio::io_context::executor_type executor = this_thread::get_executor(),
-          pmr::memory_resource * resource = this_thread::get_default_resource());
-  // movable
-  channel(channel && ) = default;
-
-  /// Access the underlying executor
-  using executor_type = asio::io_context::executor_type;
-  executor_type get_executor() {return executor_;}
-
-  // Closes the channel
-  ~channel();
-  // is the channel open?
-  bool is_open() const {return !is_closed_;}
-  // close the operation, will cancel all pending ops, too
-  void close();
-
-  // an awaitable that yields T
-  using __read_op__ = __unspecified__;
-
-  // an awaitable that yields void
-  using __write_op__ = __unspecified__;
-
-  // read a value to a channel
-  __read_op__  read();
-
-  // write a value to the channel
-  __write_op__ write(const T  && value);
-  __write_op__ write(const T  &  value);
-  __write_op__ write(      T &&  value);
-  __write_op__ write(      T  &  value);
-
-  // write a value to the channel if T is void
-  __write_op__ write();
-
-};
+include::../../include/boost/async/channel.hpp[tag=outline]
 ----
 
 === Description

@@ -43,18 +43,7 @@ async::task<int> my_gen(std::allocator_arg_t, pmr::polymorphic_allocator<void> a
 
 [source,cpp]
 ----
-template<typename Return>
-struct [[nodiscard]] task
-{
-  // movable
-  task(task &&lhs) noexcept = default;
-  task& operator=(task &&) noexcept = default;
-
-  // enable `co_await` only for rvalues.
-  auto operator co_await () &&;
-
-  ~task();
-};
+include::../../include/boost/async/task.hpp[tag=outline]
 ----
 
 NOTE: Tasks can be used synchronously from a sync function by calling `run(my_task())`.

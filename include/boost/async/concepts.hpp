@@ -18,6 +18,7 @@
 namespace boost::async
 {
 
+// tag::outline[]
 template<typename Awaitable, typename Promise = void>
 concept awaitable_type = requires (Awaitable aw, std::coroutine_handle<Promise> h)
 {
@@ -31,7 +32,7 @@ concept awaitable =
         awaitable_type<Awaitable, Promise>
     || requires (Awaitable && aw) { {std::forward<Awaitable>(aw).operator co_await()} -> awaitable_type<Promise>;}
     || requires (Awaitable && aw) { {operator co_await(std::forward<Awaitable>(aw))} -> awaitable_type<Promise>;};
-
+//end::outline[]
 
 struct promise_throw_if_cancelled_base;
 template<typename Promise = void>

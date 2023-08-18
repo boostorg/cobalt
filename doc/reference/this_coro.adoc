@@ -7,39 +7,7 @@ Pseudo-awaitables:
 
 [source,cpp,subs="+quotes"]
 ----
-
-// Awaitable type that returns the executor of the current coroutine.
-struct executor_t {}
-constexpr executor_t executor;
-
-// Awaitable type that returns the cancellation state of the current coroutine.
-struct cancellation_state_t {};
-constexpr cancellation_state_t cancellation_state;
-
-// Reset the cancellation state with custom or default filters.
-constexpr __unspecified__ reset_cancellation_state();
-template<typename Filter>
-constexpr __unspecified__ reset_cancellation_state(
-    Filter && filter);
-template<typename InFilter, typename OutFilter>
-constexpr __unspecified__ reset_cancellation_state(
-    InFilter && in_filter,
-    OutFilter && out_filter);
-
-// get & set the throw_if_cancelled setting.
-__unspecified__ throw_if_cancelled();
-__unspecified__ throw_if_cancelled(bool value);
-
-// get the allocator the promise
-struct allocator_t {};
-constexpr allocator_t allocator;
-
-// get the current cancellation state-type
-struct cancelled_t {};
-constexpr cancelled_t cancelled;
-
-// set the over-eager mode of a generator
-enum class pro_active : bool {};
+include::../../include/boost/async/this_coro.hpp[tag=outline]
 ----
 
 

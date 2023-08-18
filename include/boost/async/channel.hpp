@@ -26,22 +26,28 @@ namespace boost::async
 template<typename T>
 struct channel_reader;
 
+// tag::outline[]
 template<typename T>
 struct channel
 {
+  // create a channel with a buffer limit, executor & resource.
   channel(std::size_t limit = 0u,
           executor executor = this_thread::get_executor(),
-          pmr::memory_resource * resource = this_thread::get_default_resource())
-            : buffer_(limit, resource), executor_(executor) {}
+          pmr::memory_resource * resource = this_thread::get_default_resource());
+
+  // movable
   channel(channel && ) = default;
 
   using executor_type = executor;
-  const executor_type & get_executor() {return executor_;}
+  const executor_type & get_executor();
 
+  // Closes the channel
   ~channel();
-  bool is_open() const {return !is_closed_;}
+  bool is_open() const;
+  // close the operation, will cancel all pending ops, too
   void close();
 
+  // end::outline[]
  private:
   boost::circular_buffer<T, pmr::polymorphic_allocator<T>> buffer_;
   executor_type executor_;
@@ -121,7 +127,30 @@ struct channel
   {
     return write_op{{}, this, &value, loc};
   }
+  /*
+  // tag::outline[]
+  // an awaitable that yields T
+  using __read_op__ = __unspecified__;
+
+  // an awaitable that yields void
+  using __write_op__ = __unspecified__;
+
+  // read a value to a channel
+  __read_op__  read();
+
+  // write a value to the channel
+  __write_op__ write(const T  && value);
+  __write_op__ write(const T  &  value);
+  __write_op__ write(      T &&  value);
+  __write_op__ write(      T  &  value);
+
+  // write a value to the channel if T is void
+  __write_op__ write();  // end::outline[]
+   */
+  // tag::outline[]
+
 };
+// end::outline[]
 
 template<>
 struct channel<void>

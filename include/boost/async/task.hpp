@@ -18,21 +18,23 @@
 namespace boost::async
 {
 
+// tag::outline[]
 template<typename Return>
 struct [[nodiscard]] task
 {
-    using promise_type = detail::task_promise<Return>;
-
-    task(const task &) = delete;
-    task& operator=(const task &) = delete;
-
     task(task &&lhs) noexcept = default;
     task& operator=(task &&) noexcept = default;
 
-    auto operator co_await () {return receiver_.get_awaitable();}
+    // enable `co_await`
+    auto operator co_await ();
 
-    ~task() {}
-  private:
+    // end::outline[]
+    task(const task &) = delete;
+    task& operator=(const task &) = delete;
+
+    using promise_type = detail::task_promise<Return>;
+
+ private:
     template<typename>
     friend struct detail::task_promise;
 
@@ -42,7 +44,9 @@ struct [[nodiscard]] task
 
     detail::task_receiver<Return> receiver_;
     friend struct detail::async_initiate;
+    // tag::outline[]
 };
+// end::outline[]
 
 
 struct use_task_t
@@ -101,6 +105,9 @@ struct use_task_t
 };
 
 constexpr use_task_t use_task{};
+
+template<typename T>
+inline auto task<T>::operator co_await () {return receiver_.get_awaitable();}
 
 }
 

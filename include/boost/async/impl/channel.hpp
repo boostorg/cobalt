@@ -15,6 +15,20 @@
 namespace boost::async
 {
 
+template<typename T>
+inline channel<T>::channel(
+    std::size_t limit,
+    executor executor,
+    pmr::memory_resource * resource)
+    : buffer_(limit, resource), executor_(executor) {}
+
+
+template<typename T>
+auto channel<T>::get_executor() -> const executor_type &  {return executor_;}
+
+template<typename T>
+bool channel<T>::is_open() const {return !is_closed_;}
+
 
 template<typename T>
 channel<T>::~channel()

@@ -125,37 +125,7 @@ async::generator<int> my_gen(std::allocator_arg_t, pmr::polymorphic_allocator<vo
 
 [source,cpp,subs=+quotes]
 ----
-template<typename Yield, typename Push = void>
-struct [[nodiscard]] generator
-{
-  // Movable
-  generator(generator &&lhs) noexcept = default;
-  generator& operator=(generator &&) noexcept = default;
-
-  // True until it co_returns & is co_awaited after <1>
-  explicit operator bool() const;
-
-  // Cancel the generator. <3>
-  void cancel(asio::cancellation_type ct = asio::cancellation_type::all);
-
-  // Check if a value is available
-  bool ready() const;
-
-  // Get the return value. Throws if not `ready`.
-  Yield get();
-  // Cancel & detach the generator.
-  ~generator();
-
-  // an awaitable that results in value of `Yield`.
-  using __generator_awaitable__ = __unspecified__;
-
-  // Present when `Push` != `void`
-  __generator_awaitable__ operator()(      Push && push);
-  __generator_awaitable__ operator()(const Push &  push);
-
-  // Present when `Push` == `void`, i.e. can `co_await` the generator directly.
-  __generator_awaitable__ operator co_await (); // <2>
-}
+include::../../include/boost/async/generator.hpp[tag=outline]
 ----
 <1> This allows code like `while (gen) co_await gen:`
 <2> Supports <<interrupt_await>>
