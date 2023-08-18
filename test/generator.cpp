@@ -19,6 +19,25 @@
 using namespace boost;
 
 
+template<typename ... Ts>
+struct doctest::StringMaker<variant2::variant<Ts...>>
+{
+  static String convert(const variant2::variant<Ts...> & v)
+  {
+    String init = doctest::toString(v.index());
+    init += ":";
+    init += variant2::visit(
+        []<typename T>(const T& value)
+        {
+          return doctest::toString(value);
+        }, v);
+    return init;
+  }
+
+
+};
+
+
 TEST_SUITE_BEGIN("generator");
 
 async::generator<int> gen()
@@ -97,6 +116,20 @@ async::generator<int> delay_gen(std::chrono::milliseconds tick)
   co_return 10;
 }
 
+async::generator<int> lazy_delay_gen(std::chrono::milliseconds tick)
+{
+  co_await async::this_coro::initial;
+  asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::steady_clock::now()};
+  for (int i = 0; i < 10; i ++)
+  {
+    co_await tim.async_wait(async::use_op);
+    tim.expires_at(tim.expiry() + tick);
+    co_yield i;
+  }
+  co_return 10;
+}
+
+
 #if !defined(BOOST_ASYNC_NO_SELF_DELETE)
 
 CO_TEST_CASE("generator-left_select")
@@ -106,36 +139,68 @@ CO_TEST_CASE("generator-left_select")
   co_await tim.async_wait(async::use_op);
   auto g2 = delay_gen(std::chrono::milliseconds(100));
 
-  std::vector<std::size_t> seq{
-    0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1
-  };
+  using v = variant2::variant<int, int>;
+  auto v1 = [](int value) -> v {return v{variant2::in_place_index<0u>, value};};
+  auto v2 = [](int value) -> v {return v{variant2::in_place_index<1u>, value};};
 
-  std::vector<std::size_t> num{
-    0, 0, 1, 1, 2, 3, 2, 4, 5, 3, 6, 7, 4, 8, 9, 10
-  };
+  CHECK(v1(0) == co_await left_select(g1, g2));
+  CHECK(v2(0) == co_await left_select(g1, g2));
+  CHECK(v2(1) == co_await left_select(g1, g2));
+  CHECK(v1(1) == co_await left_select(g1, g2));
+  CHECK(v2(2) == co_await left_select(g1, g2));
+  CHECK(v2(3) == co_await left_select(g1, g2));
+  CHECK(v1(2) == co_await left_select(g1, g2));
+  CHECK(v2(4) == co_await left_select(g1, g2));
+  CHECK(v2(5) == co_await left_select(g1, g2));
+  CHECK(v1(3) == co_await left_select(g1, g2));
+  CHECK(v2(6) == co_await left_select(g1, g2));
+  CHECK(v2(7) == co_await left_select(g1, g2));
+  CHECK(v1(4) == co_await left_select(g1, g2));
+  CHECK(v2(8) == co_await left_select(g1, g2));
+  CHECK(v2(9) == co_await left_select(g1, g2));
+  CHECK(v2(10) == co_await left_select(g1, g2));
 
-  auto itr = seq.begin();
-  auto ntr = num.begin();
 
-  while (g1 && g2)
-  {
-    auto r =  co_await left_select(g1, g2);
-    REQUIRE(itr != seq.end());
-    REQUIRE(ntr != num.end());
-    CHECK(r.index() == *itr++);
-    visit(
-        [&](int i)
-        {
-          CHECK(i == *ntr++);
-        }, r);
-  }
-  CHECK(itr == seq.end());
-  CHECK(ntr == num.end());
   CHECK(!g2);
   g1.cancel();
   CHECK_THROWS(co_await g1);
-  co_return ;
 }
+
+
+CO_TEST_CASE("lazy-generator-left_select")
+{
+  asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::milliseconds(50)};
+  auto g1 = lazy_delay_gen(std::chrono::milliseconds(200));
+  co_await tim.async_wait(async::use_op);
+  auto g2 = lazy_delay_gen(std::chrono::milliseconds(100));
+
+  using v = variant2::variant<int, int>;
+  auto v1 = [](int value) -> v {return v{variant2::in_place_index<0u>, value};};
+  auto v2 = [](int value) -> v {return v{variant2::in_place_index<1u>, value};};
+
+  CHECK(v1(0) == co_await left_select(g1, g2));
+  CHECK(v2(0) == co_await left_select(g1, g2));
+  CHECK(v2(1) == co_await left_select(g1, g2));
+  CHECK(v2(2) == co_await left_select(g1, g2));
+  CHECK(v1(1) == co_await left_select(g1, g2));
+  CHECK(v2(3) == co_await left_select(g1, g2));
+  CHECK(v2(4) == co_await left_select(g1, g2));
+  CHECK(v1(2) == co_await left_select(g1, g2));
+  CHECK(v2(5) == co_await left_select(g1, g2));
+  CHECK(v2(6) == co_await left_select(g1, g2));
+  CHECK(v1(3) == co_await left_select(g1, g2));
+  CHECK(v2(7) == co_await left_select(g1, g2));
+  CHECK(v2(8) == co_await left_select(g1, g2));
+  CHECK(v1(4) == co_await left_select(g1, g2));
+  CHECK(v2(9) == co_await left_select(g1, g2));
+  CHECK(v2(10) == co_await left_select(g1, g2));
+
+
+  CHECK(!g2);
+  g1.cancel();
+  CHECK_THROWS(co_await g1);
+}
+
 #endif
 
 async::generator<int> gshould_unwind(asio::io_context & ctx)
@@ -172,6 +237,30 @@ CO_TEST_CASE("stop")
   auto g = gen_stop();
   while (g)
     co_await g;
+
+  auto gg =std::move(g);
+}
+
+async::generator<int, int> eager()
+{
+  int i = co_await async::this_coro::initial;
+  CHECK_THROWS(co_await async::this_coro::pro_active{true});
+  for (; i < 10; i += co_yield i);
+
+  co_return i;
+}
+
+
+CO_TEST_CASE("eager")
+{
+  auto g = eager();
+
+
+  CHECK(2 == co_await g(2));
+  CHECK(6 == co_await g(4));
+  CHECK(9 == co_await g(3));
+  CHECK(15 == co_await g(6));
+  CHECK(!g);
 
   auto gg =std::move(g);
 }

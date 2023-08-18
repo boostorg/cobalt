@@ -179,10 +179,11 @@ struct task_receiver : task_value_holder<T>
 
     void interrupt_await() &
     {
-      if (!self || !self->awaited_from)
+      if (!self)
         return ;
       self->exception = detached_exception();
-      std::coroutine_handle<void>::from_address(self->awaited_from.release()).resume();
+      if (self->awaited_from)
+        std::coroutine_handle<void>::from_address(self->awaited_from.release()).resume();
     }
   };
 

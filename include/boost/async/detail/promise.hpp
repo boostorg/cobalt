@@ -156,6 +156,9 @@ struct promise_receiver : promise_value_holder<T>
       if (self->done) // ok, so we're actually done already, so noop
         return false;
 
+      if (ex)
+        return false;
+
       if (self->awaited_from != nullptr) // we're already being awaited, that's an error!
       {
         ex = already_awaited();
@@ -182,10 +185,11 @@ struct promise_receiver : promise_value_holder<T>
 
     void interrupt_await() &
     {
-      if (!self || !self->awaited_from)
+      if (!self)
         return ;
-      self->exception = detached_exception();
-      std::coroutine_handle<void>::from_address(self->awaited_from.release()).resume();
+      ex = detached_exception();
+      if (self->awaited_from)
+        std::coroutine_handle<void>::from_address(self->awaited_from.release()).resume();
     }
   };
 

@@ -69,14 +69,14 @@ template<typename Yield, typename Push>
 struct generator_receiver : generator_receiver_base<Yield, Push>
 {
   std::exception_ptr exception;
-  std::optional<Yield> result;
-  Yield get_result() {return *std::exchange(result, std::nullopt);}
+  std::optional<Yield> result, result_buffer;
+  Yield get_result() {return *std::exchange(result, std::exchange(result_buffer, std::nullopt));}
   bool done = false;
   std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
   std::unique_ptr<generator_promise<Yield, Push>,
                   detail::coro_deleter<generator_promise<Yield, Push>>> yield_from{nullptr};
 
-  bool pro_active = false;
+  bool pro_active = false, lazy = false;
 
   bool ready() { return exception || result || done; }
 
@@ -116,7 +116,14 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
   template<typename T>
   void yield_value( T&& t)
   {
-    result.emplace(std::forward<T>(t));
+    if (!result)
+      result.emplace(std::forward<T>(t));
+    else
+    {
+      BOOST_ASSERT(!result_buffer);
+      result_buffer.emplace(std::forward<T>(t));
+    }
+
   }
 
   struct awaitable
@@ -141,7 +148,8 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 
     bool await_ready() const
     {
-       return self->ready();
+        assert(!ex);
+        return self->ready();
     }
 
     template<typename Promise>
@@ -150,11 +158,12 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
       if (self->done) // ok, so we're actually done already, so noop
         return std::noop_coroutine();
 
-      if (self->awaited_from != nullptr) // generator already being awaited, that's an error!
-      {
+
+      if (!ex && self->awaited_from != nullptr) // generator already being awaited, that's an error!
           ex = already_awaited();
-          return h;
-      }
+
+      if (ex)
+        return h;
 
       if constexpr (requires (Promise p) {p.get_cancellation_slot();})
         if ((cl = h.promise().get_cancellation_slot()).is_connected())
@@ -165,6 +174,21 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
       std::coroutine_handle<void> res = std::noop_coroutine();
       if (self->yield_from != nullptr)
         res = std::coroutine_handle<generator_promise<Yield, Push>>::from_promise(*self->yield_from.release());
+
+      if ((to_push.index() > 0) && !self->pushed_value && self->lazy)
+      {
+        if constexpr (std::is_void_v<Push>)
+          self->pushed_value = true;
+        else
+        {
+          if (to_push.index() == 1)
+            self->pushed_value.emplace(std::move(*variant2::get<1>(to_push)));
+          else
+            self->pushed_value.emplace(std::move(*variant2::get<2>(to_push)));
+        }
+        to_push = variant2::monostate{};
+      }
+
       return std::coroutine_handle<void>::from_address(res.address());
     }
 
@@ -179,18 +203,20 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
       if (!self->result)
         boost::throw_exception(std::logic_error("async::generator returned"), BOOST_CURRENT_LOCATION);
 
-      BOOST_ASSERT(to_push.index() > 0u);
-
-      if constexpr (std::is_void_v<Push>)
-        self->pushed_value = true;
-      else
+      if (to_push.index() > 0)
       {
-        if (to_push.index() == 1)
-          self->pushed_value.emplace(std::move(*variant2::get<1>(to_push)));
+        BOOST_ASSERT(!self->pushed_value);
+        if constexpr (std::is_void_v<Push>)
+          self->pushed_value = true;
         else
-          self->pushed_value.emplace(std::move(*variant2::get<2>(to_push)));
+        {
+          if (to_push.index() == 1)
+            self->pushed_value.emplace(std::move(*variant2::get<1>(to_push)));
+          else
+            self->pushed_value.emplace(std::move(*variant2::get<2>(to_push)));
+        }
+        to_push = variant2::monostate{};
       }
-      to_push = variant2::monostate{};
 
       // now we also want to resume the coroutine, so it starts work
       if (self->yield_from != nullptr && self->pro_active)
@@ -209,10 +235,12 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 
     void interrupt_await() &
     {
-      if (!self || !self->awaited_from)
+      if (!self)
         return ;
-      self->exception = detached_exception();
-      std::coroutine_handle<void>::from_address(self->awaited_from.release()).resume();
+      ex = detached_exception();
+
+      if (self->awaited_from)
+        std::coroutine_handle<void>::from_address(self->awaited_from.release()).resume();
     }
   };
 
@@ -328,7 +356,8 @@ struct generator_promise
 
   generator_receiver<Yield, Push>* receiver{nullptr};
 
-  auto await_transform(this_coro::pro_active val)
+  auto await_transform(this_coro::pro_active val,
+                       const boost::source_location & loc = BOOST_CURRENT_LOCATION)
   {
     struct awaitable
     {
@@ -343,7 +372,23 @@ struct generator_promise
       }
     };
 
+    if (receiver->lazy && static_cast<bool>(val))
+      throw_exception(std::logic_error("lazy generator cannot be pro_active"), loc);
+
     return awaitable{receiver, static_cast<bool>(val)};
+  }
+
+
+  auto await_transform(this_coro::initial_t val)
+  {
+    if(receiver)
+    {
+      receiver->lazy = true;
+      receiver->pro_active = false;
+      return receiver->get_yield_awaitable();
+    }
+    else
+      return generator_receiver<Yield, Push>::terminator();
   }
 
   template<typename Yield_>
@@ -351,6 +396,7 @@ struct generator_promise
   {
     if(receiver)
     {
+      // if this is lazy, there might still be a value in there.
       receiver->yield_value(std::forward<Yield_>(ret));
       return receiver->get_yield_awaitable();
     }
