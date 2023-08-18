@@ -43,6 +43,27 @@ struct finalizer_test
     }
 };
 
+struct value_finalizer_test
+{
+  using executor_type = boost::async::executor ;
+  executor_type exec;
+  executor_type get_executor()
+  {
+    return exec;
+  }
+
+  bool exit_called = false;
+  std::exception_ptr e;
+
+  auto exit(std::exception_ptr ee)
+  {
+    exit_called = true;
+    CHECK(!ee);
+    return asio::post(exec, boost::async::use_op);
+  }
+
+};
+
 CO_TEST_CASE("sync")
 {
     finalizer_test ft{co_await boost::async::this_coro::executor};
@@ -82,6 +103,46 @@ CO_TEST_CASE("async")
 
 
     CHECK(ft.e != nullptr);
+}
+
+CO_TEST_CASE("sync-int")
+{
+  value_finalizer_test ft{co_await boost::async::this_coro::executor};
+
+  CHECK(23 ==
+      co_await boost::async::with (
+          &ft,
+          [](value_finalizer_test * ft)
+          {
+              return 23;
+          },
+          [](value_finalizer_test * ft, std::exception_ptr e)
+          {
+            return ft->exit(e);
+          }));
+
+
+  CHECK(ft.e == nullptr);
+}
+
+CO_TEST_CASE("async-int")
+{
+  value_finalizer_test ft{co_await boost::async::this_coro::executor};
+
+  CHECK(
+      42 ==
+      co_await boost::async::with (
+          &ft,
+          [](value_finalizer_test * ft) -> boost::async::promise<int>
+          {
+            co_return 42;
+          },
+          [](value_finalizer_test * ft, std::exception_ptr e)
+          {
+            return ft->exit(e);
+          }));
+
+  CHECK(ft.e == nullptr);
 }
 
 

@@ -13,6 +13,7 @@
 namespace boost::async::detail
 {
 
+template<typename T>
 struct [[nodiscard]] with_impl
 {
     struct promise_type;
@@ -21,15 +22,41 @@ struct [[nodiscard]] with_impl
 
     template<typename Promise>
     BOOST_NOINLINE auto await_suspend(std::coroutine_handle<Promise> h) -> std::coroutine_handle<promise_type>;
-    inline void await_resume();
+    inline T await_resume();
 
   private:
     with_impl(promise_type & promise) : promise(promise) {}
     promise_type & promise;
 };
 
-struct with_impl::promise_type
-        : enable_awaitables<promise_type>,
+template<typename T>
+struct with_promise_value
+{
+  std::optional<T> result;
+
+  void return_value(std::optional<T> && value)
+  {
+    result = std::move(value);
+  }
+
+  T get_result()
+  {
+    return std::move(result).value();
+  }
+};
+
+template<>
+struct with_promise_value<void>
+{
+  void return_void() {}
+  void get_result() {}
+};
+
+
+template<typename T>
+struct with_impl<T>::promise_type
+        : with_promise_value<T>,
+          enable_awaitables<promise_type>,
           enable_await_allocator<promise_type>
 {
     using enable_awaitables<promise_type>::await_transform;
@@ -44,8 +71,6 @@ struct with_impl::promise_type
     {
         return with_impl{*this};
     }
-
-    void return_void() {}
 
     std::exception_ptr e;
     void unhandled_exception()
@@ -84,16 +109,30 @@ struct with_impl::promise_type
 
 };
 
-void with_impl::await_resume()
+template<typename T>
+T with_impl<T>::await_resume()
 {
     auto e = promise.e;
+    auto res = std::move(promise.get_result());
     std::coroutine_handle<promise_type>::from_promise(promise).destroy();
     if (e)
         std::rethrow_exception(e);
+
+    return std::move(res);
 }
 
+template<>
+inline void with_impl<void>::await_resume()
+{
+  auto e = promise.e;
+  std::coroutine_handle<promise_type>::from_promise(promise).destroy();
+  if (e)
+    std::rethrow_exception(e);
+}
+
+template<typename T>
 template<typename Promise>
-auto with_impl::await_suspend(std::coroutine_handle<Promise> h) -> std::coroutine_handle<promise_type>
+auto with_impl<T>::await_suspend(std::coroutine_handle<Promise> h) -> std::coroutine_handle<promise_type>
 {
     if constexpr (requires (Promise p) {p.get_executor();})
         promise.exec.emplace(h.promise().get_executor());
