@@ -29,6 +29,7 @@ include::tutorial/delay.adoc[]
 include::tutorial/echo_server.adoc[]
 include::tutorial/ticker.adoc[]
 include::tutorial/delay_op.adoc[]
+include::tutorial/push_generator.adoc[]
 
 = Design
 
