@@ -27,7 +27,7 @@ inline std::mt19937 &random_device()
 }
 
 }
-
+// tag::concept[]
 template<typename G>
   concept uniform_random_bit_generator =
     requires ( G & g)
@@ -39,6 +39,8 @@ template<typename G>
       {std::decay_t<G>::max()} -> std::same_as<typename std::decay_t<G>::result_type>;
       {g()} -> std::same_as<typename std::decay_t<G>::result_type>;
     } && (std::decay_t<G>::max() > std::decay_t<G>::min());
+
+// end::concept[]
 
 
 template<asio::cancellation_type Ct = asio::cancellation_type::all,

@@ -82,3 +82,39 @@ The `left_select` functions are like `select` but follow a strict left-to-right 
 This can lead to starvation issues, which is why this is not the recommended default, but can
 be useful for prioritization if proper care is taken.
 
+
+[#select-outline]
+=== `Outline`
+
+[source,cpp,subs=+quotes]
+----
+// Concept for the random number generator.
+include::../../include/boost/async/select.hpp[tag=concept]
+
+// Variadic select with a custom random number generator
+template<asio::cancellation_type Ct = asio::cancellation_type::all,
+         uniform_random_bit_generator URBG, awaitable ... Promise>
+__awaitable__ select(URBG && g, Promise && ... p);
+
+// Ranged select with a custom random number generator
+template<asio::cancellation_type Ct = asio::cancellation_type::all,
+         uniform_random_bit_generator URBG, range<awaitable> PromiseRange>
+__awaitable__ select(URBG && g, PromiseRange && p);
+
+// Variadic select with the default random number generator
+template<asio::cancellation_type Ct = asio::cancellation_type::all, awaitable... Promise>
+__awaitable__ select(Promise && ... p);
+
+// Ranged select with the default random number generator
+template<asio::cancellation_type Ct = asio::cancellation_type::all, range<awaitable>>
+__awaitable__ select(PromiseRange && p);
+
+// Variadic left select
+template<asio::cancellation_type Ct = asio::cancellation_type::all, awaitable... Promise>
+__awaitable__ left_select(Promise && ... p);
+
+// Ranged left select
+template<asio::cancellation_type Ct = asio::cancellation_type::all, range<awaitable>>
+__awaitable__ left_select(PromiseRange && p);
+----
+

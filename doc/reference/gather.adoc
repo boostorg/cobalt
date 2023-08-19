@@ -45,3 +45,17 @@ std::vector<promise<int>> piv;
 pmr::vector<system::result<int>> r4 = co_await gather(piv);
 ----
 
+
+[#gather-outline]
+=== `Outline`
+
+[source,cpp,subs=+quotes]
+----
+// Variadic gather
+template<asio::cancellation_type Ct = asio::cancellation_type::all, awaitable... Promise>
+__awaitable__ gather(Promise && ... p);
+
+// Ranged gather
+template<asio::cancellation_type Ct = asio::cancellation_type::all, range<awaitable>>
+__awaitable__ gather(PromiseRange && p);
+----

@@ -45,3 +45,17 @@ std::vector<promise<int>> piv;
 pmr::vector<int> r2 = co_await join(piv);
 ----
 
+
+[#join-outline]
+=== `Outline`
+
+[source,cpp,subs=+quotes]
+----
+// Variadic join
+template<asio::cancellation_type Ct = asio::cancellation_type::all, awaitable... Promise>
+__awaitable__ join(Promise && ... p);
+
+// Ranged join
+template<asio::cancellation_type Ct = asio::cancellation_type::all, range<awaitable>>
+__awaitable__ join(PromiseRange && p);
+----
