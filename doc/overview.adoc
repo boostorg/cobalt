@@ -5,16 +5,16 @@ Here's a list of relevant featuers in async:
 .Coroutine types
 [cols="1,5"]
 |===
-|<<promise>>
+|<<promise,promise>>
 |An eager coroutine returning a single result- consider it the default
 
-|<<generator>>
+|<<generator,generator>>
 |An eager coroutine that can yield multiple values.
 
-|<<task>>
-|A lazy version of <<promise>>
+|<<task,task>>
+|A lazy version of <<promise,promise>>
 
-|<<detached>>
+|<<detached,detached>>
 |A coroutine similar to promise, without a handle
 
 |===
@@ -23,28 +23,28 @@ Here's a list of relevant featuers in async:
 .Synchronization Functions
 [cols="1,5"]
 |===
-|<<select>>
+|<<select,select>>
 |A function that waits for one coroutine out of a set that is ready in a pseudo-random way, to avoid starvation.
 
-|<<join>>
+|<<join,join>>
 |A function that waits for a set of coroutines and returns all of them as value or throws an exception if any awaitable does so.
 
 
-|<<gather>>
+|<<gather,gather>>
 |A function that waits for a set of coroutines and returns all of them as `result`, capturing all exceptions individually.
 
-|<<left_select>>
+|<<left_select,left_select>>
 |A deterministic `select` that evaluates left-to-right.
 |===
 
 .Utilities
 [cols="1,5"]
 |===
-|<<channel>>
+|<<channel,channel>>
 |A thread-local utility to send values between coroutines.
 
 
-|<<with>>
+|<<with,with>>
 |An async RAII helper, that allows async teardown when exceptions occur
 
 |===
