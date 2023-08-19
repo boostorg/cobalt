@@ -69,7 +69,4 @@ include::benchmarks.adoc[]
 
 include::compiler.adoc[]
 
-[index]
-== Index
-
 :leveloffset: -1
