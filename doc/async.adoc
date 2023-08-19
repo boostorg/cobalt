@@ -13,9 +13,6 @@ Version 0.1, 29.01.2023
 
 :leveloffset: +1
 
-WARNING: Some if not all MSVC versions have a broken coroutine implementation,
-that this library needs to workaround. This may cause non-deterministic behaviour and overhead.
-
 
 include::overview.adoc[]
 include::motivation.adoc[]
@@ -25,7 +22,6 @@ include::motivation.adoc[]
 include::primer/coroutines.adoc[]
 include::primer/awaitables.adoc[]
 include::primer/event-loops.adoc[]
-
 
 = Tutorial
 
@@ -71,6 +67,7 @@ include::background/lazy_eager.adoc[]
 
 include::benchmarks.adoc[]
 
+include::compiler.adoc[]
 
 [index]
 == Index

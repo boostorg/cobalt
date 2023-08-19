@@ -1,11 +1,9 @@
 # boost.async
 
-**All MSVC versions as June 2023 have a broken coroutine implementation, that causes UB (double deletes).
-This library works around that using more posts, which can cause slight differences in behaviour and overhead.**
-
 ** This is not yet an official boost library. **
 
-This library provides a set of easy to use coroutine primitives & utilities for Boost.ASIO. A minimum of Boost 1.82 is necessary as the ASIO in that version has needed support. C++ 20 is needed for C++ coroutines.
+This library provides a set of easy to use coroutine primitives & utilities runing on top of boost.asio.
+A minimum of Boost 1.82 is necessary as the ASIO in that version has needed support. C++ 20 is needed for C++ coroutines.
 
 The assumptions are:
 
