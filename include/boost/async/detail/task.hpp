@@ -92,7 +92,7 @@ struct task_receiver : task_value_holder<T>
   }
 
   bool done = false;
-  std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
+  unique_handle<void> awaited_from{nullptr};
 
   void set_done()
   {
@@ -183,7 +183,7 @@ struct task_receiver : task_value_holder<T>
         return ;
       self->exception = detached_exception();
       if (self->awaited_from)
-        std::coroutine_handle<void>::from_address(self->awaited_from.release()).resume();
+        self->awaited_from.release().resume();
     }
   };
 
@@ -195,7 +195,7 @@ struct task_receiver : task_value_holder<T>
   void interrupt_await() &
   {
     exception = detached_exception();
-    std::coroutine_handle<void>::from_address(awaited_from.release()).resume();
+    awaited_from.release().resume();
   }
 };
 
@@ -305,7 +305,7 @@ struct task_promise
       {
         std::coroutine_handle<void> res = std::noop_coroutine();
         if (promise->receiver && promise->receiver->awaited_from.get() != nullptr)
-          res = std::coroutine_handle<void>::from_address(promise->receiver->awaited_from.release());
+          res = promise->receiver->awaited_from.release();
 
 
         if (auto & rec = h.promise().receiver; rec != nullptr)

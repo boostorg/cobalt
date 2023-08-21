@@ -51,7 +51,7 @@ void channel<T>::close()
     op.unlink();
     op.cancelled = true;
     op.cancel_slot.clear();
-    asio::post(executor_, [&op]{std::coroutine_handle<void>::from_address(op.awaited_from.release()).resume(); });
+    asio::post(executor_, std::move(op.awaited_from));
   }
   while (!write_queue_.empty())
   {
@@ -59,7 +59,7 @@ void channel<T>::close()
     op.unlink();
     op.cancelled = true;
     op.cancel_slot.clear();
-    asio::post(executor_, [&op]{std::coroutine_handle<void>::from_address(op.awaited_from.release()).resume(); });
+    asio::post(executor_, std::move(op.awaited_from));
   }
 }
 
@@ -75,10 +75,7 @@ struct  channel<T>::read_op::cancel_impl
     op->unlink();
     asio::post(
         op->chn->executor_,
-        [h = std::move(op->awaited_from)]() mutable
-        {
-          std::coroutine_handle<void>::from_address(h.release()).resume();
-        });
+        std::move(op->awaited_from));
   }
 };
 
@@ -112,12 +109,8 @@ std::coroutine_handle<void> channel<T>::read_op::await_suspend(std::coroutine_ha
     else
       direct = *variant2::get<1>(op.ref);
     BOOST_ASSERT(op.awaited_from);
-    asio::post(chn->executor_,
-               [h = std::move(awaited_from)]() mutable
-               {
-                 std::coroutine_handle<void>::from_address(h.release()).resume();
-               });
-    return std::coroutine_handle<void>::from_address(op.awaited_from.release());
+    asio::post(chn->executor_, std::move(awaited_from));
+    return op.awaited_from.release();
   }
 }
 
@@ -142,12 +135,7 @@ T channel<T>::read_op::await_resume()
     {
       op.transactional_unlink();
       BOOST_ASSERT(op.awaited_from);
-      asio::post(
-          chn->executor_,
-          [h = std::move(op.awaited_from)]() mutable
-          {
-            std::coroutine_handle<void>::from_address(h.release()).resume();
-          });
+      asio::post(chn->executor_, std::move(op.awaited_from));
     }
   }
 
@@ -164,11 +152,7 @@ struct channel<T>::write_op::cancel_impl
     op->cancelled = true;
     op->unlink();
     asio::post(
-        op->chn->executor_,
-        [h = std::move(op->awaited_from)]() mutable
-        {
-          std::coroutine_handle<void>::from_address(h.release()).resume();
-        });
+        op->chn->executor_, std::move(op->awaited_from));
   }
 };
 
@@ -201,13 +185,9 @@ std::coroutine_handle<void> channel<T>::write_op::await_suspend(std::coroutine_h
 
     BOOST_ASSERT(op.awaited_from);
     direct = true;
-    asio::post(chn->executor_,
-               [h = std::move(awaited_from)]() mutable
-               {
-                 std::coroutine_handle<void>::from_address(h.release()).resume();
-               });
+    asio::post(chn->executor_, std::move(awaited_from));
 
-    return std::coroutine_handle<void>::from_address(op.awaited_from.release());
+    return op.awaited_from.release();
   }
 }
 
@@ -237,12 +217,7 @@ void channel<T>::write_op::await_resume()
     {
       op.transactional_unlink();
       BOOST_ASSERT(op.awaited_from);
-      asio::post(
-          chn->executor_,
-          [h = std::move(op.awaited_from)]() mutable
-          {
-            std::coroutine_handle<void>::from_address(h.release()).resume();
-          });
+      asio::post(chn->executor_, std::move(op.awaited_from));
     }
   }
 
@@ -257,12 +232,7 @@ struct channel<void>::read_op::cancel_impl
   {
     op->cancelled = true;
     op->unlink();
-    asio::post(
-        op->chn->executor_,
-        [h = std::move(op->awaited_from)]() mutable
-        {
-          std::coroutine_handle<void>::from_address(h.release()).resume();
-        });
+    asio::post(op->chn->executor_, std::move(op->awaited_from));
   }
 };
 
@@ -275,11 +245,7 @@ struct channel<void>::write_op::cancel_impl
     op->cancelled = true;
     op->unlink();
     asio::post(
-          op->chn->executor_,
-          [h = std::move(op->awaited_from)]() mutable
-          {
-            std::coroutine_handle<void>::from_address(h.release()).resume();
-          });
+          op->chn->executor_, std::move(op->awaited_from));
   }
 };
 
@@ -308,12 +274,8 @@ std::coroutine_handle<void> channel<void>::read_op::await_suspend(std::coroutine
     op.direct = true;
     BOOST_ASSERT(op.awaited_from);
     direct = true;
-    asio::post(chn->executor_,
-      [h = std::move(awaited_from)]() mutable
-      {
-        std::coroutine_handle<void>::from_address(h.release()).resume();
-      });
-    return std::coroutine_handle<void>::from_address(op.awaited_from.release());
+    asio::post(chn->executor_, std::move(awaited_from));
+    return op.awaited_from.release();
   }
 }
 
@@ -342,13 +304,8 @@ std::coroutine_handle<void> channel<void>::write_op::await_suspend(std::coroutin
     op.direct = true;
     BOOST_ASSERT(op.awaited_from);
     direct = true;
-    asio::post(chn->executor_,
-               [h = std::move(awaited_from)]() mutable
-               {
-                 std::coroutine_handle<void>::from_address(h.release()).resume();
-               });
-
-    return std::coroutine_handle<void>::from_address(op.awaited_from.release());
+    asio::post(chn->executor_, std::move(awaited_from));
+    return op.awaited_from.release();
   }
 }
 

@@ -9,6 +9,7 @@
 #include <boost/async/detail/await_result_helper.hpp>
 #include <boost/async/detail/util.hpp>
 #include <boost/async/this_thread.hpp>
+#include <boost/async/unique_handle.hpp>
 
 #include <boost/asio/cancellation_signal.hpp>
 #include <boost/intrusive_ptr.hpp>
@@ -33,7 +34,7 @@ struct fork
 
     }
     // the coro awaiting the fork statement, e.g. awaiting select
-    std::unique_ptr<void, coro_deleter<>> coro;
+    unique_handle<void> coro;
     std::size_t use_count = 0u;
 
     friend void intrusive_ptr_add_ref(shared_state * st) {st->use_count++;}
@@ -55,7 +56,6 @@ struct fork
       return *exec;
     }
   };
-
 
   template<typename std::size_t BufferSize>
   struct static_shared_state : private std::array<char, BufferSize>, shared_state
@@ -141,7 +141,7 @@ struct fork
           pp->use_count--;
           BOOST_ASSERT(pp->use_count == 0u);
           if (pp->coro)
-            return std::coroutine_handle<void>::from_address(pp->coro.release());
+            return pp->coro.release();
           else
             return std::noop_coroutine();
         }
@@ -231,18 +231,18 @@ struct fork
 
   [[nodiscard]] bool done() const
   {
-    return ! handle_ ||  std::coroutine_handle<promise_type>::from_promise(*handle_).done();
+    return ! handle_ ||  handle_.done();
   }
 
   auto release() -> std::coroutine_handle<promise_type>
   {
-    return std::coroutine_handle<promise_type>::from_promise(*handle_.release());
+    return handle_.release();
   }
 
   private:
   fork(promise_type * pt) : handle_(pt) {}
 
-  std::unique_ptr<promise_type, coro_deleter<promise_type>> handle_;
+  unique_handle<promise_type> handle_;
 
 };
 

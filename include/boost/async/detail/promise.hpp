@@ -12,6 +12,7 @@
 #include <boost/async/detail/forward_cancellation.hpp>
 #include <boost/async/detail/wrapper.hpp>
 #include <boost/async/detail/this_thread.hpp>
+#include <boost/async/unique_handle.hpp>
 
 #include <boost/asio/cancellation_signal.hpp>
 
@@ -96,7 +97,7 @@ struct promise_receiver : promise_value_holder<T>
   }
 
   bool done = false;
-  std::unique_ptr<void, detail::coro_deleter<>>  awaited_from{nullptr};
+  unique_handle<void>  awaited_from{nullptr};
 
   void set_done()
   {
@@ -189,7 +190,7 @@ struct promise_receiver : promise_value_holder<T>
         return ;
       ex = detached_exception();
       if (self->awaited_from)
-        std::coroutine_handle<void>::from_address(self->awaited_from.release()).resume();
+        self->awaited_from.release().resume();
     }
   };
 
@@ -202,7 +203,7 @@ struct promise_receiver : promise_value_holder<T>
   void interrupt_await() &
   {
     exception = detached_exception();
-    std::coroutine_handle<void>::from_address(awaited_from.release()).resume();
+    awaited_from.release().resume();
   }
 };
 
@@ -291,7 +292,7 @@ struct async_promise
       {
         std::coroutine_handle<void> res = std::noop_coroutine();
         if (promise->receiver && promise->receiver->awaited_from.get() != nullptr)
-          res = std::coroutine_handle<void>::from_address(promise->receiver->awaited_from.release());
+          res = promise->receiver->awaited_from.release();
 
 
         if (auto &rec = h.promise().receiver; rec != nullptr)

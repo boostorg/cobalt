@@ -12,6 +12,7 @@
 #include <boost/async/detail/exception.hpp>
 #include <boost/async/detail/forward_cancellation.hpp>
 #include <boost/async/detail/this_thread.hpp>
+#include <boost/async/unique_handle.hpp>
 #include <boost/async/detail/wrapper.hpp>
 
 #include <boost/asio/bind_allocator.hpp>
@@ -72,9 +73,8 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
   std::optional<Yield> result, result_buffer;
   Yield get_result() {return *std::exchange(result, std::exchange(result_buffer, std::nullopt));}
   bool done = false;
-  std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
-  std::unique_ptr<generator_promise<Yield, Push>,
-                  detail::coro_deleter<generator_promise<Yield, Push>>> yield_from{nullptr};
+  unique_handle<void> awaited_from{nullptr};
+  unique_handle<generator_promise<Yield, Push>> yield_from{nullptr};
 
   bool lazy = false;
 
@@ -173,7 +173,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 
       std::coroutine_handle<void> res = std::noop_coroutine();
       if (self->yield_from != nullptr)
-        res = std::coroutine_handle<generator_promise<Yield, Push>>::from_promise(*self->yield_from.release());
+        res = self->yield_from.release();
 
       if ((to_push.index() > 0) && !self->pushed_value && self->lazy)
       {
@@ -188,7 +188,6 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
         }
         to_push = variant2::monostate{};
       }
-
       return std::coroutine_handle<void>::from_address(res.address());
     }
 
@@ -223,11 +222,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
       {
         auto exec = self->yield_from->get_executor();
         asio::post(
-            std::move(exec),
-            [h = std::exchange(self->yield_from, nullptr)]() mutable
-            {
-              std::coroutine_handle<generator_promise<Yield, Push>>::from_promise(*h.release()).resume();
-            });
+            std::move(exec), std::exchange(self->yield_from, nullptr));
       }
 
       return self->get_result();
@@ -240,14 +235,14 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
       ex = detached_exception();
 
       if (self->awaited_from)
-        std::coroutine_handle<void>::from_address(self->awaited_from.release()).resume();
+        self->awaited_from.release().resume();
     }
   };
 
   void interrupt_await() &
   {
     exception = detached_exception();
-    std::coroutine_handle<void>::from_address(awaited_from.release()).resume();
+    awaited_from.release().resume();
   }
 
   void rethrow_if()
@@ -306,7 +301,7 @@ struct generator_promise
       {
         std::coroutine_handle<void> res = std::noop_coroutine();
         if (generator->receiver && generator->receiver->awaited_from.get() != nullptr)
-          res = std::coroutine_handle<void>::from_address(generator->receiver->awaited_from.release());
+          res = generator->receiver->awaited_from.release();
         if (generator->receiver)
             generator->receiver->done = true;
 
@@ -430,7 +425,7 @@ struct generator_yield_awaitable
     }
     std::coroutine_handle<void> res = std::noop_coroutine();
     if (self->awaited_from.get() != nullptr)
-      res = std::coroutine_handle<void>::from_address(self->awaited_from.release());
+      res = self->awaited_from.release();
     self->yield_from.reset(&h.promise());
     return res;
   }
@@ -465,9 +460,9 @@ struct generator_yield_awaitable<Yield, void>
     }
     std::coroutine_handle<void> res = std::noop_coroutine();
     if (self->awaited_from.get() != nullptr)
-      res = std::coroutine_handle<void>::from_address(self->awaited_from.release());
+      res = self->awaited_from.release();
     self->yield_from.reset(&h.promise());
-    return std::coroutine_handle<>::from_address(res.address());
+    return res;
   }
 
   void await_resume()

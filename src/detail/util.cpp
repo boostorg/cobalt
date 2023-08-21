@@ -19,7 +19,7 @@ void self_destroy(std::coroutine_handle<void> h, const async::executor & exec) n
   asio::post(exec,
               asio::bind_allocator(
                  this_thread::get_allocator(),
-                 [del=std::unique_ptr<void, coro_deleter<void>>(h.address())]() mutable
+                 [del=unique_handle<void>(h.address())]() mutable
                  {
                  }));
 }
