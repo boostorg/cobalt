@@ -68,11 +68,8 @@ struct cancelled_t {};
 constexpr cancelled_t cancelled;
 
 // set the over-eager mode of a generator
-enum class pro_active : bool {};
-
 struct initial_t {};
 constexpr initial_t initial;
-
 //end::outline[]
 
 template<typename CancellationSlot = asio::cancellation_slot>

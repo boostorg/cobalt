@@ -12,6 +12,8 @@ using namespace boost;
 #include "doctest.h"
 #include "test.hpp"
 
+TEST_SUITE_BEGIN("fork");
+
 struct tester : async::detail::fork::shared_state
 {
   char buf[4096];
@@ -37,3 +39,5 @@ CO_TEST_CASE("fork")
   CHECK(!x.done());
   co_return;
 }
+
+TEST_SUITE_END();

@@ -76,7 +76,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
   std::unique_ptr<generator_promise<Yield, Push>,
                   detail::coro_deleter<generator_promise<Yield, Push>>> yield_from{nullptr};
 
-  bool pro_active = false, lazy = false;
+  bool lazy = false;
 
   bool ready() { return exception || result || done; }
 
@@ -219,7 +219,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
       }
 
       // now we also want to resume the coroutine, so it starts work
-      if (self->yield_from != nullptr && self->pro_active)
+      if (self->yield_from != nullptr && !self->lazy)
       {
         auto exec = self->yield_from->get_executor();
         asio::post(
@@ -356,35 +356,11 @@ struct generator_promise
 
   generator_receiver<Yield, Push>* receiver{nullptr};
 
-  auto await_transform(this_coro::pro_active val,
-                       const boost::source_location & loc = BOOST_CURRENT_LOCATION)
-  {
-    struct awaitable
-    {
-      generator_receiver<Yield, Push>* r;
-      bool pro_active ;
-      bool await_ready() {return true;}
-      void await_suspend(std::coroutine_handle<>) const {BOOST_ASSERT(!"Must not be called");}
-      void await_resume() const
-      {
-        if (r)
-          r->pro_active = this->pro_active;
-      }
-    };
-
-    if (receiver->lazy && static_cast<bool>(val))
-      throw_exception(std::logic_error("lazy generator cannot be pro_active"), loc);
-
-    return awaitable{receiver, static_cast<bool>(val)};
-  }
-
-
   auto await_transform(this_coro::initial_t val)
   {
     if(receiver)
     {
       receiver->lazy = true;
-      receiver->pro_active = false;
       return receiver->get_yield_awaitable();
     }
     else
@@ -431,7 +407,10 @@ template<typename Yield, typename Push>
 struct generator_yield_awaitable
 {
   generator_receiver<Yield, Push> * self;
-  constexpr bool await_ready() { return self && self->pushed_value && !self->result; }
+  constexpr bool await_ready() const
+  {
+    return self && self->pushed_value && !self->result;
+  }
 
   std::coroutine_handle<void> await_suspend(std::coroutine_handle<generator_promise<Yield, Push>> h)
   {

@@ -46,8 +46,7 @@ include::../../example/ticker.cpp[tag=ws_upgrade]
 <2> Perform the websocket handshake.
 
 Once the websocket is connected, we want to continuously receive json messages,
-for which a generator is a good choice. Note that we'll set it to <<pro_active,pro_active>> so it
-eagerly resumes after a `co_yield`.
+for which a generator is a good choice.
 
 .example/ticker.cpp json_read
 [example]
@@ -55,10 +54,9 @@ eagerly resumes after a `co_yield`.
 ----
 include::../../example/ticker.cpp[tag=json_reader]
 ----
-<1> Set to proactive
-<2> Keep running as long as the socket is open
-<3> Read a frame from the websocket
-<4> Parse & `co_yield` it as an object.
+<1> Keep running as long as the socket is open
+<2> Read a frame from the websocket
+<3> Parse & `co_yield` it as an object.
 
 This then needs to be connected to subscriber, for which we'll utilize channels to pass raw json.
 To make life-time management easy, the subscriber will hold a `shared_ptr`, and the producer a `weak_ptr`.

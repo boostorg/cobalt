@@ -21,6 +21,8 @@
 
 namespace async = boost::async;
 
+TEST_SUITE_BEGIN("any_completion_token");
+
 void async_sleep_impl(
     boost::asio::any_completion_handler<void(boost::system::error_code)> handler,
     boost::asio::any_io_executor ex,
@@ -51,3 +53,5 @@ CO_TEST_CASE("sleep_any_cpl_token")
 {
   co_await async_sleep(co_await async::this_coro::executor, std::chrono::milliseconds(1), async::use_op);
 }
+
+TEST_SUITE_END();
