@@ -238,13 +238,6 @@ struct py_awaitable
 
   py::object result;
   py::object exception;
-  struct coro_deleter
-  {
-    void operator()(void * p)
-    {
-      std::coroutine_handle<void>::from_address(p).destroy();
-    }
-  };
   constexpr bool await_ready() noexcept {return false;}
 
   template<typename T>
@@ -262,18 +255,13 @@ struct py_awaitable
     struct wrapper
     {
       asio::any_io_executor exec;
-      mutable std::unique_ptr<void, coro_deleter> awaiter;
+      mutable async::unique_handle<void> awaiter;
       py_awaitable * res;
 
       void operator()(py::object t) const
       {
         res->extract_result(t);
-        asio::dispatch(
-            exec,
-            [h = std::move(awaiter)]() mutable
-            {
-                std::coroutine_handle<void>::from_address(h.release()).resume();
-            });
+        asio::dispatch(exec, std::move(awaiter));
       }
     };
 
@@ -285,7 +273,7 @@ struct py_awaitable
 
     getattr(task, "add_done_callback")(py::cpp_function(wrapper{
           std::move(exec),
-          std::unique_ptr<void, coro_deleter>{h.address()},
+          async::unique_handle<void>{h.address()},
           this
         }));
 

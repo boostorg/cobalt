@@ -23,7 +23,7 @@ thread_promise::thread_promise()
 
 void run_thread(
     std::shared_ptr<thread_state> st,
-    std::unique_ptr<thread_promise, coro_deleter<thread_promise>> h)
+    unique_handle<thread_promise> h)
 {
 
   pmr::unsynchronized_pool_resource resource;
@@ -39,7 +39,7 @@ void run_thread(
       [st, h = std::move(h)]() mutable
       {
         std::lock_guard<std::mutex> lock{h->mtx};
-        std::coroutine_handle<thread_promise>::from_promise(*h.release()).resume();
+        std::move(h).resume();
       });
 
   std::exception_ptr ep;
@@ -68,7 +68,7 @@ boost::async::thread detail::thread_promise::get_return_object()
   auto st = std::make_shared<thread_state>();
   boost::async::thread res{std::thread{
       [st,
-       h = std::unique_ptr<thread_promise, coro_deleter<thread_promise>>(this)]() mutable
+       h = unique_handle<detail::thread_promise>::from_promise(*this)]() mutable
       {
         run_thread(std::move(st), std::move(h));
       }

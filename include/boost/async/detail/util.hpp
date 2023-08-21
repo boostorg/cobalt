@@ -100,39 +100,6 @@ constexpr decltype(auto) get_last_variadic(First &&, Args  && ... args)
     return get_last_variadic(static_cast<Args>(args)...);
 }
 
-template<typename Promise = void>
-struct coro_deleter
-{
-    coro_deleter() = default;
-    void operator()(Promise * c)
-    {
-        std::coroutine_handle<Promise>::from_promise(*c).destroy();
-    }
-};
-
-
-template<>
-struct coro_deleter<void>
-{
-    coro_deleter() = default;
-
-    void operator()(void* c)
-    {
-        std::coroutine_handle<void>::from_address(c).destroy();
-    }
-};
-
-template<>
-struct coro_deleter<std::noop_coroutine_promise>
-{
-    coro_deleter() = default;
-
-    void operator()(std::noop_coroutine_promise*)
-    {
-
-    }
-};
-
 template<typename Awaitable>
 auto get_resume_result(Awaitable & aw) -> system::result<decltype(aw.await_resume()), std::exception_ptr>
 {

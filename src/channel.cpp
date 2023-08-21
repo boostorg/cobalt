@@ -6,6 +6,7 @@
 //
 
 #include <boost/async/channel.hpp>
+#include <boost/asio/defer.hpp>
 
 namespace boost::async
 {
@@ -29,7 +30,7 @@ void channel<void>::close()
     op.unlink();
     op.cancelled = true;
     op.cancel_slot.clear();
-    asio::post(executor_, [&op]{std::coroutine_handle<void>::from_address(op.awaited_from.release()).resume(); });
+    asio::defer(executor_, std::move(op.awaited_from));
   }
   while (!write_queue_.empty())
   {
@@ -37,7 +38,7 @@ void channel<void>::close()
     op.unlink();
     op.cancelled = true;
     op.cancel_slot.clear();
-    asio::post(executor_, [&op]{std::coroutine_handle<void>::from_address(op.awaited_from.release()).resume(); });
+    asio::defer(executor_, std::move(op.awaited_from));
   }
 }
 
@@ -60,11 +61,7 @@ void channel<void>::read_op::await_resume()
       op.unlink();
       BOOST_ASSERT(op.awaited_from);
       asio::post(
-          chn->executor_,
-          [h = std::move(op.awaited_from)]() mutable
-          {
-            std::coroutine_handle<void>::from_address(h.release()).resume();
-          });
+          chn->executor_, std::move(op.awaited_from));
     }
   }
 }
@@ -87,11 +84,7 @@ void channel<void>::write_op::await_resume()
       op.unlink();
       BOOST_ASSERT(op.awaited_from);
       asio::post(
-          chn->executor_,
-          [h = std::move(op.awaited_from)]() mutable
-          {
-            std::coroutine_handle<void>::from_address(h.release()).resume();
-          });
+          chn->executor_, std::move(op.awaited_from));
     }
   }
 }

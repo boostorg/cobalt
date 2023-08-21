@@ -9,6 +9,7 @@
 #define BOOST_ASYNC_CHANNEL_HPP
 
 #include <boost/async/this_thread.hpp>
+#include <boost/async/unique_handle.hpp>
 #include <boost/async/detail/util.hpp>
 
 #include <boost/asio/cancellation_signal.hpp>
@@ -60,7 +61,7 @@ struct channel
     bool cancelled = false;
     std::optional<T> direct{};
     asio::cancellation_slot cancel_slot{};
-    std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
+    unique_handle<void> awaited_from{nullptr};
     void (*begin_transaction)(void*) = nullptr;
 
     void transactional_unlink()
@@ -87,7 +88,7 @@ struct channel
     bool cancelled = false, direct = false;
     asio::cancellation_slot cancel_slot{};
 
-    std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
+    unique_handle<void> awaited_from{nullptr};
     void (*begin_transaction)(void*) = nullptr;
 
     void transactional_unlink()
@@ -180,7 +181,7 @@ struct channel<void>
     boost::source_location loc;
     bool cancelled = false, direct = false;
     asio::cancellation_slot cancel_slot{};
-    std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
+    unique_handle<void> awaited_from{nullptr};
     void (*begin_transaction)(void*) = nullptr;
 
     void transactional_unlink()
@@ -205,7 +206,7 @@ struct channel<void>
     boost::source_location loc;
     bool cancelled = false, direct = false;
     asio::cancellation_slot cancel_slot{};
-    std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
+    unique_handle<void> awaited_from{nullptr};
     void (*begin_transaction)(void*) = nullptr;
 
     void transactional_unlink()

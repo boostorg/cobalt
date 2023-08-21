@@ -6,6 +6,7 @@
 #define BOOST_ASYNC_HANDLER_HPP
 
 #include <boost/async/this_coro.hpp>
+#include <boost/async/unique_handle.hpp>
 #include <boost/async/detail/util.hpp>
 
 #include <boost/asio/bind_allocator.hpp>
@@ -210,7 +211,7 @@ struct completion_handler : detail::completion_handler_base
           return;
         }
 
-        std::coroutine_handle<void>::from_address(p).resume();
+        std::move(p)();
     }
     using result_type = std::optional<std::tuple<Args...>>;
 
@@ -222,7 +223,7 @@ struct completion_handler : detail::completion_handler_base
         self.release();
     }
  private:
-    std::unique_ptr<void, detail::coro_deleter<void>> self;
+    unique_handle<void> self;
     std::optional<std::tuple<Args...>> &result;
 };
 
