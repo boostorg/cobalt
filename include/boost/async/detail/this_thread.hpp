@@ -19,7 +19,7 @@ namespace boost::async::detail
 inline executor
 extract_executor(executor exec) { return exec; }
 
-#if defined(BOOST_ASYNC_CUSTOM_EXECUTOR)
+#if defined(BOOST_ASYNC_CUSTOM_EXECUTOR) && defined(BOOST_ASYNC_USE_IO_CONTEXT)
 executor
 extract_executor(asio::any_io_executor exec);
 #endif

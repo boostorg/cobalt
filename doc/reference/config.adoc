@@ -10,6 +10,9 @@ The executor type defaults to `boost::asio::any_io_executor`.
 You can set it to `boost::asio::any_io_executor` by defining `BOOST_ASYNC_CUSTOM_EXECUTOR`
 and adding a `boost::async::executor` type yourself.
 
+Alternatively, `BOOST_ASYNC_USE_IO_CONTEXT` can be defined
+to set the executor to `boost::asio::io_context::executor_type`.
+
 === pmr
 
 Boost.async can be used with different pmr implementations, defaulting to `std::pmr`.
@@ -19,6 +22,7 @@ The following macros can be used to configure it:
  - `BOOST_ASYNC_USE_STD_PMR`
  - `BOOST_ASYNC_USE_BOOST_CONTAINER_PMR`
  - `BOOST_ASYNC_USE_CUSTOM_PMR`
+
 
 If you define `BOOST_ASYNC_USE_CUSTOM_PMR` you will need to provide a `boost::async::pmr` namespace,
 that is a drop-in replacement for `std::pmr`.

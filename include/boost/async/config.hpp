@@ -20,7 +20,9 @@
 #define BOOST_ASYNC_DECL
 #endif
 
-#if !defined(BOOST_ASYNC_CUSTOM_EXECUTOR)
+#if defined(BOOST_ASYNC_USE_IO_CONTEXT)
+# include <boost/asio/io_context.hpp>
+#elif !defined(BOOST_ASYNC_CUSTOM_EXECUTOR)
 # include <boost/asio/any_io_executor.hpp>
 #endif
 
@@ -55,7 +57,9 @@
 namespace boost::async
 {
 
-#if !defined(BOOST_ASYNC_CUSTOM_EXECUTOR)
+#if defined(BOOST_ASYNC_USE_IO_CONTEXT)
+using executor = boost::asio::io_context::executor_type;
+#elif !defined(BOOST_ASYNC_CUSTOM_EXECUTOR)
 using executor = boost::asio::any_io_executor;
 #endif
 
