@@ -26,9 +26,11 @@ void run_thread(
     unique_handle<thread_promise> h)
 {
 
+#if !defined(BOOST_ASYNC_NO_PMR)
   pmr::unsynchronized_pool_resource resource;
   boost::async::this_thread::set_default_resource(&resource);
   h->resource = &resource;
+#endif
 
   h->reset_cancellation_source(st->signal.slot());
   h->set_executor(st->ctx.get_executor());

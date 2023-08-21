@@ -17,10 +17,11 @@ project : requirements
 ;
 
 
-feature.feature boost.async.pmr : std boost-container custom : propagated composite ;
+feature.feature boost.async.pmr : std boost-container custom no : propagated composite ;
 feature.compose <boost.async.pmr>std             : <define>BOOST_ASYNC_USE_STD_PMR=1 ;
 feature.compose <boost.async.pmr>boost-container : <define>BOOST_ASYNC_USE_BOOST_CONTAINER_PMR=1 ;
 feature.compose <boost.async.pmr>custom          : <define>BOOST_ASYNC_USE_CUSTOM_PMR=1 ;
+feature.compose <boost.async.pmr>no              : <define>BOOST_ASYNC_NO_PMR=1 ;
 
 feature.feature boost.async.executor : any_io_executor use_io_context custom : propagated composite ;
 feature.compose <boost.async.executor>any_io_executor : ;

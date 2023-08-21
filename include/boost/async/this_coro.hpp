@@ -329,6 +329,7 @@ struct promise_throw_if_cancelled_base
 
 struct promise_memory_resource_base
 {
+#if !defined(BOOST_ASYNC_NO_PMR)
     using allocator_type = pmr::polymorphic_allocator<void>;
     allocator_type get_allocator() const {return allocator_type{resource};}
 
@@ -352,6 +353,7 @@ struct promise_memory_resource_base
 
 private:
     pmr::memory_resource * resource = this_thread::get_default_resource();
+#endif
 };
 
 /// Allocate the memory and put the allocator behind the async memory

@@ -115,7 +115,6 @@ struct select_variadic_impl
     std::array<interruptible_base*, tuple_size> working;
 
     std::size_t index{std::numeric_limits<std::size_t>::max()};
-    pmr::polymorphic_allocator<void> alloc{&this->resource};
 
     constexpr static bool all_void = (std::is_void_v<co_await_result_t<Args>> && ... );
     std::optional<variant2::variant<void_as_monostate<co_await_result_t<Args>>...>> result;
@@ -254,7 +253,7 @@ struct select_variadic_impl
     template<typename H>
     auto await_suspend(std::coroutine_handle<H> h)
     {
-      this->exec = &get_executor(h);
+      this->exec = &async::detail::get_executor(h);
       last_forked.release().resume();
 
       if (!this->outstanding_work()) // already done, resume rightaway.
@@ -329,9 +328,9 @@ struct select_ranged_impl
 
     std::exception_ptr error;
 
+#if !defined(BOOST_ASYNC_NO_PMR)
     pmr::monotonic_buffer_resource res;
     pmr::polymorphic_allocator<void> alloc{&resource};
-
 
     Range &aws;
 
@@ -352,6 +351,29 @@ struct select_ranged_impl
     pmr::vector<std::size_t> reorder{std::size(aws), alloc};
     pmr::vector<asio::cancellation_signal> cancel_{std::size(aws), alloc};
     pmr::vector<asio::cancellation_signal*> cancel{std::size(aws), alloc};
+
+#else
+    Range &aws;
+
+    struct dummy
+    {
+      template<typename ... Args>
+      dummy(Args && ...) {}
+    };
+
+    std::conditional_t<traits::interruptible,
+        std::vector<std::decay_t<typename traits::actual_awaitable>*>,
+    dummy> working{std::size(aws), std::allocator<void>()};
+
+    /* all below `reorder` is reordered
+     *
+     * cancel[idx] is for aws[reorder[idx]]
+    */
+    std::vector<std::size_t> reorder{std::size(aws), std::allocator<void>()};
+    std::vector<asio::cancellation_signal> cancel_{std::size(aws), std::allocator<void>()};
+    std::vector<asio::cancellation_signal*> cancel{std::size(aws), std::allocator<void>()};
+
+#endif
 
     bool has_result() const {return index != std::numeric_limits<std::size_t>::max(); }
 

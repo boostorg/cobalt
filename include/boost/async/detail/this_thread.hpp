@@ -35,6 +35,7 @@ executor get_executor_from_args(Args &&... args)
     return extract_executor(std::get<I + 1u>(std::tie(args...)));
 }
 
+#if !defined(BOOST_ASYNC_NO_PMR)
 template<typename ... Args>
 pmr::memory_resource * get_memory_resource_from_args(Args &&... args)
 {
@@ -56,6 +57,7 @@ pmr::memory_resource * get_memory_resource_from_args_global(Args &&... args)
   else  //
     return std::get<I + 1u>(std::tie(args...)).resource();
 }
+#endif
 
 }
 

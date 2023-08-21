@@ -82,11 +82,13 @@ struct thread_promise : signal_helper_2,
   using executor_type = typename async::executor;
   const executor_type & get_executor() const {return *exec_;}
 
+#if !defined(BOOST_ASYNC_NO_PMR)
   using allocator_type = pmr::polymorphic_allocator<void>;
   using resource_type  = pmr::unsynchronized_pool_resource;
 
   resource_type * resource;
   allocator_type  get_allocator() const { return allocator_type(resource); }
+#endif
 
   using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
   using promise_throw_if_cancelled_base::await_transform;

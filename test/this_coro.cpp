@@ -40,10 +40,12 @@ struct coro_feature_tester
   void unhandled_exception() {throw;}
   void get_return_object() {}
 
+#if !defined(BOOST_ASYNC_NO_PMR)
   async::pmr::unsynchronized_pool_resource res;
   using allocator_type = async::pmr::polymorphic_allocator<void>;
   allocator_type get_allocator() {return alloc;}
   allocator_type alloc{&res};
+#endif
 };
 
 
@@ -124,11 +126,12 @@ SELF_TEST_CASE("promise_throw_if_cancelled_base")
   CHECK(!co_await asio::this_coro::throw_if_cancelled());
 }
 
-
+#if !defined(BOOST_ASYNC_NO_PMR)
 SELF_TEST_CASE("enable_await_allocator")
 {
   CHECK(this_->get_allocator() == co_await async::this_coro::allocator);
 }
+#endif
 
 
 TEST_SUITE_END();

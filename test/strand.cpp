@@ -39,14 +39,18 @@ TEST_CASE("strand")
 
   asio::io_context ctx;
   asio::any_io_executor exec{asio::make_strand(ctx.get_executor())};
+#if !defined(BOOST_ASYNC_NO_PMR)
   async::pmr::synchronized_pool_resource sync;
+#endif
 
   for (int i = 0; i < 8; i++)
     ths.push_back(
         std::thread{
           [&]
           {
+#if !defined(BOOST_ASYNC_NO_PMR)
             async::this_thread::set_default_resource(&sync);
+#endif
             async::this_thread::set_executor(exec);
             +do_the_thing();
             ctx.run();

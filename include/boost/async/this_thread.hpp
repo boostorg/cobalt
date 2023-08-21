@@ -17,9 +17,11 @@
 namespace boost::async::this_thread
 {
 
+#if !defined(BOOST_ASYNC_NO_PMR)
 BOOST_ASYNC_DECL pmr::memory_resource* get_default_resource() noexcept;
 BOOST_ASYNC_DECL pmr::memory_resource* set_default_resource(pmr::memory_resource* r) noexcept;
 BOOST_ASYNC_DECL pmr::polymorphic_allocator<void> get_allocator();
+#endif
 
 BOOST_ASYNC_DECL
 executor & get_executor(

@@ -32,8 +32,10 @@ struct doctest::StringMaker<std::exception_ptr>
 inline void test_run(boost::async::task<void> (*func) ())
 {
   using namespace boost;
+#if !defined(BOOST_ASYNC_NO_PMR)
   async::pmr::unsynchronized_pool_resource res;
   async::this_thread::set_default_resource(&res);
+#endif
   {
     asio::io_context ctx;
     async::this_thread::set_executor(ctx.get_executor());
@@ -58,7 +60,9 @@ inline void test_run(boost::async::task<void> (*func) ())
           ctx.run_one();
       }
   }
+#if !defined(BOOST_ASYNC_NO_PMR)
   async::this_thread::set_default_resource(async::pmr::get_default_resource());
+#endif
 }
 
 // tag::test_case_macro[]

@@ -40,7 +40,9 @@ struct immediate_aw
   bool await_suspend(std::coroutine_handle<T> h)
   {
     async::completion_handler<> ch{h, result,
+#if !defined(BOOST_ASYNC_NO_PMR)
                                    async::this_thread::get_default_resource(),
+#endif
                                    &completed_immediately};
 
     auto exec = asio::get_associated_immediate_executor(ch, h.promise().get_executor());
@@ -72,7 +74,9 @@ struct non_immediate_aw
   bool await_suspend(std::coroutine_handle<T> h)
   {
     async::completion_handler<> ch{h, result,
+#if !defined(BOOST_ASYNC_NO_PMR)
                                    async::this_thread::get_default_resource(),
+#endif
                                    &completed_immediately};
 
     auto exec = asio::get_associated_immediate_executor(ch, h.promise().get_executor());

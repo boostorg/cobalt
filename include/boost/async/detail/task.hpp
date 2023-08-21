@@ -268,7 +268,9 @@ struct task_promise
 
   template<typename ... Args>
   task_promise(Args & ...args)
-      : promise_memory_resource_base(detail::get_memory_resource_from_args_global(args...))
+#if !defined(BOOST_ASYNC_NO_PMR)
+    : promise_memory_resource_base(detail::get_memory_resource_from_args_global(args...))
+#endif
   {
     this->reset_cancellation_source(signal.slot());
   }

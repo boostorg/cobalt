@@ -33,8 +33,12 @@ struct async_initiate
           asio::get_associated_immediate_executor(h, exec),
           asio::append(std::forward<Handler>(h), rec.exception, rec.exception ? T() : rec.get_result()));
 
+#if !defined(BOOST_ASYNC_NO_PMR)
     auto dalloc = pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()};
     auto alloc = asio::get_associated_allocator(h, dalloc);
+#else
+    auto alloc = asio::get_associated_allocator(h);
+#endif
     auto recs = allocate_unique<detail::task_receiver<T>>(alloc, std::move(rec));
 
     auto sl = asio::get_associated_cancellation_slot(h);
@@ -76,7 +80,12 @@ struct async_initiate
           asio::get_associated_immediate_executor(h, exec),
           asio::append(std::forward<Handler>(h), a.receiver_.exception));
 
+
+#if !defined(BOOST_ASYNC_NO_PMR)
     auto alloc = asio::get_associated_allocator(h, pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()});
+#else
+    auto alloc = asio::get_associated_allocator(h);
+#endif
     auto recs = allocate_unique<detail::task_receiver<void>>(alloc, std::move(a.receiver_));
 
     if (recs->done)

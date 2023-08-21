@@ -16,7 +16,8 @@ namespace boost::async
 template<typename T>
 T run(task<T> t)
 {
-    pmr::unsynchronized_pool_resource root_resource{this_thread::get_default_resource()};
+#if !defined(BOOST_ASYNC_NO_PMR)
+  pmr::unsynchronized_pool_resource root_resource{this_thread::get_default_resource()};
     struct reset_res
     {
         void operator()(pmr::memory_resource * res)
@@ -26,6 +27,7 @@ T run(task<T> t)
     };
     std::unique_ptr<pmr::memory_resource, reset_res> pr{
             boost::async::this_thread::set_default_resource(&root_resource)};
+#endif
     std::future<T> f;
     {
       asio::io_context ctx{BOOST_ASIO_CONCURRENCY_HINT_1};

@@ -153,7 +153,7 @@ struct gather_variadic_impl
     template<typename H>
     auto await_suspend(std::coroutine_handle<H> h)
     {
-      this->exec = &get_executor(h);
+      this->exec = &async::detail::get_executor(h);
       last_forked.release().resume();
       while (last_index < tuple_size)
         impls[last_index++](*this).release();
@@ -224,14 +224,24 @@ struct gather_ranged_impl
   struct awaitable : fork::shared_state
   {
     using type = std::decay_t<decltype(*std::begin(std::declval<Range>()))>;
+#if !defined(BOOST_ASYNC_NO_PMR)
     pmr::polymorphic_allocator<void> alloc{&resource};
-
     std::conditional_t<awaitable_type<type>, Range &,
                        pmr::vector<co_awaitable_type<type>>> aws;
 
     pmr::vector<bool> ready{std::size(aws), alloc};
     pmr::vector<asio::cancellation_signal> cancel{std::size(aws), alloc};
     pmr::vector<result_storage_type> result{cancel.size(), alloc};
+
+#else
+    std::allocator<void> alloc{};
+    std::conditional_t<awaitable_type<type>, Range &,
+        std::vector<co_awaitable_type<type>>> aws;
+
+    std::vector<bool> ready{std::size(aws), alloc};
+    std::vector<asio::cancellation_signal> cancel{std::size(aws), alloc};
+    std::vector<result_storage_type> result{cancel.size(), alloc};
+#endif
 
 
     awaitable(Range & aws_, std::false_type /* needs operator co_await */)
@@ -352,9 +362,14 @@ struct gather_ranged_impl
       return true;
     }
 
-    pmr::vector<result_type> await_resume()
+    auto await_resume()
     {
+#if !defined(BOOST_ASYNC_NO_PMR)
       pmr::vector<result_type> res{result.size(), this_thread::get_allocator()};
+#else
+      std::vector<result_type> res(result.size());
+#endif
+
       std::transform(
           result.begin(), result.end(), res.begin(),
           [](result_storage_type & res) -> result_type

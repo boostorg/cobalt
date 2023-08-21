@@ -15,13 +15,20 @@
 namespace boost::async
 {
 
+#if !defined(BOOST_ASYNC_NO_PMR)
 template<typename T>
 inline channel<T>::channel(
     std::size_t limit,
     executor executor,
     pmr::memory_resource * resource)
     : buffer_(limit, resource), executor_(executor) {}
-
+#else
+template<typename T>
+inline channel<T>::channel(
+    std::size_t limit,
+    executor executor)
+    : buffer_(limit), executor_(executor) {}
+#endif
 
 template<typename T>
 auto channel<T>::get_executor() -> const executor_type &  {return executor_;}
