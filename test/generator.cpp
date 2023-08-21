@@ -73,7 +73,6 @@ CO_TEST_CASE("generator-int")
 
 async::generator<int, int> gen_push()
 {
-  co_await async::this_coro::pro_active(true);
   int val = 1u;
   for (int i = 0; i < 10; i++)
   {
@@ -219,7 +218,6 @@ TEST_CASE("unwind")
 
 async::generator<int> gen_stop()
 {
-  co_await async::this_coro::pro_active(true);
   int val = 1u;
   for (int i = 0; i < 10; i++)
   {
@@ -244,7 +242,6 @@ CO_TEST_CASE("stop")
 async::generator<int, int> eager()
 {
   int i = co_await async::this_coro::initial;
-  CHECK_THROWS(co_await async::this_coro::pro_active{true});
   for (; i < 10; i += co_yield i);
 
   co_return i;
@@ -264,5 +261,6 @@ CO_TEST_CASE("eager")
 
   auto gg =std::move(g);
 }
+
 
 TEST_SUITE_END();

@@ -81,26 +81,6 @@ Which will generate the following output
  In main 4
 
 
-[#pro_active]
-=== Pro-Active mode
-
-By default, the generator is eager until the first resumption,
-and then waits to be resumed. This can however be undesired,
-e.g. if the generator does some async work, like polling a website.
-
-If this is desired behaviour the generator can be set to `pro_active` mode:
-
-[source,cpp]
-----
-co_await this_coro::pro_active(true);
-----
-
-This will cause the generator to `post` its own continuation onto the executor
-and thus resume when the caller suspends for some async operation.
-
-NOTE: this is inefficient for synchronous generators,
-i.e. generators that don't `co_await` between `co_yield` statements.
-
 [#initial]
 === Lazy
 

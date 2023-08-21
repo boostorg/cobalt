@@ -11,6 +11,8 @@ using namespace boost;
 
 #include "test.hpp"
 
+TEST_SUITE_BEGIN("detached");
+
 async::detached d(bool & done)
 {
   asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::milliseconds(10)};
@@ -30,3 +32,5 @@ TEST_CASE("detached")
   ctx.run();
   CHECK(done);
 }
+
+TEST_SUITE_END();

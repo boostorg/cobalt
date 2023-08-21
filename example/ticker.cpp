@@ -72,14 +72,13 @@ async::promise<void> connect_to_blockchain_info(websocket_type & ws)
 async::generator<json::object> json_reader(websocket_type & ws)
 try
 {
-    co_await async::this_coro::pro_active(true); // <1>
     beast::flat_buffer buf;
-    while (ws.is_open()) // <2>
+    while (ws.is_open()) // <1>
     {
-        auto sz = co_await ws.async_read(buf); // <3>
+        auto sz = co_await ws.async_read(buf); // <2>
         json::string_view data{static_cast<const char*>(buf.cdata().data()), sz};
         auto obj = json::parse(data);
-        co_yield obj.as_object(); // <4>
+        co_yield obj.as_object(); // <3>
         buf.consume(sz);
     }
     co_return {};
