@@ -127,6 +127,10 @@ T channel<T>::read_op::await_resume()
   if (cancel_slot.is_connected())
     cancel_slot.clear();
 
+  if constexpr (std::is_trivial_v<T>)
+    if (interrupted)
+      return T{};
+
   if (cancelled)
     boost::throw_exception(system::system_error(asio::error::operation_aborted), loc);
 
@@ -216,6 +220,10 @@ void channel<T>::write_op::await_resume()
 {
   if (cancel_slot.is_connected())
     cancel_slot.clear();
+
+  if (interrupted)
+    return ;
+
   if (cancelled)
     boost::throw_exception(system::system_error(asio::error::operation_aborted), loc);
 

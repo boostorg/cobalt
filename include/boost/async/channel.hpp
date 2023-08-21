@@ -57,11 +57,19 @@ struct channel
   {
     channel * chn;
     boost::source_location loc;
-    bool cancelled = false;
+    bool cancelled = false, interrupted = false;
     std::optional<T> direct;
     asio::cancellation_slot cancel_slot;
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
     void (*begin_transaction)(void*);
+
+    void interrupt_await() requires (!std::is_trivial_v<T>)
+    {
+      if (!awaited_from)
+        return;
+      interrupted = true;
+      std::coroutine_handle<void>::from_address(awaited_from.release()).resume();
+    }
 
     void transactional_unlink()
     {
@@ -84,11 +92,19 @@ struct channel
     channel * chn;
     variant2::variant<T*, const T*> ref;
     boost::source_location loc;
-    bool cancelled = false, direct = false;
+    bool cancelled = false, direct = false, interrupted = false;
     asio::cancellation_slot cancel_slot;
 
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
     void (*begin_transaction)(void*);
+
+    void interrupt_await()
+    {
+      if (!awaited_from)
+        return;
+      interrupted = true;
+      std::coroutine_handle<void>::from_address(awaited_from.release()).resume();
+    }
 
     void transactional_unlink()
     {
@@ -178,7 +194,7 @@ struct channel<void>
   {
     channel * chn;
     boost::source_location loc;
-    bool cancelled = false, direct = false;
+    bool cancelled = false, direct = false, interrupted = false;
     asio::cancellation_slot cancel_slot;
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
     void (*begin_transaction)(void*);
@@ -188,6 +204,14 @@ struct channel<void>
       if (begin_transaction)
           begin_transaction(awaited_from.get());
       this->unlink();
+    }
+
+    void interrupt_await()
+    {
+      if (!awaited_from)
+        return;
+      interrupted = true;
+      std::coroutine_handle<void>::from_address(awaited_from.release()).resume();
     }
 
     struct cancel_impl;
@@ -203,7 +227,7 @@ struct channel<void>
   {
     channel * chn;
     boost::source_location loc;
-    bool cancelled = false, direct = false;
+    bool cancelled = false, direct = false, interrupted = false;
     asio::cancellation_slot cancel_slot;
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
     void (*begin_transaction)(void*);
@@ -213,6 +237,14 @@ struct channel<void>
       if (begin_transaction)
           begin_transaction(awaited_from.get());
       this->unlink();
+    }
+
+    void interrupt_await()
+    {
+      if (!awaited_from)
+        return;
+      interrupted = true;
+      std::coroutine_handle<void>::from_address(awaited_from.release()).resume();
     }
 
     struct cancel_impl;

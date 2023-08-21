@@ -46,6 +46,9 @@ void channel<void>::read_op::await_resume()
   if (cancel_slot.is_connected())
     cancel_slot.clear();
 
+  if (interrupted)
+    return;
+
   if (cancelled)
     boost::throw_exception(system::system_error(asio::error::operation_aborted), loc);
 
@@ -73,6 +76,8 @@ void channel<void>::write_op::await_resume()
 {
   if (cancel_slot.is_connected())
     cancel_slot.clear();
+  if (interrupted)
+    return;
   if (cancelled)
     boost::throw_exception(system::system_error(asio::error::operation_aborted), loc);
   if (!direct)
