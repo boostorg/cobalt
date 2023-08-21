@@ -31,11 +31,19 @@ struct channel_reader;
 template<typename T>
 struct channel
 {
+  // end::outline[]
+#if defined(BOOST_ASYNC_NO_PMR)
+  channel(std::size_t limit = 0u,
+          executor executor = this_thread::get_executor());
+#else
+  // tag::outline[]
   // create a channel with a buffer limit, executor & resource.
   channel(std::size_t limit = 0u,
           executor executor = this_thread::get_executor(),
           pmr::memory_resource * resource = this_thread::get_default_resource());
-
+  // end::outline[]
+#endif
+  // tag::outline[]
   // movable
   channel(channel && ) = default;
 
@@ -50,7 +58,11 @@ struct channel
 
   // end::outline[]
  private:
+#if !defined(BOOST_ASYNC_NO_PMR)
   boost::circular_buffer<T, pmr::polymorphic_allocator<T>> buffer_;
+#else
+  boost::circular_buffer<T> buffer_;
+#endif
   executor_type executor_;
   bool is_closed_{false};
 

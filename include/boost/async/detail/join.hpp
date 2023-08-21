@@ -60,7 +60,6 @@ struct join_variadic_impl
     std::array<asio::cancellation_signal, tuple_size> cancel_;
     template<typename > constexpr static auto make_null() {return nullptr;};
     std::array<asio::cancellation_signal*, tuple_size> cancel = {make_null<Args>()...};
-    pmr::polymorphic_allocator<void> alloc{&this->resource};
 
     constexpr static bool all_void = (std::is_void_v<co_await_result_t<Args>> && ...);
     template<typename T>
@@ -193,7 +192,7 @@ struct join_variadic_impl
     template<typename H>
     auto await_suspend(std::coroutine_handle<H> h)
     {
-      this->exec = &get_executor(h);
+      this->exec = &detail::get_executor(h);
       last_forked.release().resume();
       while (last_index < tuple_size)
         impls[last_index++](*this).release();
@@ -250,7 +249,15 @@ struct join_ranged_impl
 
   struct awaitable : fork::shared_state
   {
+
+    struct dummy
+    {
+      template<typename ... Args>
+      dummy(Args && ...) {}
+    };
+
     using type = std::decay_t<decltype(*std::begin(std::declval<Range>()))>;
+#if !defined(BOOST_ASYNC_NO_PMR)
     pmr::polymorphic_allocator<void> alloc{&resource};
 
     std::conditional_t<awaitable_type<type>, Range &,
@@ -261,11 +268,6 @@ struct join_ranged_impl
     pmr::vector<asio::cancellation_signal*> cancel{std::size(aws), alloc};
 
 
-    struct dummy
-    {
-      template<typename ... Args>
-      dummy(Args && ...) {}
-    };
 
     std::conditional_t<
         std::is_void_v<result_type>,
@@ -274,7 +276,22 @@ struct join_ranged_impl
           result{
           cancel.size(),
           alloc};
+#else
+    std::allocator<void> alloc;
+    std::conditional_t<awaitable_type<type>, Range &,  std::vector<co_awaitable_type<type>>> aws;
 
+    std::vector<bool> ready{std::size(aws), alloc};
+    std::vector<asio::cancellation_signal> cancel_{std::size(aws), alloc};
+    std::vector<asio::cancellation_signal*> cancel{std::size(aws), alloc};
+
+    std::conditional_t<
+        std::is_void_v<result_type>,
+        dummy,
+        std::vector<std::optional<void_as_monostate<result_type>>>>
+          result{
+          cancel.size(),
+          alloc};
+#endif
     std::exception_ptr error;
 
     awaitable(Range & aws_, std::false_type /* needs  operator co_await */)
@@ -416,7 +433,11 @@ struct join_ranged_impl
         std::rethrow_exception(error);
       if constexpr (!std::is_void_v<result_type>)
       {
+#if defined(BOOST_ASYNC_NO_PMR)
+        std::vector<result_type> rr;
+#else
         pmr::vector<result_type> rr{this_thread::get_allocator()};
+#endif
         rr.reserve(result.size());
         for (auto & t : result)
           rr.push_back(*std::move(t));

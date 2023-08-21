@@ -26,3 +26,12 @@ The following macros can be used to configure it:
 
 If you define `BOOST_ASYNC_USE_CUSTOM_PMR` you will need to provide a `boost::async::pmr` namespace,
 that is a drop-in replacement for `std::pmr`.
+
+Alternatively, the `pmr` use can be disabled with
+
+ - `BOOST_ASYNC_NO_PMR`.
+
+In this case, async will use a non-pmr monotonic resource for the
+synchronization functions (<<select,select>>, <<gather, gather>> and <<join, join>>)
+and `use_op`. The `use_op` usage of this monotonic resource can be disabled by defining `BOOST_ASYNC_NO_MONOTONIC`.
+

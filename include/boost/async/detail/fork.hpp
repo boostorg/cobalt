@@ -10,6 +10,9 @@
 #include <boost/async/detail/util.hpp>
 #include <boost/async/this_thread.hpp>
 #include <boost/async/unique_handle.hpp>
+#if defined(BOOST_ASYNC_NO_PMR)
+#include <boost/async/detail/monotonic_resource.hpp>
+#endif
 
 #include <boost/asio/cancellation_signal.hpp>
 #include <boost/intrusive_ptr.hpp>
@@ -24,15 +27,22 @@ struct fork
   fork() = default;
   struct shared_state
   {
+#if !defined(BOOST_ASYNC_NO_PMR)
     pmr::monotonic_buffer_resource resource;
-
-    template<typename ... Args>
+        template<typename ... Args>
     shared_state(Args && ... args)
       : resource(std::forward<Args>(args)...,
                  this_thread::get_default_resource())
     {
-
     }
+#else
+    detail::monotonic_resource resource;
+    template<typename ... Args>
+    shared_state(Args && ... args)
+      : resource(std::forward<Args>(args)...)
+    {
+    }
+#endif
     // the coro awaiting the fork statement, e.g. awaiting select
     unique_handle<void> coro;
     std::size_t use_count = 0u;
@@ -64,6 +74,7 @@ struct fork
                                          std::array<char, BufferSize>::size()}
     {}
   };
+
 
   struct wired_up_t {};
   constexpr static wired_up_t wired_up{};
@@ -109,8 +120,13 @@ struct fork
     using executor_type = executor;
     const executor_type & get_executor() const { return state->get_executor(); }
 
+#if defined(BOOST_ASYNC_NO_PMR)
+    using allocator_type = detail::monotonic_allocator<void>;
+    const allocator_type get_allocator() const { return &state->resource; }
+#else
     using allocator_type = pmr::polymorphic_allocator<void>;
     const allocator_type get_allocator() const { return &state->resource; }
+#endif
 
     using cancellation_slot_type = asio::cancellation_slot;
     cancellation_slot_type get_cancellation_slot() const { return cancel; }

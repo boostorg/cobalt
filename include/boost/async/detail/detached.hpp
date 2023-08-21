@@ -81,7 +81,10 @@ struct detached_promise
 
   template<typename ... Args>
   detached_promise(Args & ...args)
-      : promise_memory_resource_base(detail::get_memory_resource_from_args(args...)),
+      :
+#if !defined(BOOST_ASYNC_NO_PMR)
+        promise_memory_resource_base(detail::get_memory_resource_from_args(args...)),
+#endif
         exec{detail::get_executor_from_args(args...)}
   {
   }

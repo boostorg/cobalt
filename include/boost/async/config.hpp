@@ -37,7 +37,8 @@
 
 #if !defined(BOOST_ASYNC_USE_STD_PMR) && \
     !defined(BOOST_ASYNC_USE_BOOST_CONTAINER_PMR) && \
-    !defined(BOOST_ASYNC_USE_CUSTOM_PMR)
+    !defined(BOOST_ASYNC_USE_CUSTOM_PMR) && \
+    !defined(BOOST_ASYNC_NO_PMR)
 #define BOOST_ASYNC_USE_STD_PMR 1
 #endif
 

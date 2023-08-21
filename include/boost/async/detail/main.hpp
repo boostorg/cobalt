@@ -49,6 +49,7 @@ struct main_promise : signal_helper,
         [[maybe_unused]] volatile auto p = &detail::main;
     }
 
+#if !defined(BOOST_ASYNC_NO_PMR)
     inline static pmr::memory_resource * my_resource = pmr::get_default_resource();
     void * operator new(const std::size_t size)
     {
@@ -59,7 +60,7 @@ struct main_promise : signal_helper,
     {
         return my_resource->deallocate(raw, size);
     }
-
+#endif
     std::suspend_always initial_suspend() {return {};}
 
     BOOST_ASYNC_DECL
@@ -78,6 +79,7 @@ struct main_promise : signal_helper,
 
     friend int main(int argc, char * argv[])
     {
+#if !defined(BOOST_ASYNC_NO_PMR)
       pmr::unsynchronized_pool_resource root_resource;
       struct reset_res
       {
@@ -91,17 +93,20 @@ struct main_promise : signal_helper,
       char buffer[8096];
       pmr::monotonic_buffer_resource main_res{buffer, 8096, &root_resource};
       my_resource = &main_res;
+#endif
       return run_main(co_main(argc, argv));
     }
 
     using executor_type = executor;
     const executor_type & get_executor() const {return *exec_;}
 
+#if !defined(BOOST_ASYNC_NO_PMR)
     using allocator_type = pmr::polymorphic_allocator<void>;
     using resource_type  = pmr::unsynchronized_pool_resource;
 
     mutable resource_type resource{my_resource};
     allocator_type get_allocator() const { return allocator_type(&resource); }
+#endif
 
     using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
     using promise_throw_if_cancelled_base::await_transform;

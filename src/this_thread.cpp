@@ -19,10 +19,14 @@ namespace boost::async::this_thread
 
 namespace detail
 {
+#if !defined(BOOST_ASYNC_NO_PMR)
 thread_local pmr::memory_resource *default_coro_memory_resource = pmr::get_default_resource();
+#endif
+
 thread_local std::optional<executor> executor;
 }
 
+#if !defined(BOOST_ASYNC_NO_PMR)
 pmr::memory_resource* get_default_resource() noexcept
 {
   return detail::default_coro_memory_resource;
@@ -39,6 +43,7 @@ pmr::polymorphic_allocator<void> get_allocator()
 {
   return pmr::polymorphic_allocator<void>{get_default_resource()};
 }
+#endif
 
 bool has_executor()
 {

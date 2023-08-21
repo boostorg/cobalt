@@ -50,7 +50,7 @@ struct monotonic_resource
   constexpr void release()
   {
     head_ = &buffer_;
-        auto nx = buffer_.next;
+    auto nx = buffer_.next;
     head_->next = nullptr;
     head_->avail = head_->size;
     while (nx != nullptr)

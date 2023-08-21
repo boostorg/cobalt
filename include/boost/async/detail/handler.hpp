@@ -9,6 +9,11 @@
 #include <boost/async/unique_handle.hpp>
 #include <boost/async/detail/util.hpp>
 
+#if defined(BOOST_ASYNC_NO_PMR)
+#include <boost/async/detail/monotonic_resource.hpp>
+#endif
+
+
 #include <boost/asio/bind_allocator.hpp>
 #include <boost/asio/post.hpp>
 
@@ -87,13 +92,21 @@ struct completion_handler_base
     return executor_ ;
   }
 
+#if !defined(BOOST_ASYNC_NO_PMR)
   using allocator_type = pmr::polymorphic_allocator<void>;
   pmr::polymorphic_allocator<void> allocator ;
   allocator_type get_allocator() const noexcept
   {
     return allocator ;
   }
-
+#elif !defined(BOOST_ASYNC_NO_MONOTONIC)
+  using allocator_type = detail::monotonic_allocator<void>;
+  detail::monotonic_allocator<void> allocator ;
+  allocator_type get_allocator() const noexcept
+  {
+    return allocator ;
+  }
+#endif
   using immediate_executor_type = completion_handler_noop_executor;
   completed_immediately_t * completed_immediately = nullptr;
   immediate_executor_type get_immediate_executor() const noexcept
@@ -107,11 +120,13 @@ struct completion_handler_base
                           completed_immediately_t * completed_immediately = nullptr)
           : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
             executor_(h.promise().get_executor()),
+#if !defined(BOOST_ASYNC_NO_PMR)
             allocator(asio::get_associated_allocator(h.promise(), this_thread::get_allocator())),
+#endif
             completed_immediately(completed_immediately)
   {
   }
-
+#if !defined(BOOST_ASYNC_NO_PMR)
   template<typename Promise>
     requires (requires (Promise p) {{p.get_executor()} -> std::same_as<const executor&>;})
   completion_handler_base(std::coroutine_handle<Promise> h,
@@ -123,6 +138,20 @@ struct completion_handler_base
             completed_immediately(completed_immediately)
   {
   }
+#elif !defined(BOOST_ASYNC_NO_MONOTONIC)
+  template<typename Promise>
+  requires (requires (Promise p) {{p.get_executor()} -> std::same_as<const executor&>;})
+  completion_handler_base(std::coroutine_handle<Promise> h,
+                          detail::monotonic_resource * resource,
+                          completed_immediately_t * completed_immediately = nullptr)
+      : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
+        executor_(h.promise().get_executor()),
+        allocator(resource),
+        completed_immediately(completed_immediately)
+  {
+  }
+
+#endif
 };
 
 
@@ -189,6 +218,7 @@ struct completion_handler : detail::completion_handler_base
     {
     }
 
+#if !defined(BOOST_ASYNC_NO_PMR)
     template<typename Promise>
     completion_handler(std::coroutine_handle<Promise> h,
                        std::optional<std::tuple<Args...>> &result,
@@ -198,6 +228,18 @@ struct completion_handler : detail::completion_handler_base
               self(h.address()), result(result)
     {
     }
+#elif !defined(BOOST_ASYNC_NO_MONOTONIC)
+    template<typename Promise>
+    completion_handler(std::coroutine_handle<Promise> h,
+                       std::optional<std::tuple<Args...>> &result,
+                       detail::monotonic_resource * resource,
+                       detail::completed_immediately_t * completed_immediately = nullptr)
+        : completion_handler_base(h, resource, completed_immediately),
+          self(h.address()), result(result)
+    {
+    }
+#endif
+
 
     void operator()(Args ... args)
     {

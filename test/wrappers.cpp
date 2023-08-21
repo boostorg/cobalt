@@ -20,6 +20,7 @@ TEST_CASE("regular")
     boost::async::this_thread::set_executor(ctx.get_executor());
     bool ran = false;
 
+#if !defined(BOOST_ASYNC_NO_PMR)
     char buf[512];
     boost::async::pmr::monotonic_buffer_resource res{buf, 512};
     auto p = boost::async::detail::post_coroutine(ctx.get_executor(),
@@ -28,6 +29,9 @@ TEST_CASE("regular")
                                               [&]{ran = true;}
                                               )
                                           );
+#else
+  auto p = boost::async::detail::post_coroutine(ctx.get_executor(), [&]{ran = true;});
+#endif
     CHECK(p);
     CHECK(!ran);
     p.resume();
