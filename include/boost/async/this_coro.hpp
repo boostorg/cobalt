@@ -49,6 +49,10 @@ constexpr __unspecified__ reset_cancellation_state(
 __unspecified__ throw_if_cancelled();
 __unspecified__ throw_if_cancelled(bool value);
 
+// Set the cancellation source in a detached.
+__unspecified__ reset_cancellation_source();
+__unspecified__ reset_cancellation_source(asio::cancellation_slot slot);
+
 end::outline[]
  */
 
@@ -66,6 +70,19 @@ constexpr cancelled_t cancelled;
 // set the over-eager mode of a generator
 enum class pro_active : bool {};
 //end::outline[]
+
+template<typename CancellationSlot = asio::cancellation_slot>
+struct reset_cancellation_source_t
+{
+  CancellationSlot source;
+};
+
+template<typename CancellationSlot= asio::cancellation_slot>
+reset_cancellation_source_t<CancellationSlot> reset_cancellation_source(CancellationSlot slot = {})
+{
+  return reset_cancellation_source_t<CancellationSlot>{std::move(slot)};
+}
+
 }
 
 template<typename CancellationSlot = asio::cancellation_slot,
