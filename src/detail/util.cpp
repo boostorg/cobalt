@@ -4,7 +4,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/async/detail/util.hpp>
+
 #include <boost/async/this_thread.hpp>
+#include <boost/async/unique_handle.hpp>
 
 #include <boost/asio/bind_allocator.hpp>
 #include <boost/asio/post.hpp>
