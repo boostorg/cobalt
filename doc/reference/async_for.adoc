@@ -21,3 +21,16 @@ cobalt::main co_main(int argc, char * argv[])
 The requirement is that the <<awaitable,awaitable>> used in the for loop has an `operator bool` to check if it
 can be awaited again. This is the case for <<generator, generator>> and <<promise,promise>>.
 
+That is, `BOOST_COBALT_FOR(__expression__, __declaration__) __statement__`  the above statement is roughly equivalent to:
+
+[source,cpp,subs=+quotes]
+----
+{
+  auto && __aw__ = co_await __expression__;
+  while (__aw__)
+  {
+    __expression__ = co_await __aw__;
+    __statement__
+  }
+}
+----
