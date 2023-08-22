@@ -33,6 +33,30 @@ async::main co_main(int argc, char *argv[])
   co_return 0;
 }
 ----
+<1> Spawn off the detached coro.
+
+
+A detached can assign itself a new cancellation source like this:
+
+[source,cpp]
+----
+
+async::detached my_task(asio::cancellation_slot sl)
+{
+   co_await this_coro::reset_cancellation_source(sl);
+   // do somework
+}
+
+async::main co_main(int argc, char *argv[])
+{
+  asio::cancellation_signal sig;
+  my_task(sig.slot()); // <1>
+  co_await delay(std::chrono::milliseconds(50));
+  sig.emit(asio::cancellation_type::all);
+  co_return 0;
+}
+
+----
 
 === Executor
 [#detached-executor]
@@ -62,7 +86,7 @@ async::detached my_gen(std::allocator_arg_t, pmr::polymorphic_allocator<void> al
 
 [source,cpp]
 ----
-include::../../include/boost/async/detached.hpp[tag=outline]
+struct detached {};
 ----
 <1> Supports <<interrupt_await>>
 
