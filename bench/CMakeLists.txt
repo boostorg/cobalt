@@ -1,4 +1,6 @@
 
+set_property(TARGET boost_async PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+
 add_executable(boost_async_post_bench post.cpp)
 target_link_libraries(boost_async_post_bench PRIVATE Boost::async Boost::system Threads::Threads)
 if (TARGET Boost::context)
@@ -29,4 +31,12 @@ if (TARGET Boost::context)
     target_link_libraries(boost_async_parallel_bench PRIVATE Boost::context)
     target_compile_definitions(boost_async_parallel_bench PRIVATE BOOST_ASYNC_BENCH_WITH_CONTEXT=1)
     set_property(TARGET boost_async_parallel_bench PROPERTY INTERPROCEDURAL_OPTIMIZATION ON)
+endif()
+
+add_executable(boost_async_pmr_bench pmr.cpp)
+target_link_libraries(boost_async_pmr_bench PRIVATE Boost::async Boost::system Threads::Threads)
+if (TARGET Boost::context)
+    target_link_libraries(boost_async_pmr_bench PRIVATE Boost::context)
+    target_compile_definitions(boost_async_pmr_bench PRIVATE BOOST_ASYNC_BENCH_WITH_CONTEXT=1)
+    set_property(TARGET boost_async_pmr_bench PROPERTY INTERPROCEDURAL_OPTIMIZATION ON)
 endif()
