@@ -186,11 +186,15 @@ def main(ctx):
         branch = 'develop'
 
     return [
-        linux("gcc-12",         branch, "docker.io/library/gcc:12",  variant="release", cxxstd="20"),
-        linux("gcc-12 (asan)",  branch, "docker.io/library/gcc:12",  variant="release", cxxstd="20", debug_symbols="on", address_sanitizer="on"),
-        linux("clang",          branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20"),
-        linux("clang (asan)",   branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", debug_symbols="on", address_sanitizer="on"),
-        linux("clang (tsan)",   branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", debug_symbols="on",  thread_sanitizer="on"),
-        windows("msvc-14.3 (x64)", branch, "cppalliance/dronevs2022:latest", variant="release", cxxstd="20", address_model="64"),
-        windows("msvc-14.3 (x32)", branch, "cppalliance/dronevs2022:latest", variant="release", cxxstd="20", address_model="32")
+        linux("gcc-12",                 branch, "docker.io/library/gcc:12",  variant="release", cxxstd="20"),
+        linux("gcc-12 (io_context)",    branch, "docker.io/library/gcc:12",  variant="release", cxxstd="20", **{'boost.async.executor': 'use_io_context'}),
+        linux("gcc-12 (container.pmr)", branch, "docker.io/library/gcc:12",  variant="release", cxxstd="20", **{'boost.async.pmr': 'boost-container'}),
+        linux("gcc-12 (no pmr)",        branch, "docker.io/library/gcc:12",  variant="release", cxxstd="20", **{'boost.async.pmr': 'no'}),
+        linux("clang",                  branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20"),
+        linux("clang (container.pmr)",  branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", **{'boost.async.pmr': 'boost-container'}),
+        linux("clang (no pmr)",         branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", **{'boost.async.pmr': 'no'}),
+        linux("clang (asan)",           branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", debug_symbols="on", address_sanitizer="on"),
+        linux("clang (tsan)",           branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", debug_symbols="on",  thread_sanitizer="on"),
+        windows("msvc-14.3 (x64)",      branch, "cppalliance/dronevs2022:latest", variant="release", cxxstd="20", address_model="64"),
+        windows("msvc-14.3 (x32)",      branch, "cppalliance/dronevs2022:latest", variant="release", cxxstd="20", address_model="32")
     ]
