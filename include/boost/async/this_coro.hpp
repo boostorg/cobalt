@@ -310,7 +310,6 @@ struct promise_throw_if_cancelled_base
 };
 
 
-
 struct promise_memory_resource_base
 {
     using allocator_type = pmr::polymorphic_allocator<void>;
@@ -320,17 +319,17 @@ struct promise_memory_resource_base
     void * operator new(const std::size_t size, Args & ... args)
     {
         auto res = detail::get_memory_resource_from_args(args...);
-        const auto p = res->allocate(size + sizeof(pmr::memory_resource *), alignof(pmr::memory_resource *));
-        auto pp = static_cast<pmr::memory_resource**>(p);
+        const auto p = res->allocate(size + sizeof(pmr::memory_resource *));
+        auto pp = reinterpret_cast<pmr::memory_resource**>(static_cast<char*>(p) + size);
         *pp = res;
-        return pp + 1;
+        return p;
     }
 
     void operator delete(void * raw, const std::size_t size) noexcept
     {
-        const auto p = static_cast<pmr::memory_resource**>(raw) - 1;
+        const auto p = reinterpret_cast<pmr::memory_resource**>(static_cast<char*>(raw) + size);
         pmr::memory_resource * res = *p;
-        res->deallocate(p, size + sizeof(pmr::memory_resource *), alignof(pmr::memory_resource *));
+        res->deallocate(raw, size + sizeof(pmr::memory_resource *));
     }
 
     promise_memory_resource_base(pmr::memory_resource * resource = this_thread::get_default_resource()) : resource(resource) {}
