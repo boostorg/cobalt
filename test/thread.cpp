@@ -37,13 +37,13 @@ boost::async::thread thr_stop()
 
 #if !defined(BOOST_ASYNC_USE_IO_CONTEXT)
   auto exec = co_await boost::asio::this_coro::executor;
-  auto exc = exec.target<boost::asio::io_context::executor_type>();
-  REQUIRE(exc != nullptr);
+  auto &exc = *exec.target<boost::asio::io_context::executor_type>();
+  REQUIRE(&exc != nullptr);
 #else
   auto exc = co_await boost::asio::this_coro::executor;
 #endif
 
-  exc->context().stop();
+  exc.context().stop();
   co_await tim.async_wait(boost::async::use_op);
 }
 

@@ -62,6 +62,7 @@ struct immediate_aw
   }
 };
 
+#if !defined(BOOST_ASYNC_USE_IO_CONTEXT)
 
 struct non_immediate_aw
 {
@@ -108,5 +109,7 @@ CO_TEST_CASE("immediate completion")
   co_await immediate_aw{};
   co_await non_immediate_aw{};
 }
+
+#endif
 
 TEST_SUITE_END();

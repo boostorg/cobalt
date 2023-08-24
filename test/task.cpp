@@ -275,6 +275,8 @@ async::task<void> test_strand()
   co_await async::join(test_strand1(e), test_strand1(e), test_strand1(e), test_strand1(e));
 }
 
+#if !defined(BOOST_ASYNC_USE_IO_CONTEXT)
+
 TEST_CASE("stranded")
 {
 
@@ -291,5 +293,6 @@ TEST_CASE("stranded")
   ctx.join();
 }
 
+#endif
 
 TEST_SUITE_END();
