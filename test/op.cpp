@@ -90,7 +90,7 @@ CO_TEST_CASE("op")
 struct op_throw_op
 {
   template<typename Handler>
-  void operator()(Handler &&h)
+  void operator()(Handler &&)
   {
     throw std::runtime_error("test-exception");
 

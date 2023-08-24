@@ -37,7 +37,7 @@ async::task<void> work(int min_a, int max_a, int b)
     printf("The CPU intensive result of adding %d to %d, is %d\n", a, b, c);
   }
 }
-int main(int argc, char *argv [])
+int main(int , char * [])
 {
   const std::size_t n = 4u;
   boost::asio::thread_pool tp{n};

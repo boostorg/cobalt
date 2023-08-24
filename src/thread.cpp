@@ -36,7 +36,7 @@ void run_thread(
 
   asio::post(
       st->ctx.get_executor(),
-      [&st, h = std::move(h)]() mutable
+      [st, h = std::move(h)]() mutable
       {
         std::lock_guard<std::mutex> lock{h->mtx};
         std::coroutine_handle<thread_promise>::from_promise(*h.release()).resume();

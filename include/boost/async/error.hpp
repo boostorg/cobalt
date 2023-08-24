@@ -32,7 +32,7 @@ struct async_category_t final : system::error_category
 
     return message(ev, nullptr, 0u);
   }
-  char const * message( int ev, char * buffer, std::size_t len ) const noexcept override
+  char const * message( int ev, char * , std::size_t ) const noexcept override
   {
     switch (static_cast<error>(ev))
     {

@@ -95,7 +95,7 @@ struct fork
 
     template<typename ... Rest>
     void operator delete(void * raw, const std::size_t size, Rest && ...) noexcept;
-    void operator delete(void * raw, const std::size_t size) noexcept {}
+    void operator delete(void *, const std::size_t) noexcept {}
 
     template<typename ... Rest>
     promise_type(shared_state & st, Rest & ...)
@@ -189,7 +189,7 @@ struct fork
         {
           return promise->state->wired_up();
         }
-        void await_suspend(std::coroutine_handle<promise_type> h)
+        void await_suspend(std::coroutine_handle<promise_type>)
         {
         }
         constexpr static void await_resume() noexcept {}

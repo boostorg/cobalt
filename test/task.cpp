@@ -98,24 +98,12 @@ TEST_CASE("unwind")
 namespace
 {
 
-async::task<int> return_(std::size_t ms)
+
+async::task<int> return_([[maybe_unused]] std::size_t ms,
+                         asio::executor_arg_t, boost::async::executor )
 {
   co_return 1234u;
 }
-
-async::task<int> return_(std::size_t ms, asio::executor_arg_t,
-                         boost::async::executor )
-{
-  co_return 1234u;
-}
-
-async::task<void> delay_r(asio::io_context &ctx, std::size_t ms,
-                                    asio::executor_arg_t, asio::any_io_executor )
-{
-  auto tim = async::use_op.as_default_on(asio::steady_timer(ctx, std::chrono::milliseconds{ms}));
-  co_await tim.async_wait();
-}
-
 
 async::task<void> delay_r(asio::io_context &ctx, std::size_t ms)
 {

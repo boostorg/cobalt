@@ -23,10 +23,11 @@ outcome_v2::awaitables::eager<int> eager_func(int x)
 
 async::main co_main(int argc, char * argv[])
 {
-  auto lr = co_await lazy_func(10);
+  [[maybe_unused]] auto lr = co_await lazy_func(10);
+
   assert(lr == 11);
 
-  auto er = co_await eager_func(10);
+  [[maybe_unused]] auto er = co_await eager_func(10);
   assert(er == 11);
 
   co_return 0;

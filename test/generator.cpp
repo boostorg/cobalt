@@ -117,7 +117,6 @@ CO_TEST_CASE("generator-left_select")
   auto itr = seq.begin();
   auto ntr = num.begin();
 
-  int i = 0;
   while (g1 && g2)
   {
     auto r =  co_await left_select(g1, g2);
