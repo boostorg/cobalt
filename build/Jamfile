@@ -43,10 +43,10 @@ alias async_sources
 explicit async_sources ;
 
 lib boost_async
-   : async_sources /boost//container
+   : async_sources
    : requirements <define>BOOST_ASYNC_SOURCE=1
      <link>shared:<define>BOOST_ASYNC_DYN_LINK=1
-   : usage-requirements  <boost.async.pmr>pmr:<library>/boost//container
+   : usage-requirements <boost.async.pmr>boost-container:<library>/boost//container
 
    ;
 
