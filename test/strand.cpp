@@ -33,6 +33,8 @@ async::promise<void> do_the_thing()
   unique--;
 }
 
+#if !defined(BOOST_ASYNC_USE_IO_CONTEXT)
+
 TEST_CASE("strand")
 {
   std::vector<std::thread> ths;
@@ -64,3 +66,5 @@ TEST_CASE("strand")
 }
 
 TEST_SUITE_END();
+
+#endif
