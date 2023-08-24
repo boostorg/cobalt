@@ -30,3 +30,13 @@ if (TARGET Boost::context)
     target_compile_definitions(boost_async_parallel_bench PRIVATE BOOST_ASYNC_BENCH_WITH_CONTEXT=1)
     set_property(TARGET boost_async_parallel_bench PROPERTY INTERPROCEDURAL_OPTIMIZATION ON)
 endif()
+
+
+
+add_executable(boost_async_monotonic_bench monotonic.cpp)
+target_link_libraries(boost_async_monotonic_bench PRIVATE Boost::async Boost::system Threads::Threads)
+if (TARGET Boost::context)
+    target_link_libraries(boost_async_monotonic_bench PRIVATE Boost::context)
+    target_compile_definitions(boost_async_monotonic_bench PRIVATE BOOST_ASYNC_BENCH_WITH_CONTEXT=1)
+    set_property(TARGET boost_async_monotonic_bench PROPERTY INTERPROCEDURAL_OPTIMIZATION ON)
+endif()
