@@ -51,12 +51,12 @@ struct completion_handler_noop_executor : executor
     }
   }
 
-  friend bool operator==(const completion_handler_noop_executor& a, const completion_handler_noop_executor& b) noexcept
+  friend bool operator==(const completion_handler_noop_executor&, const completion_handler_noop_executor&) noexcept
   {
     return true;
   }
 
-  friend bool operator!=(const completion_handler_noop_executor& a, const completion_handler_noop_executor& b) noexcept
+  friend bool operator!=(const completion_handler_noop_executor&, const completion_handler_noop_executor&) noexcept
   {
     return false;
   }
@@ -218,7 +218,7 @@ struct completion_handler : detail::completion_handler_base
     {
       if (self && completed_immediately
         && *completed_immediately == detail::completed_immediately_t::initiating
-        && std::uncaught_exceptions() > 0u)
+        && std::uncaught_exceptions() > 0)
         self.release();
     }
  private:
@@ -228,7 +228,7 @@ struct completion_handler : detail::completion_handler_base
 
 
 
-inline void interpret_result(std::tuple<> && args)
+inline void interpret_result(std::tuple<> &&)
 {
 }
 
@@ -243,7 +243,7 @@ auto interpret_result(std::tuple<std::exception_ptr, Args...> && args)
 {
     if (std::get<0>(args))
         std::rethrow_exception(std::get<0>(args));
-    return std::apply([](auto first, auto && ... rest) {return std::make_tuple(std::move(rest)...);});
+    return std::apply([](auto, auto && ... rest) {return std::make_tuple(std::move(rest)...);});
 }
 
 template<typename ... Args>
@@ -251,7 +251,7 @@ auto interpret_result(std::tuple<system::error_code, Args...> && args)
 {
     if (std::get<0>(args))
         throw system::system_error(std::get<0>(args));
-    return std::apply([](auto first, auto && ... rest) {return std::make_tuple(std::move(rest)...);});
+    return std::apply([](auto, auto && ... rest) {return std::make_tuple(std::move(rest)...);});
 }
 
 template<typename  Arg>

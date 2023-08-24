@@ -24,7 +24,7 @@ namespace boost::async::detail
 {
 
 template<typename T>
-constexpr std::size_t variadic_first(std::size_t pos = 0u)
+constexpr std::size_t variadic_first(std::size_t = 0u)
 {
     return std::numeric_limits<std::size_t>::max();
 }
@@ -95,7 +95,7 @@ constexpr decltype(auto) get_last_variadic(First && first)
 }
 
 template<typename First, typename ... Args>
-constexpr decltype(auto) get_last_variadic(First && first, Args  && ... args)
+constexpr decltype(auto) get_last_variadic(First &&, Args  && ... args)
 {
     return get_last_variadic(static_cast<Args>(args)...);
 }

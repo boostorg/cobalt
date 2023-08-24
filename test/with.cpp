@@ -28,7 +28,7 @@ struct finalizer_test
     }
 
     bool exit_called = false;
-    std::exception_ptr e;
+    std::exception_ptr e{};
 
     auto exit(std::exception_ptr ee)
     {
@@ -50,7 +50,7 @@ CO_TEST_CASE("sync")
     CHECK_THROWS(
         co_await boost::async::with (
             &ft,
-            [](finalizer_test * ft)
+            [](finalizer_test *)
             {
                 throw std::runtime_error("42");
             },

@@ -248,7 +248,7 @@ struct promise_cancellation_base
 
 struct promise_throw_if_cancelled_base
 {
-    promise_throw_if_cancelled_base(bool throw_if_cancelled = false) {}
+    promise_throw_if_cancelled_base(bool throw_if_cancelled = true) : throw_if_cancelled_(throw_if_cancelled) {}
 
     // This await transformation determines whether cancellation is propagated as
     // an exception.
@@ -309,15 +309,13 @@ struct promise_throw_if_cancelled_base
     bool throw_if_cancelled_{true};
 };
 
-
-
 struct promise_memory_resource_base
 {
     using allocator_type = pmr::polymorphic_allocator<void>;
     allocator_type get_allocator() const {return allocator_type{resource};}
 
     template<typename ... Args>
-    void * operator new(const std::size_t size, Args & ... args)
+    static void * operator new(const std::size_t size, Args & ... args)
     {
         auto res = detail::get_memory_resource_from_args(args...);
         const auto p = res->allocate(size + sizeof(pmr::memory_resource *), alignof(pmr::memory_resource *));
@@ -326,13 +324,12 @@ struct promise_memory_resource_base
         return pp + 1;
     }
 
-    void operator delete(void * raw, const std::size_t size) noexcept
+    static void operator delete(void * raw, const std::size_t size) noexcept
     {
         const auto p = static_cast<pmr::memory_resource**>(raw) - 1;
         pmr::memory_resource * res = *p;
         res->deallocate(p, size + sizeof(pmr::memory_resource *), alignof(pmr::memory_resource *));
     }
-
     promise_memory_resource_base(pmr::memory_resource * resource = this_thread::get_default_resource()) : resource(resource) {}
 
 private:
@@ -386,7 +383,7 @@ struct enable_await_allocator
             allocator_type alloc;
             constexpr static bool await_ready() { return true; }
 
-            bool await_suspend( std::coroutine_handle<void> h) { return false; }
+            bool await_suspend( std::coroutine_handle<void> ) { return false; }
             allocator_type await_resume()
             {
                 return alloc;
@@ -409,7 +406,7 @@ struct enable_await_executor
       executor_type exec;
       constexpr static bool await_ready() { return true; }
 
-      bool await_suspend( std::coroutine_handle<void> h) { return false; }
+      bool await_suspend( std::coroutine_handle<void> ) { return false; }
       executor_type await_resume()
       {
         return exec;

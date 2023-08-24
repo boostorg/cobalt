@@ -19,7 +19,7 @@ namespace boost::async
 template<typename ... Args>
 struct op
 {
-  virtual void ready(async::handler<Args...> h) {};
+  virtual void ready(async::handler<Args...>) {};
   virtual void initiate(async::completion_handler<Args...> complete) = 0 ;
   virtual ~op() = default;
 
@@ -47,8 +47,7 @@ struct op
     std::exception_ptr init_ep;
 
     template<typename Promise>
-    bool await_suspend(std::coroutine_handle<Promise> h,
-                       const boost::source_location & loc = BOOST_CURRENT_LOCATION) noexcept
+    bool await_suspend(std::coroutine_handle<Promise> h) noexcept
     {
       try
       {

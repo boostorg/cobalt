@@ -69,7 +69,7 @@ struct  channel<T>::read_op::cancel_impl
 {
   read_op * op;
   cancel_impl(read_op * op) : op(op) {}
-  void operator()(asio::cancellation_type ct)
+  void operator()(asio::cancellation_type)
   {
     op->cancelled = true;
     op->unlink();
@@ -159,7 +159,7 @@ struct channel<T>::write_op::cancel_impl
 {
   write_op * op;
   cancel_impl(write_op * op) : op(op) {}
-  void operator()(asio::cancellation_type ct)
+  void operator()(asio::cancellation_type)
   {
     op->cancelled = true;
     op->unlink();
@@ -253,7 +253,7 @@ struct channel<void>::read_op::cancel_impl
 {
   read_op * op;
   cancel_impl(read_op * op) : op(op) {}
-  void operator()(asio::cancellation_type ct)
+  void operator()(asio::cancellation_type)
   {
     op->cancelled = true;
     op->unlink();
@@ -270,7 +270,7 @@ struct channel<void>::write_op::cancel_impl
 {
   write_op * op;
   cancel_impl(write_op * op) : op(op) {}
-  void operator()(asio::cancellation_type ct)
+  void operator()(asio::cancellation_type)
   {
     op->cancelled = true;
     op->unlink();

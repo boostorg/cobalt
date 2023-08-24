@@ -58,10 +58,10 @@ struct channel
     channel * chn;
     boost::source_location loc;
     bool cancelled = false;
-    std::optional<T> direct;
-    asio::cancellation_slot cancel_slot;
+    std::optional<T> direct{};
+    asio::cancellation_slot cancel_slot{};
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
-    void (*begin_transaction)(void*);
+    void (*begin_transaction)(void*) = nullptr;
 
     void transactional_unlink()
     {
@@ -85,10 +85,10 @@ struct channel
     variant2::variant<T*, const T*> ref;
     boost::source_location loc;
     bool cancelled = false, direct = false;
-    asio::cancellation_slot cancel_slot;
+    asio::cancellation_slot cancel_slot{};
 
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
-    void (*begin_transaction)(void*);
+    void (*begin_transaction)(void*) = nullptr;
 
     void transactional_unlink()
     {
@@ -179,9 +179,9 @@ struct channel<void>
     channel * chn;
     boost::source_location loc;
     bool cancelled = false, direct = false;
-    asio::cancellation_slot cancel_slot;
+    asio::cancellation_slot cancel_slot{};
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
-    void (*begin_transaction)(void*);
+    void (*begin_transaction)(void*) = nullptr;
 
     void transactional_unlink()
     {
@@ -204,9 +204,9 @@ struct channel<void>
     channel * chn;
     boost::source_location loc;
     bool cancelled = false, direct = false;
-    asio::cancellation_slot cancel_slot;
+    asio::cancellation_slot cancel_slot{};
     std::unique_ptr<void, detail::coro_deleter<>> awaited_from{nullptr};
-    void (*begin_transaction)(void*);
+    void (*begin_transaction)(void*) = nullptr;
 
     void transactional_unlink()
     {

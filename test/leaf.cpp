@@ -28,7 +28,7 @@ CO_TEST_CASE("try_catch")
         CHECK(re.what() == std::string("TestException"));
         return -1;
       },
-      [](std::exception & e)
+      [](std::exception &)
       {
           CHECK(false);
           return -2;
@@ -39,12 +39,12 @@ CO_TEST_CASE("try_catch")
       {
         co_return 42;
       }(),
-      [](std::runtime_error & re)
+      [](std::runtime_error &)
       {
         CHECK(false);
         return -1;
       },
-      [](std::exception & e)
+      [](std::exception &)
       {
         CHECK(false);
         return -2;
@@ -65,7 +65,7 @@ CO_TEST_CASE("try_handle_all")
         CHECK(re.what() == std::string("TestException"));
         return -1;
       },
-      [](const std::exception & e)
+      [](const std::exception &)
       {
         CHECK(false);
         return -2;
@@ -81,12 +81,12 @@ CO_TEST_CASE("try_handle_all")
       {
         co_return 42;
       }(),
-      [](const std::runtime_error & re)
+      [](const std::runtime_error &)
       {
         CHECK(false);
         return -1;
       },
-      [](const std::exception & e)
+      [](const std::exception &)
       {
         CHECK(false);
         return -2;
@@ -112,7 +112,7 @@ CO_TEST_CASE("try_handle_all")
         CHECK(re.what() == std::string("TestException"));
         return -1;
       },
-      [](const std::exception & e)
+      [](const std::exception &)
       {
         CHECK(false);
         return -2;
@@ -128,12 +128,12 @@ CO_TEST_CASE("try_handle_all")
       {
         co_return 42;
       }(),
-      [](const std::runtime_error & re)
+      [](const std::runtime_error &)
       {
         CHECK(false);
         return -1;
       },
-      [](const std::exception & e)
+      [](const std::exception &)
       {
         CHECK(false);
         return -2;

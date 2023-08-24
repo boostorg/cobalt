@@ -34,7 +34,7 @@ struct partial_promise_base
     }
 
     template<typename Executor, typename CompletionToken>
-    void * operator new(const std::size_t size, Executor & exec, CompletionToken & token)
+    void * operator new(const std::size_t size, Executor &, CompletionToken & token)
     {
       // gcc: 120 8 16
       // clang: 96 8 16

@@ -86,7 +86,7 @@ struct immediate
   immediate() = default;
   immediate(const immediate & i);
   bool await_ready() {CHECK(state++ == 0  ); return true;}
-  void await_suspend(std::coroutine_handle<> h) { REQUIRE(false); }
+  void await_suspend(std::coroutine_handle<>) { REQUIRE(false); }
   void await_resume() {CHECK(state++ == 1);}
 
   ~immediate()
@@ -101,7 +101,7 @@ struct immediate_bool
   int state = 0;
 
   bool await_ready() {CHECK(state++ == 0); return false;}
-  bool await_suspend(std::coroutine_handle<> h) { CHECK(state++ == 1); return false; }
+  bool await_suspend(std::coroutine_handle<>) { CHECK(state++ == 1); return false; }
   void await_resume() {CHECK(state++ == 2);}
 
   ~immediate_bool()
