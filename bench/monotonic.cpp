@@ -6,14 +6,53 @@
 
 #include <boost/async.hpp>
 #include <boost/async/detail/monotonic_resource.hpp>
+#include <boost/async/detail/sbo_resource.hpp>
 #include <boost/asio.hpp>
+#include <boost/asio/yield.hpp>
 
-#if defined(BOOST_ASYNC_BENCH_WITH_CONTEXT)
-#include <boost/asio/spawn.hpp>
-#endif
+
+#include <boost/core/demangle.hpp>
 
 using namespace boost;
-constexpr std::size_t n = 50'000'000ull;
+constexpr std::size_t n = 2'000'000ull;
+
+
+/* The SBO optimization is for structures allocations,
+ * i.e. in a LIFO structure.
+*/
+struct my_composed_op : asio::coroutine
+{
+  std::shared_ptr<char[]> res1, res2;
+
+  template<typename Self>
+  void operator()(Self && self)
+  {
+    reenter(this)
+    {
+      yield asio::post(std::move(self));
+      res1 = std::allocate_shared<char[]>(self.get_allocator(), 512);
+      yield asio::post(std::move(self));
+      res2 = std::allocate_shared<char[]>(self.get_allocator(), 256);
+      yield asio::post(std::move(self));
+      res2.reset(); // tests reusing memory
+      res2 = std::allocate_shared<char[]>(self.get_allocator(), 256);
+      yield asio::post(std::move(self));
+      res2.reset(); // tests reusing memory
+      res2 = std::allocate_shared<char[]>(self.get_allocator(), 256);
+      yield asio::post(std::move(self));
+      res2.reset(); // tests reusing memory
+      res2 = std::allocate_shared<char[]>(self.get_allocator(), 256);
+      self.complete();
+    }
+  }
+};
+
+template<typename Token>
+auto my_composed(asio::io_context & ctx, Token && token)
+{
+  return asio::async_compose<Token, void()>(my_composed_op{}, token, ctx.get_executor());
+}
+
 
 struct std_test
 {
@@ -22,11 +61,11 @@ struct std_test
   void operator()()
   {
     if (i ++ < n)
-      asio::post(ctx, std::move(*this));
+      my_composed(ctx, std::move(*this));
   }
 };
 
-char buf[1024];
+alignas(std::max_align_t) char buf[1024];
 async::detail::monotonic_resource res{buf, sizeof(buf)};
 
 struct mono_test
@@ -39,9 +78,9 @@ struct mono_test
 
   void operator()()
   {
-    res.release();
+    res.release();  // this is a thing that wouldn't happen in a comopsed op
     if (i ++ < n)
-      asio::post(ctx, std::move(*this));
+      my_composed(ctx, std::move(*this));
   }
 };
 
@@ -57,11 +96,30 @@ struct pmr_test
 
   void operator()()
   {
-    pmr_res.release();
+    pmr_res.release(); // this is a thing that wouldn't happen in a composed op
     if (i ++ < n)
-      asio::post(ctx, std::move(*this));
+      my_composed(ctx, std::move(*this));
   }
 };
+
+
+async::detail::sbo_resource sbo_res{buf, sizeof(buf)};
+
+struct sbo_test
+{
+  asio::io_context & ctx;
+  std::size_t i = 0u;
+
+  using allocator_type = async::detail::sbo_allocator<void>;
+  allocator_type get_allocator() const { return async::detail::sbo_allocator<void>{&sbo_res}; }
+
+  void operator()()
+  {
+    if (i ++ < n)
+      my_composed(ctx, std::move(*this));
+  }
+};
+
 
 
 
@@ -93,6 +151,16 @@ int main(int argc, char * argv[])
     ctx.run();
     auto end = std::chrono::steady_clock::now();
     printf("pmr::monotonic: %ld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+  }
+
+
+  {
+    auto start = std::chrono::steady_clock::now();
+    asio::io_context ctx{BOOST_ASIO_CONCURRENCY_HINT_1};
+    sbo_test{ctx}();
+    ctx.run();
+    auto end = std::chrono::steady_clock::now();
+    printf("async::sbo: %ld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
   }
 
 

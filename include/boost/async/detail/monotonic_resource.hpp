@@ -42,6 +42,7 @@ struct monotonic_resource
       : buffer_{nullptr, 0u, 0u, std::align_val_t{0u}, nullptr}, chunk_size_(chunk_size) {}
 
 
+  monotonic_resource(monotonic_resource && lhs) noexcept = delete;
   constexpr ~monotonic_resource()
   {
     if (head_ != &buffer_)

@@ -55,6 +55,10 @@
 #include <memory_resource>
 #endif
 
+#if !defined(BOOST_ASYNC_OP_SBO_SIZE)
+#define BOOST_ASYNC_SBO_BUFFER_SIZE 4096
+#endif
+
 namespace boost::async
 {
 
