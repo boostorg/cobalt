@@ -9,11 +9,7 @@
 #include <boost/async/unique_handle.hpp>
 #include <boost/async/detail/util.hpp>
 
-#if defined(BOOST_ASYNC_NO_PMR)
-#include <boost/async/detail/monotonic_resource.hpp>
-#endif
-
-
+#include <boost/async/detail/sbo_resource.hpp>
 #include <boost/asio/bind_allocator.hpp>
 #include <boost/asio/post.hpp>
 
@@ -99,9 +95,9 @@ struct completion_handler_base
   {
     return allocator ;
   }
-#elif !defined(BOOST_ASYNC_NO_MONOTONIC)
-  using allocator_type = detail::monotonic_allocator<void>;
-  detail::monotonic_allocator<void> allocator ;
+#else
+  using allocator_type = detail::sbo_allocator<void>;
+  detail::sbo_allocator<void> allocator ;
   allocator_type get_allocator() const noexcept
   {
     return allocator ;
@@ -122,6 +118,8 @@ struct completion_handler_base
             executor_(h.promise().get_executor()),
 #if !defined(BOOST_ASYNC_NO_PMR)
             allocator(asio::get_associated_allocator(h.promise(), this_thread::get_allocator())),
+#else
+            allocator(detail::get_null_sbo_resource()),
 #endif
             completed_immediately(completed_immediately)
   {
@@ -138,11 +136,11 @@ struct completion_handler_base
             completed_immediately(completed_immediately)
   {
   }
-#elif !defined(BOOST_ASYNC_NO_MONOTONIC)
+#else
   template<typename Promise>
   requires (requires (Promise p) {{p.get_executor()} -> std::same_as<const executor&>;})
   completion_handler_base(std::coroutine_handle<Promise> h,
-                          detail::monotonic_resource * resource,
+                          detail::sbo_resource * resource,
                           completed_immediately_t * completed_immediately = nullptr)
       : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
         executor_(h.promise().get_executor()),
@@ -228,11 +226,11 @@ struct completion_handler : detail::completion_handler_base
               self(h.address()), result(result)
     {
     }
-#elif !defined(BOOST_ASYNC_NO_MONOTONIC)
+#else
     template<typename Promise>
     completion_handler(std::coroutine_handle<Promise> h,
                        std::optional<std::tuple<Args...>> &result,
-                       detail::monotonic_resource * resource,
+                       detail::sbo_resource * resource,
                        detail::completed_immediately_t * completed_immediately = nullptr)
         : completion_handler_base(h, resource, completed_immediately),
           self(h.address()), result(result)

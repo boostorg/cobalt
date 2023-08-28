@@ -9,8 +9,7 @@
 #define BOOST_ASYNC_OP_HPP
 
 #include <boost/async/detail/handler.hpp>
-
-
+#include <boost/async/detail/sbo_resource.hpp>
 
 namespace boost::async
 {
@@ -41,13 +40,9 @@ struct op
       return result.has_value();
     }
 
-#if !defined(BOOST_ASYNC_NO_PMR)
-    char buffer[2048];
-    pmr::monotonic_buffer_resource resource{buffer, sizeof(buffer)};
-#elif !defined(BOOST_ASYNC_NO_MONOTONIC)
-    char buffer[2048];
-    detail::monotonic_resource resource{buffer, sizeof(buffer)};
-#endif
+    char buffer[BOOST_ASYNC_SBO_BUFFER_SIZE];
+    detail::sbo_resource resource{buffer, sizeof(buffer)};
+
     detail::completed_immediately_t completed_immediately = detail::completed_immediately_t::no;
     std::exception_ptr init_ep;
 
@@ -57,11 +52,8 @@ struct op
       try
       {
         completed_immediately = detail::completed_immediately_t::initiating;
-#if !defined(BOOST_ASYNC_NO_PMR) && !defined(BOOST_ASYNC_NO_MONOTONIC)
         op_.initiate(completion_handler<Args...>{h, result, &resource, &completed_immediately});
-#else
-        op_.initiate(completion_handler<Args...>{h, result, &completed_immediately});
-#endif
+
         if (completed_immediately == detail::completed_immediately_t::initiating)
           completed_immediately = detail::completed_immediately_t::no;
         return completed_immediately != detail::completed_immediately_t::yes;
