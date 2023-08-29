@@ -155,7 +155,7 @@ Channels are modeled on golang; they are different from boost.asio channels in t
 Instead they directly context switch when possible.
 
 ```cpp
-async::promise<void> test(async::channel<void> & chan)
+async::promise<void> test(async::channel<int> & chan)
 {
   printf("Reader 1: %d\n", co_await chan.read());
   printf("Reader 2: %d\n", co_await chan.read());
