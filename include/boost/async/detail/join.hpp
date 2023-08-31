@@ -80,10 +80,6 @@ struct join_variadic_impl
           type &&>;
 
       auto &r = cancel[Idx];
-      if constexpr (interruptible<t>)
-        if (r != nullptr)
-          static_cast<t>(std::get<Idx>(aws)).interrupt_await();
-
       if (r)
         std::exchange(r, nullptr)->emit(asio::cancellation_type::all);
     }
@@ -329,7 +325,6 @@ struct join_ranged_impl
 
     void cancel_all()
     {
-      interrupt_await();
       for (auto & r : cancel)
         if (r)
           std::exchange(r, nullptr)->emit(asio::cancellation_type::all);
@@ -376,10 +371,10 @@ struct join_ranged_impl
     }
     catch(...)
     {
-      this_.error = std::current_exception();
+      if (!this_.error)
+        this_.error = std::current_exception();
       this_.cancel_all();
     }
-
 
     detail::fork last_forked;
     std::size_t last_index = 0u;
@@ -409,7 +404,7 @@ struct join_ranged_impl
       if (error)
         cancel_all();
 
-      if (!this->outstanding_work()) // already done, resume rightaway.
+      if (!this->outstanding_work()) // already done, resume right away.
         return false;
 
       // arm the cancel

@@ -263,9 +263,7 @@ async::promise<void> test()
 
 CO_TEST_CASE("issue-53")
 {
-  fprintf(stderr, "%s(%d)\n", __FILE__, __LINE__);
   co_await async::select(test(), boost::asio::post(async::use_op));
-  fprintf(stderr, "%s(%d)\n", __FILE__, __LINE__);
 }
 }
 

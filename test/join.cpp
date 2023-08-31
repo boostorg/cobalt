@@ -35,8 +35,10 @@ static async::generator<int> wgen(asio::any_io_executor exec)
   co_return 123;
 }
 
-static async::promise<void> wthrow()
+static async::promise<void> wthrow(bool throw_ = false)
 {
+  if (throw_)
+    co_await asio::post(co_await async::this_coro::executor, async::use_op);
   throw std::runtime_error("wthrow");
   co_return;
 }
@@ -77,9 +79,6 @@ CO_TEST_CASE("variadic-throw")
   auto g = wgen(exec);
   CHECK_THROWS(co_await join(d1, d2, wdummy(exec, std::chrono::milliseconds(150)),
                          g, wthrow()));
-
-  co_await d1;
-  co_await d2;
 }
 
 CO_TEST_CASE("list")
@@ -105,6 +104,30 @@ CO_TEST_CASE("list-exception")
   vec.push_back(wnever());
 
   CHECK_THROWS(co_await join(std::move(vec)));
+}
+
+CO_TEST_CASE("exception-after-post")
+{
+  CHECK_THROWS(co_await async::join(wthrow(true), wnever()));
+  CHECK_THROWS(co_await async::join(wnever(), wthrow(true)));
+}
+
+
+CO_TEST_CASE("exception-after-list")
+try
+{
+   std::vector<async::promise<void>> vec;
+   vec.push_back(wthrow(true));
+   vec.push_back(wnever());
+   CHECK_THROWS(co_await async::join(vec));
+   vec.clear();
+   vec.push_back(wnever());
+   vec.push_back(wthrow(true));
+   CHECK_THROWS(co_await async::join(vec));
+}
+catch(...)
+{
+
 }
 
 CO_TEST_CASE("compliance")
