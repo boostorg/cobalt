@@ -242,8 +242,8 @@ async::promise<void> timeout_and_write(async::channel<std::string> &channel)
   {
     boost::asio::steady_timer timer{co_await async::this_coro::executor};
     timer.expires_after(std::chrono::seconds{20});
-//    co_await timer.async_wait(async::use_op);
-    co_await channel.write("Test!");
+    co_await timer.async_wait(async::use_op);
+    co_await channel.write(std::string("Test!"));
   }
 
   co_return;
