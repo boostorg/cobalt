@@ -40,10 +40,10 @@ struct unique_handle
 
   void destroy() { handle_.reset(); }
 
-  void operator()() const & { resume(); }
+  void operator()() const & { if(*this) resume(); }
   void resume()     const & { get_handle_().resume(); }
 
-  void operator()() && { release().resume(); }
+  void operator()() && { if(*this) release().resume(); }
   void resume()     && { release().resume(); }
 
   T & promise() {return *handle_;}
@@ -110,10 +110,10 @@ struct unique_handle<void>
   explicit operator bool() const { return static_cast<bool>(handle_); }
   bool done() const noexcept { return get_handle_().done(); }
 
-  void operator()() const & { resume(); }
+  void operator()() const & { if(*this) resume(); }
   void resume() const & { get_handle_().resume(); }
 
-  void operator()() && { release().resume(); }
+  void operator()() && { if(*this) release().resume(); }
   void resume()     && { release().resume(); }
 
   void destroy() { handle_.reset(); }
@@ -189,6 +189,8 @@ struct associator<Associator,
   static typename Associator<Promise, DefaultCandidate>::type
   get(const boost::async::unique_handle<Promise>& h) BOOST_ASIO_NOEXCEPT
   {
+    if (!h)
+      throw_exception(system::system_error(error::invalid_argument, "unique_handle-associator"));
     return Associator<Promise, DefaultCandidate>::get(*h);
   }
 
@@ -199,6 +201,9 @@ struct associator<Associator,
     BOOST_ASIO_AUTO_RETURN_TYPE_SUFFIX((
       Associator<Promise, DefaultCandidate>::get(*h, c)))
   {
+    if (!h)
+      throw_exception(
+          system::system_error(error::invalid_argument, "unique_handle-associator"));
     return Associator<Promise, DefaultCandidate>::get(*h, c);
   }
 };
