@@ -30,7 +30,8 @@ void channel<void>::close()
     op.unlink();
     op.cancelled = true;
     op.cancel_slot.clear();
-    asio::defer(executor_, std::move(op.awaited_from));
+    if (op.awaited_from)
+      asio::defer(executor_, std::move(op.awaited_from));
   }
   while (!write_queue_.empty())
   {
@@ -38,7 +39,8 @@ void channel<void>::close()
     op.unlink();
     op.cancelled = true;
     op.cancel_slot.clear();
-    asio::defer(executor_, std::move(op.awaited_from));
+    if (op.awaited_from)
+      asio::defer(executor_, std::move(op.awaited_from));
   }
 }
 

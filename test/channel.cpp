@@ -9,6 +9,8 @@
 #include <boost/async/promise.hpp>
 #include <boost/async/select.hpp>
 #include <boost/async/gather.hpp>
+#include <boost/async/join.hpp>
+#include <boost/asio/steady_timer.hpp>
 
 #include "test.hpp"
 #include "doctest.h"
@@ -227,6 +229,44 @@ CO_TEST_CASE("selectable-1")
       cv.write());
   CHECK(r1->index() == 1u);
   CHECK(!r2.has_error());
+}
+
+
+
+namespace issue_53
+{
+
+async::promise<void> timeout_and_write(async::channel<std::string> &channel)
+{
+  while (!co_await async::this_coro::cancelled)
+  {
+    boost::asio::steady_timer timer{co_await async::this_coro::executor};
+    timer.expires_after(std::chrono::seconds{20});
+//    co_await timer.async_wait(async::use_op);
+    co_await channel.write("Test!");
+  }
+
+  co_return;
+}
+
+async::promise<void> read(async::channel<std::string> &channel)
+{
+  while (!co_await async::this_coro::cancelled)
+    co_await channel.read();
+}
+
+async::promise<void> test()
+{
+  async::channel<std::string> channel;
+  co_await async::join(timeout_and_write(channel), read(channel));
+}
+
+CO_TEST_CASE("issue-53")
+{
+  fprintf(stderr, "%s(%d)\n", __FILE__, __LINE__);
+  co_await async::select(test(), boost::asio::post(async::use_op));
+  fprintf(stderr, "%s(%d)\n", __FILE__, __LINE__);
+}
 }
 
 TEST_SUITE_END();
