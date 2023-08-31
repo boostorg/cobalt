@@ -1,6 +1,7 @@
 # boost.async
 
-** This is not yet an official boost library. **
+> [!NOTE]  
+> This is not yet an official boost library.
 
 This library provides a set of easy to use coroutine primitives & utilities runing on top of boost.asio.
 A minimum of Boost 1.82 is necessary as the ASIO in that version has needed support. C++ 20 is needed for C++ coroutines.
