@@ -187,9 +187,10 @@ def main(ctx):
 
     return [
         linux("gcc-12",                 branch, "docker.io/library/gcc:12",  variant="release", cxxstd="20"),
-        linux("gcc-12 (io_context)",    branch, "docker.io/library/gcc:12",  variant="release", cxxstd="20", **{'boost.async.executor': 'use_io_context'}),
-        linux("gcc-12 (container.pmr)", branch, "docker.io/library/gcc:12",  variant="release", cxxstd="20", **{'boost.async.pmr': 'boost-container'}),
-        linux("gcc-12 (no pmr)",        branch, "docker.io/library/gcc:12",  variant="release", cxxstd="20", **{'boost.async.pmr': 'no'}),
+        linux("gcc-13",                 branch, "docker.io/library/gcc:13",  variant="release", cxxstd="20"),
+        linux("gcc-13 (io_context)",    branch, "docker.io/library/gcc:13",  variant="release", cxxstd="20", **{'boost.async.executor': 'use_io_context'}),
+        linux("gcc-13 (container.pmr)", branch, "docker.io/library/gcc:13",  variant="release", cxxstd="20", **{'boost.async.pmr': 'boost-container'}),
+        linux("gcc-13 (no pmr)",        branch, "docker.io/library/gcc:13",  variant="release", cxxstd="20", **{'boost.async.pmr': 'no'}),
         linux("clang",                  branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20"),
         linux("clang (container.pmr)",  branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", **{'boost.async.pmr': 'boost-container'}),
         linux("clang (no pmr)",         branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", **{'boost.async.pmr': 'no'}),
