@@ -243,7 +243,8 @@ async::promise<void> timeout_and_write(async::channel<std::string> &channel)
     boost::asio::steady_timer timer{co_await async::this_coro::executor};
     timer.expires_after(std::chrono::seconds{20});
     co_await timer.async_wait(async::use_op);
-    co_await channel.write(std::string("Test!"));
+    std::string val("Test!");
+    co_await channel.write(val);
   }
 
   co_return;
@@ -261,7 +262,7 @@ async::promise<void> test()
   co_await async::join(timeout_and_write(channel), read(channel));
 }
 
-CO_TEST_CASE("issue-53")
+CO_TEST_CASE("issue-93")
 {
   co_await async::select(test(), boost::asio::post(async::use_op));
 }
