@@ -75,7 +75,12 @@ inline
 void thread::cancel(asio::cancellation_type type)
 {
   if (auto st = state_)
-    asio::post(state_->ctx,[s= state_, type]{s->signal.emit(type);});
+    asio::post(state_->ctx,
+               [s= state_, type]
+               {
+                 BOOST_ASIO_HANDLER_LOCATION((__FILE__, __LINE__, __func__));
+                 s->signal.emit(type);
+               });
 }
 
 inline void thread::join() {thread_.join();}

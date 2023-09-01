@@ -58,6 +58,7 @@ void channel<T>::close()
     op.unlink();
     op.cancelled = true;
     op.cancel_slot.clear();
+
     if (op.awaited_from)
       asio::post(executor_, std::move(op.awaited_from));
   }

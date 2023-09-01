@@ -210,9 +210,15 @@ struct completion_handler : detail::completion_handler_base
     template<typename Promise>
     completion_handler(std::coroutine_handle<Promise> h,
                        std::optional<std::tuple<Args...>> &result,
-                       detail::completed_immediately_t * completed_immediately = nullptr)
-            : completion_handler_base(h, completed_immediately),
+                       detail::completed_immediately_t * completed_immediately = nullptr
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+                     , const boost::source_location & loc = BOOST_CURRENT_LOCATION
+#endif
+          ) : completion_handler_base(h, completed_immediately),
               self(h.address()), result(result)
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+            , loc_(loc)
+#endif
     {
     }
 
@@ -221,9 +227,15 @@ struct completion_handler : detail::completion_handler_base
     completion_handler(std::coroutine_handle<Promise> h,
                        std::optional<std::tuple<Args...>> &result,
                        pmr::memory_resource * resource,
-                       detail::completed_immediately_t * completed_immediately = nullptr)
-            : completion_handler_base(h, resource, completed_immediately),
+                       detail::completed_immediately_t * completed_immediately = nullptr
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+                     , const boost::source_location & loc = BOOST_CURRENT_LOCATION
+#endif
+          ) : completion_handler_base(h, resource, completed_immediately),
               self(h.address()), result(result)
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+            , loc_(loc)
+#endif
     {
     }
 #else
@@ -241,6 +253,9 @@ struct completion_handler : detail::completion_handler_base
 
     void operator()(Args ... args)
     {
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+      BOOST_ASIO_HANDLER_LOCATION((loc_.file_name(), loc_.line(), loc_.function_name()));
+#endif
         result.emplace(std::move(args)...);
         BOOST_ASSERT(this->self != nullptr);
         auto p = this->self.release();
@@ -265,6 +280,9 @@ struct completion_handler : detail::completion_handler_base
  private:
     unique_handle<void> self;
     std::optional<std::tuple<Args...>> &result;
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+    boost::source_location loc_;
+#endif
 };
 
 

@@ -47,13 +47,21 @@ struct op
     std::exception_ptr init_ep;
 
     template<typename Promise>
-    bool await_suspend(std::coroutine_handle<Promise> h) noexcept
+    bool await_suspend(std::coroutine_handle<Promise> h
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+                     , const boost::source_location & loc = BOOST_CURRENT_LOCATION
+#endif
+    ) noexcept
     {
       try
       {
         completed_immediately = detail::completed_immediately_t::initiating;
-        op_.initiate(completion_handler<Args...>{h, result, &resource, &completed_immediately});
 
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+        op_.initiate(completion_handler<Args...>{h, result, &resource, &completed_immediately, loc});
+#else
+        op_.initiate(completion_handler<Args...>{h, result, &resource, &completed_immediately});
+#endif
         if (completed_immediately == detail::completed_immediately_t::initiating)
           completed_immediately = detail::completed_immediately_t::no;
         return completed_immediately != detail::completed_immediately_t::yes;

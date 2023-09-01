@@ -186,8 +186,16 @@ struct join_variadic_impl
     }
 
     template<typename H>
-    auto await_suspend(std::coroutine_handle<H> h)
+    auto await_suspend(
+          std::coroutine_handle<H> h
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+        , const boost::source_location & loc = BOOST_CURRENT_LOCATION
+#endif
+    )
     {
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+      this->loc = loc;
+#endif
       this->exec = &detail::get_executor(h);
       last_forked.release().resume();
       while (last_index < tuple_size)
@@ -393,8 +401,16 @@ struct join_ranged_impl
 
 
     template<typename H>
-    auto await_suspend(std::coroutine_handle<H> h)
+    auto await_suspend(
+        std::coroutine_handle<H> h
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+        , const boost::source_location & loc = BOOST_CURRENT_LOCATION
+#endif
+    )
     {
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+      this->loc = loc;
+#endif
       exec = &detail::get_executor(h);
 
       last_forked.release().resume();

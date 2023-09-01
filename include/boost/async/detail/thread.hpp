@@ -140,7 +140,12 @@ struct thread_awaitable
             [st = state_](asio::cancellation_type type)
             {
               std::lock_guard<std::mutex> lock{st->mtx};
-              asio::post(st->ctx,[st, type]{st->signal.emit(type);});
+              asio::post(st->ctx,
+                         [st, type]
+                         {
+                            BOOST_ASIO_HANDLER_LOCATION((__FILE__, __LINE__, __func__));
+                            st->signal.emit(type);
+                         });
             });
 
       }
