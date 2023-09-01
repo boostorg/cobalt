@@ -40,6 +40,7 @@ int main_promise::run_main(::boost::async::main mn)
     asio::cancellation_signal & signal;
     void operator()(system::error_code ec, int sig) const
     {
+      BOOST_ASIO_HANDLER_LOCATION((__FILE__, __LINE__, __func__));
       if (sig == SIGINT)
         signal.emit(asio::cancellation_type::total);
       if (sig == SIGTERM)
@@ -50,7 +51,12 @@ int main_promise::run_main(::boost::async::main mn)
   };
 
   ss.async_wait(work{ss, mn.promise->signal});
-  asio::post(ctx.get_executor(), [p]{p.resume();});
+  asio::post(ctx.get_executor(),
+             [p]
+             {
+               BOOST_ASIO_HANDLER_LOCATION((__FILE__, __LINE__, __func__));
+               p.resume();
+             });
 
   ctx.run();
   return res;

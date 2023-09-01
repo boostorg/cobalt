@@ -65,6 +65,10 @@ struct fork
       BOOST_ASSERT(exec != nullptr);
       return *exec;
     }
+
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+    boost::source_location loc;
+#endif
   };
 
   template<typename std::size_t BufferSize>
@@ -184,6 +188,10 @@ struct fork
         auto await_suspend(std::coroutine_handle<promise_type> h)
         {
           BOOST_ASSERT(h.promise().state->wired_up());
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+          if constexpr (requires {aw.await_suspend(h, boost::source_location ());})
+            return aw.await_suspend(h, h.promise().state->loc);
+#endif
           return aw.await_suspend(h);
         }
 

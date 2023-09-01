@@ -410,7 +410,12 @@ struct generator_yield_awaitable
     return self && self->pushed_value && !self->result;
   }
 
-  std::coroutine_handle<void> await_suspend(std::coroutine_handle<generator_promise<Yield, Push>> h)
+  std::coroutine_handle<void> await_suspend(
+        std::coroutine_handle<generator_promise<Yield, Push>> h
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+      , const boost::source_location & loc = BOOST_CURRENT_LOCATION
+#endif
+      )
   {
     if (self == nullptr) // we're a terminator, kill it
     {
@@ -429,7 +434,11 @@ struct generator_yield_awaitable
     std::coroutine_handle<void> res = std::noop_coroutine();
     if (self->awaited_from.get() != nullptr)
       res = self->awaited_from.release();
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+    self->yield_from.reset(&h.promise(), loc);
+#else
     self->yield_from.reset(&h.promise());
+#endif
     return res;
   }
 
@@ -446,7 +455,12 @@ struct generator_yield_awaitable<Yield, void>
   generator_receiver<Yield, void> * self;
   constexpr bool await_ready() { return self && self->pushed_value; }
 
-  std::coroutine_handle<> await_suspend(std::coroutine_handle<generator_promise<Yield, void>> h)
+  std::coroutine_handle<> await_suspend(
+      std::coroutine_handle<generator_promise<Yield, void>> h
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+      , const boost::source_location & loc = BOOST_CURRENT_LOCATION
+#endif
+  )
   {
     if (self == nullptr) // we're a terminator, kill it
     {
@@ -464,7 +478,11 @@ struct generator_yield_awaitable<Yield, void>
     std::coroutine_handle<void> res = std::noop_coroutine();
     if (self->awaited_from.get() != nullptr)
       res = self->awaited_from.release();
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+    self->yield_from.reset(&h.promise(), loc);
+#else
     self->yield_from.reset(&h.promise());
+#endif
     return res;
   }
 
