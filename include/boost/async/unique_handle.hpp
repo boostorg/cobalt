@@ -61,14 +61,18 @@ struct unique_handle
 
   void operator()() const &
   {
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
     BOOST_ASIO_HANDLER_LOCATION((loc_.file_name(), loc_.line(), loc_.function_name()));
+#endif
     resume();
   }
   void resume()     const & { get_handle_().resume(); }
 
   void operator()() &&
   {
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
     BOOST_ASIO_HANDLER_LOCATION((loc_.file_name(), loc_.line(), loc_.function_name()));
+#endif
     release().resume();
   }
   void resume()     && { release().resume(); }
@@ -180,14 +184,18 @@ static unique_handle<void> from_address(void* a) noexcept
 
   void operator()() const &
   {
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
     BOOST_ASIO_HANDLER_LOCATION((loc_.file_name(), loc_.line(), loc_.function_name()));
+#endif
     resume();
   }
   void resume() const & { get_handle_().resume(); }
 
   void operator()() &&
   {
+#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
     BOOST_ASIO_HANDLER_LOCATION((loc_.file_name(), loc_.line(), loc_.function_name()));
+#endif
     release().resume();
   }
   void resume()     && { release().resume(); }

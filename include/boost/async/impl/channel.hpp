@@ -87,6 +87,7 @@ struct channel<T>::read_op::cancel_impl
       asio::post(
           op->chn->executor_,
           std::move(op->awaited_from));
+    op->cancel_slot.clear();
   }
 };
 
@@ -165,6 +166,7 @@ struct channel<T>::write_op::cancel_impl
     if (op->awaited_from)
       asio::post(
         op->chn->executor_, std::move(op->awaited_from));
+    op->cancel_slot.clear();
   }
 };
 
@@ -244,9 +246,8 @@ struct channel<void>::read_op::cancel_impl
   {
     op->cancelled = true;
     op->unlink();
-    BOOST_ASSERT(op->awaited_from != nullptr);
-    if (op->awaited_from)
-      asio::post(op->chn->executor_, std::move(op->awaited_from));
+    asio::post(op->chn->executor_, std::move(op->awaited_from));
+    op->cancel_slot.clear();
   }
 };
 
@@ -258,10 +259,8 @@ struct channel<void>::write_op::cancel_impl
   {
     op->cancelled = true;
     op->unlink();
-    BOOST_ASSERT(op->awaited_from != nullptr);
-    if (op->awaited_from)
-      asio::post(
-          op->chn->executor_, std::move(op->awaited_from));
+    asio::post(op->chn->executor_, std::move(op->awaited_from));
+    op->cancel_slot.clear();
   }
 };
 
