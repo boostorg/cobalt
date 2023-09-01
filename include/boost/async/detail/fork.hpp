@@ -102,8 +102,8 @@ struct fork
   };
   struct promise_type
   {
-    template<typename ... Rest>
-    void * operator new(const std::size_t size, shared_state & st, Rest &&...)
+    template<typename State, typename ... Rest>
+    void * operator new(const std::size_t size, State & st, Rest &&...)
     {
       return st.resource.allocate(size);
     }
