@@ -74,7 +74,7 @@ void channel<T>::close()
 
 
 template<typename T>
-struct  channel<T>::read_op::cancel_impl
+struct channel<T>::read_op::cancel_impl
 {
   read_op * op;
   cancel_impl(read_op * op) : op(op) {}
