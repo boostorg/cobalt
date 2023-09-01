@@ -113,6 +113,7 @@ std::coroutine_handle<void> channel<T>::read_op::await_suspend(std::coroutine_ha
   }
   else
   {
+    cancel_slot.clear();
     auto & op = chn->write_queue_.front();
     op.transactional_unlink();
     op.direct = true;
@@ -190,6 +191,7 @@ std::coroutine_handle<void> channel<T>::write_op::await_suspend(std::coroutine_h
   }
   else
   {
+    cancel_slot.clear();
     auto & op = chn->read_queue_.front();
     op.transactional_unlink();
     if (ref.index() == 0)
@@ -284,6 +286,7 @@ std::coroutine_handle<void> channel<void>::read_op::await_suspend(std::coroutine
   }
   else // we're good, we can read, so we'll do that, but we need to post, so we need to initialize a transactin.
   {
+    cancel_slot.clear();
     auto & op = chn->write_queue_.front();
     op.unlink();
     op.direct = true;
@@ -314,6 +317,7 @@ std::coroutine_handle<void> channel<void>::write_op::await_suspend(std::coroutin
   }
   else
   {
+    cancel_slot.clear();
     auto & op = chn->read_queue_.front();
     op.unlink();
     op.direct = true;
