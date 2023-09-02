@@ -12,6 +12,7 @@
 #include <boost/async/detail/sbo_resource.hpp>
 #include <boost/asio/bind_allocator.hpp>
 #include <boost/asio/post.hpp>
+#include <boost/system/result.hpp>
 
 #include <memory>
 #include <optional>
@@ -285,69 +286,6 @@ struct completion_handler : detail::completion_handler_base
 #endif
 };
 
-
-
-inline void interpret_result(std::tuple<> &&)
-{
-}
-
-template<typename ... Args>
-auto interpret_result(std::tuple<Args...> && args)
-{
-    return std::move(args);
-}
-
-template<typename ... Args>
-auto interpret_result(std::tuple<std::exception_ptr, Args...> && args)
-{
-    if (std::get<0>(args))
-        std::rethrow_exception(std::get<0>(args));
-    return std::apply([](auto, auto && ... rest) {return std::make_tuple(std::move(rest)...);});
-}
-
-template<typename ... Args>
-auto interpret_result(std::tuple<system::error_code, Args...> && args)
-{
-    if (std::get<0>(args))
-        throw system::system_error(std::get<0>(args));
-    return std::apply([](auto, auto && ... rest) {return std::make_tuple(std::move(rest)...);});
-}
-
-template<typename  Arg>
-auto interpret_result(std::tuple<Arg> && args)
-{
-    return std::get<0>(std::move(args));
-}
-
-template<typename Arg>
-auto interpret_result(std::tuple<std::exception_ptr, Arg> && args)
-{
-    if (std::get<0>(args))
-        std::rethrow_exception(std::get<0>(args));
-    return std::get<1>(std::move(args));
-}
-
-inline auto interpret_result(std::tuple<system::error_code> && args)
-{
-    if (std::get<0>(args))
-        throw system::system_error(std::get<0>(args));
-}
-
-
-inline auto interpret_result(std::tuple<std::exception_ptr> && args)
-{
-    if (std::get<0>(args))
-        std::rethrow_exception(std::get<0>(args));
-}
-
-template<typename Arg>
-auto interpret_result(std::tuple<system::error_code, Arg> && args)
-{
-    if (std::get<0>(args))
-        throw system::system_error(std::get<0>(args));
-    return std::get<1>(std::move(args));
-}
-
-}
+};
 
 #endif //BOOST_ASYNC_HANDLER_HPP

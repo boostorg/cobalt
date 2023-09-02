@@ -29,6 +29,9 @@
 namespace boost::async
 {
 
+struct as_tuple_tag;
+struct as_result_tag;
+
 template<typename Return>
 struct promise;
 
@@ -44,11 +47,11 @@ struct promise_value_holder
   std::optional<T> result;
   bool result_taken = false;
 
-  T get_result()
+  system::result<T, std::exception_ptr> get_result_value()
   {
     result_taken = true;
     BOOST_ASSERT(result);
-    return std::move(*result);
+    return {system::in_place_value, std::move(*result)};
   }
 
   void return_value(T && ret)
@@ -69,7 +72,11 @@ template<>
 struct promise_value_holder<void>
 {
   bool result_taken = false;
-  void get_result() { result_taken = true; }
+  system::result<void, std::exception_ptr> get_result_value()
+  {
+    result_taken = true;
+    return {system::in_place_value};
+  }
 
   inline void return_void();
 };
@@ -80,15 +87,16 @@ template<typename T>
 struct promise_receiver : promise_value_holder<T>
 {
   std::exception_ptr exception;
-  void rethrow_if()
+  system::result<T, std::exception_ptr> get_result()
   {
     if (exception && !done) // detached error
-      std::rethrow_exception(std::exchange(exception, nullptr));
+      return {system::in_place_error, std::exchange(exception, nullptr)};
     else if (exception)
     {
       this->result_taken = true;
-      std::rethrow_exception(exception);
+      return {system::in_place_error, exception};
     }
+    return this->get_result_value();
   }
   void unhandled_exception()
   {
@@ -174,16 +182,46 @@ struct promise_receiver : promise_value_holder<T>
       return true;
     }
 
-    T await_resume()
+    T await_resume(const boost::source_location & loc = BOOST_CURRENT_LOCATION)
     {
       if (cl.is_connected())
-          cl.clear();
+        cl.clear();
       if (ex)
         std::rethrow_exception(ex);
-      self->rethrow_if();
+      return self->get_result().value(loc);
+    }
+
+    system::result<T, std::exception_ptr> await_resume(const as_result_tag &)
+    {
+      if (cl.is_connected())
+        cl.clear();
+      if (ex)
+        return {system::in_place_error, std::move(ex)};
       return self->get_result();
     }
 
+    auto await_resume(const as_tuple_tag &)
+    {
+      if (cl.is_connected())
+        cl.clear();
+
+      if constexpr (std::is_void_v<T>)
+      {
+        if (ex)
+          return std::move(ex);
+        return self->get_result().error();
+      }
+      else
+      {
+        if (ex)
+          return std::make_tuple(std::move(ex), T{});
+        auto res = self->get_result();
+        if (res.has_error())
+          return std::make_tuple(res.error(), T{});
+        else
+          return std::make_tuple(std::exception_ptr(), std::move(*res));
+      }
+    }
     void interrupt_await() &
     {
       if (!self)

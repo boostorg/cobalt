@@ -50,8 +50,7 @@ struct [[nodiscard]] promise
       if (!ready())
         boost::throw_exception(std::logic_error("promise not ready"), loc);
 
-      receiver_.rethrow_if();
-      return receiver_.get_result();
+      return receiver_.get_result().value(loc);
     }
 
     using promise_type = detail::async_promise<Return>;

@@ -31,7 +31,7 @@ struct async_initiate
     if (rec.done)
       return asio::dispatch(
           asio::get_associated_immediate_executor(h, exec),
-          asio::append(std::forward<Handler>(h), rec.exception, rec.exception ? T() : rec.get_result()));
+          asio::append(std::forward<Handler>(h), rec.exception, rec.exception ? T() : *rec.get_result()));
 
 #if !defined(BOOST_ASYNC_NO_PMR)
     auto dalloc = pmr::polymorphic_allocator<void>{boost::async::this_thread::get_default_resource()};
@@ -61,7 +61,7 @@ struct async_initiate
                   auto ex = r->exception;
                   T rr{};
                   if (r->result)
-                     rr = r->get_result();
+                     rr = std::move(*r->result);
                   r.reset();
                   h(ex, std::move(rr));
                 }

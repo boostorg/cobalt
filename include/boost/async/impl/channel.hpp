@@ -9,6 +9,7 @@
 #define BOOST_ASYNC_IMPL_CHANNEL_HPP
 
 #include <boost/async/channel.hpp>
+#include <boost/async/result.hpp>
 
 #include <boost/asio/post.hpp>
 
@@ -127,14 +128,33 @@ std::coroutine_handle<void> channel<T>::read_op::await_suspend(std::coroutine_ha
   }
 }
 
+
 template<typename T>
 T channel<T>::read_op::await_resume()
+{
+  return await_resume(as_result_tag{}).value(loc);
+}
+
+template<typename T>
+std::tuple<system::error_code, T> channel<T>::read_op::await_resume(const struct as_tuple_tag &)
+{
+  auto res = await_resume(as_result_tag{});
+
+  if (res.has_error())
+    return {res.error(), T{}};
+  else
+    return {system::error_code{}, std::move(*res)};
+
+}
+
+template<typename T>
+system::result<T> channel<T>::read_op::await_resume(const struct as_result_tag &)
 {
   if (cancel_slot.is_connected())
     cancel_slot.clear();
 
   if (cancelled)
-    boost::throw_exception(system::system_error(asio::error::operation_aborted), loc);
+   return {system::in_place_error, asio::error::operation_aborted};
 
   T value = direct ? std::move(*direct) : std::move(chn->buffer_.front());
   if (!direct)
@@ -151,8 +171,7 @@ T channel<T>::read_op::await_resume()
       asio::post(chn->executor_, std::move(op.awaited_from));
     }
   }
-
-  return value;
+  return {system::in_place_value, value};
 }
 
 template<typename T>
@@ -208,7 +227,19 @@ std::coroutine_handle<void> channel<T>::write_op::await_suspend(std::coroutine_h
 }
 
 template<typename T>
+std::tuple<system::error_code> channel<T>::write_op::await_resume(const struct as_tuple_tag &)
+{
+  return await_resume(as_result_tag{}).error();
+}
+
+template<typename T>
 void channel<T>::write_op::await_resume()
+{
+  await_resume(as_result_tag{}).value(loc);
+}
+
+template<typename T>
+system::result<void>  channel<T>::write_op::await_resume(const struct as_result_tag &)
 {
   if (cancel_slot.is_connected())
     cancel_slot.clear();
@@ -236,8 +267,7 @@ void channel<T>::write_op::await_resume()
       asio::post(chn->executor_, std::move(op.awaited_from));
     }
   }
-
-
+  return system::in_place_value;
 }
 
 struct channel<void>::read_op::cancel_impl

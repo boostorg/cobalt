@@ -44,13 +44,13 @@ void channel<void>::close()
   }
 }
 
-void channel<void>::read_op::await_resume()
+system::result<void>  channel<void>::read_op::await_resume(const struct as_result_tag &)
 {
   if (cancel_slot.is_connected())
     cancel_slot.clear();
 
   if (cancelled)
-    boost::throw_exception(system::system_error(asio::error::operation_aborted), loc);
+    return {system::in_place_error, asio::error::operation_aborted};
 
   if (!direct)
     chn->n_--;
@@ -66,14 +66,26 @@ void channel<void>::read_op::await_resume()
           chn->executor_, std::move(op.awaited_from));
     }
   }
+  return {system::in_place_value};
 }
 
-void channel<void>::write_op::await_resume()
+void channel<void>::read_op::await_resume()
+{
+  await_resume(as_result_tag{}).value(loc);
+}
+
+std::tuple<system::error_code> channel<void>::read_op::await_resume(const struct as_tuple_tag & )
+{
+  return await_resume(as_result_tag{}).error();
+}
+
+
+system::result<void> channel<void>::write_op::await_resume(const struct as_result_tag &)
 {
   if (cancel_slot.is_connected())
     cancel_slot.clear();
   if (cancelled)
-    boost::throw_exception(system::system_error(asio::error::operation_aborted), loc);
+    return {system::in_place_error, asio::error::operation_aborted};
   if (!direct)
     chn->n_++;
 
@@ -89,6 +101,19 @@ void channel<void>::write_op::await_resume()
           chn->executor_, std::move(op.awaited_from));
     }
   }
+  return {system::in_place_value};
+}
+
+
+void channel<void>::write_op::await_resume()
+{
+  await_resume(as_result_tag{}).value(loc);
+}
+
+
+std::tuple<system::error_code> channel<void>::write_op::await_resume(const struct as_tuple_tag & )
+{
+  return await_resume(as_result_tag{}).error();
 }
 
 }
