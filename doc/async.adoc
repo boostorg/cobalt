@@ -75,4 +75,7 @@ include::benchmarks.adoc[]
 
 include::compiler.adoc[]
 
+include::acknowledgements.adoc[]
+
+
 :leveloffset: -1
