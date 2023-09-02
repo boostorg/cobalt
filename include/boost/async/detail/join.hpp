@@ -234,6 +234,45 @@ struct join_variadic_impl
               return std::move(*var);
             }, result);
     }
+
+    auto await_resume(const as_tuple_tag &)
+    {
+      using t = decltype(await_resume());
+      if constexpr(!all_void)
+      {
+        if (error)
+          return std::make_tuple(error, t{});
+        else
+          return std::make_tuple(std::current_exception(),
+                                 mp11::tuple_transform(
+              []<typename T>(std::optional<T> & var)
+                  -> T
+              {
+                BOOST_ASSERT(var.has_value());
+                return std::move(*var);
+              }, result));
+      }
+      else
+        return std::make_tuple(error);
+    }
+
+    auto await_resume(const as_result_tag &)
+    {
+      using t = decltype(await_resume());
+      using rt = system::result<t, std::exception_ptr>;
+      if (error)
+        return rt(system::in_place_error, error);
+      if constexpr(!all_void)
+        return mp11::tuple_transform(
+            []<typename T>(std::optional<T> & var)
+                -> T
+            {
+              BOOST_ASSERT(var.has_value());
+              return std::move(*var);
+            }, result);
+      else
+        return system::in_place_value;
+    }
   };
   awaitable operator co_await() &&
   {
@@ -436,6 +475,44 @@ struct join_ranged_impl
 
       this->coro.reset(h.address());
       return true;
+    }
+
+    auto await_resume(const as_tuple_tag & )
+    {
+#if defined(BOOST_ASYNC_NO_PMR)
+      std::vector<result_type> rr;
+#else
+      pmr::vector<result_type> rr{this_thread::get_allocator()};
+#endif
+
+      if (error)
+        return std::make_tuple(error, rr);
+      if constexpr (!std::is_void_v<result_type>)
+      {
+        rr.reserve(result.size());
+        for (auto & t : result)
+          rr.push_back(*std::move(t));
+        return std::make_tuple(std::exception_ptr(), std::move(rr));
+      }
+    }
+
+    auto await_resume(const as_result_tag & )
+    {
+#if defined(BOOST_ASYNC_NO_PMR)
+      std::vector<result_type> rr;
+#else
+      pmr::vector<result_type> rr{this_thread::get_allocator()};
+#endif
+
+      if (error)
+        return system::result<decltype(rr), std::exception_ptr>(error);
+      if constexpr (!std::is_void_v<result_type>)
+      {
+        rr.reserve(result.size());
+        for (auto & t : result)
+          rr.push_back(*std::move(t));
+        return rr;
+      }
     }
 
     auto await_resume()

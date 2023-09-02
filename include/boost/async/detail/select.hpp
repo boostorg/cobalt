@@ -12,6 +12,7 @@
 #include <boost/async/detail/fork.hpp>
 #include <boost/async/detail/handler.hpp>
 #include <boost/async/detail/forward_cancellation.hpp>
+#include <boost/async/result.hpp>
 #include <boost/async/this_thread.hpp>
 #include <boost/async/detail/util.hpp>
 
@@ -297,10 +298,31 @@ struct select_variadic_impl
 
     auto await_resume()
     {
+      if (error)
+        std::rethrow_exception(error);
       if constexpr (all_void)
         return index;
       else
         return std::move(*result);
+    }
+
+    auto await_resume(const as_tuple_tag &)
+    {
+      if constexpr (all_void)
+        return std::make_tuple(error, index);
+      else
+        return std::make_tuple(error, std::move(*result));
+    }
+
+    auto await_resume(const as_result_tag & )
+        -> system::result<std::conditional_t<all_void, std::size_t, variant2::variant<void_as_monostate<co_await_result_t<Args>>...>>, std::exception_ptr>
+    {
+      if (error)
+        return {system::in_place_error, error};
+      if constexpr (all_void)
+        return {system::in_place_value, index};
+      else
+        return {system::in_place_value, std::move(*result)};
     }
   };
   awaitable operator co_await() &&
@@ -548,6 +570,26 @@ struct select_ranged_impl
       else
         return std::make_pair(index, *result);
     }
+
+    auto await_resume(const as_tuple_tag &)
+    {
+      if constexpr (std::is_void_v<result_type>)
+        return std::make_tuple(error, index);
+      else
+        return std::make_tuple(error, std::make_pair(index, std::move(*result)));
+    }
+
+    auto await_resume(const as_result_tag & )
+    -> system::result<result_type, std::exception_ptr>
+    {
+      if (error)
+        return {system::in_place_error, error};
+      if constexpr (std::is_void_v<result_type>)
+        return {system::in_place_value, index};
+      else
+        return {system::in_place_value, std::make_pair(index, std::move(*result))};
+    }
+
   };
   awaitable operator co_await() &&
   {

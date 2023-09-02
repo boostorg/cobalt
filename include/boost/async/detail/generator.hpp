@@ -9,6 +9,7 @@
 #define BOOST_ASYNC_DETAIL_GENERATOR_HPP
 
 #include <boost/async/concepts.hpp>
+#include <boost/async/result.hpp>
 #include <boost/async/detail/exception.hpp>
 #include <boost/async/detail/forward_cancellation.hpp>
 #include <boost/async/detail/this_thread.hpp>
@@ -191,16 +192,31 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
       return std::coroutine_handle<void>::from_address(res.address());
     }
 
-    Yield await_resume()
+    Yield await_resume(const boost::source_location & loc = BOOST_CURRENT_LOCATION)
+    {
+      return await_resume(as_result_tag{}).value(loc);
+    }
+
+    std::tuple<std::exception_ptr, Yield> await_resume(
+        const as_tuple_tag &)
+    {
+      auto res = await_resume(as_result_tag{});
+      if (res.has_error())
+          return {res.error(), Yield{}};
+      else
+          return {nullptr, res.value()};
+    }
+
+    system::result<Yield, std::exception_ptr> await_resume(const as_result_tag& )
     {
       if (cl.is_connected())
         cl.clear();
       if (ex)
-        std::rethrow_exception(ex);
+        return {system::in_place_error, ex};
       if (self->exception)
-        std::rethrow_exception(std::exchange(self->exception, nullptr));
+        return {system::in_place_error, std::exchange(self->exception, nullptr)};
       if (!self->result)
-        boost::throw_exception(std::logic_error("async::generator returned"), BOOST_CURRENT_LOCATION);
+        return {system::in_place_error, std::make_exception_ptr(std::logic_error("async::generator returned"))};
 
       if (to_push.index() > 0)
       {
@@ -225,7 +241,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
             std::move(exec), std::exchange(self->yield_from, nullptr));
       }
 
-      return self->get_result();
+      return {system::in_place_value, self->get_result()};
     }
 
     void interrupt_await() &

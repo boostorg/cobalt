@@ -10,6 +10,7 @@
 
 #include <boost/async/detail/handler.hpp>
 #include <boost/async/detail/sbo_resource.hpp>
+#include <boost/async/result.hpp>
 
 namespace boost::async
 {
@@ -73,12 +74,27 @@ struct op
       }
     }
 
-    auto await_resume()
+    auto await_resume(const boost::source_location & loc = BOOST_CURRENT_LOCATION)
     {
       if (init_ep)
         std::rethrow_exception(init_ep);
-      return interpret_result(*std::move(result));
+      return await_resume(as_result_tag{}).value(loc);
     }
+
+    auto await_resume(const struct as_tuple_tag &)
+    {
+      if (init_ep)
+        std::rethrow_exception(init_ep);
+      return *std::move(result);
+    }
+
+    auto await_resume(const struct as_result_tag &)
+    {
+      if (init_ep)
+        std::rethrow_exception(init_ep);
+      return interpret_as_result(*std::move(result));
+    }
+
 
 
   };
@@ -154,7 +170,7 @@ namespace boost::asio
 template<typename ... Args>
 struct async_result<boost::async::use_op_t, void(Args...)>
 {
-  using return_type = decltype(boost::async::interpret_result(std::declval<std::tuple<Args...>&&>()));
+  using return_type = boost::async::op<Args...>;
 
   template <typename Initiation, typename... InitArgs>
   struct op_impl final : boost::async::op<Args...>

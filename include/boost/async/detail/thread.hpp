@@ -21,6 +21,9 @@
 namespace boost::async
 {
 
+struct as_tuple_tag;
+struct as_result_tag;
+
 namespace detail
 {
 struct thread_promise;
@@ -164,6 +167,30 @@ struct thread_awaitable
       return;
     if (auto ee = std::get<0>(*res))
       std::rethrow_exception(ee);
+  }
+
+  system::result<void, std::exception_ptr> await_resume(const as_result_tag &)
+  {
+    if (cl.is_connected())
+      cl.clear();
+    if (thread_)
+      thread_->join();
+    if (!res) // await_ready
+      return {system::in_place_value};
+    if (auto ee = std::get<0>(*res))
+      return {system::in_place_error, std::move(ee)};
+
+    return {system::in_place_value};
+  }
+
+  std::tuple<std::exception_ptr> await_resume(const as_tuple_tag &)
+  {
+    if (cl.is_connected())
+      cl.clear();
+    if (thread_)
+      thread_->join();
+
+    return std::get<0>(*res);
   }
 
   explicit thread_awaitable(std::shared_ptr<detail::thread_state> state)
