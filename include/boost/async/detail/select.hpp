@@ -175,7 +175,7 @@ struct select_variadic_impl
               )
       };
 
-      as_result aw{aw_};
+      as_result_t aw{aw_};
 
 
       struct interruptor final : interruptible_base
@@ -507,7 +507,7 @@ struct select_ranged_impl
               static_cast<typename traits::awaitable>(*std::next(std::begin(this_.aws), idx))
               )};
 
-      as_result aw{aw_};
+      as_result_t aw{aw_};
 
       if constexpr (traits::interruptible)
         this_.working[idx] = &aw_;

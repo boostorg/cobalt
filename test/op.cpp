@@ -83,8 +83,8 @@ CO_TEST_CASE("op")
   co_await test_wait_op_2{tim};
   CHECK_THROWS(co_await test_wait_op_2{tim});
 
-  co_await post_op(co_await asio::this_coro::executor);
-  co_await tim.async_wait(async::use_op);
+  (co_await async::as_result(post_op(co_await asio::this_coro::executor))).value();
+  (co_await async::as_result(tim.async_wait(async::use_op))).value();
 }
 
 struct op_throw_op
@@ -160,10 +160,11 @@ CO_TEST_CASE("immediate_executor")
   asio::post(co_await asio::this_coro::executor, [&]{called = true;});
   asio::experimental::channel<void(system::error_code)> chn{co_await asio::this_coro::executor, 2u};
   CHECK(chn.try_send(system::error_code()));
-  co_await chn.async_receive(async::use_op);
+  auto [ec] = co_await async::as_tuple(chn.async_receive(async::use_op));
+  CHECK(!ec);
 
   CHECK(!called);
-  co_await asio::post(co_await asio::this_coro::executor, async::use_op);
+  co_await async::as_tuple(asio::post(co_await asio::this_coro::executor, async::use_op));
   CHECK(called);
 }
 
