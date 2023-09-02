@@ -98,6 +98,11 @@ struct select_variadic_impl
 
   struct awaitable : fork::static_shared_state<256 * tuple_size>
   {
+
+#if !defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+    boost::source_location loc;
+#endif
+
     template<std::size_t ... Idx>
     awaitable(std::tuple<Args...> & args, URBG & g, std::index_sequence<Idx...>) :
         aws{args}
@@ -141,28 +146,48 @@ struct select_variadic_impl
           i->interrupt_await();
     }
 
+    template<typename T, typename Error>
+    void assign_error(system::result<T, Error> & res)
+    try
+    {
+      std::move(res).value(loc);
+    }
+    catch(...)
+    {
+      error = std::current_exception();
+    }
+
+    template<typename T>
+    void assign_error(system::result<T, std::exception_ptr> & res)
+    {
+      error = std::move(res).error();
+    }
+
     template<std::size_t Idx>
     static detail::fork await_impl(awaitable & this_)
     try
     {
       using traits = select_traits<mp11::mp_at_c<mp11::mp_list<Args...>, Idx>>;
 
-      typename traits::actual_awaitable aw{
+      typename traits::actual_awaitable aw_{
           get_awaitable_type(
               static_cast<typename traits::awaitable>(std::get<Idx>(this_.aws))
               )
       };
 
+      as_result aw{aw_};
+
+
       struct interruptor final : interruptible_base
       {
         std::decay_t<typename traits::actual_awaitable> & aw;
-        interruptor(std::decay_t<typename traits::actual_awaitable> &  aw) : aw(aw) {}
+        interruptor(std::decay_t<typename traits::actual_awaitable> & aw) : aw(aw) {}
         void interrupt_await() override
         {
           traits::do_interrupt(aw);
         }
       };
-      interruptor in{aw};
+      interruptor in{aw_};
       //if constexpr (traits::interruptible)
         this_.working[Idx] = &in;
 
@@ -186,13 +211,17 @@ struct select_variadic_impl
         co_await detail::fork::wired_up;
 
         // do the await - this doesn't call await-ready again
-        if constexpr (std::is_void_v<decltype(aw.await_resume())>)
+        if constexpr (std::is_void_v<decltype(aw_.await_resume())>)
         {
-          co_await aw;
+          auto res = co_await aw;
           if (!this_.has_result())
+          {
             this_.index = Idx;
+            if (res.has_error())
+              this_.assign_error(res);
+          }
           if constexpr(!all_void)
-            if (this_.index == Idx)
+            if (this_.index == Idx && !res.has_error())
               this_.result.emplace(variant2::in_place_index<Idx>);
         }
         else
@@ -201,7 +230,12 @@ struct select_variadic_impl
           if (!this_.has_result())
             this_.index = Idx;
           if (this_.index == Idx)
-            this_.result.emplace(variant2::in_place_index<Idx>,  std::move(val));
+          {
+            if (val.has_error())
+              this_.assign_error(val);
+            else
+              this_.result.emplace(variant2::in_place_index<Idx>, *std::move(val));
+          }
         }
         this_.cancel[Idx] = nullptr;
       }
@@ -209,16 +243,27 @@ struct select_variadic_impl
       {
         if (!this_.has_result())
           this_.index = Idx;
-        if constexpr (std::is_void_v<decltype(aw.await_resume())>)
+        if constexpr (std::is_void_v<decltype(aw_.await_resume())>)
         {
-          aw.await_resume();
+          auto res = aw.await_resume();
           if (this_.index == Idx)
-            this_.result.emplace(variant2::in_place_index<Idx>);
+          {
+            if (res.has_error())
+              this_.assign_error(res);
+            else
+              this_.result.emplace(variant2::in_place_index<Idx>);
+          }
         }
         else
         {
           if (this_.index == Idx)
-            this_.result.emplace(variant2::in_place_index<Idx>, aw.await_resume());
+          {
+            auto res = aw.await_resume();
+            if (res.has_error())
+              this_.assign_error(res);
+            else
+              this_.result.emplace(variant2::in_place_index<Idx>, *std::move(res));
+          }
           else
             aw.await_resume();
         }
@@ -253,15 +298,10 @@ struct select_variadic_impl
 
     template<typename H>
     auto await_suspend(
-        std::coroutine_handle<H> h
-#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
-      , const boost::source_location & loc = BOOST_CURRENT_LOCATION
-#endif
-        )
+        std::coroutine_handle<H> h,
+        const boost::source_location & loc = BOOST_CURRENT_LOCATION)
     {
-#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
       this->loc = loc;
-#endif
 
       this->exec = &async::detail::get_executor(h);
       last_forked.release().resume();
@@ -335,6 +375,7 @@ struct select_variadic_impl
 template<asio::cancellation_type Ct, typename URBG, typename Range>
 struct select_ranged_impl
 {
+
   using result_type = co_await_result_t<std::decay_t<decltype(*std::begin(std::declval<Range>()))>>;
   template<typename URBG_>
   select_ranged_impl(URBG_ && g, Range && rng)
@@ -347,6 +388,11 @@ struct select_ranged_impl
 
   struct awaitable : fork::shared_state
   {
+
+#if !defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
+    boost::source_location loc;
+#endif
+
     using type = std::decay_t<decltype(*std::begin(std::declval<Range>()))>;
     using traits = select_traits<Range, type>;
 
@@ -435,15 +481,36 @@ struct select_ranged_impl
             traits::do_interrupt(*aw);
     }
 
+
+    template<typename T, typename Error>
+    void assign_error(system::result<T, Error> & res)
+    try
+    {
+      std::move(res).value(loc);
+    }
+    catch(...)
+    {
+      error = std::current_exception();
+    }
+
+    template<typename T>
+    void assign_error(system::result<T, std::exception_ptr> & res)
+    {
+      error = std::move(res).error();
+    }
+
     static detail::fork await_impl(awaitable & this_, std::size_t idx)
     try
     {
-      typename traits::actual_awaitable aw{
+      typename traits::actual_awaitable aw_{
           get_awaitable_type(
               static_cast<typename traits::awaitable>(*std::next(std::begin(this_.aws), idx))
               )};
+
+      as_result aw{aw_};
+
       if constexpr (traits::interruptible)
-        this_.working[idx] = &aw;
+        this_.working[idx] = &aw_;
 
       auto transaction = [&this_, idx = idx] {
         if (this_.has_result())
@@ -467,9 +534,13 @@ struct select_ranged_impl
         // do the await - this doesn't call await-ready again
         if constexpr (std::is_void_v<result_type>)
         {
-          co_await aw;
+          auto res = co_await aw;
           if (!this_.has_result())
+          {
+            if (res.has_error())
+              this_.assign_error(res);
             this_.index = idx;
+          }
         }
         else
         {
@@ -477,20 +548,36 @@ struct select_ranged_impl
           if (!this_.has_result())
             this_.index = idx;
           if (this_.index == idx)
-            this_.result.emplace(std::move(val));
+          {
+            if (val.has_error())
+              this_.assign_error(val);
+            else
+              this_.result.emplace(*std::move(val));
+          }
         }
         this_.cancel[idx] = nullptr;
       }
       else
       {
+
         if (!this_.has_result())
           this_.index = idx;
-        if constexpr (std::is_void_v<decltype(aw.await_resume())>)
-          aw.await_resume();
+        if constexpr (std::is_void_v<decltype(aw_.await_resume())>)
+        {
+          auto val = aw.await_resume();
+          if (val.has_error())
+            this_.assign_error(val);
+        }
         else
         {
           if (this_.index == idx)
-            this_.result.emplace(aw.await_resume());
+          {
+            auto val = aw.await_resume();
+            if (val.has_error())
+              this_.assign_error(val);
+            else
+              this_.result.emplace(*std::move(val));
+          }
           else
             aw.await_resume();
         }
@@ -519,15 +606,10 @@ struct select_ranged_impl
     }
 
     template<typename H>
-    auto await_suspend(std::coroutine_handle<H> h
-#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
-                     , const boost::source_location & loc = BOOST_CURRENT_LOCATION
-#endif
-    )
+    auto await_suspend(std::coroutine_handle<H> h,
+                       const boost::source_location & loc = BOOST_CURRENT_LOCATION)
     {
-#if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
       this->loc = loc;
-#endif
       this->exec = &detail::get_executor(h);
       last_forked.release().resume();
 
