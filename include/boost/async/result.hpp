@@ -83,9 +83,9 @@ struct as_result_tag {};
 struct as_tuple_tag {};
 
 template<awaitable Aw>
-struct as_result
+struct as_result_t
 {
-  as_result(Aw && aw) : aw_(std::forward<Aw>(aw)) {}
+  as_result_t(Aw && aw) : aw_(std::forward<Aw>(aw)) {}
 
   bool await_ready() { return aw_.await_ready();}
   template<typename T>
@@ -131,12 +131,56 @@ struct as_result
 
 
 template<awaitable Aw>
-as_result(Aw &&) -> as_result<Aw>;
+as_result_t(Aw &&) -> as_result_t<Aw>;
+
+template<awaitable_type Aw>
+auto as_result(Aw && aw) -> as_result_t<Aw>
+{
+  return as_result_t<Aw>(std::forward<Aw>(aw));
+}
+
+template<typename Aw>
+  requires requires (Aw && aw)
+  {
+    {std::forward<Aw>(aw).operator co_await()} -> awaitable_type;
+  }
+auto as_result(Aw && aw)
+{
+  struct lazy_tuple
+  {
+    Aw aw;
+    auto operator co_await ()
+    {
+      return as_result(std::forward<Aw>(aw).operator co_await());
+    }
+  };
+  return lazy_tuple(std::forward<Aw>(aw));
+}
+
+template<typename Aw>
+  requires requires (Aw && aw)
+  {
+    {operator co_await(std::forward<Aw>(aw))} -> awaitable_type;
+  }
+auto as_result(Aw && aw)
+{
+  struct lazy_tuple
+  {
+    Aw aw;
+    auto operator co_await ()
+    {
+      return as_result(operator co_await(std::forward<Aw>(aw)));
+    }
+  };
+  return lazy_tuple(std::forward<Aw>(aw));
+}
+
+
 
 template<awaitable Aw>
-struct as_tuple
+struct as_tuple_t
 {
-  as_tuple(Aw && aw) : aw_(std::forward<Aw>(aw)) {}
+  as_tuple_t(Aw && aw) : aw_(std::forward<Aw>(aw)) {}
 
   bool await_ready() { return aw_.await_ready();}
   template<typename T>
@@ -198,7 +242,51 @@ private:
 
 
 template<awaitable Aw>
-as_tuple(Aw &&) -> as_tuple<Aw>;
+as_tuple_t(Aw &&) -> as_tuple_t<Aw>;
+
+
+template<awaitable_type Aw>
+auto as_tuple(Aw && aw) -> as_tuple_t<Aw>
+{
+  return as_tuple_t<Aw>(std::forward<Aw>(aw));
+}
+
+template<typename Aw>
+  requires requires (Aw && aw)
+  {
+    {std::forward<Aw>(aw).operator co_await()} -> awaitable_type;
+  }
+auto as_tuple(Aw && aw)
+{
+  struct lazy_tuple
+  {
+    Aw aw;
+    auto operator co_await ()
+    {
+      return as_tuple(std::forward<Aw>(aw).operator co_await());
+    }
+  };
+  return lazy_tuple(std::forward<Aw>(aw));
+}
+
+template<typename Aw>
+  requires requires (Aw && aw)
+  {
+    {operator co_await(std::forward<Aw>(aw))} -> awaitable_type;
+  }
+auto as_tuple(Aw && aw)
+{
+  struct lazy_tuple
+  {
+    Aw aw;
+    auto operator co_await ()
+    {
+      return as_tuple(operator co_await(std::forward<Aw>(aw)));
+    }
+  };
+  return lazy_tuple(std::forward<Aw>(aw));
+}
+
 
 }
 

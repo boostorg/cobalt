@@ -24,8 +24,8 @@ async::promise<void> do_write(async::channel<void> &chn, std::vector<int> & seq)
   seq.push_back(0);
   co_await chn.write(); seq.push_back(1);
   co_await chn.write(); seq.push_back(2);
-  co_await chn.write(); seq.push_back(3);
-  co_await chn.write(); seq.push_back(4);
+  (co_await async::as_result(chn.write())).value(); seq.push_back(3);
+  co_await async::as_tuple(chn.write()); seq.push_back(4);
   co_await chn.write(); seq.push_back(5);
   co_await chn.write(); seq.push_back(6);
   co_await chn.write(); seq.push_back(7);
@@ -36,8 +36,8 @@ async::promise<void> do_read(async::channel<void> &chn, std::vector<int> & seq)
   seq.push_back(10);
   co_await chn.read(); seq.push_back(11);
   co_await chn.read(); seq.push_back(12);
-  co_await chn.read(); seq.push_back(13);
-  co_await chn.read(); seq.push_back(14);
+  (co_await async::as_result(chn.read())).value(); seq.push_back(13);
+  co_await async::as_tuple(chn.read()); seq.push_back(14);
   co_await chn.read(); seq.push_back(15);
   co_await chn.read(); seq.push_back(16);
   co_await chn.read(); seq.push_back(17);
@@ -108,8 +108,8 @@ async::promise<void> do_write(async::channel<int> &chn, std::vector<int> & seq)
   seq.push_back(0);
   co_await chn.write(1); seq.push_back(1);
   co_await chn.write(2); seq.push_back(2);
-  co_await chn.write(3); seq.push_back(3);
-  co_await chn.write(4); seq.push_back(4);
+  (co_await async::as_result(chn.write(3))).value(); seq.push_back(3);
+  co_await async::as_tuple(chn.write(4)); seq.push_back(4);
   co_await chn.write(5); seq.push_back(5);
   co_await chn.write(6); seq.push_back(6);
   co_await chn.write(7); seq.push_back(7);
@@ -120,8 +120,8 @@ async::promise<void> do_read(async::channel<int> &chn, std::vector<int> & seq)
   seq.push_back(10);
   CHECK(1 == co_await chn.read()); seq.push_back(11);
   CHECK(2 == co_await chn.read()); seq.push_back(12);
-  CHECK(3 == co_await chn.read()); seq.push_back(13);
-  CHECK(4 == co_await chn.read()); seq.push_back(14);
+  CHECK(3 == (co_await async::as_result(chn.read())).value()); seq.push_back(13);
+  CHECK(4 == std::get<1>(co_await async::as_tuple(chn.read()))); seq.push_back(14);
   CHECK(5 == co_await chn.read()); seq.push_back(15);
   CHECK(6 == co_await chn.read()); seq.push_back(16);
   CHECK(7 == co_await chn.read()); seq.push_back(17);
