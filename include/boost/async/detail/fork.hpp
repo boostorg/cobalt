@@ -174,7 +174,7 @@ struct fork
     {
     }
 
-    template<awaitable Aw>
+    template<awaitable<promise_type> Aw>
     auto await_transform(Aw & aw)
     {
       struct wrapped_awaitable
