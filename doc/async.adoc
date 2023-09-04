@@ -63,6 +63,7 @@ include::reference/thread.adoc[]
 include::reference/async_for.adoc[]
 include::reference/error.adoc[]
 include::reference/config.adoc[]
+include::reference/leaf.adoc[]
 
 = Technical Background
 
