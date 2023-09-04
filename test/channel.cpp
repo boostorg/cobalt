@@ -9,6 +9,8 @@
 #include <boost/async/promise.hpp>
 #include <boost/async/select.hpp>
 #include <boost/async/gather.hpp>
+#include <boost/async/async_for.hpp>
+
 #include <boost/async/join.hpp>
 #include <boost/asio/steady_timer.hpp>
 
@@ -266,6 +268,26 @@ CO_TEST_CASE("issue-93")
 {
   co_await async::select(test(), boost::asio::post(async::use_op));
 }
+
+async::promise<void> writer(async::channel<int> & c)
+{
+  for (int i = 0; i < 10; i++)
+    co_await c.write(i);
+  c.close();
+}
+
+CO_TEST_CASE("reader")
+{
+  async::channel<int> c;
+
+  +writer(c);
+  int i = 0;
+  BOOST_ASYNC_FOR(int value, async::channel_reader(c))
+    CHECK(value == i++);
+
+}
+
+
 }
 
 TEST_SUITE_END();

@@ -255,9 +255,9 @@ template<typename T>
 struct channel_reader
 {
   channel_reader(channel<T> & chan,
-                 const boost::source_location & loc = BOOST_CURRENT_LOCATION) : chan_(chan), loc_(loc) {}
+                 const boost::source_location & loc = BOOST_CURRENT_LOCATION) : chan_(&chan), loc_(loc) {}
 
-  auto operator co_await () -> typename channel<T>::read_op
+  auto operator co_await ()
   {
     return chan_->read(loc_);
   }
