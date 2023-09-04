@@ -12,7 +12,7 @@ Here's a list of relevant featuers in async:
 |An eager coroutine that can yield multiple values.
 
 |<<task,task>>
-|A lazy version of <<promise,promise>>
+|A lazy version of <<promise,promise>> that can be spawned onto other executors.
 
 |<<detached,detached>>
 |A coroutine similar to promise, without a handle

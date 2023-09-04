@@ -18,6 +18,8 @@ async::main co_main(int argc, char *argv[])
 }
 ----
 
+Unlike a <<promise, promise>>, a task can be awaited or spawned on another executor than it was created on.
+
 === Executor
 [#task-executor]
 

@@ -85,7 +85,7 @@ async::generator<int, bool> iota()
     more = co_yield i++;
   }
   while(more);
-  co_return ;
+  co_return -1;
 }
 ----
 
