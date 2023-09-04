@@ -19,6 +19,7 @@ include::motivation.adoc[]
 
 = Coroutine Primer
 
+include::primer/async.adoc[]
 include::primer/coroutines.adoc[]
 include::primer/awaitables.adoc[]
 include::primer/event-loops.adoc[]

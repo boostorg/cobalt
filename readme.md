@@ -3,8 +3,13 @@
 > [!NOTE]  
 > This is not yet an official boost library.
 
-This library provides a set of easy to use coroutine primitives & utilities runing on top of boost.asio.
+This library provides a set of easy to use coroutine primitives & utilities running on top of boost.asio.
+These will be of interest for applications that perform a lot of IO that want to not block unnecessarily,
+yet still want to have linear & readable code (i..e. avoid callbacks).
+
 A minimum of Boost 1.82 is necessary as the ASIO in that version has needed support. C++ 20 is needed for C++ coroutines.
+
+Below is a showcase of features, if you're new to coroutines or asynchronous programming, please see the [primer](https://klemens.dev/async/#coroutine_primer).
 
 The assumptions are:
 
