@@ -19,7 +19,7 @@
 #include <boost/range/iterator_range.hpp>
 #include <boost/unordered_map.hpp>
 // cause cmake
-#include <boost/url/src.hpp>
+#include <boost/url.hpp>
 
 #include <list>
 #include <iostream>
