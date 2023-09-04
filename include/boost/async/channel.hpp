@@ -38,6 +38,7 @@ struct channel
 #else
   // tag::outline[]
   // create a channel with a buffer limit, executor & resource.
+  explicit
   channel(std::size_t limit = 0u,
           executor executor = this_thread::get_executor(),
           pmr::memory_resource * resource = this_thread::get_default_resource());
@@ -168,6 +169,7 @@ struct channel
 template<>
 struct channel<void>
 {
+  explicit
   channel(std::size_t limit = 0u,
           executor executor = this_thread::get_executor())
         : limit_(limit), executor_(executor) {}

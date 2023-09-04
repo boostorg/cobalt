@@ -13,6 +13,7 @@ namespace boost::async
 struct wait_group
 {
     // create a wait_group
+    explicit
     wait_group(asio::cancellation_type normal_cancel = asio::cancellation_type::none,
                asio::cancellation_type exception_cancel = asio::cancellation_type::all);
 
