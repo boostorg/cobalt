@@ -45,8 +45,9 @@ struct channel
   // end::outline[]
 #endif
   // tag::outline[]
-  // movable
-  channel(channel && ) = default;
+  // movable. moving with active operations is undefined behaviour.
+  channel(channel && ) noexcept = default;
+  channel & operator=(channel && lhs) noexcept = delete;
 
   using executor_type = executor;
   const executor_type & get_executor();
@@ -173,7 +174,8 @@ struct channel<void>
   channel(std::size_t limit = 0u,
           executor executor = this_thread::get_executor())
         : limit_(limit), executor_(executor) {}
-  channel(channel && ) = default;
+  channel(channel && ) noexcept = default;
+  channel & operator=(channel && lhs) noexcept = delete;
 
   using executor_type = executor;
   const executor_type & get_executor() {return executor_;}
