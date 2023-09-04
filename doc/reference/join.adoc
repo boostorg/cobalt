@@ -47,7 +47,7 @@ pmr::vector<int> r2 = co_await join(piv);
 
 
 [#join-outline]
-=== `Outline`
+=== Outline
 
 [source,cpp,subs=+quotes]
 ----

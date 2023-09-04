@@ -84,7 +84,7 @@ be useful for prioritization if proper care is taken.
 
 
 [#select-outline]
-=== `Outline`
+=== Outline
 
 [source,cpp,subs=+quotes]
 ----
