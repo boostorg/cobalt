@@ -85,7 +85,7 @@ Which will generate the following output
 === Lazy
 
 A generator can be turned lazy by awaiting initial.
-This `co_await` statement will statement will return the `Push` value.
+This `co_await` expression will produce the `Push` value.
 This means the generator will wait until it's awaited for the first time,
 and then process the newly pushed value and resume at the next co_yield.
 

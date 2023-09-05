@@ -59,3 +59,6 @@ __awaitable__ join(Promise && ... p);
 template<asio::cancellation_type Ct = asio::cancellation_type::all, range<awaitable>>
 __awaitable__ join(PromiseRange && p);
 ----
+
+NOTE: Selecting an on empty range will cause an exception.
+

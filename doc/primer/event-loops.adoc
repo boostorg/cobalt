@@ -1,11 +1,11 @@
 [#event-loops]
 == Event Loops
 
-Since the coroutines in `async` can `co_await` events,
-they need to be run on an event-loop.
-That is another piece of code is responsible for tracking 
-outstanding event and resume a resuming coroutines that are awaiting them.
-This pattern is very common and is used in a similar way 
-by node.js or python's `asyncio`.
+Since the coroutines in `async` can `co_await` events, they need to be run on an event-loop.
+That is another piece of code is responsible for tracking outstanding event and resume a resuming coroutines that are awaiting them.
+This pattern is very common and is used in a similar way by node.js or python's `asyncio`.
 
-`async` uses an `asio::io_context` as its default event loop.
+`async` uses an https://www.boost.org/doc/libs/master/doc/html/boost_asio/reference/io_context.html[`asio::io_context`] as its default event loop.
+
+The event loop is accessed through an executor (following the asio terminology) and can be manually set using <<this_thread, set_executor>>.
+

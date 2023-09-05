@@ -53,6 +53,7 @@ async::generator<tcp_socket> listen()
     tcp_socket sock = co_await acceptor.async_accept(); // <2>
     co_yield std::move(sock); // <3>
   }
+  co_return tcp_socket{acceptor.get_executor()}; // <4>
 }
 // end::listen[]
 

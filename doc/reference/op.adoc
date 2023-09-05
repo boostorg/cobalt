@@ -31,7 +31,7 @@ auto tim = async::use_op.as_default_on(asio::steady_timer{co_await async::this_c
 co_await tim.async_wait();
 ----
 
-Depending on the completion signature the `co_await` statement may throw.
+Depending on the completion signature the `co_await` expression may throw.
 
 [cols="1,1,1"]
 |===

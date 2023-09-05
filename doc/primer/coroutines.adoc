@@ -71,7 +71,7 @@ async::generator<int> iota(int max)
 }
 ----
 
-A `co_yield` statement can also produce a value, 
+A `co_yield` expression can also produce a value,
 which allows the user of yielding coroutine to push values into it.
 
 [source,cpp]

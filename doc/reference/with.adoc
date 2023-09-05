@@ -19,8 +19,6 @@ async::promise<void> outer()
 }
 ----
 
-NOTE: `with` statements always yield `void`.
-
 The teardown can either be done by providing an `await_exit` member function or a `tag_invoke` function
 that returns an <<awaitable, awaitable>> or by providing the teardown as the third argument to `with`.
 

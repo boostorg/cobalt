@@ -118,3 +118,4 @@ template<asio::cancellation_type Ct = asio::cancellation_type::all, range<awaita
 __awaitable__ left_select(PromiseRange && p);
 ----
 
+NOTE: Selecting an empty range will cause an exception to be thrown.

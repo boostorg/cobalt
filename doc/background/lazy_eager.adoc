@@ -1,7 +1,7 @@
 [#lazy] [#eager]
 == Lazy & eager
 
-Coroutines are lazy if they only start execution of its code after it gets resumed, while an eager one will execute right-away until its first suspension point (i.e. a `co_await`, `co_yield` or `co_return` statement.)
+Coroutines are lazy if they only start execution of its code after it gets resumed, while an eager one will execute right-away until its first suspension point (i.e. a `co_await`, `co_yield` or `co_return` expression.)
 
 [source,cpp]
 ----

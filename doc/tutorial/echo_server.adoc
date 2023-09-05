@@ -30,8 +30,8 @@ an exception will be raised, too. Under these conditions, we print the error and
 Note that promise is eager. Calling `echo` will immediately execute code until `async_read_some`
 and then return control to the caller.
 
-Next, we also need an acceptor function. Since this is a tutorial, we're using a <<generator,generator>>.
-This is a coroutine that can be co_awaited multiple times, until a `co_return` statement is reached.
+Next, we also need an acceptor function. Here, we're using a <<generator,generator>> to manage the acceptor state.
+This is a coroutine that can be co_awaited multiple times, until a `co_return` expression is reached.
 
 .example/echo_server.cpp listen function
 [example]
@@ -42,6 +42,8 @@ include::../../example/echo_server.cpp[tag=listen]
 <1> Cancellation will also lead to an exception here being thrown from the `co_await`
 <2> Asynchronously accept the connection
 <3> Yield it to the awaiting coroutine
+<4> `co_return` a value for C++ conformance.
+
 
 With those two functions we can now write the server:
 
