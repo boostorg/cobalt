@@ -434,12 +434,227 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+pre.rouge table td { padding: 5px; }
+pre.rouge table pre { margin: 0; }
+pre.rouge .cm {
+  color: #999988;
+  font-style: italic;
+}
+pre.rouge .cp {
+  color: #999999;
+  font-weight: bold;
+}
+pre.rouge .c1 {
+  color: #999988;
+  font-style: italic;
+}
+pre.rouge .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+pre.rouge .c, pre.rouge .ch, pre.rouge .cd, pre.rouge .cpf {
+  color: #999988;
+  font-style: italic;
+}
+pre.rouge .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+pre.rouge .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+pre.rouge .ge {
+  color: #000000;
+  font-style: italic;
+}
+pre.rouge .gr {
+  color: #aa0000;
+}
+pre.rouge .gh {
+  color: #999999;
+}
+pre.rouge .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+pre.rouge .go {
+  color: #888888;
+}
+pre.rouge .gp {
+  color: #555555;
+}
+pre.rouge .gs {
+  font-weight: bold;
+}
+pre.rouge .gu {
+  color: #aaaaaa;
+}
+pre.rouge .gt {
+  color: #aa0000;
+}
+pre.rouge .kc {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kd {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kn {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kp {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kr {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kt {
+  color: #445588;
+  font-weight: bold;
+}
+pre.rouge .k, pre.rouge .kv {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .mf {
+  color: #009999;
+}
+pre.rouge .mh {
+  color: #009999;
+}
+pre.rouge .il {
+  color: #009999;
+}
+pre.rouge .mi {
+  color: #009999;
+}
+pre.rouge .mo {
+  color: #009999;
+}
+pre.rouge .m, pre.rouge .mb, pre.rouge .mx {
+  color: #009999;
+}
+pre.rouge .sa {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .sb {
+  color: #d14;
+}
+pre.rouge .sc {
+  color: #d14;
+}
+pre.rouge .sd {
+  color: #d14;
+}
+pre.rouge .s2 {
+  color: #d14;
+}
+pre.rouge .se {
+  color: #d14;
+}
+pre.rouge .sh {
+  color: #d14;
+}
+pre.rouge .si {
+  color: #d14;
+}
+pre.rouge .sx {
+  color: #d14;
+}
+pre.rouge .sr {
+  color: #009926;
+}
+pre.rouge .s1 {
+  color: #d14;
+}
+pre.rouge .ss {
+  color: #990073;
+}
+pre.rouge .s, pre.rouge .dl {
+  color: #d14;
+}
+pre.rouge .na {
+  color: #008080;
+}
+pre.rouge .bp {
+  color: #999999;
+}
+pre.rouge .nb {
+  color: #0086B3;
+}
+pre.rouge .nc {
+  color: #445588;
+  font-weight: bold;
+}
+pre.rouge .no {
+  color: #008080;
+}
+pre.rouge .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+pre.rouge .ni {
+  color: #800080;
+}
+pre.rouge .ne {
+  color: #990000;
+  font-weight: bold;
+}
+pre.rouge .nf, pre.rouge .fm {
+  color: #990000;
+  font-weight: bold;
+}
+pre.rouge .nl {
+  color: #990000;
+  font-weight: bold;
+}
+pre.rouge .nn {
+  color: #555555;
+}
+pre.rouge .nt {
+  color: #000080;
+}
+pre.rouge .vc {
+  color: #008080;
+}
+pre.rouge .vg {
+  color: #008080;
+}
+pre.rouge .vi {
+  color: #008080;
+}
+pre.rouge .nv, pre.rouge .vm {
+  color: #008080;
+}
+pre.rouge .ow {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .o {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .w {
+  color: #bbbbbb;
+}
+pre.rouge {
+  background-color: #f8f8f8;
+}
+</style>
 <style>.toc-current{font-weight: bold;} .toc-root{font-family: "Open Sans","DejaVu Sans",sans-serif;
                        font-size: 0.9em;} #content{display: flex; flex-direction: column; flex: 1 1 auto;}
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="index" class="article toc2 toc-left">
+<body id="coroutine_primer" class="article toc2 toc-left">
 <div id="header">
 <h1>Documentation boost.async</h1>
 <div class="details">
@@ -450,12 +665,30 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root toc-current"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
+<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
 <li><a href="overview.html">Overview</a>
 </li>
 <li><a href="motivation.html">Motivation</a>
 </li>
-<li><a href="coroutine_primer.html">Coroutine Primer</a>
+<li><a href="coroutine_primer.html"><span class="toc-current">Coroutine Primer</span></a>
+<ul class="sectlevel2">
+<li><a href="coroutine_primer.html#async_programming">Async programming</a>
+</li>
+<li><a href="coroutine_primer.html#coroutines">Coroutines</a>
+<ul class="sectlevel3">
+<li><a href="coroutine_primer.html#co_return"><code>co_return</code></a>
+</li>
+<li><a href="coroutine_primer.html#co_await"><code>co_await</code></a>
+</li>
+<li><a href="coroutine_primer.html#co_yield"><code>co_yield</code></a>
+</li>
+</ul>
+</li>
+<li><a href="coroutine_primer.html#awaitables">Awaitables</a>
+</li>
+<li><a href="coroutine_primer.html#event-loops">Event Loops</a>
+</li>
+</ul>
 </li>
 <li><a href="tutorial.html">Tutorial</a>
 </li>
@@ -475,42 +708,336 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div id="content">
+<div class="sect1">
+<h2 id="coroutine_primer">Coroutine Primer</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="async_programming">Async programming</h3>
+<div class="paragraph">
+<p>Asynchronous programming generally refers to a style of programming
+that allows tasks to be run in the background, while the other works is performed.</p>
+</div>
+<div class="paragraph">
+<p>Imagine if you will a get-request function that performs a
+full http request including connecting &amp; ssl handshakes etc.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="nf">http_get</span><span class="p">(</span><span class="n">std</span><span class="o">:</span><span class="n">string_view</span> <span class="n">url</span><span class="p">);</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+    <span class="k">auto</span> <span class="n">res</span> <span class="o">=</span> <span class="n">http_get</span><span class="p">(</span><span class="s">"https://boost.org"</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span> <span class="n">res</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The above code would be traditional synchronous programming. If we want to perform
+two requests in parallel we would need to create another thread to run another thread
+with synchronous code.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="nf">http_get</span><span class="p">(</span><span class="n">std</span><span class="o">:</span><span class="n">string_view</span> <span class="n">url</span><span class="p">);</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">other_res</span><span class="p">;</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">thr</span><span class="p">{[</span><span class="o">&amp;</span><span class="p">]{</span> <span class="n">other_res</span> <span class="o">=</span> <span class="n">http_get</span><span class="p">(</span><span class="s">"https://cppalliance.org"</span><span class="p">);</span> <span class="p">}};</span>
+    <span class="k">auto</span> <span class="n">res</span> <span class="o">=</span> <span class="n">http_get</span><span class="p">(</span><span class="s">"https://boost.org"</span><span class="p">);</span>
+    <span class="n">thr</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>
+
+    <span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span> <span class="n">res</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span> <span class="n">other_res</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This works, but our program will spend most of the time waiting for input.
+Operating systems provide APIs that allow IO to be performed asynchronously,
+and libraries such as <a href="https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio.html">boost.asio</a>
+provide portable ways to manage asynchronous operations.
+Asio itself does not dictate a way to handle the completions.
+This library (boost.async) provides a way to manage this all through coroutines/awaitables.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">http_async_get</span><span class="p">(</span><span class="n">std</span><span class="o">:</span><span class="n">string_view</span> <span class="n">url</span><span class="p">);</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="nf">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+    <span class="k">auto</span> <span class="p">[</span><span class="n">res</span><span class="p">,</span> <span class="n">other_res</span><span class="p">]</span> <span class="o">=</span>
+            <span class="n">async</span><span class="o">::</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">http_async_get</span><span class="p">((</span><span class="s">"https://boost.org"</span><span class="p">),</span>
+                <span class="n">http_async_get</span><span class="p">((</span><span class="s">"https://cppalliance.org"</span><span class="p">)</span>
+            <span class="p">);</span>
+
+    <span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span> <span class="n">res</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span> <span class="n">other_res</span><span class="p">.</span><span class="n">c_str</span><span class="p">());</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In the above code the asynchronous function to perform the request
+takes advantage of the operating system APIs so that the actual IO doesn&#8217;t block.
+This means that while we&#8217;re waiting for both functions to complete,
+the operations are interleaved and non-blocking.
+At the same time async provides the coroutine primitives that keep us out of callback hell.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="coroutines">Coroutines</h3>
+<div class="paragraph">
+<p>Coroutines are resumable functions.
+Resumable means that a function can suspend,
+i.e. pass the control back to the caller multiple times.</p>
+</div>
+<div class="paragraph">
+<p>A regular function yields control back to the caller with the <code>return</code> function, where it also returns the value.</p>
+</div>
+<div class="paragraph">
+<p>A coroutine on the other hand might yield control to the caller and get resumed multiple times.</p>
+</div>
+<div class="paragraph">
+<p>A coroutine has three control keywords akin to co_return
+(of which only <code>co_return</code> has to be supported).</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="overview.html">Overview</a></p>
+<p><code>co_return</code></p>
 </li>
 <li>
-<p><a href="motivation.html">Motivation</a></p>
+<p><code>co_yield</code></p>
 </li>
 <li>
-<p><a href="coroutine_primer.html">Coroutine Primer</a></p>
-</li>
-<li>
-<p><a href="tutorial.html">Tutorial</a></p>
-</li>
-<li>
-<p><a href="design.html">Design</a></p>
-</li>
-<li>
-<p><a href="reference.html">Reference</a></p>
-</li>
-<li>
-<p><a href="technical_background.html">Technical Background</a></p>
-</li>
-<li>
-<p><a href="benchmarks.html">Benchmarks</a></p>
-</li>
-<li>
-<p><a href="compiler_support.html">Compiler support</a></p>
-</li>
-<li>
-<p><a href="acknowledgements.html">Acknowledgements</a></p>
+<p><code>co_await</code></p>
 </li>
 </ul>
 </div>
+<div class="sect3">
+<h4 id="co_return"><code>co_return</code></h4>
+<div class="paragraph">
+<p>This is similar to <code>return</code>, but marks the function as a coroutine.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="co_await"><code>co_await</code></h4>
+<div class="paragraph">
+<p>The <code>co_await</code> expression suspends for an <a href="reference.html#awaitable">Awaitable</a>,
+i.e. stops execution until the <code>awaitable</code> resumes it.</p>
+</div>
+<div class="paragraph">
+<p>E.g.:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">delay</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">milliseconds</span><span class="p">);</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">task</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">example</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="k">co_await</span> <span class="n">delay</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">milliseconds</span><span class="p">(</span><span class="mi">50</span><span class="p">));</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A <code>co_await</code> expression can yield a value, depending on what it is awaiting.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">read_some</span><span class="p">();</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">task</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">example</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">res</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">read_some</span><span class="p">();</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+In <code>async</code> most coroutine primitives are also <a href="coroutine_primer.html#awaitables">Awaitables</a>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="co_yield"><code>co_yield</code></h4>
+<div class="paragraph">
+<p>The <code>co_yield</code> expression is similar to the <code>co_await</code>,
+but it yields control to the caller and carries a value.</p>
+</div>
+<div class="paragraph">
+<p>For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">iota</span><span class="p">(</span><span class="kt">int</span> <span class="n">max</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="k">while</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">max</span><span class="p">)</span>
+    <span class="k">co_yield</span> <span class="n">i</span><span class="o">++</span><span class="p">;</span>
+
+  <span class="k">co_return</span> <span class="n">i</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A <code>co_yield</code> expression can also produce a value,
+which allows the user of yielding coroutine to push values into it.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="kt">bool</span><span class="o">&gt;</span> <span class="n">iota</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="kt">bool</span> <span class="n">more</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+  <span class="k">do</span>
+  <span class="p">{</span>
+    <span class="n">more</span> <span class="o">=</span> <span class="k">co_yield</span> <span class="n">i</span><span class="o">++</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">while</span><span class="p">(</span><span class="n">more</span><span class="p">);</span>
+  <span class="k">co_return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Stackless</div>
+<div class="paragraph">
+<p>C++ coroutine are stack-less, which means they only allocate their own function frame.</p>
+</div>
+<div class="paragraph">
+<p>See <a href="technical_background.html#stackless">Stackless</a> for more details.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="awaitables">Awaitables</h3>
+<div class="paragraph">
+<p>Awaitables are types that can be used in a <code>co_await</code> expression.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">struct</span> <span class="nc">awaitable_prototype</span>
+<span class="p">{</span>
+    <span class="kt">bool</span> <span class="n">await_ready</span><span class="p">();</span>
+
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+    <span class="n"><em>see_below</em></span> <span class="n">await_suspend</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">);</span>
+
+    <span class="n"><em>return_type</em></span>  <span class="n">await_resume</span><span class="p">();</span>
+<span class="p">};</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Type will be implicitly converted into an awaitable if there is an <code>operator co_await</code> call available.
+This documentation will use <code>awaitable</code> to include these types,
+and "actual_awaitable" to refer to type conforming to the above prototype.
+</td>
+</tr>
+</table>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-3c02ebe8653ca74da052ef1b78e1f756.png" alt="Diagram" width="197" height="430">
+</div>
+</div>
+<div class="paragraph">
+<p>In a <code>co_await</code> expression the waiting coroutine will first invoke
+<code>await_ready</code> to check if the coroutine needs to suspend.
+When ready, it goes directly to <code>await_resume</code> to get the value,
+as there is no suspension needed.
+Otherwise, it will suspend itself and call <code>await_suspend</code> with a
+<code>std::coroutine_handle</code> to its own promise.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>std::coroutine_handle&lt;void&gt;</code> can be used for type erasure.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The <em>return_type</em> is the result type of the <code>co_await expression</code>, e.g. <code>int</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="k">co_await</span> <span class="nf">awaitable_with_int_result</span><span class="p">();</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The return type of the <code>await_suspend</code> can be three things:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>void</code></p>
+</li>
+<li>
+<p><code>bool</code></p>
+</li>
+<li>
+<p><code>std::coroutine_handle&lt;U&gt;</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>If it is void the awaiting coroutine remains suspended. If it is <code>bool</code>,
+the value will be checked, and if falls, the awaiting coroutine will resume right away.</p>
+</div>
+<div class="paragraph">
+<p>If a <code>std::coroutine_handle</code> is returned, this coroutine will be resumed.
+The latter allows <code>await_suspend</code> to return the handle passed in,
+being effectively the same as returning <code>false</code>.</p>
+</div>
+<div class="paragraph">
+<p>If the awaiting coroutine gets re-resumed right away, i.e. after calling await_resume,
+it is referred to as "immediate completion" within this library.
+This is not to be confused with a non-suspending awaitable, i.e. one that returns <code>true</code> from <code>await_ready</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="event-loops">Event Loops</h3>
+<div class="paragraph">
+<p>Since the coroutines in <code>async</code> can <code>co_await</code> events, they need to be run on an event-loop.
+That is another piece of code is responsible for tracking outstanding event and resume a resuming coroutines that are awaiting them.
+This pattern is very common and is used in a similar way by node.js or python&#8217;s <code>asyncio</code>.</p>
+</div>
+<div class="paragraph">
+<p><code>async</code> uses an <a href="https://www.boost.org/doc/libs/master/doc/html/boost_asio/reference/io_context.html"><code>asio::io_context</code></a> as its default event loop.</p>
+</div>
+<div class="paragraph">
+<p>The event loop is accessed through an executor (following the asio terminology) and can be manually set using <a href="reference.html#this_thread">set_executor</a>.</p>
+</div>
+</div>
+</div>
+</div>
 <div class="paragraph nav-footer">
-<p>Next: <a href="overview.html">Overview</a> →</p>
+<p>← Previous: <a href="motivation.html">Motivation</a> | ↑ Up: <a href="index.html">Documentation boost.async</a> | Next: <a href="tutorial.html">Tutorial</a> →</p>
 </div>
 </div>
 <div id="footer">

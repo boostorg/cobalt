@@ -439,7 +439,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="index" class="article toc2 toc-left">
+<body id="overview" class="article toc2 toc-left">
 <div id="header">
 <h1>Documentation boost.async</h1>
 <div class="details">
@@ -450,8 +450,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root toc-current"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
-<li><a href="overview.html">Overview</a>
+<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
+<li><a href="overview.html"><span class="toc-current">Overview</span></a>
 </li>
 <li><a href="motivation.html">Motivation</a>
 </li>
@@ -475,42 +475,83 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div id="content">
-<div class="ulist">
-<ul>
-<li>
-<p><a href="overview.html">Overview</a></p>
-</li>
-<li>
-<p><a href="motivation.html">Motivation</a></p>
-</li>
-<li>
-<p><a href="coroutine_primer.html">Coroutine Primer</a></p>
-</li>
-<li>
-<p><a href="tutorial.html">Tutorial</a></p>
-</li>
-<li>
-<p><a href="design.html">Design</a></p>
-</li>
-<li>
-<p><a href="reference.html">Reference</a></p>
-</li>
-<li>
-<p><a href="technical_background.html">Technical Background</a></p>
-</li>
-<li>
-<p><a href="benchmarks.html">Benchmarks</a></p>
-</li>
-<li>
-<p><a href="compiler_support.html">Compiler support</a></p>
-</li>
-<li>
-<p><a href="acknowledgements.html">Acknowledgements</a></p>
-</li>
-</ul>
+<div class="sect1">
+<h2 id="overview">Overview</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Here&#8217;s a list of relevant featuers in async:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 1. Coroutine types</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="reference.html#promise">promise</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">An eager coroutine returning a single result- consider it the default</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="reference.html#generator">generator</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">An eager coroutine that can yield multiple values.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="reference.html#task">task</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A lazy version of <a href="reference.html#promise">promise</a> that can be spawned onto other executors.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="reference.html#detached">detached</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A coroutine similar to promise, without a handle</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 2. Synchronization Functions</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="reference.html#select">select</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A function that waits for one coroutine out of a set that is ready in a pseudo-random way, to avoid starvation.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="reference.html#join">join</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A function that waits for a set of coroutines and returns all of them as value or throws an exception if any awaitable does so.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="reference.html#gather">gather</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A function that waits for a set of coroutines and returns all of them as <code>result</code>, capturing all exceptions individually.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="reference.html#left_select">left_select</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A deterministic <code>select</code> that evaluates left-to-right.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 3. Utilities</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="reference.html#channel">channel</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A thread-local utility to send values between coroutines.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="reference.html#with">with</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">An async RAII helper, that allows async teardown when exceptions occur</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <div class="paragraph nav-footer">
-<p>Next: <a href="overview.html">Overview</a> →</p>
+<p>↑ Up: <a href="index.html">Documentation boost.async</a> | Next: <a href="motivation.html">Motivation</a> →</p>
 </div>
 </div>
 <div id="footer">

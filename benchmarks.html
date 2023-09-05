@@ -434,12 +434,227 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+pre.rouge table td { padding: 5px; }
+pre.rouge table pre { margin: 0; }
+pre.rouge .cm {
+  color: #999988;
+  font-style: italic;
+}
+pre.rouge .cp {
+  color: #999999;
+  font-weight: bold;
+}
+pre.rouge .c1 {
+  color: #999988;
+  font-style: italic;
+}
+pre.rouge .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+pre.rouge .c, pre.rouge .ch, pre.rouge .cd, pre.rouge .cpf {
+  color: #999988;
+  font-style: italic;
+}
+pre.rouge .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+pre.rouge .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+pre.rouge .ge {
+  color: #000000;
+  font-style: italic;
+}
+pre.rouge .gr {
+  color: #aa0000;
+}
+pre.rouge .gh {
+  color: #999999;
+}
+pre.rouge .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+pre.rouge .go {
+  color: #888888;
+}
+pre.rouge .gp {
+  color: #555555;
+}
+pre.rouge .gs {
+  font-weight: bold;
+}
+pre.rouge .gu {
+  color: #aaaaaa;
+}
+pre.rouge .gt {
+  color: #aa0000;
+}
+pre.rouge .kc {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kd {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kn {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kp {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kr {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kt {
+  color: #445588;
+  font-weight: bold;
+}
+pre.rouge .k, pre.rouge .kv {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .mf {
+  color: #009999;
+}
+pre.rouge .mh {
+  color: #009999;
+}
+pre.rouge .il {
+  color: #009999;
+}
+pre.rouge .mi {
+  color: #009999;
+}
+pre.rouge .mo {
+  color: #009999;
+}
+pre.rouge .m, pre.rouge .mb, pre.rouge .mx {
+  color: #009999;
+}
+pre.rouge .sa {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .sb {
+  color: #d14;
+}
+pre.rouge .sc {
+  color: #d14;
+}
+pre.rouge .sd {
+  color: #d14;
+}
+pre.rouge .s2 {
+  color: #d14;
+}
+pre.rouge .se {
+  color: #d14;
+}
+pre.rouge .sh {
+  color: #d14;
+}
+pre.rouge .si {
+  color: #d14;
+}
+pre.rouge .sx {
+  color: #d14;
+}
+pre.rouge .sr {
+  color: #009926;
+}
+pre.rouge .s1 {
+  color: #d14;
+}
+pre.rouge .ss {
+  color: #990073;
+}
+pre.rouge .s, pre.rouge .dl {
+  color: #d14;
+}
+pre.rouge .na {
+  color: #008080;
+}
+pre.rouge .bp {
+  color: #999999;
+}
+pre.rouge .nb {
+  color: #0086B3;
+}
+pre.rouge .nc {
+  color: #445588;
+  font-weight: bold;
+}
+pre.rouge .no {
+  color: #008080;
+}
+pre.rouge .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+pre.rouge .ni {
+  color: #800080;
+}
+pre.rouge .ne {
+  color: #990000;
+  font-weight: bold;
+}
+pre.rouge .nf, pre.rouge .fm {
+  color: #990000;
+  font-weight: bold;
+}
+pre.rouge .nl {
+  color: #990000;
+  font-weight: bold;
+}
+pre.rouge .nn {
+  color: #555555;
+}
+pre.rouge .nt {
+  color: #000080;
+}
+pre.rouge .vc {
+  color: #008080;
+}
+pre.rouge .vg {
+  color: #008080;
+}
+pre.rouge .vi {
+  color: #008080;
+}
+pre.rouge .nv, pre.rouge .vm {
+  color: #008080;
+}
+pre.rouge .ow {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .o {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .w {
+  color: #bbbbbb;
+}
+pre.rouge {
+  background-color: #f8f8f8;
+}
+</style>
 <style>.toc-current{font-weight: bold;} .toc-root{font-family: "Open Sans","DejaVu Sans",sans-serif;
                        font-size: 0.9em;} #content{display: flex; flex-direction: column; flex: 1 1 auto;}
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="index" class="article toc2 toc-left">
+<body id="benchmarks" class="article toc2 toc-left">
 <div id="header">
 <h1>Documentation boost.async</h1>
 <div class="details">
@@ -450,7 +665,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root toc-current"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
+<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
 <li><a href="overview.html">Overview</a>
 </li>
 <li><a href="motivation.html">Motivation</a>
@@ -465,7 +680,17 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="technical_background.html">Technical Background</a>
 </li>
-<li><a href="benchmarks.html">Benchmarks</a>
+<li><a href="benchmarks.html"><span class="toc-current">Benchmarks</span></a>
+<ul class="sectlevel2">
+<li><a href="benchmarks.html#posting_to_an_executor">Posting to an executor</a>
+</li>
+<li><a href="benchmarks.html#running_noop_coroutine_in_parallel">Running noop coroutine in parallel</a>
+</li>
+<li><a href="benchmarks.html#immediate">Immediate</a>
+</li>
+<li><a href="benchmarks.html#channels">Channels</a>
+</li>
+</ul>
 </li>
 <li><a href="compiler_support.html">Compiler support</a>
 </li>
@@ -475,42 +700,215 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div id="content">
-<div class="ulist">
-<ul>
-<li>
-<p><a href="overview.html">Overview</a></p>
-</li>
-<li>
-<p><a href="motivation.html">Motivation</a></p>
-</li>
-<li>
-<p><a href="coroutine_primer.html">Coroutine Primer</a></p>
-</li>
-<li>
-<p><a href="tutorial.html">Tutorial</a></p>
-</li>
-<li>
-<p><a href="design.html">Design</a></p>
-</li>
-<li>
-<p><a href="reference.html">Reference</a></p>
-</li>
-<li>
-<p><a href="technical_background.html">Technical Background</a></p>
-</li>
-<li>
-<p><a href="benchmarks.html">Benchmarks</a></p>
-</li>
-<li>
-<p><a href="compiler_support.html">Compiler support</a></p>
-</li>
-<li>
-<p><a href="acknowledgements.html">Acknowledgements</a></p>
-</li>
-</ul>
+<div class="sect1">
+<h2 id="benchmarks">Benchmarks</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>Run on 11th Gen Intel&#174; Core&#8482; i7-1185G7 @ 3.00GHz</em></p>
+</div>
+<div class="sect2">
+<h3 id="posting_to_an_executor">Posting to an executor</h3>
+<div class="paragraph">
+<p>The benchmark is running the following code, with async&#8217;s task, <code>asio::awaitable</code> and `asio&#8217;s
+stackful coroutine (boost.context) based.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">task</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">atest</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0u</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="k">co_await</span> <span class="n">asio</span><span class="o">::</span><span class="n">post</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">use_op</span><span class="p">);</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 5. results for 50M times in ms</caption>
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"></th>
+<th class="tableblock halign-left valign-top">gcc 12</th>
+<th class="tableblock halign-left valign-top">clang 16</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">async</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2472</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2098</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">awaitable</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2432</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2253</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">stackful</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3655</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3725</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="running_noop_coroutine_in_parallel">Running noop coroutine in parallel</h3>
+<div class="paragraph">
+<p>This benchmark uses an <code>asio::experimental::channel</code> that has a size of zero,
+to read &amp; write in parallel to it. It uses <a href="reference.html#gather">gather</a> with async
+and an <code>awaitable_operator</code> in the <code>asio::awaitable</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">task</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">atest</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">asio</span><span class="o">::</span><span class="n">experimental</span><span class="o">::</span><span class="n">channel</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">(</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="p">)</span><span class="o">&gt;</span> <span class="n">chan</span><span class="p">{</span><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">executor</span><span class="p">,</span> <span class="mi">0u</span><span class="p">};</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0u</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">gather</span><span class="p">(</span>
+              <span class="n">chan</span><span class="p">.</span><span class="n">async_send</span><span class="p">(</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="p">{},</span> <span class="n">async</span><span class="o">::</span><span class="n">use_task</span><span class="p">),</span>
+              <span class="n">chan</span><span class="p">.</span><span class="n">async_receive</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">use_task</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="n">asio</span><span class="o">::</span><span class="n">awaitable</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">awtest</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">asio</span><span class="o">::</span><span class="n">experimental</span><span class="o">::</span><span class="n">channel</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">(</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="p">)</span><span class="o">&gt;</span> <span class="n">chan</span><span class="p">{</span><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">executor</span><span class="p">,</span> <span class="mi">0u</span><span class="p">};</span>
+  <span class="k">using</span> <span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">experimental</span><span class="o">::</span><span class="n">awaitable_operators</span><span class="o">::</span><span class="k">operator</span><span class="o">&amp;&amp;</span><span class="p">;</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0u</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="k">co_await</span> <span class="p">(</span>
+        <span class="n">chan</span><span class="p">.</span><span class="n">async_send</span><span class="p">(</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="p">{},</span> <span class="n">asio</span><span class="o">::</span><span class="n">use_awaitable</span><span class="p">)</span>
+        <span class="o">&amp;&amp;</span>
+        <span class="n">chan</span><span class="p">.</span><span class="n">async_receive</span><span class="p">(</span><span class="n">asio</span><span class="o">::</span><span class="n">use_awaitable</span><span class="p">));</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 6. results for 3M times in ms</caption>
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"></th>
+<th class="tableblock halign-left valign-top">gcc 12</th>
+<th class="tableblock halign-left valign-top">clang 16</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">async</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1563</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1468</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">awaitable</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2800</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2805</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="immediate">Immediate</h3>
+<div class="paragraph">
+<p>This benchmark utilizes the immediate completion, by using a channel
+with a size of 1, so that every operation is immediate.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">task</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">atest</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">asio</span><span class="o">::</span><span class="n">experimental</span><span class="o">::</span><span class="n">channel</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">(</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="p">)</span><span class="o">&gt;</span> <span class="n">chan</span><span class="p">{</span><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">executor</span><span class="p">,</span> <span class="mi">1u</span><span class="p">};</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0u</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="k">co_await</span> <span class="n">chan</span><span class="p">.</span><span class="n">async_send</span><span class="p">(</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="p">{},</span> <span class="n">async</span><span class="o">::</span><span class="n">use_op</span><span class="p">);</span>
+    <span class="k">co_await</span> <span class="n">chan</span><span class="p">.</span><span class="n">async_receive</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">use_op</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 7. result for 10M times in ms</caption>
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"></th>
+<th class="tableblock halign-left valign-top">gcc 12</th>
+<th class="tableblock halign-left valign-top">clang 16</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">async</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1810</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1864</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">awaitable</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3109</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4110</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">stackful</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3922</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4705</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="channels">Channels</h3>
+<div class="paragraph">
+<p>As In this benchmark asio::experimental::channel and async::channel get compared.</p>
+</div>
+<div class="paragraph">
+<p>This si similar to the parallel test, but uses the <code>async::channel</code> instead.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 8. result of running the test 3M times in ms</caption>
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"></th>
+<th class="tableblock halign-left valign-top">gcc</th>
+<th class="tableblock halign-left valign-top">clang</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">async</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">500</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">350</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">awaitable</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">790</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">770</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">stackful</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">867</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">907</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div class="paragraph nav-footer">
-<p>Next: <a href="overview.html">Overview</a> →</p>
+<p>← Previous: <a href="technical_background.html">Technical Background</a> | ↑ Up: <a href="index.html">Documentation boost.async</a> | Next: <a href="compiler_support.html">Compiler support</a> →</p>
 </div>
 </div>
 <div id="footer">

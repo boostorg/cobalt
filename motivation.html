@@ -439,7 +439,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="index" class="article toc2 toc-left">
+<body id="motivation" class="article toc2 toc-left">
 <div id="header">
 <h1>Documentation boost.async</h1>
 <div class="details">
@@ -450,10 +450,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root toc-current"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
+<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
 <li><a href="overview.html">Overview</a>
 </li>
-<li><a href="motivation.html">Motivation</a>
+<li><a href="motivation.html"><span class="toc-current">Motivation</span></a>
 </li>
 <li><a href="coroutine_primer.html">Coroutine Primer</a>
 </li>
@@ -475,42 +475,63 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div id="content">
+<div class="sect1">
+<h2 id="motivation">Motivation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Many languages provide a simple programming languages
+like node.js and python provide easy to use single-threaded concurrency frameworks.
+While more complex than synchronous code,
+single threaded asynchronicity avoids many of the pitfalls &amp; overhead of multi-threading.</p>
+</div>
+<div class="paragraph">
+<p>That is, one coroutine can work, while others wait for events (e.g. a response from a server).
+This allows to write applications that <strong>do multiple things simultaneously</strong> on a <strong>single thread</strong>.</p>
+</div>
+<div class="paragraph">
+<p>This library is meant to provide this to C++: <strong>simple single threaded asynchronicity</strong>
+akin to node.js and asyncio in python that works with existing libraries like
+<code>boost.beast</code>, <code>boost.mysql</code> or <code>boost.redis</code>.</p>
+</div>
+<div class="paragraph">
+<p>It takes a collection of concepts from other languages and provides them based on  C++20 coroutines.</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="overview.html">Overview</a></p>
+<p>easy asynchronous base functions, such as an async main &amp; threads</p>
 </li>
 <li>
-<p><a href="motivation.html">Motivation</a></p>
+<p><a href="reference.html#promise">promise</a> &amp; <a href="reference.html#generator">generator</a> types</p>
 </li>
 <li>
-<p><a href="coroutine_primer.html">Coroutine Primer</a></p>
+<p><a href="reference.html#op">operation wrappers</a></p>
 </li>
 <li>
-<p><a href="tutorial.html">Tutorial</a></p>
+<p>an <a href="reference.html#with">async scope</a></p>
 </li>
 <li>
-<p><a href="design.html">Design</a></p>
+<p><a href="reference.html#select">select</a></p>
 </li>
 <li>
-<p><a href="reference.html">Reference</a></p>
-</li>
-<li>
-<p><a href="technical_background.html">Technical Background</a></p>
-</li>
-<li>
-<p><a href="benchmarks.html">Benchmarks</a></p>
-</li>
-<li>
-<p><a href="compiler_support.html">Compiler support</a></p>
-</li>
-<li>
-<p><a href="acknowledgements.html">Acknowledgements</a></p>
+<p><a href="reference.html#channel">channel</a></p>
 </li>
 </ul>
 </div>
+<div class="paragraph">
+<p>Unlike <code>asio::awaitable</code> and <code>asio::experimental::coro</code>, <code>async</code> coroutines are open.
+That is, an <code>asio::awaitable</code> can only await and be awaited by other <code>asio::awaitable</code>
+and does not provide coroutine specific synchronization mechanisms.</p>
+</div>
+<div class="paragraph">
+<p><code>async</code> on the other hand provides a coroutine specific <code>channel</code>
+and different wait types (<code>select</code>, <code>gather</code> etc.) that are optimized
+to work with coroutines and awaitables.</p>
+</div>
+</div>
+</div>
 <div class="paragraph nav-footer">
-<p>Next: <a href="overview.html">Overview</a> →</p>
+<p>← Previous: <a href="overview.html">Overview</a> | ↑ Up: <a href="index.html">Documentation boost.async</a> | Next: <a href="coroutine_primer.html">Coroutine Primer</a> →</p>
 </div>
 </div>
 <div id="footer">

@@ -434,12 +434,227 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+pre.rouge table td { padding: 5px; }
+pre.rouge table pre { margin: 0; }
+pre.rouge .cm {
+  color: #999988;
+  font-style: italic;
+}
+pre.rouge .cp {
+  color: #999999;
+  font-weight: bold;
+}
+pre.rouge .c1 {
+  color: #999988;
+  font-style: italic;
+}
+pre.rouge .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+pre.rouge .c, pre.rouge .ch, pre.rouge .cd, pre.rouge .cpf {
+  color: #999988;
+  font-style: italic;
+}
+pre.rouge .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+pre.rouge .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+pre.rouge .ge {
+  color: #000000;
+  font-style: italic;
+}
+pre.rouge .gr {
+  color: #aa0000;
+}
+pre.rouge .gh {
+  color: #999999;
+}
+pre.rouge .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+pre.rouge .go {
+  color: #888888;
+}
+pre.rouge .gp {
+  color: #555555;
+}
+pre.rouge .gs {
+  font-weight: bold;
+}
+pre.rouge .gu {
+  color: #aaaaaa;
+}
+pre.rouge .gt {
+  color: #aa0000;
+}
+pre.rouge .kc {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kd {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kn {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kp {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kr {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kt {
+  color: #445588;
+  font-weight: bold;
+}
+pre.rouge .k, pre.rouge .kv {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .mf {
+  color: #009999;
+}
+pre.rouge .mh {
+  color: #009999;
+}
+pre.rouge .il {
+  color: #009999;
+}
+pre.rouge .mi {
+  color: #009999;
+}
+pre.rouge .mo {
+  color: #009999;
+}
+pre.rouge .m, pre.rouge .mb, pre.rouge .mx {
+  color: #009999;
+}
+pre.rouge .sa {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .sb {
+  color: #d14;
+}
+pre.rouge .sc {
+  color: #d14;
+}
+pre.rouge .sd {
+  color: #d14;
+}
+pre.rouge .s2 {
+  color: #d14;
+}
+pre.rouge .se {
+  color: #d14;
+}
+pre.rouge .sh {
+  color: #d14;
+}
+pre.rouge .si {
+  color: #d14;
+}
+pre.rouge .sx {
+  color: #d14;
+}
+pre.rouge .sr {
+  color: #009926;
+}
+pre.rouge .s1 {
+  color: #d14;
+}
+pre.rouge .ss {
+  color: #990073;
+}
+pre.rouge .s, pre.rouge .dl {
+  color: #d14;
+}
+pre.rouge .na {
+  color: #008080;
+}
+pre.rouge .bp {
+  color: #999999;
+}
+pre.rouge .nb {
+  color: #0086B3;
+}
+pre.rouge .nc {
+  color: #445588;
+  font-weight: bold;
+}
+pre.rouge .no {
+  color: #008080;
+}
+pre.rouge .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+pre.rouge .ni {
+  color: #800080;
+}
+pre.rouge .ne {
+  color: #990000;
+  font-weight: bold;
+}
+pre.rouge .nf, pre.rouge .fm {
+  color: #990000;
+  font-weight: bold;
+}
+pre.rouge .nl {
+  color: #990000;
+  font-weight: bold;
+}
+pre.rouge .nn {
+  color: #555555;
+}
+pre.rouge .nt {
+  color: #000080;
+}
+pre.rouge .vc {
+  color: #008080;
+}
+pre.rouge .vg {
+  color: #008080;
+}
+pre.rouge .vi {
+  color: #008080;
+}
+pre.rouge .nv, pre.rouge .vm {
+  color: #008080;
+}
+pre.rouge .ow {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .o {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .w {
+  color: #bbbbbb;
+}
+pre.rouge {
+  background-color: #f8f8f8;
+}
+</style>
 <style>.toc-current{font-weight: bold;} .toc-root{font-family: "Open Sans","DejaVu Sans",sans-serif;
                        font-size: 0.9em;} #content{display: flex; flex-direction: column; flex: 1 1 auto;}
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="index" class="article toc2 toc-left">
+<body id="technical_background" class="article toc2 toc-left">
 <div id="header">
 <h1>Documentation boost.async</h1>
 <div class="details">
@@ -450,7 +665,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root toc-current"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
+<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
 <li><a href="overview.html">Overview</a>
 </li>
 <li><a href="motivation.html">Motivation</a>
@@ -463,7 +678,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="reference.html">Reference</a>
 </li>
-<li><a href="technical_background.html">Technical Background</a>
+<li><a href="technical_background.html"><span class="toc-current">Technical Background</span></a>
+<ul class="sectlevel2">
+<li><a href="technical_background.html#stackless">Stackless</a>
+</li>
+<li><a href="technical_background.html#lazy_eager">Lazy &amp; eager</a>
+</li>
+</ul>
 </li>
 <li><a href="benchmarks.html">Benchmarks</a>
 </li>
@@ -475,42 +696,194 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div id="content">
-<div class="ulist">
-<ul>
-<li>
-<p><a href="overview.html">Overview</a></p>
-</li>
-<li>
-<p><a href="motivation.html">Motivation</a></p>
-</li>
-<li>
-<p><a href="coroutine_primer.html">Coroutine Primer</a></p>
-</li>
-<li>
-<p><a href="tutorial.html">Tutorial</a></p>
-</li>
-<li>
-<p><a href="design.html">Design</a></p>
-</li>
-<li>
-<p><a href="reference.html">Reference</a></p>
-</li>
-<li>
-<p><a href="technical_background.html">Technical Background</a></p>
-</li>
-<li>
-<p><a href="benchmarks.html">Benchmarks</a></p>
-</li>
-<li>
-<p><a href="compiler_support.html">Compiler support</a></p>
-</li>
-<li>
-<p><a href="acknowledgements.html">Acknowledgements</a></p>
-</li>
-</ul>
+<div class="sect1">
+<h2 id="technical_background">Technical Background</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="stackless">Stackless</h3>
+<div class="paragraph">
+<p>C++20 coroutines are stackless, meaning they don&#8217;t have their own stack.</p>
+</div>
+<div class="paragraph">
+<p>A stack in C++ describes the callstack, i.e. all the function frames stacked.
+A function frame is the memory a function needs to operate, i.e. a slice of memory
+to store its variables and information such as the return address.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The size of a function frame is known at compile time, but not outside the compile unit containing its definition.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="kt">int</span> <span class="nf">bar</span><span class="p">()</span> <span class="p">{</span><span class="k">return</span> <span class="mi">0</span><span class="p">;}</span> <span class="c1">// the deepest point of the stack</span>
+<span class="kt">int</span> <span class="n">foo</span><span class="p">()</span> <span class="p">{</span><span class="k">return</span> <span class="n">bar</span><span class="p">();}</span>
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="n">bar</span><span class="p">();</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The call stack in the above example is:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="c++"><span class="n">main</span><span class="p">()</span>
+  <span class="n">foo</span><span class="p">()</span>
+    <span class="n">bar</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-fde7569e876f007da058f2519d15de4c.png" alt="Diagram" width="650" height="347">
+</div>
+</div>
+<div class="paragraph">
+<p>Coroutines can be implemented a stackful, which means that it allocates a fixes chunk of memory and stacks function frames similar to a thread.
+C++20 coroutines are stackless, i.e. they only allocate their own frame and use the callers stack on resumption. Using our previous example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">fictional_eager_coro_type</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">example</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">co_yield</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">co_yield</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="n">nested_resume</span><span class="p">(</span><span class="n">fictional_eager_coro_type</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">f</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">f</span><span class="p">.</span><span class="n">resume</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">auto</span> <span class="n">f</span> <span class="o">=</span> <span class="n">example</span><span class="p">();</span>
+    <span class="n">nested_resume</span><span class="p">(</span><span class="n">f</span><span class="p">);</span>
+    <span class="n">f</span><span class="p">.</span><span class="n">reenter</span><span class="p">();</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This will yield a call stack similar to this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="c++"><span class="n">main</span><span class="p">()</span>
+  <span class="n">f</span><span class="err">$</span><span class="n">example</span><span class="p">()</span>
+  <span class="n">nested_resume</span><span class="p">()</span>
+    <span class="n">f</span><span class="err">$</span><span class="n">example</span><span class="p">()</span>
+  <span class="n">f</span><span class="err">$</span><span class="n">example</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-8fd7f223344b3ac3a597f3412c12c7aa.png" alt="Diagram" width="650" height="529">
+</div>
+</div>
+<div class="paragraph">
+<p>The same applies if a coroutine gets moved accross threads.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="lazy_eager">Lazy &amp; eager</h3>
+<div class="paragraph">
+<p>Coroutines are lazy if they only start execution of its code after it gets resumed, while an eager one will execute right-away until its first suspension point (i.e. a <code>co_await</code>, <code>co_yield</code> or <code>co_return</code> expression.)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">lazy_coro</span> <span class="nf">co_example</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Entered coro</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="k">co_yield</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Coro done</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"enter main</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="k">auto</span> <span class="n">lazy</span> <span class="o">=</span> <span class="n">co_example</span><span class="p">();</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"constructed coro</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="n">lazy</span><span class="p">.</span><span class="n">resume</span><span class="p">();</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"resumed once</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="n">lazy</span><span class="p">.</span><span class="n">resume</span><span class="p">();</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"resumed twice</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Which will produce output like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="c++"><span class="n">enter</span> <span class="n">main</span>
+<span class="n">constructed</span> <span class="n">coro</span>
+<span class="n">Entered</span> <span class="n">coro</span>
+<span class="n">resumed</span> <span class="n">once</span>
+<span class="n">Coro</span> <span class="n">Done</span>
+<span class="n">resumed</span> <span class="n">twice</span></code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-92ac19dccd7288d200ef9a4ab39376e0.png" alt="Diagram" width="650" height="673">
+</div>
+</div>
+<div class="paragraph">
+<p>Whereas an eager coro would look like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">eager_coro</span> <span class="nf">co_example</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Entered coro</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="k">co_yield</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Coro done</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"enter main</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="k">auto</span> <span class="n">lazy</span> <span class="o">=</span> <span class="n">co_example</span><span class="p">();</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"constructed coro</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="n">lazy</span><span class="p">.</span><span class="n">resume</span><span class="p">();</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"resumed once</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Which will produce output like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="c++"><span class="n">enter</span> <span class="n">main</span>
+<span class="n">Entered</span> <span class="n">coro</span>
+<span class="n">constructed</span> <span class="n">coro</span>
+<span class="n">resume</span> <span class="n">once</span>
+<span class="n">Coro</span> <span class="n">Done</span></code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-58c38f3af9c2a5b77ebd1168b5245d89.png" alt="Diagram" width="650" height="583">
+</div>
+</div>
+</div>
+</div>
 </div>
 <div class="paragraph nav-footer">
-<p>Next: <a href="overview.html">Overview</a> →</p>
+<p>← Previous: <a href="reference.html">Reference</a> | ↑ Up: <a href="index.html">Documentation boost.async</a> | Next: <a href="benchmarks.html">Benchmarks</a> →</p>
 </div>
 </div>
 <div id="footer">

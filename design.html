@@ -434,12 +434,227 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+pre.rouge table td { padding: 5px; }
+pre.rouge table pre { margin: 0; }
+pre.rouge .cm {
+  color: #999988;
+  font-style: italic;
+}
+pre.rouge .cp {
+  color: #999999;
+  font-weight: bold;
+}
+pre.rouge .c1 {
+  color: #999988;
+  font-style: italic;
+}
+pre.rouge .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+pre.rouge .c, pre.rouge .ch, pre.rouge .cd, pre.rouge .cpf {
+  color: #999988;
+  font-style: italic;
+}
+pre.rouge .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+pre.rouge .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+pre.rouge .ge {
+  color: #000000;
+  font-style: italic;
+}
+pre.rouge .gr {
+  color: #aa0000;
+}
+pre.rouge .gh {
+  color: #999999;
+}
+pre.rouge .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+pre.rouge .go {
+  color: #888888;
+}
+pre.rouge .gp {
+  color: #555555;
+}
+pre.rouge .gs {
+  font-weight: bold;
+}
+pre.rouge .gu {
+  color: #aaaaaa;
+}
+pre.rouge .gt {
+  color: #aa0000;
+}
+pre.rouge .kc {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kd {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kn {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kp {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kr {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kt {
+  color: #445588;
+  font-weight: bold;
+}
+pre.rouge .k, pre.rouge .kv {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .mf {
+  color: #009999;
+}
+pre.rouge .mh {
+  color: #009999;
+}
+pre.rouge .il {
+  color: #009999;
+}
+pre.rouge .mi {
+  color: #009999;
+}
+pre.rouge .mo {
+  color: #009999;
+}
+pre.rouge .m, pre.rouge .mb, pre.rouge .mx {
+  color: #009999;
+}
+pre.rouge .sa {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .sb {
+  color: #d14;
+}
+pre.rouge .sc {
+  color: #d14;
+}
+pre.rouge .sd {
+  color: #d14;
+}
+pre.rouge .s2 {
+  color: #d14;
+}
+pre.rouge .se {
+  color: #d14;
+}
+pre.rouge .sh {
+  color: #d14;
+}
+pre.rouge .si {
+  color: #d14;
+}
+pre.rouge .sx {
+  color: #d14;
+}
+pre.rouge .sr {
+  color: #009926;
+}
+pre.rouge .s1 {
+  color: #d14;
+}
+pre.rouge .ss {
+  color: #990073;
+}
+pre.rouge .s, pre.rouge .dl {
+  color: #d14;
+}
+pre.rouge .na {
+  color: #008080;
+}
+pre.rouge .bp {
+  color: #999999;
+}
+pre.rouge .nb {
+  color: #0086B3;
+}
+pre.rouge .nc {
+  color: #445588;
+  font-weight: bold;
+}
+pre.rouge .no {
+  color: #008080;
+}
+pre.rouge .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+pre.rouge .ni {
+  color: #800080;
+}
+pre.rouge .ne {
+  color: #990000;
+  font-weight: bold;
+}
+pre.rouge .nf, pre.rouge .fm {
+  color: #990000;
+  font-weight: bold;
+}
+pre.rouge .nl {
+  color: #990000;
+  font-weight: bold;
+}
+pre.rouge .nn {
+  color: #555555;
+}
+pre.rouge .nt {
+  color: #000080;
+}
+pre.rouge .vc {
+  color: #008080;
+}
+pre.rouge .vg {
+  color: #008080;
+}
+pre.rouge .vi {
+  color: #008080;
+}
+pre.rouge .nv, pre.rouge .vm {
+  color: #008080;
+}
+pre.rouge .ow {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .o {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .w {
+  color: #bbbbbb;
+}
+pre.rouge {
+  background-color: #f8f8f8;
+}
+</style>
 <style>.toc-current{font-weight: bold;} .toc-root{font-family: "Open Sans","DejaVu Sans",sans-serif;
                        font-size: 0.9em;} #content{display: flex; flex-direction: column; flex: 1 1 auto;}
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="index" class="article toc2 toc-left">
+<body id="design" class="article toc2 toc-left">
 <div id="header">
 <h1>Documentation boost.async</h1>
 <div class="details">
@@ -450,7 +665,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root toc-current"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
+<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
 <li><a href="overview.html">Overview</a>
 </li>
 <li><a href="motivation.html">Motivation</a>
@@ -459,7 +674,31 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="tutorial.html">Tutorial</a>
 </li>
-<li><a href="design.html">Design</a>
+<li><a href="design.html"><span class="toc-current">Design</span></a>
+<ul class="sectlevel2">
+<li><a href="design.html#design:concepts">Concepts</a>
+</li>
+<li><a href="design.html#executors">Executors</a>
+<ul class="sectlevel3">
+<li><a href="design.html#using_strands">Using Strands</a>
+</li>
+</ul>
+</li>
+<li><a href="design.html#polymorphic_memory_resource">polymorphic memory resource</a>
+</li>
+<li><a href="design.html#cancellation">cancellation</a>
+</li>
+<li><a href="design.html#design:promise">Promise</a>
+</li>
+<li><a href="design.html#design:select">Select</a>
+</li>
+<li><a href="design.html#design:interrupt_await">interrupt_await</a>
+</li>
+<li><a href="design.html#associators">Associators</a>
+</li>
+<li><a href="design.html#threading">Threading</a>
+</li>
+</ul>
 </li>
 <li><a href="reference.html">Reference</a>
 </li>
@@ -475,42 +714,440 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div id="content">
+<div class="sect1">
+<h2 id="design">Design</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="design:concepts">Concepts</h3>
+<div class="paragraph">
+<p>This library has two fundamental concepts:</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="overview.html">Overview</a></p>
+<p><a href="reference.html#awaitable">awaitable</a></p>
 </li>
 <li>
-<p><a href="motivation.html">Motivation</a></p>
-</li>
-<li>
-<p><a href="coroutine_primer.html">Coroutine Primer</a></p>
-</li>
-<li>
-<p><a href="tutorial.html">Tutorial</a></p>
-</li>
-<li>
-<p><a href="design.html">Design</a></p>
-</li>
-<li>
-<p><a href="reference.html">Reference</a></p>
-</li>
-<li>
-<p><a href="technical_background.html">Technical Background</a></p>
-</li>
-<li>
-<p><a href="benchmarks.html">Benchmarks</a></p>
-</li>
-<li>
-<p><a href="compiler_support.html">Compiler support</a></p>
-</li>
-<li>
-<p><a href="acknowledgements.html">Acknowledgements</a></p>
+<p>coroutine</p>
 </li>
 </ul>
 </div>
+<div class="paragraph">
+<p>An <a href="reference.html#awaitable">awaitable</a> is an expression that can be used with <code>co_await</code>
+from within a coroutine, e.g.:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">co_await</span> <span class="nf">delay</span><span class="p">(</span><span class="mx">50ms</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>An <strong>actual awaitable</strong> is a type that can be <code>co_await</code>-ed from within any coroutine,
+like a <code>delay</code> operation.
+A <code>pseudo-awaitable</code> is one that can only be used in coroutines adding special
+functionality for it. It is akin to a contextual pseudo-keyword.</p>
+</div>
+<div class="paragraph">
+<p>All the verbs in the <a href="reference.html#this_coro">this_coro</a> namespace are such pseudo-awaitables.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">auto</span> <span class="n">exec</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">this_coro</span><span class="o">::</span><span class="n">executor</span><span class="p">;</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This library exposes a set of <code>enable_*</code> base classes for promises,
+to make the creation of custom coroutines easy.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>A coroutine in the context of this documentation refers
+to an asynchronous coroutine, i.e. synchronous coroutines like
+<a href="https://en.cppreference.com/w/cpp/coroutine/generator">generator</a>
+are not considered.</p>
+</div>
+<div class="paragraph">
+<p>All coroutines except  <a href="reference.html#main">main</a> are also actual awaitables.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="executors">Executors</h3>
+<div class="paragraph">
+<p>Since everything is asynchronous the library needs to use an event-loop.
+Because everything is single-threaded, it can be assumed that there is exactly one executor
+per thread, which will suffice for 97% of use-cases.
+Therefore, there is a <code>thread_local</code> executor that gets used as default
+by the coroutine objects (although stored by copy in the coroutine promise).</p>
+</div>
+<div class="paragraph">
+<p>Likewise, there is one <code>executor</code> type used by the library,
+which defaults to <code>asio::any_io_executor</code>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you write your own coroutine, it should hold a copy of the executor,
+and have a <code>get_executor</code> function returning it by const reference.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="using_strands">Using Strands</h4>
+<div class="paragraph">
+<p>While strands can be used, they are not compatible with the <code>thread_local</code> executor.
+This is because they might switch threads, thus they can&#8217;t be <code>thread_local</code>.</p>
+</div>
+<div class="paragraph">
+<p>If you wish to use strands (e.g. through a <a href="reference.html#spawn">spawn</a>)
+the executor for any <a href="reference.html#promise">promise</a>, <a href="reference.html#generator">generator</a> or <a href="reference.html#channel">channel</a>
+must be assigned manually.</p>
+</div>
+<div class="paragraph">
+<p>In the case of a <a href="reference.html#channel">channel</a> this is a constructor argument,
+but for the other coroutine types, <code>asio::executor_arg</code> needs to be used.
+This is done by having <code>asio::executor_arg_t</code> (somewhere) in the argument
+list directly followed by the executor to be used in the argument list of the coroutine, e.g.:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">example_with_executor</span><span class="p">(</span><span class="kt">int</span> <span class="n">some_arg</span><span class="p">,</span> <span class="n">asio</span><span class="o">::</span><span class="n">executor_arg_t</span><span class="p">,</span> <span class="n">async</span><span class="o">::</span><span class="n">executor</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This way the coroutine-promise can pick up the executor from the third argument,
+instead of defaulting to the thread_local one.</p>
+</div>
+<div class="paragraph">
+<p>The arguments can of course be defaulted, to make them less inconvenient,
+if they are sometimes with a thread_local executor.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">example_with_executor</span><span class="p">(</span><span class="kt">int</span> <span class="n">some_arg</span><span class="p">,</span>
+                                           <span class="n">asio</span><span class="o">::</span><span class="n">executor_arg_t</span> <span class="o">=</span> <span class="n">asio</span><span class="o">::</span><span class="n">executor_arg</span><span class="p">,</span>
+                                           <span class="n">async</span><span class="o">::</span><span class="n">executor</span> <span class="o">=</span> <span class="n">async</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">get_executor</span><span class="p">());</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If this gets omitted on a strand an exception of type <code>asio::bad_allocator</code> is thrown,
+or - worse - the wrong executor is used.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="polymorphic_memory_resource">polymorphic memory resource</h3>
+<div class="paragraph">
+<p>Similarly, the library uses a thread_local <code>pmr::memory_resource</code> to allocate
+coroutine frames &amp; to use as allocator on asynchronous operations.</p>
+</div>
+<div class="paragraph">
+<p>The reason is, that users may want to customize allocations,
+e.g. to avoid locks, limit memory usage or monitor usage.
+<code>pmr</code> allows us to achieve this without introducing unnecessary template parameters,
+i.e. no <code>promise&lt;T, Allocator&gt;</code> complexity.
+Using <code>pmr</code> however does introduce some minimal overheads,
+so a user has the option to disable by defining <code>BOOST_ASYNC_NO_PMR</code>.</p>
+</div>
+<div class="paragraph">
+<p><a href="reference.html#op">op</a> uses an internal resource optimized for asio&#8217;s allocator usages
+and <a href="reference.html#gather">gather</a>, <a href="reference.html#select">select</a> and <a href="reference.html#join">join</a> use a monotonic resource to miminize allocations.
+Both still work with <code>BOOST_ASYNC_NO_PMR</code> defined, in which case they&#8217;ll use <code>new/delete</code> as upstream allocations.</p>
+</div>
+<div class="paragraph">
+<p><a href="reference.html#main">main</a> and <a href="reference.html#thread">thread</a> single <code>pmr::unsynchronized_pool_resource</code> per thread with PMR enabled.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you write your own coroutine, it should have a get_allocator function
+returning a <code>pmr::polymorphic_allocator&lt;void&gt;</code>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="cancellation">cancellation</h3>
+<div class="paragraph">
+<p>async uses implicit cancellation based on <code>asio::cancellation_signal</code>.
+This is mostly used implicitly (e.g. with <a href="reference.html#select">select</a>),
+so that there is very little explicit use in the examples.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you write custom coroutine it must return a <code>cancellation_slot</code> from a
+<code>get_cancellation_slot</code> function in order to be able to cancel other operations.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you write a custom awaitable, it can use that function in await_suspend to receive cancellation signals.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="design:promise">Promise</h3>
+<div class="paragraph">
+<p>The main coroutine type is a <code>promise</code>, which is eager.
+The reason to default to this, is that the compiler can optimize out
+promises that do not suspend, like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">noop</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="k">co_return</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Awaiting the above operation is in theory a noop,
+but practically speaking, compilers aren&#8217;t there as of 2023.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="design:select">Select</h3>
+<div class="paragraph">
+<p>The most important synchronization mechanism is the <code>select</code> function.</p>
+</div>
+<div class="paragraph">
+<p>It awaits multiple <a href="reference.html#awaitable">awaitable</a>s in a pseudo-random order
+and will return the result of the first one completion, before disregarding the rest.</p>
+</div>
+<div class="paragraph">
+<p>That is, it initiates the <code>co_await</code> in a pseudo-random order and stops once one
+awaitable is found to be ready or completed immediately.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">gen1</span><span class="p">();</span>
+<span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">gen2</span><span class="p">();</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">p</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="k">auto</span> <span class="n">g1</span> <span class="o">=</span> <span class="n">gen1</span><span class="p">();</span>
+  <span class="k">auto</span> <span class="n">g2</span> <span class="o">=</span> <span class="n">gen2</span><span class="p">();</span>
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">cancelled</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="k">switch</span><span class="p">(</span><span class="k">auto</span> <span class="n">v</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">select</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">);</span> <span class="n">v</span><span class="p">.</span><span class="n">index</span><span class="p">())</span>
+    <span class="p">{</span>
+    <span class="k">case</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="n">printf</span><span class="p">(</span><span class="s">"Got int %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">get</span><span class="o">&lt;</span><span class="mi">0</span><span class="o">&gt;</span><span class="p">(</span><span class="n">v</span><span class="p">));</span>
+      <span class="k">break</span><span class="p">;</span>
+    <span class="k">case</span> <span class="mi">1</span><span class="p">:</span>
+      <span class="n">printf</span><span class="p">(</span><span class="s">"Got double %f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">get</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span><span class="n">v</span><span class="p">));</span>
+      <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>select</code> must however internally wait  for all awaitable to complete
+once it initiates to <code>co_await</code>.
+Therefor, once the first <a href="reference.html#awaitable">awaitable</a> completes,
+it tries to <a href="reference.html#interrupt_await">interrupt</a> the rest, and if that fails cancels them.</p>
+</div>
+<div class="paragraph">
+<p><code>select</code> is the preferred way to trigger cancellations, e.g:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">timeout</span><span class="p">();</span>
+<span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">work</span><span class="p">();</span>
+
+<span class="n">select</span><span class="p">(</span><span class="n">timeout</span><span class="p">(),</span> <span class="n">work</span><span class="p">());</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="design:interrupt_await">interrupt_await</h3>
+<div class="paragraph">
+<p>If it naively cancelled it would however lose data.
+Thus, the concept of  <code>interrupt_await</code> is introduced,
+which tells the awaitable (that supports it)
+to immediately resume the awaiter and return or throw an ignored value.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example of an interruptible awaitable</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">struct</span> <span class="nc">awaitable</span>
+<span class="p">{</span>
+   <span class="kt">bool</span> <span class="n">await_ready</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+
+   <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Promise</span><span class="p">&gt;</span>
+   <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">await_suspend</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="n">Promise</span><span class="o">&gt;</span> <span class="n">h</span><span class="p">);</span>
+
+   <span class="n">T</span> <span class="n">await_resume</span><span class="p">();</span>
+
+   <span class="kt">void</span> <span class="n">interrupt_await</span><span class="p">()</span> <span class="o">&amp;</span><span class="p">;</span>
+<span class="p">};</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If the <code>interrupt_await</code> doesn&#8217;t result in immediate resumption (of <code>h</code>),
+<code>select</code> will send a cancel signal.</p>
+</div>
+<div class="paragraph">
+<p><code>select</code> applies these with the correct reference qualification:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">auto</span> <span class="n">g</span> <span class="o">=</span> <span class="n">gen1</span><span class="p">();</span>
+<span class="n">select</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">gen2</span><span class="p">());</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The above will call a <code>interrupt_await() &amp;</code> function for <code>g1</code> and <code>interrupt_await() &amp;&amp;</code> for <code>g2</code> if available.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Generally speaking, the coroutines in async support lvalue interruption, ie. <code>interrupt_await() &amp;</code>.
+<a href="reference.html#channel">channel</a> operations are unqualified, i.e. work in both cases.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><a href="reference.html#join">join</a> and <a href="reference.html#gather">gather</a> will forward interruptions,
+i.e. this will only interrupt <code>g1</code> and <code>g2</code> if <code>gen2()</code> completes first:</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="associators">Associators</h3>
+<div class="paragraph">
+<p><code>async</code> uses the <code>associator</code> concept of asio, but simplifies it.
+That is, it has three associators that are member functions of an awaiting promise.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>const executor_type &amp; get_executor()</code> (always <code>executor</code>, must return by const ref)</p>
+</li>
+<li>
+<p><code>allocator_type get_allocator()</code> (always <code>pmr::polymorphic_allocator&lt;void&gt;</code>)</p>
+</li>
+<li>
+<p><code>cancellation_slot_type get_cancellation_slot()</code> (must have the same IF as <code>asio::cancellation_slot</code>)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><code>async</code> uses concepts to check if those are present in its <code>await_suspend</code> functions.</p>
+</div>
+<div class="paragraph">
+<p>That way custom coroutines can support cancellation, executors etc..</p>
+</div>
+<div class="paragraph">
+<p>In a custom awaitable you can obtain them like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">struct</span> <span class="nc">my_awaitable</span>
+<span class="p">{</span>
+    <span class="kt">bool</span> <span class="n">await_ready</span><span class="p">();</span>
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+    <span class="kt">void</span> <span class="n">await_suspend</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">corutine_handle</span><span class="o">&lt;</span><span class="n">P</span><span class="o">&gt;</span> <span class="n">h</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="k">requires</span>  <span class="p">(</span><span class="n">Promise</span> <span class="n">p</span><span class="p">)</span> <span class="p">{</span><span class="n">p</span><span class="p">.</span><span class="n">get_executor</span><span class="p">();})</span>
+            <span class="n">handle_executor</span><span class="p">(</span><span class="n">h</span><span class="p">.</span><span class="n">promise</span><span class="p">().</span><span class="n">get_executor</span><span class="p">();</span>
+
+        <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="k">requires</span> <span class="p">(</span><span class="n">Promise</span> <span class="n">p</span><span class="p">)</span> <span class="p">{</span><span class="n">p</span><span class="p">.</span><span class="n">get_cancellation_slot</span><span class="p">();})</span>
+            <span class="k">if</span> <span class="p">((</span><span class="n">cl</span> <span class="o">=</span> <span class="n">h</span><span class="p">.</span><span class="n">promise</span><span class="p">().</span><span class="n">get_cancellation_slot</span><span class="p">()).</span><span class="n">is_connected</span><span class="p">())</span>
+                <span class="n">cl</span><span class="p">.</span><span class="n">emplace</span><span class="o">&lt;</span><span class="n">my_cancellation</span><span class="o">&gt;</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="kt">void</span> <span class="n">await_resume</span><span class="p">();</span>
+<span class="p">};</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="threading">Threading</h3>
+<div class="paragraph">
+<p>This library is single-threaded by design, because this simplifies resumption
+and thus more performant handling of synchronizations like <a href="reference.html#select">select</a>.
+<a href="reference.html#select">select</a> would need to lock every selected awaitable to avoid data loss
+which would need to be blocking and get worse with every additional element.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+you can&#8217;t have any coroutines be resumed on a different thread than created on,
+except for a <a href="reference.html#task">task</a> (e.g. using <a href="reference.html#spawn">spawn</a>).
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The main technical reason is that the most efficient way of switching coroutines is by returning the handle
+of the new coroutine from <code>await_suspend</code> like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">struct</span> <span class="nc">my_awaitable</span>
+<span class="p">{</span>
+    <span class="kt">bool</span> <span class="n">await_ready</span><span class="p">();</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">await_suspend</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="n">U</span><span class="o">&gt;</span><span class="p">);</span>
+    <span class="kt">void</span> <span class="n">await_resume</span><span class="p">();</span>
+<span class="p">};</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this case, the awaiting coroutine will be suspended before await_suspend is called,
+and the coroutine returned is resumed. This of course doesn&#8217;t work if we need to go through an executor.</p>
+</div>
+<div class="paragraph">
+<p>This doesn&#8217;t only apply to awaited coroutines, but channels, too.
+The channels in this library use an intrusive list of awaitables
+and may return the handle of reading (and thus suspended) coroutine
+from a write_operation&#8217;s <code>await_suspend</code>.</p>
+</div>
+</div>
+</div>
+</div>
 <div class="paragraph nav-footer">
-<p>Next: <a href="overview.html">Overview</a> →</p>
+<p>← Previous: <a href="tutorial.html">Tutorial</a> | ↑ Up: <a href="index.html">Documentation boost.async</a> | Next: <a href="reference.html">Reference</a> →</p>
 </div>
 </div>
 <div id="footer">
