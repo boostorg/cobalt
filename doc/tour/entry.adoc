@@ -1,0 +1,53 @@
+== Entry into an async environment
+
+In order to use <<awaitable, awaitables>> we need to be able to `co_await` them, i.e. be within a coroutine.
+
+We got four ways to achieve this:
+
+
+<<main>>:: replace `int main` with a coroutine
+[source,cpp]
+----
+async::main co_main(int argc, char* argv[])
+{
+    // co_await things here
+    co_return 0;
+}
+----
+
+<<thread>>:: create a thread for the asynchronous environments
+[source,cpp]
+----
+async::thread my_thread()
+{
+    // co_await things here
+    co_return;
+}
+
+int main(int argc, char ** argv[])
+{
+    auto t = my_thread();
+    t.join();
+    return 0;
+}
+----
+
+<<task>>:: create a task and run or spawn it
+[source,cpp]
+----
+async::task<void> my_thread()
+{
+   // co_await things here
+   co_return;
+}
+
+int main(int argc, char ** argv[])
+{
+    async::run(my_task()); // sync
+    asio::io_context ctx;
+    async::spawn(ctx, my_task(), asio::detached); // async, refer to async for details
+    ctx.run();
+    return 0;
+}
+----
+

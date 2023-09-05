@@ -97,9 +97,9 @@ async::task<void> atest()
 
 == Channels
 
-As In this benchmark asio::experimental::channel and async::channel get compared.
+In this benchmark asio::experimental::channel and async::channel get compared.
 
-This si similar to the parallel test, but uses the `async::channel` instead.
+This is similar to the parallel test, but uses the `async::channel` instead.
 
 .result of running the test 3M times in ms
 [cols="1,1,1"]
@@ -111,3 +111,23 @@ This si similar to the parallel test, but uses the `async::channel` instead.
 |stackful  | 867 | 907
 
 |===
+
+== Operation Allocations
+
+This benchmark compares the different possible solutions for the associated allocator of asynchronous operations
+
+.result of running the test 2M times in ms
+[cols="1,1,1"]
+|===
+| |gcc |clang
+
+|std::allocator   | 1136 | 1139
+|async::monotonic | 1149 | 1270
+|pmr::monotonic   | 1164 | 1173
+|async::sbo       | 1021 | 1060
+
+The latter method is used internally by async.
+
+|===
+
+

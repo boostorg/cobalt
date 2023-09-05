@@ -14,7 +14,6 @@ Version 0.1, 29.01.2023
 
 :leveloffset: +1
 
-
 include::overview.adoc[]
 include::motivation.adoc[]
 
@@ -24,6 +23,15 @@ include::primer/async.adoc[]
 include::primer/coroutines.adoc[]
 include::primer/awaitables.adoc[]
 include::primer/event-loops.adoc[]
+
+= Tour
+
+include::tour/entry.adoc[]
+include::tour/promise.adoc[]
+include::tour/task.adoc[]
+include::tour/generator.adoc[]
+include::tour/join.adoc[]
+include::tour/select.adoc[]
 
 = Tutorial
 
