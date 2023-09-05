@@ -654,7 +654,7 @@ pre.rouge {
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="compiler_support" class="article toc2 toc-left">
+<body id="echo_server" class="article toc2 toc-left">
 <div id="header">
 <h1>Documentation boost.async</h1>
 <div class="details">
@@ -665,16 +665,26 @@ pre.rouge {
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
-<li><a href="overview.html">Overview</a>
-</li>
+<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel0">
 <li><a href="motivation.html">Motivation</a>
 </li>
 <li><a href="coroutine_primer.html">Coroutine Primer</a>
 </li>
-<li><a href="tour.html">Tour</a>
-</li>
 <li><a href="tutorial.html">Tutorial</a>
+<ul class="sectlevel1">
+<li><a href="delay.html">delay</a>
+</li>
+<li><a href="echo_server.html"><span class="toc-current">echo server</span></a>
+</li>
+<li><a href="price_ticker.html">price ticker</a>
+</li>
+<li><a href="delay_op.html">delay op</a>
+</li>
+<li><a href="generator_with_push_value.html">Generator with push value</a>
+</li>
+<li><a href="advanced_examples.html">Advanced examples</a>
+</li>
+</ul>
 </li>
 <li><a href="design.html">Design</a>
 </li>
@@ -684,7 +694,7 @@ pre.rouge {
 </li>
 <li><a href="benchmarks.html">Benchmarks</a>
 </li>
-<li><a href="compiler_support.html"><span class="toc-current">Compiler support</span></a>
+<li><a href="compiler_support.html">Compiler support</a>
 </li>
 <li><a href="acknowledgements.html">Acknowledgements</a>
 </li>
@@ -693,93 +703,195 @@ pre.rouge {
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="compiler_support">Compiler support</h2>
+<h2 id="echo_server">echo server</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This library is supported since Clang 14, Gcc 10 &amp; MSVC 19.28.</p>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-Gcc versions 12.1 and 12.2 appear to have a bug for coroutines with out stack variables
-as can be seen [here](<a href="https://godbolt.org/z/6adGcqP1z" class="bare">https://godbolt.org/z/6adGcqP1z</a>) and should be avoided for coroutines.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>Clang only added <code>std::pmr</code> support in 16, so older clang versions use <code>boost::contianer::pmr</code> as a drop-in replacement.</p>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-Some if not all MSVC versions have a broken coroutine implementation,
-that this library needs to workaround. This may cause non-deterministic behaviour and overhead.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>A coroutine continuation may be done in the awaitable returned from a <code>final_suspend</code>, like this:</p>
+<p>We&#8217;ll be using the <code>use_op</code> (<a href="https://www.boost.org/doc/libs/master/doc/html/boost_asio/overview/model/completion_tokens.html">asio completion</a>) token everywhere,
+so we&#8217;re using a <a href="https://www.boost.org/doc/libs/master/doc/html/boost_asio/reference/asynchronous_operations.html#boost_asio.reference.asynchronous_operations.default_completion_tokens">default completion token</a>, so that we can skip the last parameters.</p>
 </div>
 <div class="listingblock">
+<div class="title">example/echo_server.cpp declarations</div>
 <div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="c1">// in promise</span>
-<span class="k">auto</span> <span class="n">final_suspend</span><span class="p">()</span> <span class="k">noexcept</span>
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">namespace</span> <span class="n">async</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">async</span><span class="p">;</span>
+<span class="k">using</span> <span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">ip</span><span class="o">::</span><span class="n">tcp</span><span class="p">;</span>
+<span class="k">using</span> <span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">detached</span><span class="p">;</span>
+<span class="k">using</span> <span class="n">tcp_acceptor</span> <span class="o">=</span> <span class="n">async</span><span class="o">::</span><span class="n">use_op_t</span><span class="o">::</span><span class="n">as_default_on_t</span><span class="o">&lt;</span><span class="n">tcp</span><span class="o">::</span><span class="n">acceptor</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="k">using</span> <span class="n">tcp_socket</span>   <span class="o">=</span> <span class="n">async</span><span class="o">::</span><span class="n">use_op_t</span><span class="o">::</span><span class="n">as_default_on_t</span><span class="o">&lt;</span><span class="n">tcp</span><span class="o">::</span><span class="n">socket</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="k">namespace</span> <span class="n">this_coro</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="p">;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We&#8217;re writing the echo function as a <a href="promise.html">promise</a> coroutine.
+It&#8217;s an eager coroutine and recommended as the default;
+in case a lazy coro is needed, <a href="task.html">task</a> is available.</p>
+</div>
+<div class="listingblock">
+<div class="title">example/echo_server.cpp echo function</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">echo</span><span class="p">(</span><span class="n">tcp_socket</span> <span class="n">socket</span><span class="p">)</span>
 <span class="p">{</span>
-    <span class="k">struct</span> <span class="nc">final_awaitable</span>
+  <span class="k">try</span> <i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="p">{</span>
+    <span class="kt">char</span> <span class="n">data</span><span class="p">[</span><span class="mi">4096</span><span class="p">];</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">socket</span><span class="p">.</span><span class="n">is_open</span><span class="p">())</span> <i class="conum" data-value="2"></i><b>(2)</b>
     <span class="p">{</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">continuation</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">noop_coroutine</span><span class="p">()};</span> <i class="conum" data-value="1"></i><b>(1)</b>
-      <span class="kt">bool</span> <span class="n">await_ready</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">await_suspend</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">h</span><span class="p">)</span> <span class="k">noexcept</span>
-      <span class="p">{</span>
-        <span class="k">auto</span> <span class="n">cc</span> <span class="o">=</span> <span class="n">continuation</span><span class="p">;</span>
-        <span class="n">h</span><span class="p">.</span><span class="n">destroy</span><span class="p">();</span> <i class="conum" data-value="2"></i><b>(2)</b>
-        <span class="k">return</span> <span class="n">cc</span><span class="p">;</span>
-      <span class="p">}</span>
-
-      <span class="kt">void</span> <span class="n">await_resume</span><span class="p">()</span> <span class="k">noexcept</span> <span class="p">{}</span>
-    <span class="p">};</span>
-    <span class="k">return</span> <span class="n">final_awaitable</span><span class="p">{</span><span class="n">my_continuation</span><span class="p">};</span>
-<span class="p">};</span></code></pre>
+      <span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">n</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">socket</span><span class="p">.</span><span class="n">async_read_some</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">buffer</span><span class="p">(</span><span class="n">data</span><span class="p">));</span> <i class="conum" data-value="3"></i><b>(3)</b>
+      <span class="k">co_await</span> <span class="n">async_write</span><span class="p">(</span><span class="n">socket</span><span class="p">,</span> <span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">buffer</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">n</span><span class="p">));</span> <i class="conum" data-value="4"></i><b>(4)</b>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="k">catch</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span> <span class="n">e</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"echo: exception: %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The continuation</td>
+<td>When using the use_op completion token, I/O errors are translated into C++ exceptions. Additionally,
+if the coroutine gets cancelled (e.g. because the user hit Ctrl-C),
+an exception will be raised, too. Under these conditions, we print the error and exit the loop.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Self destroying the coroutine before continuation</td>
+<td>We run the loop until we get cancelled (exception) or the user closes the connection.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Read as much as is available.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Write all the read bytes.</td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>The final_suspend doesnt not properly suspend the coroutine on MSVC, so that the <code>h.destroy()</code> will cause
-double destruction of elements on the coroutine frame.
-Therefor, msvc will need to post the destruction, to do it out of line.
-This will cause overhead and make the actual freeing of memory indeterministic.</p>
+<p>Note that promise is eager. Calling <code>echo</code> will immediately execute code until <code>async_read_some</code>
+and then return control to the caller.</p>
+</div>
+<div class="paragraph">
+<p>Next, we also need an acceptor function. Here, we&#8217;re using a <a href="generator.html">generator</a> to manage the acceptor state.
+This is a coroutine that can be co_awaited multiple times, until a <code>co_return</code> expression is reached.</p>
+</div>
+<div class="listingblock">
+<div class="title">example/echo_server.cpp listen function</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="n">tcp_socket</span><span class="o">&gt;</span> <span class="n">listen</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">tcp_acceptor</span> <span class="n">acceptor</span><span class="p">({</span><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">executor</span><span class="p">},</span> <span class="p">{</span><span class="n">tcp</span><span class="o">::</span><span class="n">v4</span><span class="p">(),</span> <span class="mi">55555</span><span class="p">});</span>
+  <span class="k">for</span> <span class="p">(;;)</span> <i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="p">{</span>
+    <span class="n">tcp_socket</span> <span class="n">sock</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">acceptor</span><span class="p">.</span><span class="n">async_accept</span><span class="p">();</span> <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="k">co_yield</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">sock</span><span class="p">);</span> <i class="conum" data-value="3"></i><b>(3)</b>
+  <span class="p">}</span>
+  <span class="k">co_return</span> <span class="n">tcp_socket</span><span class="p">{</span><span class="n">acceptor</span><span class="p">.</span><span class="n">get_executor</span><span class="p">()};</span> <i class="conum" data-value="4"></i><b>(4)</b>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Cancellation will also lead to an exception here being thrown from the <code>co_await</code></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Asynchronously accept the connection</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Yield it to the awaiting coroutine</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td><code>co_return</code> a value for C++ conformance.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>With those two functions we can now write the server:</p>
+</div>
+<div class="listingblock">
+<div class="title">example/echo_server.cpp run_server function</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">run_server</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">wait_group</span> <span class="o">&amp;</span> <span class="n">workers</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="k">auto</span> <span class="n">l</span> <span class="o">=</span> <span class="n">listen</span><span class="p">();</span> <i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="k">while</span> <span class="p">(</span><span class="nb">true</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">workers</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">==</span> <span class="mi">10u</span><span class="p">)</span>
+      <span class="k">co_await</span> <span class="n">workers</span><span class="p">.</span><span class="n">wait_one</span><span class="p">();</span>  <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="k">else</span>
+      <span class="n">workers</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">echo</span><span class="p">(</span><span class="k">co_await</span> <span class="n">l</span><span class="p">));</span> <i class="conum" data-value="3"></i><b>(3)</b>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Construct the listener generator coroutine. When the object is destroyed,
+the coroutine will be cancelled, performing all required cleanup.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>When we have more than 10 workers, we wait for one to finish</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Accept a new connection &amp; launch it.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The <a href="wait_group.html">wait_group</a> is used to manage the running echo functions.
+This class will cancel &amp; await the running <code>echo</code> coroutines.</p>
+</div>
+<div class="paragraph">
+<p>We do not need to do the same for the <code>listener</code>, because it will just stop on its own, when <code>l</code> gets destroyed.
+The destructor of a generator will cancel it.</p>
+</div>
+<div class="paragraph">
+<p>Since the <code>promise</code> is eager, just calling it is enough to launch.
+We then put those promises into a <a href="wait_group.html">wait_group</a> which will allow us to tear down all the workers on scope exit.</p>
+</div>
+<div class="listingblock">
+<div class="title">example/echo_server.cpp co_main function</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="nf">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">with</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">wait_group</span><span class="p">(),</span> <span class="o">&amp;</span><span class="n">run_server</span><span class="p">);</span> <i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="k">co_return</span> <span class="mi">0u</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Run <code>run_server</code> with an async scope.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The <a href="with.html">with</a> function shown above, will run a function with a resource such as <a href="wait_group.html">wait_group</a>.
+On scope exit <code>with</code> will invoke &amp; <code>co_await</code> an asynchronous teardown function.
+This will cause all connections to be properly shutdown before <code>co_main</code> exists.</p>
 </div>
 </div>
 </div>
 <div class="paragraph nav-footer">
-<p>← Previous: <a href="benchmarks.html">Benchmarks</a> | ↑ Up: <a href="index.html">Documentation boost.async</a> | Next: <a href="acknowledgements.html">Acknowledgements</a> →</p>
+<p>← Previous: <a href="delay.html">delay</a> | ↑ Up: <a href="tutorial.html">Tutorial</a> | ⌂ Home: <a href="index.html">Documentation boost.async</a> | Next: <a href="price_ticker.html">price ticker</a> →</p>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2023-09-05 16:09:54 +0800
+Last updated 2023-09-05 11:10:40 +0800
 </div>
 </div>
 </body>

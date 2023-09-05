@@ -672,6 +672,8 @@ pre.rouge {
 </li>
 <li><a href="coroutine_primer.html">Coroutine Primer</a>
 </li>
+<li><a href="tour.html">Tour</a>
+</li>
 <li><a href="tutorial.html">Tutorial</a>
 </li>
 <li><a href="design.html">Design</a>
@@ -689,6 +691,8 @@ pre.rouge {
 <li><a href="benchmarks.html#immediate">Immediate</a>
 </li>
 <li><a href="benchmarks.html#channels">Channels</a>
+</li>
+<li><a href="benchmarks.html#operation_allocations">Operation Allocations</a>
 </li>
 </ul>
 </li>
@@ -722,7 +726,7 @@ stackful coroutine (boost.context) based.</p>
 </div>
 </div>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 5. results for 50M times in ms</caption>
+<caption class="title">Table 6. results for 50M times in ms</caption>
 <colgroup>
 <col style="width: 33.3333%;">
 <col style="width: 33.3333%;">
@@ -785,7 +789,7 @@ and an <code>awaitable_operator</code> in the <code>asio::awaitable</code>.</p>
 </div>
 </div>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 6. results for 3M times in ms</caption>
+<caption class="title">Table 7. results for 3M times in ms</caption>
 <colgroup>
 <col style="width: 33.3333%;">
 <col style="width: 33.3333%;">
@@ -832,7 +836,7 @@ with a size of 1, so that every operation is immediate.</p>
 </div>
 </div>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 7. result for 10M times in ms</caption>
+<caption class="title">Table 8. result for 10M times in ms</caption>
 <colgroup>
 <col style="width: 33.3333%;">
 <col style="width: 33.3333%;">
@@ -867,13 +871,13 @@ with a size of 1, so that every operation is immediate.</p>
 <div class="sect2">
 <h3 id="channels">Channels</h3>
 <div class="paragraph">
-<p>As In this benchmark asio::experimental::channel and async::channel get compared.</p>
+<p>In this benchmark asio::experimental::channel and async::channel get compared.</p>
 </div>
 <div class="paragraph">
-<p>This si similar to the parallel test, but uses the <code>async::channel</code> instead.</p>
+<p>This is similar to the parallel test, but uses the <code>async::channel</code> instead.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 8. result of running the test 3M times in ms</caption>
+<caption class="title">Table 9. result of running the test 3M times in ms</caption>
 <colgroup>
 <col style="width: 33.3333%;">
 <col style="width: 33.3333%;">
@@ -905,6 +909,50 @@ with a size of 1, so that every operation is immediate.</p>
 </tbody>
 </table>
 </div>
+<div class="sect2">
+<h3 id="operation_allocations">Operation Allocations</h3>
+<div class="paragraph">
+<p>This benchmark compares the different possible solutions for the associated allocator of asynchronous operations</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 10. result of running the test 2M times in ms</caption>
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"></th>
+<th class="tableblock halign-left valign-top">gcc</th>
+<th class="tableblock halign-left valign-top">clang</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">std::allocator</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1136</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1139</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">async::monotonic</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1149</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1270</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pmr::monotonic</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1164</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1173</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">async::sbo</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1021</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1060</p>
+<p class="tableblock">The latter method is used internally by async.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 </div>
 <div class="paragraph nav-footer">
@@ -914,7 +962,7 @@ with a size of 1, so that every operation is immediate.</p>
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2023-09-05 11:00:59 +0800
+Last updated 2023-09-05 16:09:54 +0800
 </div>
 </div>
 </body>

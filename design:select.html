@@ -654,7 +654,7 @@ pre.rouge {
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="compiler_support" class="article toc2 toc-left">
+<body id="design:select" class="article toc2 toc-left">
 <div id="header">
 <h1>Documentation boost.async</h1>
 <div class="details">
@@ -665,18 +665,34 @@ pre.rouge {
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
-<li><a href="overview.html">Overview</a>
-</li>
+<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel0">
 <li><a href="motivation.html">Motivation</a>
 </li>
 <li><a href="coroutine_primer.html">Coroutine Primer</a>
 </li>
-<li><a href="tour.html">Tour</a>
-</li>
 <li><a href="tutorial.html">Tutorial</a>
 </li>
 <li><a href="design.html">Design</a>
+<ul class="sectlevel1">
+<li><a href="design:concepts.html">Concepts</a>
+</li>
+<li><a href="executors.html">Executors</a>
+</li>
+<li><a href="polymorphic_memory_resource.html">polymorphic memory resource</a>
+</li>
+<li><a href="cancellation.html">cancellation</a>
+</li>
+<li><a href="design:promise.html">Promise</a>
+</li>
+<li><a href="design:select.html"><span class="toc-current">Select</span></a>
+</li>
+<li><a href="design:interrupt_await.html">interrupt_await</a>
+</li>
+<li><a href="associators.html">Associators</a>
+</li>
+<li><a href="threading.html">Threading</a>
+</li>
+</ul>
 </li>
 <li><a href="reference.html">Reference</a>
 </li>
@@ -684,7 +700,7 @@ pre.rouge {
 </li>
 <li><a href="benchmarks.html">Benchmarks</a>
 </li>
-<li><a href="compiler_support.html"><span class="toc-current">Compiler support</span></a>
+<li><a href="compiler_support.html">Compiler support</a>
 </li>
 <li><a href="acknowledgements.html">Acknowledgements</a>
 </li>
@@ -693,93 +709,70 @@ pre.rouge {
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="compiler_support">Compiler support</h2>
+<h2 id="design:select">Select</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This library is supported since Clang 14, Gcc 10 &amp; MSVC 19.28.</p>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-Gcc versions 12.1 and 12.2 appear to have a bug for coroutines with out stack variables
-as can be seen [here](<a href="https://godbolt.org/z/6adGcqP1z" class="bare">https://godbolt.org/z/6adGcqP1z</a>) and should be avoided for coroutines.
-</td>
-</tr>
-</table>
+<p>The most important synchronization mechanism is the <code>select</code> function.</p>
 </div>
 <div class="paragraph">
-<p>Clang only added <code>std::pmr</code> support in 16, so older clang versions use <code>boost::contianer::pmr</code> as a drop-in replacement.</p>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-Some if not all MSVC versions have a broken coroutine implementation,
-that this library needs to workaround. This may cause non-deterministic behaviour and overhead.
-</td>
-</tr>
-</table>
+<p>It awaits multiple <a href="concepts.html#awaitable">awaitable</a>s in a pseudo-random order
+and will return the result of the first one completion, before disregarding the rest.</p>
 </div>
 <div class="paragraph">
-<p>A coroutine continuation may be done in the awaitable returned from a <code>final_suspend</code>, like this:</p>
+<p>That is, it initiates the <code>co_await</code> in a pseudo-random order and stops once one
+awaitable is found to be ready or completed immediately.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="c1">// in promise</span>
-<span class="k">auto</span> <span class="n">final_suspend</span><span class="p">()</span> <span class="k">noexcept</span>
-<span class="p">{</span>
-    <span class="k">struct</span> <span class="nc">final_awaitable</span>
-    <span class="p">{</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">continuation</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">noop_coroutine</span><span class="p">()};</span> <i class="conum" data-value="1"></i><b>(1)</b>
-      <span class="kt">bool</span> <span class="n">await_ready</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">await_suspend</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">h</span><span class="p">)</span> <span class="k">noexcept</span>
-      <span class="p">{</span>
-        <span class="k">auto</span> <span class="n">cc</span> <span class="o">=</span> <span class="n">continuation</span><span class="p">;</span>
-        <span class="n">h</span><span class="p">.</span><span class="n">destroy</span><span class="p">();</span> <i class="conum" data-value="2"></i><b>(2)</b>
-        <span class="k">return</span> <span class="n">cc</span><span class="p">;</span>
-      <span class="p">}</span>
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">gen1</span><span class="p">();</span>
+<span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">gen2</span><span class="p">();</span>
 
-      <span class="kt">void</span> <span class="n">await_resume</span><span class="p">()</span> <span class="k">noexcept</span> <span class="p">{}</span>
-    <span class="p">};</span>
-    <span class="k">return</span> <span class="n">final_awaitable</span><span class="p">{</span><span class="n">my_continuation</span><span class="p">};</span>
-<span class="p">};</span></code></pre>
+<span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">p</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="k">auto</span> <span class="n">g1</span> <span class="o">=</span> <span class="n">gen1</span><span class="p">();</span>
+  <span class="k">auto</span> <span class="n">g2</span> <span class="o">=</span> <span class="n">gen2</span><span class="p">();</span>
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">cancelled</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="k">switch</span><span class="p">(</span><span class="k">auto</span> <span class="n">v</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">select</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">);</span> <span class="n">v</span><span class="p">.</span><span class="n">index</span><span class="p">())</span>
+    <span class="p">{</span>
+    <span class="k">case</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="n">printf</span><span class="p">(</span><span class="s">"Got int %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">get</span><span class="o">&lt;</span><span class="mi">0</span><span class="o">&gt;</span><span class="p">(</span><span class="n">v</span><span class="p">));</span>
+      <span class="k">break</span><span class="p">;</span>
+    <span class="k">case</span> <span class="mi">1</span><span class="p">:</span>
+      <span class="n">printf</span><span class="p">(</span><span class="s">"Got double %f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">get</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span><span class="n">v</span><span class="p">));</span>
+      <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre>
 </div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The continuation</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Self destroying the coroutine before continuation</td>
-</tr>
-</table>
 </div>
 <div class="paragraph">
-<p>The final_suspend doesnt not properly suspend the coroutine on MSVC, so that the <code>h.destroy()</code> will cause
-double destruction of elements on the coroutine frame.
-Therefor, msvc will need to post the destruction, to do it out of line.
-This will cause overhead and make the actual freeing of memory indeterministic.</p>
+<p>The <code>select</code> must however internally wait  for all awaitable to complete
+once it initiates to <code>co_await</code>.
+Therefor, once the first <a href="concepts.html#awaitable">awaitable</a> completes,
+it tries to <a href="select.html#interrupt_await">interrupt</a> the rest, and if that fails cancels them.</p>
+</div>
+<div class="paragraph">
+<p><code>select</code> is the preferred way to trigger cancellations, e.g:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">timeout</span><span class="p">();</span>
+<span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">work</span><span class="p">();</span>
+
+<span class="n">select</span><span class="p">(</span><span class="n">timeout</span><span class="p">(),</span> <span class="n">work</span><span class="p">());</span></code></pre>
+</div>
 </div>
 </div>
 </div>
 <div class="paragraph nav-footer">
-<p>← Previous: <a href="benchmarks.html">Benchmarks</a> | ↑ Up: <a href="index.html">Documentation boost.async</a> | Next: <a href="acknowledgements.html">Acknowledgements</a> →</p>
+<p>← Previous: <a href="design:promise.html">Promise</a> | ↑ Up: <a href="design.html">Design</a> | ⌂ Home: <a href="index.html">Documentation boost.async</a> | Next: <a href="design:interrupt_await.html">interrupt_await</a> →</p>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2023-09-05 16:09:54 +0800
+Last updated 2023-09-05 11:10:40 +0800
 </div>
 </div>
 </body>

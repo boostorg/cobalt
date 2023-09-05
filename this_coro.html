@@ -654,7 +654,7 @@ pre.rouge {
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="compiler_support" class="article toc2 toc-left">
+<body id="this_coro" class="article toc2 toc-left">
 <div id="header">
 <h1>Documentation boost.async</h1>
 <div class="details">
@@ -665,26 +665,82 @@ pre.rouge {
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
-<li><a href="overview.html">Overview</a>
-</li>
+<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel0">
 <li><a href="motivation.html">Motivation</a>
 </li>
 <li><a href="coroutine_primer.html">Coroutine Primer</a>
-</li>
-<li><a href="tour.html">Tour</a>
 </li>
 <li><a href="tutorial.html">Tutorial</a>
 </li>
 <li><a href="design.html">Design</a>
 </li>
 <li><a href="reference.html">Reference</a>
+<ul class="sectlevel1">
+<li><a href="main.html">async/main.hpp</a>
+</li>
+<li><a href="promise.html">async/promise.hpp</a>
+</li>
+<li><a href="generator.html">async/generator.hpp</a>
+</li>
+<li><a href="task.html">async/task.hpp</a>
+</li>
+<li><a href="detached.html">async/detached.hpp</a>
+</li>
+<li><a href="async_operation.html">async/op.hpp</a>
+</li>
+<li><a href="concepts.html">async/concepts.hpp</a>
+</li>
+<li><a href="this_coro.html"><span class="toc-current">async/this_coro.hpp</span></a>
+<ul class="sectlevel2">
+<li><a href="this_coro.html#enable_await_allocator">Await Allocator</a>
+</li>
+<li><a href="this_coro.html#enable_await_executor">Await Executor</a>
+</li>
+<li><a href="this_coro.html#promise_memory_resource_base">Memory resource base</a>
+</li>
+<li><a href="this_coro.html#promise_throw_if_cancelled_base">Throw if cancelled</a>
+</li>
+<li><a href="this_coro.html#promise_cancellation_base">Cancellation state</a>
+</li>
+</ul>
+</li>
+<li><a href="this_thread.html">async/this_thread.hpp</a>
+</li>
+<li><a href="channel.html">async/channel.hpp</a>
+</li>
+<li><a href="with.html">async/with.hpp</a>
+</li>
+<li><a href="select.html">async/select.hpp</a>
+</li>
+<li><a href="gather.html">async/gather.hpp</a>
+</li>
+<li><a href="join.html">async/join.hpp</a>
+</li>
+<li><a href="wait_group.html">async/wait_group.hpp</a>
+</li>
+<li><a href="spawn.html">async/spawn.hpp</a>
+</li>
+<li><a href="run.html">async/run.hpp</a>
+</li>
+<li><a href="thread.html">async/thread.hpp</a>
+</li>
+<li><a href="result.html">async/result.hpp</a>
+</li>
+<li><a href="async_for.html">async/async_for.hpp</a>
+</li>
+<li><a href="error.html">async/error.hpp</a>
+</li>
+<li><a href="config.html">async/config.hpp</a>
+</li>
+<li><a href="leaf.html">async/leaf.hpp</a>
+</li>
+</ul>
 </li>
 <li><a href="technical_background.html">Technical Background</a>
 </li>
 <li><a href="benchmarks.html">Benchmarks</a>
 </li>
-<li><a href="compiler_support.html"><span class="toc-current">Compiler support</span></a>
+<li><a href="compiler_support.html">Compiler support</a>
 </li>
 <li><a href="acknowledgements.html">Acknowledgements</a>
 </li>
@@ -693,93 +749,178 @@ pre.rouge {
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="compiler_support">Compiler support</h2>
+<h2 id="this_coro">async/this_coro.hpp</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This library is supported since Clang 14, Gcc 10 &amp; MSVC 19.28.</p>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-Gcc versions 12.1 and 12.2 appear to have a bug for coroutines with out stack variables
-as can be seen [here](<a href="https://godbolt.org/z/6adGcqP1z" class="bare">https://godbolt.org/z/6adGcqP1z</a>) and should be avoided for coroutines.
-</td>
-</tr>
-</table>
+<p>The <code>this_coro</code> namespace provides utilities to access the internal state of a coroutine promise.</p>
 </div>
 <div class="paragraph">
-<p>Clang only added <code>std::pmr</code> support in 16, so older clang versions use <code>boost::contianer::pmr</code> as a drop-in replacement.</p>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-Some if not all MSVC versions have a broken coroutine implementation,
-that this library needs to workaround. This may cause non-deterministic behaviour and overhead.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>A coroutine continuation may be done in the awaitable returned from a <code>final_suspend</code>, like this:</p>
+<p>Pseudo-awaitables:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="c1">// in promise</span>
-<span class="k">auto</span> <span class="n">final_suspend</span><span class="p">()</span> <span class="k">noexcept</span>
-<span class="p">{</span>
-    <span class="k">struct</span> <span class="nc">final_awaitable</span>
-    <span class="p">{</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">continuation</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">noop_coroutine</span><span class="p">()};</span> <i class="conum" data-value="1"></i><b>(1)</b>
-      <span class="kt">bool</span> <span class="n">await_ready</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">await_suspend</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">h</span><span class="p">)</span> <span class="k">noexcept</span>
-      <span class="p">{</span>
-        <span class="k">auto</span> <span class="n">cc</span> <span class="o">=</span> <span class="n">continuation</span><span class="p">;</span>
-        <span class="n">h</span><span class="p">.</span><span class="n">destroy</span><span class="p">();</span> <i class="conum" data-value="2"></i><b>(2)</b>
-        <span class="k">return</span> <span class="n">cc</span><span class="p">;</span>
-      <span class="p">}</span>
+<pre class="rouge highlight"><code data-lang="cpp"><span class="c1">// Awaitable type that returns the executor of the current coroutine.</span>
+<span class="k">struct</span> <span class="nc">executor_t</span> <span class="p">{}</span>
+<span class="k">constexpr</span> <span class="n">executor_t</span> <span class="n">executor</span><span class="p">;</span>
 
-      <span class="kt">void</span> <span class="n">await_resume</span><span class="p">()</span> <span class="k">noexcept</span> <span class="p">{}</span>
-    <span class="p">};</span>
-    <span class="k">return</span> <span class="n">final_awaitable</span><span class="p">{</span><span class="n">my_continuation</span><span class="p">};</span>
+<span class="c1">// Awaitable type that returns the cancellation state of the current coroutine.</span>
+<span class="k">struct</span> <span class="nc">cancellation_state_t</span> <span class="p">{};</span>
+<span class="k">constexpr</span> <span class="n">cancellation_state_t</span> <span class="n">cancellation_state</span><span class="p">;</span>
+
+<span class="c1">// Reset the cancellation state with custom or default filters.</span>
+<span class="k">constexpr</span> <span class="n"><em>unspecified</em></span> <span class="n">reset_cancellation_state</span><span class="p">();</span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Filter</span><span class="p">&gt;</span>
+<span class="k">constexpr</span> <span class="n"><em>unspecified</em></span> <span class="n">reset_cancellation_state</span><span class="p">(</span>
+    <span class="n">Filter</span> <span class="o">&amp;&amp;</span> <span class="n">filter</span><span class="p">);</span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">InFilter</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">OutFilter</span><span class="p">&gt;</span>
+<span class="k">constexpr</span> <span class="n"><em>unspecified</em></span> <span class="n">reset_cancellation_state</span><span class="p">(</span>
+    <span class="n">InFilter</span> <span class="o">&amp;&amp;</span> <span class="n">in_filter</span><span class="p">,</span>
+    <span class="n">OutFilter</span> <span class="o">&amp;&amp;</span> <span class="n">out_filter</span><span class="p">);</span>
+
+<span class="c1">// get &amp; set the throw_if_cancelled setting.</span>
+<span class="n"><em>unspecified</em></span> <span class="n">throw_if_cancelled</span><span class="p">();</span>
+<span class="n"><em>unspecified</em></span> <span class="n">throw_if_cancelled</span><span class="p">(</span><span class="kt">bool</span> <span class="n">value</span><span class="p">);</span>
+
+<span class="c1">// Set the cancellation source in a detached.</span>
+<span class="n"><em>unspecified</em></span> <span class="n">reset_cancellation_source</span><span class="p">();</span>
+<span class="n"><em>unspecified</em></span> <span class="n">reset_cancellation_source</span><span class="p">(</span><span class="n">asio</span><span class="o">::</span><span class="n">cancellation_slot</span> <span class="n">slot</span><span class="p">);</span>
+
+
+<span class="c1">// get the allocator the promise</span>
+<span class="k">struct</span> <span class="nc">allocator_t</span> <span class="p">{};</span>
+<span class="k">constexpr</span> <span class="n">allocator_t</span> <span class="n">allocator</span><span class="p">;</span>
+
+<span class="c1">// get the current cancellation state-type</span>
+<span class="k">struct</span> <span class="nc">cancelled_t</span> <span class="p">{};</span>
+<span class="k">constexpr</span> <span class="n">cancelled_t</span> <span class="n">cancelled</span><span class="p">;</span>
+
+<span class="c1">// set the over-eager mode of a generator</span>
+<span class="k">struct</span> <span class="nc">initial_t</span> <span class="p">{};</span>
+<span class="k">constexpr</span> <span class="n">initial_t</span> <span class="n">initial</span><span class="p">;</span></code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="enable_await_allocator">Await Allocator</h3>
+<div class="paragraph">
+<p>The allocator of a coroutine supporting <code>enable_await_allocator</code> can be obtained the following way:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">allocator</span><span class="p">;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In order to enable this for your own coroutine you can inherit <code>enable_await_allocator</code> with the CRTP pattern:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">struct</span> <span class="nc">my_promise</span> <span class="o">:</span> <span class="n">async</span><span class="o">::</span><span class="n">enable_await_allocator</span><span class="o">&lt;</span><span class="n">my_promise</span><span class="o">&gt;</span>
+<span class="p">{</span>
+  <span class="k">using</span> <span class="n">allocator_type</span> <span class="o">=</span> <span class="n">__your_allocator_type__</span><span class="p">;</span>
+  <span class="n">allocator_type</span> <span class="n">get_allocator</span><span class="p">();</span>
 <span class="p">};</span></code></pre>
 </div>
 </div>
-<div class="colist arabic">
+<div class="admonitionblock note">
 <table>
 <tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The continuation</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Self destroying the coroutine before continuation</td>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If available the allocator gets used by <a href="async_operation.html#use_op">use_op</a>
+</td>
 </tr>
 </table>
 </div>
+</div>
+<div class="sect2">
+<h3 id="enable_await_executor">Await Executor</h3>
 <div class="paragraph">
-<p>The final_suspend doesnt not properly suspend the coroutine on MSVC, so that the <code>h.destroy()</code> will cause
-double destruction of elements on the coroutine frame.
-Therefor, msvc will need to post the destruction, to do it out of line.
-This will cause overhead and make the actual freeing of memory indeterministic.</p>
+<p>The allocator of a coroutine supporting <code>enable_await_executor</code> can be obtained the following way:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">executor</span><span class="p">;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In order to enable this for your own coroutine you can inherit <code>enable_await_executor</code> with the CRTP pattern:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">struct</span> <span class="nc">my_promise</span> <span class="o">:</span> <span class="n">async</span><span class="o">::</span><span class="n">enable_await_executor</span><span class="o">&lt;</span><span class="n">my_promise</span><span class="o">&gt;</span>
+<span class="p">{</span>
+  <span class="k">using</span> <span class="n">executor_type</span> <span class="o">=</span> <span class="n">__your_executor_type__</span><span class="p">;</span>
+  <span class="n">executor_type</span> <span class="n">get_executor</span><span class="p">();</span>
+<span class="p">};</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If available the executor gets used by <a href="async_operation.html#use_op">use_op</a>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="promise_memory_resource_base">Memory resource base</h3>
+<div class="paragraph">
+<p>The <code>promise_memory_resource_base</code> base of a promise will provide a <code>get_allocator</code> in the promise taken from
+either the default resource or one passed following a <code>std::allocator_arg</code> argument.
+Likewise, it will add <code>operator new</code> overloads so the coroutine uses the same memory resource for its frame allocation.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="promise_throw_if_cancelled_base">Throw if cancelled</h3>
+<div class="paragraph">
+<p>The <code>promise_throw_if_cancelled_base</code> provides the basic options to allow operation to enable a coroutines
+to turn throw an exception when another actual <a href="concepts.html#awaitable">awaitable</a> is awaited.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">throw_if_cancelled</span><span class="p">;</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="promise_cancellation_base">Cancellation state</h3>
+<div class="paragraph">
+<p>The <code>promise_cancellation_base</code> provides the basic options to allow operation to enable a coroutines
+to have a cancellation_state that is resettable by
+<a href="https://www.boost.org/doc/libs/master/doc/html/boost_asio/reference/this_coro__reset_cancellation_state.html"><code>reset_cancellation_state</code></a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">reset_cancellation_state</span><span class="p">();</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For convenience there is also a short-cut to check the current cancellation status:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">asio</span><span class="o">::</span><span class="n">cancellation_type</span> <span class="n">ct</span> <span class="o">=</span> <span class="p">(</span><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">cancellation_state</span><span class="p">).</span><span class="n">cancelled</span><span class="p">();</span>
+<span class="n">asio</span><span class="o">::</span><span class="n">cancellation_type</span> <span class="n">ct</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">cancelled</span><span class="p">;</span> <span class="c1">// same as above</span></code></pre>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div class="paragraph nav-footer">
-<p>← Previous: <a href="benchmarks.html">Benchmarks</a> | ↑ Up: <a href="index.html">Documentation boost.async</a> | Next: <a href="acknowledgements.html">Acknowledgements</a> →</p>
+<p>← Previous: <a href="concepts.html">async/concepts.hpp</a> | ↑ Up: <a href="reference.html">Reference</a> | ⌂ Home: <a href="index.html">Documentation boost.async</a> | Next: <a href="this_thread.html">async/this_thread.hpp</a> →</p>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2023-09-05 16:09:54 +0800
+Last updated 2023-09-05 11:10:40 +0800
 </div>
 </div>
 </body>

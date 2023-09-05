@@ -654,7 +654,7 @@ pre.rouge {
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="compiler_support" class="article toc2 toc-left">
+<body id="generator" class="article toc2 toc-left">
 <div id="header">
 <h1>Documentation boost.async</h1>
 <div class="details">
@@ -665,26 +665,82 @@ pre.rouge {
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
-<li><a href="overview.html">Overview</a>
-</li>
+<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel0">
 <li><a href="motivation.html">Motivation</a>
 </li>
 <li><a href="coroutine_primer.html">Coroutine Primer</a>
-</li>
-<li><a href="tour.html">Tour</a>
 </li>
 <li><a href="tutorial.html">Tutorial</a>
 </li>
 <li><a href="design.html">Design</a>
 </li>
 <li><a href="reference.html">Reference</a>
+<ul class="sectlevel1">
+<li><a href="main.html">async/main.hpp</a>
+</li>
+<li><a href="promise.html">async/promise.hpp</a>
+</li>
+<li><a href="generator.html"><span class="toc-current">async/generator.hpp</span></a>
+<ul class="sectlevel2">
+<li><a href="generator.html#initial">Lazy</a>
+</li>
+<li><a href="generator.html#generator-executor">Executor</a>
+</li>
+<li><a href="generator.html#generator-allocator">Memory Resource</a>
+</li>
+<li><a href="generator.html#generator-outline">Outline</a>
+</li>
+<li><a href="generator.html#generator-promise">Promise</a>
+</li>
+</ul>
+</li>
+<li><a href="task.html">async/task.hpp</a>
+</li>
+<li><a href="detached.html">async/detached.hpp</a>
+</li>
+<li><a href="async_operation.html">async/op.hpp</a>
+</li>
+<li><a href="concepts.html">async/concepts.hpp</a>
+</li>
+<li><a href="this_coro.html">async/this_coro.hpp</a>
+</li>
+<li><a href="this_thread.html">async/this_thread.hpp</a>
+</li>
+<li><a href="channel.html">async/channel.hpp</a>
+</li>
+<li><a href="with.html">async/with.hpp</a>
+</li>
+<li><a href="select.html">async/select.hpp</a>
+</li>
+<li><a href="gather.html">async/gather.hpp</a>
+</li>
+<li><a href="join.html">async/join.hpp</a>
+</li>
+<li><a href="wait_group.html">async/wait_group.hpp</a>
+</li>
+<li><a href="spawn.html">async/spawn.hpp</a>
+</li>
+<li><a href="run.html">async/run.hpp</a>
+</li>
+<li><a href="thread.html">async/thread.hpp</a>
+</li>
+<li><a href="result.html">async/result.hpp</a>
+</li>
+<li><a href="async_for.html">async/async_for.hpp</a>
+</li>
+<li><a href="error.html">async/error.hpp</a>
+</li>
+<li><a href="config.html">async/config.hpp</a>
+</li>
+<li><a href="leaf.html">async/leaf.hpp</a>
+</li>
+</ul>
 </li>
 <li><a href="technical_background.html">Technical Background</a>
 </li>
 <li><a href="benchmarks.html">Benchmarks</a>
 </li>
-<li><a href="compiler_support.html"><span class="toc-current">Compiler support</span></a>
+<li><a href="compiler_support.html">Compiler support</a>
 </li>
 <li><a href="acknowledgements.html">Acknowledgements</a>
 </li>
@@ -693,62 +749,203 @@ pre.rouge {
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="compiler_support">Compiler support</h2>
+<h2 id="generator">async/generator.hpp</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This library is supported since Clang 14, Gcc 10 &amp; MSVC 19.28.</p>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-Gcc versions 12.1 and 12.2 appear to have a bug for coroutines with out stack variables
-as can be seen [here](<a href="https://godbolt.org/z/6adGcqP1z" class="bare">https://godbolt.org/z/6adGcqP1z</a>) and should be avoided for coroutines.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>Clang only added <code>std::pmr</code> support in 16, so older clang versions use <code>boost::contianer::pmr</code> as a drop-in replacement.</p>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-Some if not all MSVC versions have a broken coroutine implementation,
-that this library needs to workaround. This may cause non-deterministic behaviour and overhead.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>A coroutine continuation may be done in the awaitable returned from a <code>final_suspend</code>, like this:</p>
+<p>A generator is an eager coroutine that can <code>co_await</code> and <code>co_yield</code> values to the caller.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="c1">// in promise</span>
-<span class="k">auto</span> <span class="n">final_suspend</span><span class="p">()</span> <span class="k">noexcept</span>
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">example</span><span class="p">()</span>
 <span class="p">{</span>
-    <span class="k">struct</span> <span class="nc">final_awaitable</span>
-    <span class="p">{</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">continuation</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">noop_coroutine</span><span class="p">()};</span> <i class="conum" data-value="1"></i><b>(1)</b>
-      <span class="kt">bool</span> <span class="n">await_ready</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">await_suspend</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">h</span><span class="p">)</span> <span class="k">noexcept</span>
-      <span class="p">{</span>
-        <span class="k">auto</span> <span class="n">cc</span> <span class="o">=</span> <span class="n">continuation</span><span class="p">;</span>
-        <span class="n">h</span><span class="p">.</span><span class="n">destroy</span><span class="p">();</span> <i class="conum" data-value="2"></i><b>(2)</b>
-        <span class="k">return</span> <span class="n">cc</span><span class="p">;</span>
-      <span class="p">}</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"In coro 1</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+  <span class="k">co_yield</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"In coro 3</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+  <span class="k">co_return</span> <span class="mi">4</span><span class="p">;</span>
+<span class="p">}</span>
 
-      <span class="kt">void</span> <span class="n">await_resume</span><span class="p">()</span> <span class="k">noexcept</span> <span class="p">{}</span>
-    <span class="p">};</span>
-    <span class="k">return</span> <span class="n">final_awaitable</span><span class="p">{</span><span class="n">my_continuation</span><span class="p">};</span>
+<span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="n">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"In main 0</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+  <span class="k">auto</span> <span class="n">f</span> <span class="o">=</span> <span class="n">example</span><span class="p">();</span> <span class="c1">// call and let it run until the first co_yield</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"In main 1</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"In main %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="k">co_await</span> <span class="n">f</span><span class="p">);</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"In main %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="k">co_await</span> <span class="n">f</span><span class="p">);</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Which will generate the following output</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>In main 0
+In coro 1
+In main 1
+In main 2
+In coro 3
+In main 4</pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-7d35836ce40d736190db3f748f30383d.png" alt="Diagram" width="650" height="583">
+</div>
+</div>
+<div class="paragraph">
+<p>Values can be pushed into the generator, when <code>Push</code> (the second template parameter) is set to non-void:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;</span> <span class="n">example</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"In coro 1</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+  <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span>  <span class="k">co_yield</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"In coro %d</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+  <span class="k">co_return</span> <span class="mi">4</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="n">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"In main 0</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+  <span class="k">auto</span> <span class="n">f</span> <span class="o">=</span> <span class="n">example</span><span class="p">();</span> <span class="c1">// call and let it run until the first co_yield</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"In main %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="k">co_await</span> <span class="n">f</span><span class="p">(</span><span class="mi">3</span><span class="p">));</span> <i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The pushed value gets passed through <code>operator()</code> to the result of <code>co_yield</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Which will generate the following output</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>In main 0
+In coro 1
+In main 2
+Pushed 2
+In coro 3
+In main 4</pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="initial">Lazy</h3>
+<div class="paragraph">
+<p>A generator can be turned lazy by awaiting initial.
+This <code>co_await</code> expression will produce the <code>Push</code> value.
+This means the generator will wait until it&#8217;s awaited for the first time,
+and then process the newly pushed value and resume at the next co_yield.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;</span> <span class="n">example</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="kt">int</span> <span class="n">v</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">initial</span><span class="p">;</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"In coro %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">v</span><span class="p">);</span>
+  <span class="k">co_yield</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"In coro %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">v</span><span class="p">);</span>
+  <span class="k">co_return</span> <span class="mi">4</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="n">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"In main 0</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+  <span class="k">auto</span> <span class="n">f</span> <span class="o">=</span> <span class="n">example</span><span class="p">();</span> <span class="c1">// call and let it run until the first co_yield</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"In main 1</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span> <span class="c1">// &lt; this is now before the co_await initial</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"In main %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="k">co_await</span> <span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"In main %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="k">co_await</span> <span class="n">f</span><span class="p">(</span><span class="mi">3</span><span class="p">));</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Which will generate the following output</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>In main 0
+In main 1
+In coro 1
+In main 2
+In coro 3
+In main 4</pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-7d35836ce40d736190db3f748f30383d.png" alt="Diagram" width="650" height="583">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="generator-executor">Executor</h3>
+<div class="paragraph">
+<p>The executor is taken from the <code>thread_local</code> <a href="this_thread.html">get_executor</a> function, unless a <code>asio::executor_arg</code> is used
+in any position followed by the executor argument.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">my_gen</span><span class="p">(</span><span class="n">asio</span><span class="o">::</span><span class="n">executor_arg_t</span><span class="p">,</span> <span class="n">asio</span><span class="o">::</span><span class="n">io_context</span><span class="o">::</span><span class="n">executor_type</span> <span class="n">exec_to_use</span><span class="p">);</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="generator-allocator">Memory Resource</h3>
+<div class="paragraph">
+<p>The memory resource is taken from the <code>thread_local</code> <a href="this_thread.html">get_default_resource</a> function,
+unless a <code>std::allocator_arg</code> is used in any position followed by a <code>polymorphic_allocator</code> argument.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">my_gen</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">allocator_arg_t</span><span class="p">,</span> <span class="n">pmr</span><span class="o">::</span><span class="n">polymorphic_allocator</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">alloc</span><span class="p">);</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="generator-outline">Outline</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Yield</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">Push</span> <span class="o">=</span> <span class="kt">void</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="p">[[</span><span class="n">nodiscard</span><span class="p">]]</span> <span class="n">generator</span>
+<span class="p">{</span>
+  <span class="c1">// Movable</span>
+
+  <span class="n">generator</span><span class="p">(</span><span class="n">generator</span> <span class="o">&amp;&amp;</span><span class="n">lhs</span><span class="p">)</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+  <span class="n">generator</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">generator</span> <span class="o">&amp;&amp;</span><span class="p">)</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+
+  <span class="c1">// True until it co_returns &amp; is co_awaited after </span><i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="k">explicit</span> <span class="k">operator</span> <span class="kt">bool</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+
+  <span class="c1">// Cancel the generator. </span><i class="conum" data-value="3"></i><b>(3)</b>
+  <span class="kt">void</span> <span class="n">cancel</span><span class="p">(</span><span class="n">asio</span><span class="o">::</span><span class="n">cancellation_type</span> <span class="n">ct</span> <span class="o">=</span> <span class="n">asio</span><span class="o">::</span><span class="n">cancellation_type</span><span class="o">::</span><span class="n">all</span><span class="p">);</span>
+
+  <span class="c1">// Check if a value is available</span>
+  <span class="kt">bool</span> <span class="n">ready</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+
+  <span class="c1">// Get the return value. Throws if not <code>ready</code>.</span>
+  <span class="n">Yield</span> <span class="n">get</span><span class="p">();</span>
+
+  <span class="c1">// Cancel &amp; detach the generator.</span>
+  <span class="o">~</span><span class="n">generator</span><span class="p">();</span>
+
+  <span class="c1">// an awaitable that results in value of <code>Yield</code>.</span>
+  <span class="k">using</span> <span class="n"><em>generator_awaitable</em></span> <span class="o">=</span> <span class="n"><em>unspecified</em></span><span class="p">;</span>
+
+  <span class="c1">// Present when <code>Push</code> != <code>void</code></span>
+  <span class="n"><em>generator_awaitable</em></span> <span class="k">operator</span><span class="p">()(</span>      <span class="n">Push</span> <span class="o">&amp;&amp;</span> <span class="n">push</span><span class="p">);</span>
+  <span class="n"><em>generator_awaitable</em></span> <span class="k">operator</span><span class="p">()(</span><span class="k">const</span> <span class="n">Push</span> <span class="o">&amp;</span>  <span class="n">push</span><span class="p">);</span>
+
+  <span class="c1">// Present when <code>Push</code> == <code>void</code>, i.e. can <code>co_await</code> the generator directly.</span>
+  <span class="n"><em>generator_awaitable</em></span> <span class="k">operator</span> <span class="k">co_await</span> <span class="p">();</span> <i class="conum" data-value="2"></i><b>(2)</b>
+
 <span class="p">};</span></code></pre>
 </div>
 </div>
@@ -756,30 +953,57 @@ that this library needs to workaround. This may cause non-deterministic behaviou
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The continuation</td>
+<td>This allows code like <code>while (gen) co_await gen:</code></td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Self destroying the coroutine before continuation</td>
+<td>Supports <a href="select.html#interrupt_await">Interrupt Wait</a></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>A cancelled generator maybe be resumable</td>
 </tr>
 </table>
 </div>
+</div>
+<div class="sect2">
+<h3 id="generator-promise">Promise</h3>
 <div class="paragraph">
-<p>The final_suspend doesnt not properly suspend the coroutine on MSVC, so that the <code>h.destroy()</code> will cause
-double destruction of elements on the coroutine frame.
-Therefor, msvc will need to post the destruction, to do it out of line.
-This will cause overhead and make the actual freeing of memory indeterministic.</p>
+<p>The generator promise has the following properties.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="this_coro.html#promise_memory_resource_base">Memory resource base</a></p>
+</li>
+<li>
+<p><a href="this_coro.html#promise_cancellation_base">Cancellation state</a></p>
+</li>
+<li>
+<p><a href="this_coro.html#promise_throw_if_cancelled_base">Throw if cancelled</a></p>
+</li>
+<li>
+<p><a href="concepts.html#enable_awaitables">Enable awaitables</a></p>
+</li>
+<li>
+<p><a href="this_coro.html#enable_await_allocator">Await Allocator</a></p>
+</li>
+<li>
+<p><a href="this_coro.html#enable_await_executor">Await Executor</a></p>
+</li>
+</ul>
+</div>
 </div>
 </div>
 </div>
 <div class="paragraph nav-footer">
-<p>← Previous: <a href="benchmarks.html">Benchmarks</a> | ↑ Up: <a href="index.html">Documentation boost.async</a> | Next: <a href="acknowledgements.html">Acknowledgements</a> →</p>
+<p>← Previous: <a href="promise.html">async/promise.hpp</a> | ↑ Up: <a href="reference.html">Reference</a> | ⌂ Home: <a href="index.html">Documentation boost.async</a> | Next: <a href="task.html">async/task.hpp</a> →</p>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2023-09-05 16:09:54 +0800
+Last updated 2023-09-05 11:10:40 +0800
 </div>
 </div>
 </body>

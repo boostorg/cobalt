@@ -654,7 +654,7 @@ pre.rouge {
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="compiler_support" class="article toc2 toc-left">
+<body id="stackless" class="article toc2 toc-left">
 <div id="header">
 <h1>Documentation boost.async</h1>
 <div class="details">
@@ -665,14 +665,10 @@ pre.rouge {
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
-<li><a href="overview.html">Overview</a>
-</li>
+<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel0">
 <li><a href="motivation.html">Motivation</a>
 </li>
 <li><a href="coroutine_primer.html">Coroutine Primer</a>
-</li>
-<li><a href="tour.html">Tour</a>
 </li>
 <li><a href="tutorial.html">Tutorial</a>
 </li>
@@ -681,10 +677,16 @@ pre.rouge {
 <li><a href="reference.html">Reference</a>
 </li>
 <li><a href="technical_background.html">Technical Background</a>
+<ul class="sectlevel1">
+<li><a href="stackless.html"><span class="toc-current">Stackless</span></a>
+</li>
+<li><a href="lazy_eager.html">Lazy &amp; eager</a>
+</li>
+</ul>
 </li>
 <li><a href="benchmarks.html">Benchmarks</a>
 </li>
-<li><a href="compiler_support.html"><span class="toc-current">Compiler support</span></a>
+<li><a href="compiler_support.html">Compiler support</a>
 </li>
 <li><a href="acknowledgements.html">Acknowledgements</a>
 </li>
@@ -693,93 +695,110 @@ pre.rouge {
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="compiler_support">Compiler support</h2>
+<h2 id="stackless">Stackless</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This library is supported since Clang 14, Gcc 10 &amp; MSVC 19.28.</p>
+<p>C++20 coroutines are stackless, meaning they don&#8217;t have their own stack.</p>
 </div>
-<div class="admonitionblock important">
+<div class="paragraph">
+<p>A stack in C++ describes the callstack, i.e. all the function frames stacked.
+A function frame is the memory a function needs to operate, i.e. a slice of memory
+to store its variables and information such as the return address.</p>
+</div>
+<div class="admonitionblock note">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-important" title="Important"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Gcc versions 12.1 and 12.2 appear to have a bug for coroutines with out stack variables
-as can be seen [here](<a href="https://godbolt.org/z/6adGcqP1z" class="bare">https://godbolt.org/z/6adGcqP1z</a>) and should be avoided for coroutines.
+The size of a function frame is known at compile time, but not outside the compile unit containing its definition.
 </td>
 </tr>
 </table>
-</div>
-<div class="paragraph">
-<p>Clang only added <code>std::pmr</code> support in 16, so older clang versions use <code>boost::contianer::pmr</code> as a drop-in replacement.</p>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-Some if not all MSVC versions have a broken coroutine implementation,
-that this library needs to workaround. This may cause non-deterministic behaviour and overhead.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>A coroutine continuation may be done in the awaitable returned from a <code>final_suspend</code>, like this:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="c1">// in promise</span>
-<span class="k">auto</span> <span class="n">final_suspend</span><span class="p">()</span> <span class="k">noexcept</span>
-<span class="p">{</span>
-    <span class="k">struct</span> <span class="nc">final_awaitable</span>
-    <span class="p">{</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">continuation</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">noop_coroutine</span><span class="p">()};</span> <i class="conum" data-value="1"></i><b>(1)</b>
-      <span class="kt">bool</span> <span class="n">await_ready</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">await_suspend</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">h</span><span class="p">)</span> <span class="k">noexcept</span>
-      <span class="p">{</span>
-        <span class="k">auto</span> <span class="n">cc</span> <span class="o">=</span> <span class="n">continuation</span><span class="p">;</span>
-        <span class="n">h</span><span class="p">.</span><span class="n">destroy</span><span class="p">();</span> <i class="conum" data-value="2"></i><b>(2)</b>
-        <span class="k">return</span> <span class="n">cc</span><span class="p">;</span>
-      <span class="p">}</span>
+<pre class="rouge highlight"><code data-lang="cpp"><span class="kt">int</span> <span class="nf">bar</span><span class="p">()</span> <span class="p">{</span><span class="k">return</span> <span class="mi">0</span><span class="p">;}</span> <span class="c1">// the deepest point of the stack</span>
+<span class="kt">int</span> <span class="n">foo</span><span class="p">()</span> <span class="p">{</span><span class="k">return</span> <span class="n">bar</span><span class="p">();}</span>
 
-      <span class="kt">void</span> <span class="n">await_resume</span><span class="p">()</span> <span class="k">noexcept</span> <span class="p">{}</span>
-    <span class="p">};</span>
-    <span class="k">return</span> <span class="n">final_awaitable</span><span class="p">{</span><span class="n">my_continuation</span><span class="p">};</span>
-<span class="p">};</span></code></pre>
+<span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="n">bar</span><span class="p">();</span>
+<span class="p">}</span></code></pre>
 </div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The continuation</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Self destroying the coroutine before continuation</td>
-</tr>
-</table>
 </div>
 <div class="paragraph">
-<p>The final_suspend doesnt not properly suspend the coroutine on MSVC, so that the <code>h.destroy()</code> will cause
-double destruction of elements on the coroutine frame.
-Therefor, msvc will need to post the destruction, to do it out of line.
-This will cause overhead and make the actual freeing of memory indeterministic.</p>
+<p>The call stack in the above example is:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="c++"><span class="n">main</span><span class="p">()</span>
+  <span class="n">foo</span><span class="p">()</span>
+    <span class="n">bar</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-fde7569e876f007da058f2519d15de4c.png" alt="Diagram" width="650" height="347">
+</div>
+</div>
+<div class="paragraph">
+<p>Coroutines can be implemented a stackful, which means that it allocates a fixes chunk of memory and stacks function frames similar to a thread.
+C++20 coroutines are stackless, i.e. they only allocate their own frame and use the callers stack on resumption. Using our previous example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">fictional_eager_coro_type</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">example</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">co_yield</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">co_yield</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="n">nested_resume</span><span class="p">(</span><span class="n">fictional_eager_coro_type</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">f</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">f</span><span class="p">.</span><span class="n">resume</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">auto</span> <span class="n">f</span> <span class="o">=</span> <span class="n">example</span><span class="p">();</span>
+    <span class="n">nested_resume</span><span class="p">(</span><span class="n">f</span><span class="p">);</span>
+    <span class="n">f</span><span class="p">.</span><span class="n">reenter</span><span class="p">();</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This will yield a call stack similar to this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="c++"><span class="n">main</span><span class="p">()</span>
+  <span class="n">f</span><span class="err">$</span><span class="n">example</span><span class="p">()</span>
+  <span class="n">nested_resume</span><span class="p">()</span>
+    <span class="n">f</span><span class="err">$</span><span class="n">example</span><span class="p">()</span>
+  <span class="n">f</span><span class="err">$</span><span class="n">example</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-8fd7f223344b3ac3a597f3412c12c7aa.png" alt="Diagram" width="650" height="529">
+</div>
+</div>
+<div class="paragraph">
+<p>The same applies if a coroutine gets moved accross threads.</p>
 </div>
 </div>
 </div>
 <div class="paragraph nav-footer">
-<p>← Previous: <a href="benchmarks.html">Benchmarks</a> | ↑ Up: <a href="index.html">Documentation boost.async</a> | Next: <a href="acknowledgements.html">Acknowledgements</a> →</p>
+<p>↑ Up: <a href="technical_background.html">Technical Background</a> | ⌂ Home: <a href="index.html">Documentation boost.async</a> | Next: <a href="lazy_eager.html">Lazy &amp; eager</a> →</p>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2023-09-05 16:09:54 +0800
+Last updated 2023-09-05 11:10:40 +0800
 </div>
 </div>
 </body>

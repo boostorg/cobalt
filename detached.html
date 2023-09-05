@@ -654,7 +654,7 @@ pre.rouge {
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="compiler_support" class="article toc2 toc-left">
+<body id="detached" class="article toc2 toc-left">
 <div id="header">
 <h1>Documentation boost.async</h1>
 <div class="details">
@@ -665,26 +665,80 @@ pre.rouge {
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
-<li><a href="overview.html">Overview</a>
-</li>
+<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel0">
 <li><a href="motivation.html">Motivation</a>
 </li>
 <li><a href="coroutine_primer.html">Coroutine Primer</a>
-</li>
-<li><a href="tour.html">Tour</a>
 </li>
 <li><a href="tutorial.html">Tutorial</a>
 </li>
 <li><a href="design.html">Design</a>
 </li>
 <li><a href="reference.html">Reference</a>
+<ul class="sectlevel1">
+<li><a href="main.html">async/main.hpp</a>
+</li>
+<li><a href="promise.html">async/promise.hpp</a>
+</li>
+<li><a href="generator.html">async/generator.hpp</a>
+</li>
+<li><a href="task.html">async/task.hpp</a>
+</li>
+<li><a href="detached.html"><span class="toc-current">async/detached.hpp</span></a>
+<ul class="sectlevel2">
+<li><a href="detached.html#executor_4">Executor</a>
+</li>
+<li><a href="detached.html#memory_resource_4">Memory Resource</a>
+</li>
+<li><a href="detached.html#detached-outline">Outline</a>
+</li>
+<li><a href="detached.html#detached-detached">Promise</a>
+</li>
+</ul>
+</li>
+<li><a href="async_operation.html">async/op.hpp</a>
+</li>
+<li><a href="concepts.html">async/concepts.hpp</a>
+</li>
+<li><a href="this_coro.html">async/this_coro.hpp</a>
+</li>
+<li><a href="this_thread.html">async/this_thread.hpp</a>
+</li>
+<li><a href="channel.html">async/channel.hpp</a>
+</li>
+<li><a href="with.html">async/with.hpp</a>
+</li>
+<li><a href="select.html">async/select.hpp</a>
+</li>
+<li><a href="gather.html">async/gather.hpp</a>
+</li>
+<li><a href="join.html">async/join.hpp</a>
+</li>
+<li><a href="wait_group.html">async/wait_group.hpp</a>
+</li>
+<li><a href="spawn.html">async/spawn.hpp</a>
+</li>
+<li><a href="run.html">async/run.hpp</a>
+</li>
+<li><a href="thread.html">async/thread.hpp</a>
+</li>
+<li><a href="result.html">async/result.hpp</a>
+</li>
+<li><a href="async_for.html">async/async_for.hpp</a>
+</li>
+<li><a href="error.html">async/error.hpp</a>
+</li>
+<li><a href="config.html">async/config.hpp</a>
+</li>
+<li><a href="leaf.html">async/leaf.hpp</a>
+</li>
+</ul>
 </li>
 <li><a href="technical_background.html">Technical Background</a>
 </li>
 <li><a href="benchmarks.html">Benchmarks</a>
 </li>
-<li><a href="compiler_support.html"><span class="toc-current">Compiler support</span></a>
+<li><a href="compiler_support.html">Compiler support</a>
 </li>
 <li><a href="acknowledgements.html">Acknowledgements</a>
 </li>
@@ -693,93 +747,150 @@ pre.rouge {
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="compiler_support">Compiler support</h2>
+<h2 id="detached">async/detached.hpp</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This library is supported since Clang 14, Gcc 10 &amp; MSVC 19.28.</p>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-Gcc versions 12.1 and 12.2 appear to have a bug for coroutines with out stack variables
-as can be seen [here](<a href="https://godbolt.org/z/6adGcqP1z" class="bare">https://godbolt.org/z/6adGcqP1z</a>) and should be avoided for coroutines.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>Clang only added <code>std::pmr</code> support in 16, so older clang versions use <code>boost::contianer::pmr</code> as a drop-in replacement.</p>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-Some if not all MSVC versions have a broken coroutine implementation,
-that this library needs to workaround. This may cause non-deterministic behaviour and overhead.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>A coroutine continuation may be done in the awaitable returned from a <code>final_suspend</code>, like this:</p>
+<p>A detached is an eager coroutine that can <code>co_await</code> but not <code>co_return</code> values.
+That is, it cannot be resumed and is usually not awaited.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="c1">// in promise</span>
-<span class="k">auto</span> <span class="n">final_suspend</span><span class="p">()</span> <span class="k">noexcept</span>
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">detached</span> <span class="nf">delayed_print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">milliseconds</span> <span class="n">ms</span><span class="p">)</span>
 <span class="p">{</span>
-    <span class="k">struct</span> <span class="nc">final_awaitable</span>
-    <span class="p">{</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">continuation</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">noop_coroutine</span><span class="p">()};</span> <i class="conum" data-value="1"></i><b>(1)</b>
-      <span class="kt">bool</span> <span class="n">await_ready</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">await_suspend</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">h</span><span class="p">)</span> <span class="k">noexcept</span>
-      <span class="p">{</span>
-        <span class="k">auto</span> <span class="n">cc</span> <span class="o">=</span> <span class="n">continuation</span><span class="p">;</span>
-        <span class="n">h</span><span class="p">.</span><span class="n">destroy</span><span class="p">();</span> <i class="conum" data-value="2"></i><b>(2)</b>
-        <span class="k">return</span> <span class="n">cc</span><span class="p">;</span>
-      <span class="p">}</span>
+  <span class="n">asio</span><span class="o">::</span><span class="n">steady_timer</span> <span class="n">tim</span><span class="p">{</span><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">executor</span><span class="p">,</span> <span class="n">ms</span><span class="p">};</span>
+  <span class="k">co_await</span> <span class="n">tim</span><span class="p">.</span><span class="n">async_wait</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">use_op</span><span class="p">);</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"Hello world</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="p">}</span>
 
-      <span class="kt">void</span> <span class="n">await_resume</span><span class="p">()</span> <span class="k">noexcept</span> <span class="p">{}</span>
-    <span class="p">};</span>
-    <span class="k">return</span> <span class="n">final_awaitable</span><span class="p">{</span><span class="n">my_continuation</span><span class="p">};</span>
-<span class="p">};</span></code></pre>
+<span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="n">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="n">delayed_print</span><span class="p">();</span>
+  <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Promises are mainly used to spawn tasks easily.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">detached</span> <span class="nf">my_task</span><span class="p">();</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="nf">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="n">my_task</span><span class="p">();</span> <i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="k">co_await</span> <span class="n">delay</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">milliseconds</span><span class="p">(</span><span class="mi">50</span><span class="p">));</span>
+  <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The continuation</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Self destroying the coroutine before continuation</td>
+<td>Spawn off the detached coro.</td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>The final_suspend doesnt not properly suspend the coroutine on MSVC, so that the <code>h.destroy()</code> will cause
-double destruction of elements on the coroutine frame.
-Therefor, msvc will need to post the destruction, to do it out of line.
-This will cause overhead and make the actual freeing of memory indeterministic.</p>
+<p>A detached can assign itself a new cancellation source like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">detached</span> <span class="nf">my_task</span><span class="p">(</span><span class="n">asio</span><span class="o">::</span><span class="n">cancellation_slot</span> <span class="n">sl</span><span class="p">)</span>
+<span class="p">{</span>
+   <span class="k">co_await</span> <span class="n">this_coro</span><span class="o">::</span><span class="n">reset_cancellation_source</span><span class="p">(</span><span class="n">sl</span><span class="p">);</span>
+   <span class="c1">// do somework</span>
+<span class="p">}</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="n">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="n">asio</span><span class="o">::</span><span class="n">cancellation_signal</span> <span class="n">sig</span><span class="p">;</span>
+  <span class="n">my_task</span><span class="p">(</span><span class="n">sig</span><span class="p">.</span><span class="n">slot</span><span class="p">());</span> <i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="k">co_await</span> <span class="n">delay</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">milliseconds</span><span class="p">(</span><span class="mi">50</span><span class="p">));</span>
+  <span class="n">sig</span><span class="p">.</span><span class="n">emit</span><span class="p">(</span><span class="n">asio</span><span class="o">::</span><span class="n">cancellation_type</span><span class="o">::</span><span class="n">all</span><span class="p">);</span>
+  <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="executor_4">Executor</h3>
+<div id="detached-executor" class="paragraph">
+<p>The executor is taken from the <code>thread_local</code> <a href="this_thread.html">get_executor</a> function, unless a <code>asio::executor_arg</code> is used
+in any position followed by the executor argument.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">detached</span> <span class="nf">my_gen</span><span class="p">(</span><span class="n">asio</span><span class="o">::</span><span class="n">executor_arg_t</span><span class="p">,</span> <span class="n">asio</span><span class="o">::</span><span class="n">io_context</span><span class="o">::</span><span class="n">executor_type</span> <span class="n">exec_to_use</span><span class="p">);</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="memory_resource_4">Memory Resource</h3>
+<div id="detached-allocator" class="paragraph">
+<p>The memory resource is taken from the <code>thread_local</code> <a href="this_thread.html">get_default_resource</a> function,
+unless a <code>std::allocator_arg</code> is used in any position followed by a <code>polymorphic_allocator</code> argument.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">detached</span> <span class="nf">my_gen</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">allocator_arg_t</span><span class="p">,</span> <span class="n">pmr</span><span class="o">::</span><span class="n">polymorphic_allocator</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">alloc</span><span class="p">);</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="detached-outline">Outline</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">struct</span> <span class="nc">detached</span> <span class="p">{};</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Supports <a href="select.html#interrupt_await">Interrupt Wait</a></td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="detached-detached">Promise</h3>
+<div class="paragraph">
+<p>The thread detached has the following properties.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="this_coro.html#promise_memory_resource_base">Memory resource base</a></p>
+</li>
+<li>
+<p><a href="this_coro.html#promise_cancellation_base">Cancellation state</a></p>
+</li>
+<li>
+<p><a href="this_coro.html#promise_throw_if_cancelled_base">Throw if cancelled</a></p>
+</li>
+<li>
+<p><a href="concepts.html#enable_awaitables">Enable awaitables</a></p>
+</li>
+<li>
+<p><a href="this_coro.html#enable_await_allocator">Await Allocator</a></p>
+</li>
+<li>
+<p><a href="this_coro.html#enable_await_executor">Await Executor</a></p>
+</li>
+</ul>
+</div>
 </div>
 </div>
 </div>
 <div class="paragraph nav-footer">
-<p>← Previous: <a href="benchmarks.html">Benchmarks</a> | ↑ Up: <a href="index.html">Documentation boost.async</a> | Next: <a href="acknowledgements.html">Acknowledgements</a> →</p>
+<p>← Previous: <a href="task.html">async/task.hpp</a> | ↑ Up: <a href="reference.html">Reference</a> | ⌂ Home: <a href="index.html">Documentation boost.async</a> | Next: <a href="async_operation.html">async/op.hpp</a> →</p>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2023-09-05 16:09:54 +0800
+Last updated 2023-09-05 11:10:40 +0800
 </div>
 </div>
 </body>

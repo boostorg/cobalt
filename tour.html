@@ -654,7 +654,7 @@ pre.rouge {
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="compiler_support" class="article toc2 toc-left">
+<body id="tour" class="article toc2 toc-left">
 <div id="header">
 <h1>Documentation boost.async</h1>
 <div class="details">
@@ -672,7 +672,21 @@ pre.rouge {
 </li>
 <li><a href="coroutine_primer.html">Coroutine Primer</a>
 </li>
-<li><a href="tour.html">Tour</a>
+<li><a href="tour.html"><span class="toc-current">Tour</span></a>
+<ul class="sectlevel2">
+<li><a href="tour.html#entry_into_an_async_environment">Entry into an async environment</a>
+</li>
+<li><a href="tour.html#promises">Promises</a>
+</li>
+<li><a href="tour.html#tasks">Tasks</a>
+</li>
+<li><a href="tour.html#tour-generator">Generator</a>
+</li>
+<li><a href="tour.html#tour-join">join</a>
+</li>
+<li><a href="tour.html#tour-select">select</a>
+</li>
+</ul>
 </li>
 <li><a href="tutorial.html">Tutorial</a>
 </li>
@@ -684,7 +698,7 @@ pre.rouge {
 </li>
 <li><a href="benchmarks.html">Benchmarks</a>
 </li>
-<li><a href="compiler_support.html"><span class="toc-current">Compiler support</span></a>
+<li><a href="compiler_support.html">Compiler support</a>
 </li>
 <li><a href="acknowledgements.html">Acknowledgements</a>
 </li>
@@ -693,87 +707,302 @@ pre.rouge {
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="compiler_support">Compiler support</h2>
+<h2 id="tour">Tour</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="entry_into_an_async_environment">Entry into an async environment</h3>
 <div class="paragraph">
-<p>This library is supported since Clang 14, Gcc 10 &amp; MSVC 19.28.</p>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-Gcc versions 12.1 and 12.2 appear to have a bug for coroutines with out stack variables
-as can be seen [here](<a href="https://godbolt.org/z/6adGcqP1z" class="bare">https://godbolt.org/z/6adGcqP1z</a>) and should be avoided for coroutines.
-</td>
-</tr>
-</table>
+<p>In order to use <a href="reference.html#awaitable">awaitables</a> we need to be able to <code>co_await</code> them, i.e. be within a coroutine.</p>
 </div>
 <div class="paragraph">
-<p>Clang only added <code>std::pmr</code> support in 16, so older clang versions use <code>boost::contianer::pmr</code> as a drop-in replacement.</p>
+<p>We got four ways to achieve this:</p>
 </div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-Some if not all MSVC versions have a broken coroutine implementation,
-that this library needs to workaround. This may cause non-deterministic behaviour and overhead.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>A coroutine continuation may be done in the awaitable returned from a <code>final_suspend</code>, like this:</p>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a href="reference.html#main">async/main.hpp</a></dt>
+<dd>
+<p>replace <code>int main</code> with a coroutine</p>
+</dd>
+</dl>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="c1">// in promise</span>
-<span class="k">auto</span> <span class="n">final_suspend</span><span class="p">()</span> <span class="k">noexcept</span>
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="nf">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
 <span class="p">{</span>
-    <span class="k">struct</span> <span class="nc">final_awaitable</span>
-    <span class="p">{</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">continuation</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">noop_coroutine</span><span class="p">()};</span> <i class="conum" data-value="1"></i><b>(1)</b>
-      <span class="kt">bool</span> <span class="n">await_ready</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">await_suspend</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">h</span><span class="p">)</span> <span class="k">noexcept</span>
-      <span class="p">{</span>
-        <span class="k">auto</span> <span class="n">cc</span> <span class="o">=</span> <span class="n">continuation</span><span class="p">;</span>
-        <span class="n">h</span><span class="p">.</span><span class="n">destroy</span><span class="p">();</span> <i class="conum" data-value="2"></i><b>(2)</b>
-        <span class="k">return</span> <span class="n">cc</span><span class="p">;</span>
-      <span class="p">}</span>
+    <span class="c1">// co_await things here</span>
+    <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a href="reference.html#thread">async/thread.hpp</a></dt>
+<dd>
+<p>create a thread for the asynchronous environments</p>
+</dd>
+</dl>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="kr">thread</span> <span class="nf">my_thread</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">// co_await things here</span>
+    <span class="k">co_return</span><span class="p">;</span>
+<span class="p">}</span>
 
-      <span class="kt">void</span> <span class="n">await_resume</span><span class="p">()</span> <span class="k">noexcept</span> <span class="p">{}</span>
-    <span class="p">};</span>
-    <span class="k">return</span> <span class="n">final_awaitable</span><span class="p">{</span><span class="n">my_continuation</span><span class="p">};</span>
-<span class="p">};</span></code></pre>
+<span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+    <span class="k">auto</span> <span class="n">t</span> <span class="o">=</span> <span class="n">my_thread</span><span class="p">();</span>
+    <span class="n">t</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
 </div>
 </div>
-<div class="colist arabic">
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a href="reference.html#task">async/task.hpp</a></dt>
+<dd>
+<p>create a task and run or spawn it</p>
+</dd>
+</dl>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">task</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">my_thread</span><span class="p">()</span>
+<span class="p">{</span>
+   <span class="c1">// co_await things here</span>
+   <span class="k">co_return</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+    <span class="n">async</span><span class="o">::</span><span class="n">run</span><span class="p">(</span><span class="n">my_task</span><span class="p">());</span> <span class="c1">// sync</span>
+    <span class="n">asio</span><span class="o">::</span><span class="n">io_context</span> <span class="n">ctx</span><span class="p">;</span>
+    <span class="n">async</span><span class="o">::</span><span class="n">spawn</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">my_task</span><span class="p">(),</span> <span class="n">asio</span><span class="o">::</span><span class="n">detached</span><span class="p">);</span> <span class="c1">// async, refer to async for details</span>
+    <span class="n">ctx</span><span class="p">.</span><span class="n">run</span><span class="p">();</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="promises">Promises</h3>
+<div class="paragraph">
+<p><a href="reference.html#promise">Promises</a> are the recommended default coroutine type.
+They&#8217;re eager and thus easily usable for ad-hoc concurrecy.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">my_promise</span><span class="p">()</span>
+<span class="p">{</span>
+   <span class="k">co_await</span> <span class="n">do_the_thing</span><span class="p">();</span>
+   <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="n">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+    <span class="c1">// start the promise here</span>
+    <span class="k">auto</span> <span class="n">p</span> <span class="o">=</span> <span class="n">my_promise</span><span class="p">();</span>
+    <span class="c1">// do something else here</span>
+    <span class="k">co_await</span> <span class="n">do_the_other_thing</span><span class="p">();</span>
+    <span class="c1">// wait for the promise to complete</span>
+    <span class="k">auto</span> <span class="n">res</span> <span class="o">=</span> <span class="n">co_wait</span> <span class="n">p</span><span class="p">;</span>
+
+    <span class="k">co_return</span> <span class="n">res</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="tasks">Tasks</h3>
+<div class="paragraph">
+<p><a href="reference.html#task">Tasks</a> are lazy, which means they won&#8217;d do anything before awaited or spwaned.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">task</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">my_task</span><span class="p">()</span>
+<span class="p">{</span>
+   <span class="k">co_await</span> <span class="n">do_the_thing</span><span class="p">();</span>
+   <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="n">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+    <span class="c1">// create the task here</span>
+    <span class="k">auto</span> <span class="n">t</span> <span class="o">=</span> <span class="n">my_task</span><span class="p">();</span>
+    <span class="c1">// do something else here first</span>
+    <span class="k">co_await</span> <span class="n">do_the_other_thing</span><span class="p">();</span>
+    <span class="c1">// start and wait for the task to complete</span>
+    <span class="k">auto</span> <span class="n">res</span> <span class="o">=</span> <span class="n">co_wait</span> <span class="n">t</span><span class="p">;</span>
+    <span class="k">co_return</span> <span class="n">res</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="tour-generator">Generator</h3>
+<div class="paragraph">
+<p>A <a href="reference.html#generator">generator</a> is the only type in async that can <code>co_yield</code> values.</p>
+</div>
+<div class="paragraph">
+<p><a href="reference.html#generator">Generator</a> are eager by default. Unlike <a href="https://en.cppreference.com/w/cpp/coroutine/generator">std::generator</a>
+the <code>async::generator</code> can <code>co_await</code> and thus is asynchronous.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">my_generator</span><span class="p">()</span>
+<span class="p">{</span>
+   <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="k">co_yield</span> <span class="n">i</span><span class="p">;</span>
+   <span class="k">co_return</span> <span class="mi">10</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="n">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+    <span class="c1">// create the generator</span>
+    <span class="k">auto</span> <span class="n">g</span> <span class="o">=</span> <span class="n">my_generator</span><span class="p">();</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">g</span><span class="p">)</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"Generator %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="k">co_await</span> <span class="n">g</span><span class="p">);</span>
+    <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Values can be pushed into the generator, that will be returned from the <code>co_yield</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="kt">double</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;</span> <span class="n">my_eager_push_generator</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="p">)</span>
+<span class="p">{</span>
+   <span class="k">while</span> <span class="p">(</span><span class="n">value</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+       <span class="n">value</span> <span class="o">=</span> <span class="k">co_yield</span> <span class="n">value</span> <span class="o">*</span> <span class="mf">0.1</span><span class="p">;</span>
+   <span class="k">co_return</span> <span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="n">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+    <span class="c1">// create the generator</span>
+    <span class="k">auto</span> <span class="n">g</span> <span class="o">=</span> <span class="n">my_generator</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+
+    <span class="n">assert</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">==</span> <span class="k">co_await</span> <span class="n">g</span><span class="p">(</span><span class="mi">4</span><span class="p">));</span> <span class="c1">// result of 5</span>
+    <span class="n">assert</span><span class="p">(</span><span class="mf">0.4</span> <span class="o">==</span> <span class="k">co_await</span> <span class="n">g</span><span class="p">(</span><span class="mi">3</span><span class="p">));</span> <span class="c1">// result of 4</span>
+    <span class="n">assert</span><span class="p">(</span><span class="mf">0.3</span> <span class="o">==</span> <span class="k">co_await</span> <span class="n">g</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span> <span class="c1">// result of 3</span>
+    <span class="n">assert</span><span class="p">(</span><span class="mf">0.2</span> <span class="o">==</span> <span class="k">co_await</span> <span class="n">g</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span> <span class="c1">// result of 2</span>
+    <span class="n">assert</span><span class="p">(</span><span class="mf">0.1</span> <span class="o">==</span> <span class="k">co_await</span> <span class="n">g</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span> <span class="c1">// result of 1</span>
+
+    <span class="c1">// we let the coroutine go out of scope while suspended</span>
+    <span class="c1">// no need for another co_await of `g`</span>
+
+    <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A coroutine can also be made lazy using <a href="reference.html#initial"><code>this_coro::initial</code></a>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="kt">double</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;</span> <span class="n">my_eager_push_generator</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">auto</span> <span class="n">value</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">this_coro</span><span class="o">::</span><span class="n">initial</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">value</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="k">co_yield</span> <span class="n">value</span> <span class="o">*</span> <span class="mf">0.1</span><span class="p">;</span>
+    <span class="k">co_return</span> <span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="n">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+    <span class="c1">// create the generator</span>
+    <span class="k">auto</span> <span class="n">g</span> <span class="o">=</span> <span class="n">my_generator</span><span class="p">();</span> <span class="c1">// lazy, so the generator waits for the first pushed value</span>
+    <span class="n">assert</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">==</span> <span class="k">co_await</span> <span class="n">g</span><span class="p">(</span><span class="mi">5</span><span class="p">));</span> <span class="c1">// result of 5</span>
+    <span class="n">assert</span><span class="p">(</span><span class="mf">0.4</span> <span class="o">==</span> <span class="k">co_await</span> <span class="n">g</span><span class="p">(</span><span class="mi">4</span><span class="p">));</span> <span class="c1">// result of 4</span>
+    <span class="n">assert</span><span class="p">(</span><span class="mf">0.3</span> <span class="o">==</span> <span class="k">co_await</span> <span class="n">g</span><span class="p">(</span><span class="mi">3</span><span class="p">));</span> <span class="c1">// result of 3</span>
+    <span class="n">assert</span><span class="p">(</span><span class="mf">0.2</span> <span class="o">==</span> <span class="k">co_await</span> <span class="n">g</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span> <span class="c1">// result of 2</span>
+    <span class="n">assert</span><span class="p">(</span><span class="mf">0.1</span> <span class="o">==</span> <span class="k">co_await</span> <span class="n">g</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span> <span class="c1">// result of 1</span>
+
+    <span class="c1">// we let the coroutine go out of scope while suspended</span>
+    <span class="c1">// no need for another co_await of `g`</span>
+
+    <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="tour-join">join</h3>
+<div class="paragraph">
+<p>If multiple <a href="reference.html#awaitable">awaitables</a> work in parallel they can be awaited simultaneously with
+<a href="reference.html#join">join</a>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">some_work</span><span class="p">();</span>
+<span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">more_work</span><span class="p">();</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="nf">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">tuple</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="kt">double</span><span class="o">&gt;</span> <span class="n">res</span> <span class="o">=</span> <span class="n">async</span><span class="o">::</span><span class="n">join</span><span class="p">(</span><span class="n">some_work</span><span class="p">(),</span> <span class="n">more_work</span><span class="p">());</span>
+    <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="tour-select">select</h3>
+<div class="paragraph">
+<p>If multiple <a href="reference.html#awaitable">awaitables</a> work in parallel,
+but we want to be notified if either completes, we shall use <a href="reference.html#select">select</a>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">some_data_source</span><span class="p">();</span>
+<span class="n">async</span><span class="o">::</span><span class="n">generator</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">another_data_source</span><span class="p">();</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="nf">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+    <span class="k">auto</span> <span class="n">g1</span> <span class="o">=</span> <span class="n">some_data_source</span><span class="p">();</span>
+    <span class="k">auto</span> <span class="n">g2</span> <span class="o">=</span> <span class="n">another_data_source</span><span class="p">();</span>
+
+    <span class="kt">int</span> <span class="n">res1</span>    <span class="o">=</span> <span class="k">co_await</span> <span class="n">g1</span><span class="p">;</span>
+    <span class="kt">double</span> <span class="n">res2</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">g2</span><span class="p">;</span>
+
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Result: %f"</span><span class="p">,</span> <span class="n">res1</span> <span class="o">*</span> <span class="n">res2</span><span class="p">);</span>
+
+    <span class="k">while</span> <span class="p">(</span><span class="n">g1</span> <span class="o">&amp;&amp;</span> <span class="n">g2</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">switch</span><span class="p">(</span><span class="n">variant2</span><span class="o">::</span><span class="n">variant</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="kt">double</span><span class="o">&gt;</span> <span class="n">nx</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">select</span><span class="p">(</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">))</span>
+        <span class="p">{</span>
+            <span class="k">case</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">res1</span> <span class="o">=</span> <span class="n">variant2</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="mi">0</span><span class="o">&gt;</span><span class="p">(</span><span class="n">nx</span><span class="p">);</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">res2</span> <span class="o">=</span> <span class="n">variant2</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span><span class="n">nx</span><span class="p">);</span>
+                <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"New result: %f"</span><span class="p">,</span> <span class="n">res1</span> <span class="o">*</span> <span class="n">res2</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
 <table>
 <tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The continuation</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Self destroying the coroutine before continuation</td>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>select</code> in this context will not cause any data loss.
+</td>
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>The final_suspend doesnt not properly suspend the coroutine on MSVC, so that the <code>h.destroy()</code> will cause
-double destruction of elements on the coroutine frame.
-Therefor, msvc will need to post the destruction, to do it out of line.
-This will cause overhead and make the actual freeing of memory indeterministic.</p>
 </div>
 </div>
 </div>
 <div class="paragraph nav-footer">
-<p>← Previous: <a href="benchmarks.html">Benchmarks</a> | ↑ Up: <a href="index.html">Documentation boost.async</a> | Next: <a href="acknowledgements.html">Acknowledgements</a> →</p>
+<p>← Previous: <a href="coroutine_primer.html">Coroutine Primer</a> | ↑ Up: <a href="index.html">Documentation boost.async</a> | Next: <a href="tutorial.html">Tutorial</a> →</p>
 </div>
 </div>
 <div id="footer">

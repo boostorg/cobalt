@@ -654,7 +654,7 @@ pre.rouge {
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="compiler_support" class="article toc2 toc-left">
+<body id="channel" class="article toc2 toc-left">
 <div id="header">
 <h1>Documentation boost.async</h1>
 <div class="details">
@@ -665,26 +665,78 @@ pre.rouge {
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
-<li><a href="overview.html">Overview</a>
-</li>
+<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel0">
 <li><a href="motivation.html">Motivation</a>
 </li>
 <li><a href="coroutine_primer.html">Coroutine Primer</a>
-</li>
-<li><a href="tour.html">Tour</a>
 </li>
 <li><a href="tutorial.html">Tutorial</a>
 </li>
 <li><a href="design.html">Design</a>
 </li>
 <li><a href="reference.html">Reference</a>
+<ul class="sectlevel1">
+<li><a href="main.html">async/main.hpp</a>
+</li>
+<li><a href="promise.html">async/promise.hpp</a>
+</li>
+<li><a href="generator.html">async/generator.hpp</a>
+</li>
+<li><a href="task.html">async/task.hpp</a>
+</li>
+<li><a href="detached.html">async/detached.hpp</a>
+</li>
+<li><a href="async_operation.html">async/op.hpp</a>
+</li>
+<li><a href="concepts.html">async/concepts.hpp</a>
+</li>
+<li><a href="this_coro.html">async/this_coro.hpp</a>
+</li>
+<li><a href="this_thread.html">async/this_thread.hpp</a>
+</li>
+<li><a href="channel.html"><span class="toc-current">async/channel.hpp</span></a>
+<ul class="sectlevel2">
+<li><a href="channel.html#outline">Outline</a>
+</li>
+<li><a href="channel.html#description">Description</a>
+</li>
+<li><a href="channel.html#example">Example</a>
+</li>
+</ul>
+</li>
+<li><a href="with.html">async/with.hpp</a>
+</li>
+<li><a href="select.html">async/select.hpp</a>
+</li>
+<li><a href="gather.html">async/gather.hpp</a>
+</li>
+<li><a href="join.html">async/join.hpp</a>
+</li>
+<li><a href="wait_group.html">async/wait_group.hpp</a>
+</li>
+<li><a href="spawn.html">async/spawn.hpp</a>
+</li>
+<li><a href="run.html">async/run.hpp</a>
+</li>
+<li><a href="thread.html">async/thread.hpp</a>
+</li>
+<li><a href="result.html">async/result.hpp</a>
+</li>
+<li><a href="async_for.html">async/async_for.hpp</a>
+</li>
+<li><a href="error.html">async/error.hpp</a>
+</li>
+<li><a href="config.html">async/config.hpp</a>
+</li>
+<li><a href="leaf.html">async/leaf.hpp</a>
+</li>
+</ul>
 </li>
 <li><a href="technical_background.html">Technical Background</a>
 </li>
 <li><a href="benchmarks.html">Benchmarks</a>
 </li>
-<li><a href="compiler_support.html"><span class="toc-current">Compiler support</span></a>
+<li><a href="compiler_support.html">Compiler support</a>
 </li>
 <li><a href="acknowledgements.html">Acknowledgements</a>
 </li>
@@ -693,93 +745,186 @@ pre.rouge {
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="compiler_support">Compiler support</h2>
+<h2 id="channel">async/channel.hpp</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This library is supported since Clang 14, Gcc 10 &amp; MSVC 19.28.</p>
+<p>Channels can be used to exchange data between different coroutines
+on a single thread.</p>
 </div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-Gcc versions 12.1 and 12.2 appear to have a bug for coroutines with out stack variables
-as can be seen [here](<a href="https://godbolt.org/z/6adGcqP1z" class="bare">https://godbolt.org/z/6adGcqP1z</a>) and should be avoided for coroutines.
-</td>
-</tr>
-</table>
+<div class="sect2">
+<h3 id="outline">Outline</h3>
+<div class="listingblock">
+<div class="title">channel outline</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">channel</span>
+<span class="p">{</span>
+  <span class="c1">// create a channel with a buffer limit, executor &amp; resource.</span>
+  <span class="k">explicit</span>
+  <span class="n">channel</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">limit</span> <span class="o">=</span> <span class="mi">0u</span><span class="p">,</span>
+          <span class="n">executor</span> <span class="n">executor</span> <span class="o">=</span> <span class="n">this_thread</span><span class="o">::</span><span class="n">get_executor</span><span class="p">(),</span>
+          <span class="n">pmr</span><span class="o">::</span><span class="n">memory_resource</span> <span class="o">*</span> <span class="n">resource</span> <span class="o">=</span> <span class="n">this_thread</span><span class="o">::</span><span class="n">get_default_resource</span><span class="p">());</span>
+  <span class="c1">// movable. moving with active operations is undefined behaviour.</span>
+  <span class="n">channel</span><span class="p">(</span><span class="n">channel</span> <span class="o">&amp;&amp;</span> <span class="p">)</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+  <span class="n">channel</span> <span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">channel</span> <span class="o">&amp;&amp;</span> <span class="n">lhs</span><span class="p">)</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
+
+  <span class="k">using</span> <span class="n">executor_type</span> <span class="o">=</span> <span class="n">executor</span><span class="p">;</span>
+  <span class="k">const</span> <span class="n">executor_type</span> <span class="o">&amp;</span> <span class="n">get_executor</span><span class="p">();</span>
+
+  <span class="c1">// Closes the channel</span>
+  <span class="o">~</span><span class="n">channel</span><span class="p">();</span>
+  <span class="kt">bool</span> <span class="n">is_open</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
+  <span class="c1">// close the operation, will cancel all pending ops, too</span>
+  <span class="kt">void</span> <span class="n">close</span><span class="p">();</span>
+
+  <span class="c1">// an awaitable that yields T</span>
+  <span class="k">using</span> <span class="n"><em>read_op</em></span> <span class="o">=</span> <span class="n"><em>unspecified</em></span><span class="p">;</span>
+
+  <span class="c1">// an awaitable that yields void</span>
+  <span class="k">using</span> <span class="n"><em>write_op</em></span> <span class="o">=</span> <span class="n"><em>unspecified</em></span><span class="p">;</span>
+
+  <span class="c1">// read a value to a channel</span>
+  <span class="n"><em>read_op</em></span>  <span class="n">read</span><span class="p">();</span>
+
+  <span class="c1">// write a value to the channel</span>
+  <span class="n"><em>write_op</em></span> <span class="n">write</span><span class="p">(</span><span class="k">const</span> <span class="n">T</span>  <span class="o">&amp;&amp;</span> <span class="n">value</span><span class="p">);</span>
+  <span class="n"><em>write_op</em></span> <span class="n">write</span><span class="p">(</span><span class="k">const</span> <span class="n">T</span>  <span class="o">&amp;</span>  <span class="n">value</span><span class="p">);</span>
+  <span class="n"><em>write_op</em></span> <span class="n">write</span><span class="p">(</span>      <span class="n">T</span> <span class="o">&amp;&amp;</span>  <span class="n">value</span><span class="p">);</span>
+  <span class="n"><em>write_op</em></span> <span class="n">write</span><span class="p">(</span>      <span class="n">T</span>  <span class="o">&amp;</span>  <span class="n">value</span><span class="p">);</span>
+
+  <span class="c1">// write a value to the channel if T is void</span>
+
+<span class="p">};</span></code></pre>
 </div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="description">Description</h3>
 <div class="paragraph">
-<p>Clang only added <code>std::pmr</code> support in 16, so older clang versions use <code>boost::contianer::pmr</code> as a drop-in replacement.</p>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-Some if not all MSVC versions have a broken coroutine implementation,
-that this library needs to workaround. This may cause non-deterministic behaviour and overhead.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>A coroutine continuation may be done in the awaitable returned from a <code>final_suspend</code>, like this:</p>
+<p>Channels are a tool for two coroutines to communicate and synchronize.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="c1">// in promise</span>
-<span class="k">auto</span> <span class="n">final_suspend</span><span class="p">()</span> <span class="k">noexcept</span>
-<span class="p">{</span>
-    <span class="k">struct</span> <span class="nc">final_awaitable</span>
-    <span class="p">{</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">continuation</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">noop_coroutine</span><span class="p">()};</span> <i class="conum" data-value="1"></i><b>(1)</b>
-      <span class="kt">bool</span> <span class="n">await_ready</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">await_suspend</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">h</span><span class="p">)</span> <span class="k">noexcept</span>
-      <span class="p">{</span>
-        <span class="k">auto</span> <span class="n">cc</span> <span class="o">=</span> <span class="n">continuation</span><span class="p">;</span>
-        <span class="n">h</span><span class="p">.</span><span class="n">destroy</span><span class="p">();</span> <i class="conum" data-value="2"></i><b>(2)</b>
-        <span class="k">return</span> <span class="n">cc</span><span class="p">;</span>
-      <span class="p">}</span>
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">buffer_size</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="n">channel</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">ch</span><span class="p">{</span><span class="n">exec</span><span class="p">,</span> <span class="n">buffer_size</span><span class="p">};</span>
 
-      <span class="kt">void</span> <span class="n">await_resume</span><span class="p">()</span> <span class="k">noexcept</span> <span class="p">{}</span>
-    <span class="p">};</span>
-    <span class="k">return</span> <span class="n">final_awaitable</span><span class="p">{</span><span class="n">my_continuation</span><span class="p">};</span>
-<span class="p">};</span></code></pre>
+<span class="c1">// in coroutine </span><i class="conum" data-value="1"></i><b>(1)</b>
+<span class="k">co_await</span> <span class="n">ch</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="mi">42</span><span class="p">);</span>
+
+<span class="c1">// in coroutine </span><i class="conum" data-value="2"></i><b>(2)</b>
+<span class="k">auto</span> <span class="n">val</span> <span class="o">=</span> <span class="k">co_await</span> <span class="n">ch</span><span class="p">.</span><span class="n">read</span><span class="p">();</span></code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The continuation</td>
+<td>Send a value to the channel - will block until it can be sent</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Self destroying the coroutine before continuation</td>
+<td>Read a value from the channel - will block until a value is awaitable.</td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>The final_suspend doesnt not properly suspend the coroutine on MSVC, so that the <code>h.destroy()</code> will cause
-double destruction of elements on the coroutine frame.
-Therefor, msvc will need to post the destruction, to do it out of line.
-This will cause overhead and make the actual freeing of memory indeterministic.</p>
+<p>Both operations maybe be blocking depending on the channel buffer size.</p>
+</div>
+<div class="paragraph">
+<p>If the buffer size is zero, a <code>read</code> &amp; <code>write</code> will need to occur at the same time,
+i.e. act as a rendezvous.</p>
+</div>
+<div class="paragraph">
+<p>If the buffer is not full, the write operation will not suspend the coroutine;
+likewise if the buffer is not empty, the read operation will not suspend.</p>
+</div>
+<div class="paragraph">
+<p>If two operations complete at once (as is always the case with an empty buffer),
+the second operation gets posted to the executor for later completion.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+A channel type can be <code>void</code>, in which case <code>write</code> takes no parameter.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The channel operations can be cancelled without losing data.
+This makes them usable with <a href="select.html">select</a>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">generator</span><span class="o">&lt;</span><span class="n">variant2</span><span class="o">::</span><span class="n">variant</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="kt">double</span><span class="o">&gt;&gt;</span> <span class="n">merge</span><span class="p">(</span>
+    <span class="n">channel</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="o">&amp;</span> <span class="n">c1</span><span class="p">,</span>
+    <span class="n">channel</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="o">&amp;</span> <span class="n">c2</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">c1</span> <span class="o">&amp;&amp;</span> <span class="n">c2</span><span class="p">)</span>
+       <span class="k">co_yield</span> <span class="k">co_await</span> <span class="n">select</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">);</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="example">Example</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">producer</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">channel</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="o">&amp;</span> <span class="n">chan</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="k">co_await</span> <span class="n">chan</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+
+  <span class="n">chan</span><span class="p">.</span><span class="n">close</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="n">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="n">async</span><span class="o">::</span><span class="n">channel</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">c</span><span class="p">;</span>
+
+  <span class="k">auto</span> <span class="n">p</span> <span class="o">=</span> <span class="n">producer</span><span class="p">(</span><span class="n">c</span><span class="p">);</span>
+  <span class="k">while</span> <span class="p">(</span><span class="n">c</span><span class="p">.</span><span class="n">is_open</span><span class="p">())</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="k">co_await</span> <span class="n">c</span><span class="p">.</span><span class="n">read</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+
+  <span class="k">co_await</span> <span class="n">p</span><span class="p">;</span>
+  <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Additionally, a <code>channel_reader</code> is provided to make reading channels more convenient &amp; usable with
+<a href="async_for.html">BOOST_ASYNC_FOR</a>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="n">async</span><span class="o">::</span><span class="n">main</span> <span class="nf">co_main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="n">async</span><span class="o">::</span><span class="n">channel</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">c</span><span class="p">;</span>
+
+  <span class="k">auto</span> <span class="n">p</span> <span class="o">=</span> <span class="n">producer</span><span class="p">(</span><span class="n">c</span><span class="p">);</span>
+  <span class="n">BOOST_ASYNC_FOR</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="p">,</span> <span class="n">async</span><span class="o">::</span><span class="n">channel_reader</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">value</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+
+  <span class="k">co_await</span> <span class="n">p</span><span class="p">;</span>
+  <span class="k">co_return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div class="paragraph nav-footer">
-<p>← Previous: <a href="benchmarks.html">Benchmarks</a> | ↑ Up: <a href="index.html">Documentation boost.async</a> | Next: <a href="acknowledgements.html">Acknowledgements</a> →</p>
+<p>← Previous: <a href="this_thread.html">async/this_thread.hpp</a> | ↑ Up: <a href="reference.html">Reference</a> | ⌂ Home: <a href="index.html">Documentation boost.async</a> | Next: <a href="with.html">async/with.hpp</a> →</p>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2023-09-05 16:09:54 +0800
+Last updated 2023-09-05 11:10:40 +0800
 </div>
 </div>
 </body>

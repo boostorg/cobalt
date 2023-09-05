@@ -654,7 +654,7 @@ pre.rouge {
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="compiler_support" class="article toc2 toc-left">
+<body id="awaitables" class="article toc2 toc-left">
 <div id="header">
 <h1>Documentation boost.async</h1>
 <div class="details">
@@ -665,14 +665,20 @@ pre.rouge {
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
-<li><a href="overview.html">Overview</a>
-</li>
+<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel0">
 <li><a href="motivation.html">Motivation</a>
 </li>
 <li><a href="coroutine_primer.html">Coroutine Primer</a>
+<ul class="sectlevel1">
+<li><a href="async_programming.html">Async programming</a>
 </li>
-<li><a href="tour.html">Tour</a>
+<li><a href="coroutines.html">Coroutines</a>
+</li>
+<li><a href="awaitables.html"><span class="toc-current">Awaitables</span></a>
+</li>
+<li><a href="event-loops.html">Event Loops</a>
+</li>
+</ul>
 </li>
 <li><a href="tutorial.html">Tutorial</a>
 </li>
@@ -684,7 +690,7 @@ pre.rouge {
 </li>
 <li><a href="benchmarks.html">Benchmarks</a>
 </li>
-<li><a href="compiler_support.html"><span class="toc-current">Compiler support</span></a>
+<li><a href="compiler_support.html">Compiler support</a>
 </li>
 <li><a href="acknowledgements.html">Acknowledgements</a>
 </li>
@@ -693,93 +699,111 @@ pre.rouge {
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="compiler_support">Compiler support</h2>
+<h2 id="awaitables">Awaitables</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This library is supported since Clang 14, Gcc 10 &amp; MSVC 19.28.</p>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-Gcc versions 12.1 and 12.2 appear to have a bug for coroutines with out stack variables
-as can be seen [here](<a href="https://godbolt.org/z/6adGcqP1z" class="bare">https://godbolt.org/z/6adGcqP1z</a>) and should be avoided for coroutines.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>Clang only added <code>std::pmr</code> support in 16, so older clang versions use <code>boost::contianer::pmr</code> as a drop-in replacement.</p>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-Some if not all MSVC versions have a broken coroutine implementation,
-that this library needs to workaround. This may cause non-deterministic behaviour and overhead.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>A coroutine continuation may be done in the awaitable returned from a <code>final_suspend</code>, like this:</p>
+<p>Awaitables are types that can be used in a <code>co_await</code> expression.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="c1">// in promise</span>
-<span class="k">auto</span> <span class="n">final_suspend</span><span class="p">()</span> <span class="k">noexcept</span>
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">struct</span> <span class="nc">awaitable_prototype</span>
 <span class="p">{</span>
-    <span class="k">struct</span> <span class="nc">final_awaitable</span>
-    <span class="p">{</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">continuation</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">noop_coroutine</span><span class="p">()};</span> <i class="conum" data-value="1"></i><b>(1)</b>
-      <span class="kt">bool</span> <span class="n">await_ready</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">await_suspend</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">h</span><span class="p">)</span> <span class="k">noexcept</span>
-      <span class="p">{</span>
-        <span class="k">auto</span> <span class="n">cc</span> <span class="o">=</span> <span class="n">continuation</span><span class="p">;</span>
-        <span class="n">h</span><span class="p">.</span><span class="n">destroy</span><span class="p">();</span> <i class="conum" data-value="2"></i><b>(2)</b>
-        <span class="k">return</span> <span class="n">cc</span><span class="p">;</span>
-      <span class="p">}</span>
+    <span class="kt">bool</span> <span class="n">await_ready</span><span class="p">();</span>
 
-      <span class="kt">void</span> <span class="n">await_resume</span><span class="p">()</span> <span class="k">noexcept</span> <span class="p">{}</span>
-    <span class="p">};</span>
-    <span class="k">return</span> <span class="n">final_awaitable</span><span class="p">{</span><span class="n">my_continuation</span><span class="p">};</span>
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+    <span class="n"><em>see_below</em></span> <span class="n">await_suspend</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">);</span>
+
+    <span class="n"><em>return_type</em></span>  <span class="n">await_resume</span><span class="p">();</span>
 <span class="p">};</span></code></pre>
 </div>
 </div>
-<div class="colist arabic">
+<div class="admonitionblock note">
 <table>
 <tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The continuation</td>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Type will be implicitly converted into an awaitable if there is an <code>operator co_await</code> call available.
+This documentation will use <code>awaitable</code> to include these types,
+and "actual_awaitable" to refer to type conforming to the above prototype.
+</td>
 </tr>
+</table>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-3c02ebe8653ca74da052ef1b78e1f756.png" alt="Diagram" width="197" height="430">
+</div>
+</div>
+<div class="paragraph">
+<p>In a <code>co_await</code> expression the waiting coroutine will first invoke
+<code>await_ready</code> to check if the coroutine needs to suspend.
+When ready, it goes directly to <code>await_resume</code> to get the value,
+as there is no suspension needed.
+Otherwise, it will suspend itself and call <code>await_suspend</code> with a
+<code>std::coroutine_handle</code> to its own promise.</p>
+</div>
+<div class="admonitionblock note">
+<table>
 <tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Self destroying the coroutine before continuation</td>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>std::coroutine_handle&lt;void&gt;</code> can be used for type erasure.
+</td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>The final_suspend doesnt not properly suspend the coroutine on MSVC, so that the <code>h.destroy()</code> will cause
-double destruction of elements on the coroutine frame.
-Therefor, msvc will need to post the destruction, to do it out of line.
-This will cause overhead and make the actual freeing of memory indeterministic.</p>
+<p>The <em>return_type</em> is the result type of the <code>co_await expression</code>, e.g. <code>int</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="k">co_await</span> <span class="nf">awaitable_with_int_result</span><span class="p">();</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The return type of the <code>await_suspend</code> can be three things:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>void</code></p>
+</li>
+<li>
+<p><code>bool</code></p>
+</li>
+<li>
+<p><code>std::coroutine_handle&lt;U&gt;</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>If it is void the awaiting coroutine remains suspended. If it is <code>bool</code>,
+the value will be checked, and if falls, the awaiting coroutine will resume right away.</p>
+</div>
+<div class="paragraph">
+<p>If a <code>std::coroutine_handle</code> is returned, this coroutine will be resumed.
+The latter allows <code>await_suspend</code> to return the handle passed in,
+being effectively the same as returning <code>false</code>.</p>
+</div>
+<div class="paragraph">
+<p>If the awaiting coroutine gets re-resumed right away, i.e. after calling await_resume,
+it is referred to as "immediate completion" within this library.
+This is not to be confused with a non-suspending awaitable, i.e. one that returns <code>true</code> from <code>await_ready</code>.</p>
 </div>
 </div>
 </div>
 <div class="paragraph nav-footer">
-<p>← Previous: <a href="benchmarks.html">Benchmarks</a> | ↑ Up: <a href="index.html">Documentation boost.async</a> | Next: <a href="acknowledgements.html">Acknowledgements</a> →</p>
+<p>← Previous: <a href="coroutines.html">Coroutines</a> | ↑ Up: <a href="coroutine_primer.html">Coroutine Primer</a> | ⌂ Home: <a href="index.html">Documentation boost.async</a> | Next: <a href="event-loops.html">Event Loops</a> →</p>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2023-09-05 16:09:54 +0800
+Last updated 2023-09-05 11:10:40 +0800
 </div>
 </div>
 </body>

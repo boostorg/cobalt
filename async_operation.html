@@ -654,7 +654,7 @@ pre.rouge {
              .nav-footer{text-align: center; margin-top: auto;}
              .nav-footer > p > a {white-space: nowrap;}</style>
 </head>
-<body id="compiler_support" class="article toc2 toc-left">
+<body id="async_operation" class="article toc2 toc-left">
 <div id="header">
 <h1>Documentation boost.async</h1>
 <div class="details">
@@ -665,26 +665,76 @@ pre.rouge {
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
-<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel1">
-<li><a href="overview.html">Overview</a>
-</li>
+<p><span class="toc-root"><a href="index.html">Documentation boost.async</a></span></p><ul class="sectlevel0">
 <li><a href="motivation.html">Motivation</a>
 </li>
 <li><a href="coroutine_primer.html">Coroutine Primer</a>
-</li>
-<li><a href="tour.html">Tour</a>
 </li>
 <li><a href="tutorial.html">Tutorial</a>
 </li>
 <li><a href="design.html">Design</a>
 </li>
 <li><a href="reference.html">Reference</a>
+<ul class="sectlevel1">
+<li><a href="main.html">async/main.hpp</a>
+</li>
+<li><a href="promise.html">async/promise.hpp</a>
+</li>
+<li><a href="generator.html">async/generator.hpp</a>
+</li>
+<li><a href="task.html">async/task.hpp</a>
+</li>
+<li><a href="detached.html">async/detached.hpp</a>
+</li>
+<li><a href="async_operation.html"><span class="toc-current">async/op.hpp</span></a>
+<ul class="sectlevel2">
+<li><a href="async_operation.html#use_op">use_op</a>
+</li>
+<li><a href="async_operation.html#op">Hand coded Operations</a>
+</li>
+</ul>
+</li>
+<li><a href="concepts.html">async/concepts.hpp</a>
+</li>
+<li><a href="this_coro.html">async/this_coro.hpp</a>
+</li>
+<li><a href="this_thread.html">async/this_thread.hpp</a>
+</li>
+<li><a href="channel.html">async/channel.hpp</a>
+</li>
+<li><a href="with.html">async/with.hpp</a>
+</li>
+<li><a href="select.html">async/select.hpp</a>
+</li>
+<li><a href="gather.html">async/gather.hpp</a>
+</li>
+<li><a href="join.html">async/join.hpp</a>
+</li>
+<li><a href="wait_group.html">async/wait_group.hpp</a>
+</li>
+<li><a href="spawn.html">async/spawn.hpp</a>
+</li>
+<li><a href="run.html">async/run.hpp</a>
+</li>
+<li><a href="thread.html">async/thread.hpp</a>
+</li>
+<li><a href="result.html">async/result.hpp</a>
+</li>
+<li><a href="async_for.html">async/async_for.hpp</a>
+</li>
+<li><a href="error.html">async/error.hpp</a>
+</li>
+<li><a href="config.html">async/config.hpp</a>
+</li>
+<li><a href="leaf.html">async/leaf.hpp</a>
+</li>
+</ul>
 </li>
 <li><a href="technical_background.html">Technical Background</a>
 </li>
 <li><a href="benchmarks.html">Benchmarks</a>
 </li>
-<li><a href="compiler_support.html"><span class="toc-current">Compiler support</span></a>
+<li><a href="compiler_support.html">Compiler support</a>
 </li>
 <li><a href="acknowledgements.html">Acknowledgements</a>
 </li>
@@ -693,62 +743,138 @@ pre.rouge {
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="compiler_support">Compiler support</h2>
+<h2 id="async_operation">async/op.hpp</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This library is supported since Clang 14, Gcc 10 &amp; MSVC 19.28.</p>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-Gcc versions 12.1 and 12.2 appear to have a bug for coroutines with out stack variables
-as can be seen [here](<a href="https://godbolt.org/z/6adGcqP1z" class="bare">https://godbolt.org/z/6adGcqP1z</a>) and should be avoided for coroutines.
-</td>
-</tr>
-</table>
+<p>An async operation is an <a href="concepts.html#awaitable">awaitable</a> wrapping an <code>asio</code> operation.</p>
 </div>
 <div class="paragraph">
-<p>Clang only added <code>std::pmr</code> support in 16, so older clang versions use <code>boost::contianer::pmr</code> as a drop-in replacement.</p>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-Some if not all MSVC versions have a broken coroutine implementation,
-that this library needs to workaround. This may cause non-deterministic behaviour and overhead.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>A coroutine continuation may be done in the awaitable returned from a <code>final_suspend</code>, like this:</p>
+<p>E.g. this is an <code>async_operation</code> with the completion signature  <code>void()</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="c1">// in promise</span>
-<span class="k">auto</span> <span class="n">final_suspend</span><span class="p">()</span> <span class="k">noexcept</span>
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">auto</span> <span class="n">op</span> <span class="o">=</span> <span class="n">asio</span><span class="o">::</span><span class="n">post</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">async</span><span class="o">::</span><span class="n">use_op</span><span class="p">);</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Or the async_operation can be templated like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">auto</span> <span class="n">op</span> <span class="o">=</span> <span class="p">[</span><span class="o">&amp;</span><span class="n">ctx</span><span class="p">](</span><span class="k">auto</span> <span class="n">token</span><span class="p">)</span> <span class="p">{</span><span class="k">return</span> <span class="n">asio</span><span class="o">::</span><span class="n">post</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">token</span><span class="p">));</span> <span class="p">};</span></code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="use_op">use_op</h3>
+<div class="paragraph">
+<p>The <code>use_op</code> token is the direct to create an op,
+i.e. using <code>async::use_op</code> as the completion token will create the required awaitable.</p>
+</div>
+<div class="paragraph">
+<p>It also supports <code>defaults_on</code> so that async_ops can be awaited without the token:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">auto</span> <span class="n">tim</span> <span class="o">=</span> <span class="n">async</span><span class="o">::</span><span class="n">use_op</span><span class="p">.</span><span class="n">as_default_on</span><span class="p">(</span><span class="n">asio</span><span class="o">::</span><span class="n">steady_timer</span><span class="p">{</span><span class="k">co_await</span> <span class="n">async</span><span class="o">::</span><span class="n">this_coro</span><span class="o">::</span><span class="n">executor</span><span class="p">});</span>
+<span class="k">co_await</span> <span class="n">tim</span><span class="p">.</span><span class="n">async_wait</span><span class="p">();</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Depending on the completion signature the <code>co_await</code> expression may throw.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Signature</th>
+<th class="tableblock halign-left valign-top">Return type</th>
+<th class="tableblock halign-left valign-top">Exception</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>void()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>void</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>noexcept</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>void(T)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>T</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>noexcept</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>void(T&#8230;&#8203;)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>std::tuple&lt;T&#8230;&#8203;&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>noexcept</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>void(system::error_code, T)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>T</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>system::system_error</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>void(system::error_code, T&#8230;&#8203;)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>std::tuple&lt;T&#8230;&#8203;&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>system::system_error</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>void(std::exception_ptr, T)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>T</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>any exception</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>void(std::exception_ptr, T&#8230;&#8203;)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>std::tuple&lt;T&#8230;&#8203;&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>any exception</em></p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>use_op</code> will never complete immediately, i.e. <code>await_ready</code> will always return false, but always suspend the coroutine.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="op">Hand coded Operations</h3>
+<div class="paragraph">
+<p>Operations are a more advanced implementation of the <a href="async_operation.html">async/op.hpp</a> feature.</p>
+</div>
+<div class="paragraph">
+<p>This library makes it easy to create asynchronous operations with an early completion condition,
+i.e. a condition that avoids suspension of coroutines altogether.</p>
+</div>
+<div class="paragraph">
+<p>We can for example create a <code>wait_op</code> that does nothing if the timer is already expired.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">struct</span> <span class="nc">wait_op</span> <span class="o">:</span> <span class="n">async</span><span class="o">::</span><span class="n">op</span><span class="o">&lt;</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="o">&gt;</span> <i class="conum" data-value="1"></i><b>(1)</b>
 <span class="p">{</span>
-    <span class="k">struct</span> <span class="nc">final_awaitable</span>
-    <span class="p">{</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">continuation</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">noop_coroutine</span><span class="p">()};</span> <i class="conum" data-value="1"></i><b>(1)</b>
-      <span class="kt">bool</span> <span class="n">await_ready</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span><span class="p">;</span>
-      <span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">await_suspend</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">h</span><span class="p">)</span> <span class="k">noexcept</span>
-      <span class="p">{</span>
-        <span class="k">auto</span> <span class="n">cc</span> <span class="o">=</span> <span class="n">continuation</span><span class="p">;</span>
-        <span class="n">h</span><span class="p">.</span><span class="n">destroy</span><span class="p">();</span> <i class="conum" data-value="2"></i><b>(2)</b>
-        <span class="k">return</span> <span class="n">cc</span><span class="p">;</span>
-      <span class="p">}</span>
+  <span class="n">asio</span><span class="o">::</span><span class="n">steady_timer</span> <span class="o">&amp;</span> <span class="n">tim</span><span class="p">;</span>
 
-      <span class="kt">void</span> <span class="n">await_resume</span><span class="p">()</span> <span class="k">noexcept</span> <span class="p">{}</span>
-    <span class="p">};</span>
-    <span class="k">return</span> <span class="n">final_awaitable</span><span class="p">{</span><span class="n">my_continuation</span><span class="p">};</span>
+  <span class="n">wait_op</span><span class="p">(</span><span class="n">asio</span><span class="o">::</span><span class="n">steady_timer</span> <span class="o">&amp;</span> <span class="n">tim</span><span class="p">)</span> <span class="o">:</span> <span class="n">tim</span><span class="p">(</span><span class="n">tim</span><span class="p">)</span> <span class="p">{}</span>
+
+  <span class="kt">bool</span> <span class="n">ready</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">handler</span><span class="o">&lt;</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="o">&gt;</span> <span class="p">)</span> <i class="conum" data-value="2"></i><b>(2)</b>
+  <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">tim</span><span class="p">.</span><span class="n">expiry</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">steady_clock</span><span class="o">::</span><span class="n">now</span><span class="p">())</span>
+        <span class="n">h</span><span class="p">(</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="p">{});</span>
+  <span class="p">}</span>
+  <span class="kt">void</span> <span class="n">initiate</span><span class="p">(</span><span class="n">async</span><span class="o">::</span><span class="n">completion_handler</span><span class="o">&lt;</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span><span class="o">&gt;</span> <span class="n">complete</span><span class="p">)</span> <i class="conum" data-value="3"></i><b>(3)</b>
+  <span class="p">{</span>
+    <span class="n">tim</span><span class="p">.</span><span class="n">async_wait</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">complete</span><span class="p">));</span>
+  <span class="p">}</span>
 <span class="p">};</span></code></pre>
 </div>
 </div>
@@ -756,30 +882,29 @@ that this library needs to workaround. This may cause non-deterministic behaviou
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The continuation</td>
+<td>Inherit <code>op</code> with the matching signature <code>await_transform</code> picks it up</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Self destroying the coroutine before continuation</td>
+<td>Check if the operation is ready - called from <code>await_ready</code></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Initiate the async operation if its not ready.</td>
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>The final_suspend doesnt not properly suspend the coroutine on MSVC, so that the <code>h.destroy()</code> will cause
-double destruction of elements on the coroutine frame.
-Therefor, msvc will need to post the destruction, to do it out of line.
-This will cause overhead and make the actual freeing of memory indeterministic.</p>
 </div>
 </div>
 </div>
 <div class="paragraph nav-footer">
-<p>← Previous: <a href="benchmarks.html">Benchmarks</a> | ↑ Up: <a href="index.html">Documentation boost.async</a> | Next: <a href="acknowledgements.html">Acknowledgements</a> →</p>
+<p>← Previous: <a href="detached.html">async/detached.hpp</a> | ↑ Up: <a href="reference.html">Reference</a> | ⌂ Home: <a href="index.html">Documentation boost.async</a> | Next: <a href="concepts.html">async/concepts.hpp</a> →</p>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2023-09-05 16:09:54 +0800
+Last updated 2023-09-05 11:10:40 +0800
 </div>
 </div>
 </body>
