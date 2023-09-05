@@ -11,6 +11,7 @@ Version 0.1, 29.01.2023
 :source-language: c++
 :example-caption: Example
 
+
 :leveloffset: +1
 
 
@@ -31,6 +32,8 @@ include::tutorial/echo_server.adoc[]
 include::tutorial/ticker.adoc[]
 include::tutorial/delay_op.adoc[]
 include::tutorial/push_generator.adoc[]
+include::tutorial/advanced.adoc[]
+
 
 = Design
 

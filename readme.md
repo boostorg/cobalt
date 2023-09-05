@@ -112,7 +112,7 @@ An async:promise can also be used with `spawn` to turn it into an asio operation
 
 ## Task
 
-A [`task`](doc/reference/task.adoc) is a lazy alternative to a promise.
+A [`task`](doc/reference/task.adoc) is a lazy alternative to a promise, that can be spawned onto or `co_await`ed on another executor.
 
 ## Generator
 

@@ -21,7 +21,7 @@ struct awaitable_spsc_queue
   template<typename ... Args>
   awaitable_spsc_queue(Args && ... args) : queue(std::forward<Args>(args)...) {}
 
-  // if the quque gets destroyed, destroying the awaiters is all we can do.
+  // if the queue gets destroyed, destroying the awaiters is all we can do.
   ~awaitable_spsc_queue()
   {
     if (auto r = reader.load(); r != nullptr)

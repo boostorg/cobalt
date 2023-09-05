@@ -51,7 +51,21 @@ or - worse - the wrong executor is used.
 
 Similarly, the library uses a thread_local `pmr::memory_resource` to allocate
 coroutine frames & to use as allocator on asynchronous operations.
-This allows the usage of a single `pmr::unsynchronized_pool_resource` per thread.
+
+
+
+The reason is, that users may want to customize allocations,
+e.g. to avoid locks, limit memory usage or monitor usage.
+`pmr` allows us to achieve this without introducing unnecessary template parameters,
+i.e. no `promise<T, Allocator>` complexity.
+Using `pmr` however does introduce some minimal overheads,
+so a user has the option to disable by defining `BOOST_ASYNC_NO_PMR`.
+
+<<op, op>> uses an internal resource optimized for asio's allocator usages
+and <<gather, gather>>, <<select,select>> and <<join,join>> use a monotonic resource to miminize allocations.
+Both still work with `BOOST_ASYNC_NO_PMR` defined, in which case they'll use `new/delete` as upstream allocations.
+
+<<main,main>> and <<thread,thread>> single `pmr::unsynchronized_pool_resource` per thread with PMR enabled.
 
 NOTE: If you write your own coroutine, it should have a get_allocator function
 returning a `pmr::polymorphic_allocator<void>`.

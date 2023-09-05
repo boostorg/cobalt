@@ -14,18 +14,17 @@ async::generator<system::error_code, json::object>
     json_writer(websocket_type & ws)
 try
 {
-    co_await async::this_coro::pro_active(true); // <1>
     char buffer[4096];
     json::serializer ser;
 
-    while (ws.is_open()) // <2>
+    while (ws.is_open()) // <1>
     {
-        auto val = co_yield system::error_code{}; // <3>
+        auto val = co_yield system::error_code{}; // <2>
 
         while (!ser.done())
         {
             auto sv = ser.read(buffer);
-            co_await ws.async_write({sv.data(), sv.size()}); // <4>
+            co_await ws.async_write({sv.data(), sv.size()}); // <3>
         }
 
     }
@@ -41,10 +40,9 @@ catch (std::exception & e)
     throw;
 }
 ----
-<1> Set to proactive
-<2> Keep running as long as the socket is open
-<3> `co_yield` the current error and retrieve a new value.
-<4> Write a frame to the websocket
+<1> Keep running as long as the socket is open
+<2> `co_yield` the current error and retrieve a new value.
+<3> Write a frame to the websocket
 
 Now we can use the generator like this:
 

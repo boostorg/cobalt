@@ -29,6 +29,10 @@ async::main co_main(int argc, char *argv[])
 The main promise will create an `asio::signal_set` and uses it for cancellation.
 `SIGINT` becomes total , while `SIGTERM` becomes terminal cancellation.
 
+NOTE: The cancellation will not be forwarded to detached coroutines.
+The user will need to take care to end then on cancellation,
+since the program otherwise doesn't allow graceful termination.
+
 === Executor
 [#main-executor]
 

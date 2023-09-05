@@ -21,8 +21,8 @@ is defined as above. This has a few advantages:
  - asio is signaled that the context is single threaded
  - an `asio::signal_set` with `SIGINT` & `SIGTERM` is automatically connected to cancellations (i.e. `Ctrl+C` causes cancellations)
 
-This coroutine then has an executor in its promisefootnote:[the promise the C++ name for a coroutine state.
-Not to be confused with <<promise>>] which we can obtain through the dummy-<<awaitable, awaitable>>s in
+This coroutine then has an executor in its promise (the promise the C++ name for a coroutine state.
+Not to be confused with <<promise>>) which we can obtain through the dummy-<<awaitable, awaitable>>s in
 the <<this_coro, this_coro>> namespace.
 
 We can then construct a timer and initiate the `async_wait` with <<use_op>>.
