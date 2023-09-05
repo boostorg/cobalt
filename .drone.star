@@ -67,7 +67,7 @@ def git_boost_steps(branch, image="alpine/git", env_win_style=False):
             "image": image,
             "commands": [
                 "cd boost/libs",
-                "git clone {}".format("$Env:DRONE_REMOTE_URL" if env_win_style else "$DRONE_REMOTE_URL"),
+                "git clone {}".format("$Env:DRONE_GIT_HTTP_URL" if env_win_style else "$DRONE_GIT_HTTP_URL"),
                 "cd async",
                 "git checkout {}".format("$Env:DRONE_COMMIT" if env_win_style else "$DRONE_COMMIT")
             ]
