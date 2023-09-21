@@ -149,7 +149,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 
     bool await_ready() const
     {
-        assert(!ex);
+        BOOST_ASSERT(!ex);
         return self->ready();
     }
 
