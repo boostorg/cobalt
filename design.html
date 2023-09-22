@@ -1074,7 +1074,7 @@ That is, it has three associators that are member functions of an awaiting promi
 <p><code>async</code> uses concepts to check if those are present in its <code>await_suspend</code> functions.</p>
 </div>
 <div class="paragraph">
-<p>That way custom coroutines can support cancellation, executors etc..</p>
+<p>That way custom coroutines can support cancellation, executors and allocators.</p>
 </div>
 <div class="paragraph">
 <p>In a custom awaitable you can obtain them like this:</p>
@@ -1098,6 +1098,10 @@ That is, it has three associators that are member functions of an awaiting promi
     <span class="kt">void</span> <span class="n">await_resume</span><span class="p">();</span>
 <span class="p">};</span></code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>Cancellation gets connected by <code>co_await</code> statements (if supported by the coroutine &amp; awaitable),
+including synchronization mechanism like <a href="reference.html#select">select</a>.</p>
 </div>
 </div>
 <div class="sect2">

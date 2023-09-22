@@ -1015,14 +1015,12 @@ Depending on the coroutine properties different things can be <code>co_await</co
 </div>
 </div>
 <div class="paragraph">
-<p>Promises can also be used to spawn tasks easily.</p>
-</div>
-<div class="paragraph">
 <p>Promises are by default attached.
 This means, that a cancellation is sent when the <code>promise</code> handles goes out of scope.</p>
 </div>
 <div class="paragraph">
-<p>A promise can be detached by calling <code>detach</code> or by using the prefix <code>+</code> operator.</p>
+<p>A promise can be detached by calling <code>detach</code> or by using the prefix <code>+</code> operator.
+This is a runtime alternative to using <a href="reference.html#detached">detached</a>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1499,7 +1497,7 @@ Tasks can be used synchronously from a sync function by calling <code>run(my_tas
 <div class="paragraph">
 <p>The <code>use_task</code> completion token can be used to create a task from an <code>async_</code> function.
 This is less efficient than <a href="reference.html#use_op">use_op</a> as it needs to allocate a coroutine frame,
-but has an obvious return type and support <a href="reference.html#interrupt_await">Interrupt Wait</a>.</p>
+but has a simpler return type and supports <a href="reference.html#interrupt_await">Interrupt Wait</a>.</p>
 </div>
 </div>
 </div>
@@ -1526,7 +1524,7 @@ That is, it cannot be resumed and is usually not awaited.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Promises are mainly used to spawn tasks easily.</p>
+<p>Detached is used to run coroutines in the background easily.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2691,18 +2689,19 @@ a <code>gather</code> function (<code>wait_all</code>) and will clean up on scop
 <div class="sect2">
 <h3 id="spawn">async/spawn.hpp</h3>
 <div class="paragraph">
-<p>The <code>spawn</code> functions allow to use <a href="reference.html#task">task</a> directly with asio:</p>
+<p>The <code>spawn</code> functions allow to run <a href="reference.html#task">task</a> on an asio <code>executor</code>/<code>execution_context</code>
+and consume the result with a <a href="https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/overview/model/completion_tokens.html">completion token</a>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="cpp"><span class="k">auto</span> <span class="nf">spawn</span><span class="p">(</span>                            <span class="n">task</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span>    <span class="o">&amp;&amp;</span> <span class="n">t</span><span class="p">,</span> <span class="n">CompletionToken</span><span class="o">&amp;&amp;</span> <span class="n">token</span><span class="p">);</span>
-<span class="k">auto</span> <span class="nf">spawn</span><span class="p">(</span><span class="n">asio</span><span class="o">::</span><span class="n">io_context</span> <span class="o">&amp;</span> <span class="n">context</span><span class="p">,</span> <span class="n">task</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span>    <span class="o">&amp;&amp;</span> <span class="n">t</span><span class="p">,</span> <span class="n">CompletionToken</span><span class="o">&amp;&amp;</span> <span class="n">token</span><span class="p">);</span>
-<span class="k">auto</span> <span class="nf">spawn</span><span class="p">(</span><span class="n">Executor</span> <span class="n">executor</span><span class="p">,</span>          <span class="n">task</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span>    <span class="o">&amp;&amp;</span> <span class="n">t</span><span class="p">,</span> <span class="n">CompletionToken</span><span class="o">&amp;&amp;</span> <span class="n">token</span><span class="p">);</span></code></pre>
+<pre class="rouge highlight"><code data-lang="cpp"><span class="k">auto</span> <span class="nf">spawn</span><span class="p">(</span><span class="n">Context</span> <span class="o">&amp;</span> <span class="n">context</span><span class="p">,</span> <span class="n">task</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">&amp;&amp;</span> <span class="n">t</span><span class="p">,</span> <span class="n">CompletionToken</span><span class="o">&amp;&amp;</span> <span class="n">token</span><span class="p">);</span>
+<span class="k">auto</span> <span class="nf">spawn</span><span class="p">(</span><span class="n">Executor</span> <span class="n">executor</span><span class="p">,</span> <span class="n">task</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">&amp;&amp;</span> <span class="n">t</span><span class="p">,</span> <span class="n">CompletionToken</span><span class="o">&amp;&amp;</span> <span class="n">token</span><span class="p">);</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Spawn will post both ways, so it is safe to use task to run the task
-on another executor and consume the result on the current one with <a href="reference.html#use_op">use_op</a>.</p>
+<p>Spawn will dispatch it&#8217;s initiartion and post the completion. S
+That makes it safe to use task to run the task on another executor
+and consume the result on the current one with <a href="reference.html#use_op">use_op</a>.</p>
 </div>
 <div class="sect3">
 <h4 id="example_2">Example</h4>
@@ -2728,7 +2727,7 @@ on another executor and consume the result on the current one with <a href="refe
 </td>
 <td class="content">
 The caller needs to make sure that the executor is not running on multiple threads
-concurrently, e,g, by using a single-threaded context.
+concurrently, e,g, by using a single-threaded <code>asio::io_context</code> or a <code>strand</code>.
 </td>
 </tr>
 </table>
