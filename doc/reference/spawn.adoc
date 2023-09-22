@@ -1,17 +1,18 @@
 [#spawn]
 == async/spawn.hpp
 
-The `spawn` functions allow to use <<task, task>> directly with asio:
+The `spawn` functions allow to run <<task, task>> on an asio `executor`/`execution_context`
+and consume the result with a https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/overview/model/completion_tokens.html[completion token].
 
 [source,cpp]
 ----
-auto spawn(                            task<T>    && t, CompletionToken&& token);
-auto spawn(asio::io_context & context, task<T>    && t, CompletionToken&& token);
-auto spawn(Executor executor,          task<T>    && t, CompletionToken&& token);
+auto spawn(Context & context, task<T> && t, CompletionToken&& token);
+auto spawn(Executor executor, task<T> && t, CompletionToken&& token);
 ----
 
-Spawn will post both ways, so it is safe to use task to run the task
-on another executor and consume the result on the current one with <<use_op>>.
+Spawn will dispatch it's initiartion and post the completion. S
+That makes it safe to use task to run the task on another executor
+and consume the result on the current one with <<use_op>>.
 
 === Example
 
@@ -30,6 +31,6 @@ int main(int argc, char *argv[])
 ----
 
 WARNING: The caller needs to make sure that the executor is not running on multiple threads
-concurrently, e,g, by using a single-threaded context.
+concurrently, e,g, by using a single-threaded `asio::io_context` or a `strand`.
 
 

@@ -68,5 +68,5 @@ The task promise has the following properties.
 
 The `use_task` completion token can be used to create a task from an `async_` function.
 This is less efficient than <<use_op, use_op>> as it needs to allocate a coroutine frame,
-but has an obvious return type and support <<interrupt_await>>.
+but has a simpler return type and supports <<interrupt_await>>.
 

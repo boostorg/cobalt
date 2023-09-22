@@ -18,12 +18,11 @@ async::main co_main(int argc, char *argv[])
 }
 ----
 
-Promises can also be used to spawn tasks easily.
-
 Promises are by default attached.
 This means, that a cancellation is sent when the `promise` handles goes out of scope.
 
 A promise can be detached by calling `detach` or by using the prefix `+` operator.
+This is a runtime alternative to using <<detached, detached>>.
 
 [source,cpp]
 ----

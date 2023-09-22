@@ -20,7 +20,7 @@ async::main co_main(int argc, char *argv[])
 }
 ----
 
-Promises are mainly used to spawn tasks easily.
+Detached is used to run coroutines in the background easily.
 
 [source,cpp]
 ----

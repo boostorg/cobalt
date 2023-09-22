@@ -35,7 +35,7 @@ struct [[nodiscard]] generator
   // Check if a value is available
   bool ready() const;
 
-  // Get the return value. Throws if not `ready`.
+  // Get the return value. Throws if `ready()` returns false.
   Yield get();
 
   // Cancel & detach the generator.
