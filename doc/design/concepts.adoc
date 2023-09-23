@@ -32,7 +32,7 @@ to make the creation of custom coroutines easy.
 
 A coroutine in the context of this documentation refers
 to an asynchronous coroutine, i.e. synchronous coroutines like
-link:https://en.cppreference.com/w/cpp/coroutine/generator[generator]
+link:https://en.cppreference.com/w/cpp/coroutine/generator[std::generator]
 are not considered.
 
 All coroutines except  <<main, main>> are also actual awaitables.
