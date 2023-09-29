@@ -8,9 +8,8 @@ The easiest way to get started with an async application is to use the `co_main`
 async::main co_main(int argc, char *argv[]);
 ----
 
-Declaring `co_main` will add a `main` function that performs all the necessary steps to run a coroutine
-on an event loop.
-This allows us to write a very simple asynchronous programs;
+Declaring `co_main` will add a `main` function that performs all the necessary steps to run a coroutine on an event loop.
+This allows us to write very simple asynchronous programs.
 
 [source,cpp]
 ----

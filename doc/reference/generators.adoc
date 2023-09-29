@@ -57,7 +57,7 @@ async::generator<int, int> example()
 {
   printf("In coro 1\n");
   int i =  co_yield 2;
-  printf("In coro %d\n");
+  printf("In coro %d\n", i);
   co_return 4;
 }
 
@@ -66,7 +66,7 @@ async::main co_main(int argc, char * argv[])
   printf("In main 0\n");
   auto f = example(); // call and let it run until the first co_yield
   printf("In main %d\n", co_await f(3)); // <1>
-  return 0;
+  co_return 0;
 }
 ----
 <1> The pushed value gets passed through `operator()` to the result of `co_yield`.
@@ -76,10 +76,7 @@ Which will generate the following output
  In main 0
  In coro 1
  In main 2
- Pushed 2
  In coro 3
- In main 4
-
 
 [#initial]
 === Lazy
