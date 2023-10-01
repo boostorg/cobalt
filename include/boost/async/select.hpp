@@ -19,10 +19,9 @@ namespace boost::async
 namespace detail
 {
 
-inline std::mt19937 &random_device()
+inline std::mt19937 &prng()
 {
-  thread_local static std::random_device rd;
-  thread_local static std::mt19937 g(rd());
+  thread_local static std::mt19937 g(std::random_device{}());
   return g;
 }
 
@@ -69,7 +68,7 @@ template<asio::cancellation_type Ct = asio::cancellation_type::all,
          awaitable<detail::fork::promise_type> ... Promise>
 auto select(Promise && ... p) -> detail::select_variadic_impl<Ct, std::mt19937&, Promise ...>
 {
-  return select<Ct>(detail::random_device(), static_cast<Promise&&>(p)...);
+  return select<Ct>(detail::prng(), static_cast<Promise&&>(p)...);
 }
 
 
@@ -81,7 +80,7 @@ auto select(PromiseRange && p) -> detail::select_ranged_impl<Ct, std::mt19937&, 
   if (std::empty(p))
     throw_exception(std::invalid_argument("empty range selected"));
 
-  return select<Ct>(detail::random_device(), static_cast<PromiseRange&&>(p));
+  return select<Ct>(detail::prng(), static_cast<PromiseRange&&>(p));
 }
 
 template<asio::cancellation_type Ct = asio::cancellation_type::all,
