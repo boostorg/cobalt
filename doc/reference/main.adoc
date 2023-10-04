@@ -43,7 +43,7 @@ It will be assigned to the `async::this_thread::get_executor()` .
 [#main-allocator]
 
 It also creates a memory resource that will be used as a default for internal memory allocations.
-It will be assigned to the `thread_local` to the  `async::this_thread::get_default_resoruce()`.
+It will be assigned to the `thread_local` to the  `async::this_thread::get_default_resource()`.
 
 [#main-promise]
 === Promise
