@@ -26,7 +26,7 @@ async::promise<void> do_gather()
 
 The `gather` will invoke the functions of the `awaitable` as if used in a `co_await` expression.
 
-.Signatures of join
+.Signatures of gather
 [source, cpp]
 ----
 extern promise<void> pv1, pv2;
