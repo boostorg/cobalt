@@ -7,7 +7,7 @@ Let's start with the simplest example possible: a simple delay.
 ----
 include::../../example/delay.cpp[tag=timer_example]
 ----
-<1> The <<main, co_main>> function defines an implicit `main` when defined
+<1> The <<main, co_main>> function defines an implicit `main` when used
 and is the easiest way to set up an environment to run asynchronous code.
 <2> Take the executor from the current coroutine promise.
 <3> Use an argument to set the timeout

@@ -76,7 +76,7 @@ which allows the user of yielding coroutine to push values into it.
 
 [source,cpp]
 ----
-async::generator<int, bool> iota()
+async::generator<int> iota()
 {
   int i = 0;
   bool more = false;
