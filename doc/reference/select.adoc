@@ -51,8 +51,9 @@ std::pair<std::size_t, int> r8 = co_await select(rdm, piv);
 === Interrupt Wait
 
 When arguments are passed as rvalue reference, the select will attempt to use `.interrupt_await`
-on the awaitable to detach the not completed <<awaitable, awaitables>>. If supported, the <<awaitable>> must complete immediately.
-If the `select` doesn't detect the immediate completion, it will send a cancellation.
+on the <<awaitable, awaitable>> to signal the awaitable to complete now and that the result will be ignored.
+If supported, the <<awaitable>> must resume the awaiting coroutine before `interrupt_await` returns.
+If the `select` doesn't detect the function, it will send a cancellation.
 
 This means that you can reuse select like this:
 
