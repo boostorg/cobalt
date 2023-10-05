@@ -34,6 +34,6 @@ struct my_awaitable
 };
 ----
 
-Cancellation gets connected by `co_await` statements (if supported by the coroutine & awaitable),
+Cancellation gets connected in a `co_await` expression (if supported by the coroutine & awaitable),
 including synchronization mechanism like <<select, select>>.
 

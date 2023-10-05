@@ -15,7 +15,7 @@ It based on `boost.asio`.
 
 It takes a collection of concepts from other languages and provides them based on  C++20 coroutines.
 
- - easy asynchronous base functions, such as an async main & threads
+ - easy asynchronous base functions, such as an async <<main, main>> & <<thread, threads>>
  - <<promise, promise>> & <<generator, generator>> types
  - <<op, operation wrappers>>
  - an <<with, async scope>>
