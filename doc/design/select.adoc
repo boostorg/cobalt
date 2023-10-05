@@ -85,7 +85,7 @@ select(g, gen2());
 
 The above will call a `interrupt_await() &` function for `g1` and `interrupt_await() &&` for `g2` if available.
 
-NOTE: Generally speaking, the coroutines in async support lvalue interruption, ie. `interrupt_await() &`.
+NOTE: Generally speaking, the coroutines in async support lvalue interruption, i.e. `interrupt_await() &`.
 <<channel,channel>> operations are unqualified, i.e. work in both cases.
 
 <<join,join>> and <<gather, gather>> will forward interruptions,

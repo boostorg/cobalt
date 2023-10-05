@@ -23,6 +23,7 @@ This means, that a cancellation is sent when the `promise` handles goes out of s
 
 A promise can be detached by calling `detach` or by using the prefix `+` operator.
 This is a runtime alternative to using <<detached, detached>>.
+A detached promise will not send a cancellation on destruction.
 
 [source,cpp]
 ----
