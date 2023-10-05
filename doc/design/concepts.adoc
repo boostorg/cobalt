@@ -14,12 +14,18 @@ from within a coroutine, e.g.:
 co_await delay(50ms);
 ----
 
-An *actual awaitable* is a type that can be `co_await`-ed from within any coroutine,
-like a `delay` operation.
-A `pseudo-awaitable` is one that can only be used in coroutines adding special
-functionality for it. It is akin to a contextual pseudo-keyword.
+However, a coroutine promise can define an `await_transform`,
+i.e. what is actually valid to use with `co_await` expression depends on the coroutine.
 
-All the verbs in the <<this_coro, this_coro>> namespace are such pseudo-awaitables.
+Thus, we should redefine what an <<awaitable, awaitable>> is:
+An *awaitable* is a type that can be `co_await`-ed from within a coroutine,
+which promise does not define `await_transform`.
+
+
+A `pseudo-keyword` is a type that can be used in a coroutines that is adds special
+functionality for it due to its promise `await_transform`.
+
+All the verbs in the <<this_coro, this_coro>> namespace are such pseudo-keywords.
 
 [source,cpp]
 ----
@@ -28,12 +34,13 @@ auto exec = co_await this_coro::executor;
 
 NOTE: This library exposes a set of `enable_*` base classes for promises,
 to make the creation of custom coroutines easy.
-
+This includes the <<enable_awaitables, enable_awaitables>>, which provides an `await_transform`
+that just forward <<awaitable, awaitables>>.
 
 A coroutine in the context of this documentation refers
 to an asynchronous coroutine, i.e. synchronous coroutines like
 link:https://en.cppreference.com/w/cpp/coroutine/generator[generator]
 are not considered.
 
-All coroutines except  <<main, main>> are also actual awaitables.
+All coroutines except <<main, main>> are also actual <<awaitable, awaitables>>.
 
