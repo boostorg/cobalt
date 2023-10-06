@@ -1,0 +1,52 @@
+[#io::timer]
+=== async/io/steady_timer.hpp, async/io/system_timer.hpp & async/io/sleep.hpp
+
+async.io provides simple timers based on a `std::chrono::steady_clock` and `std::chrono::system_clock`.
+
+The interface between `boost::async::io::steady_timer` and `boost::async::io::system_timer` are equivalent.
+
+[source,cpp]
+----
+struct steady_timer
+{
+
+  using wait_result = system::result<void>;
+
+  /// The clock type.
+  typedef std::chrono::steady_clock clock_type;
+
+  /// The duration type of the clock.
+  typedef typename clock_type::duration duration;
+
+  /// The time point type of the clock.
+  typedef typename clock_type::time_point time_point;
+
+  steady_timer();
+  steady_timer(const time_point& expiry_time);
+  steady_timer(const duration& expiry_duration);
+
+  void cancel();
+
+  time_point expiry() const;
+  void reset(const time_point& expiry_time);
+  void reset(const duration& expiry_time);
+  bool expired() const;
+
+  [[nodiscard]] awaitable<result<void>> wait() { return wait_op_{this}; }
+  // allow the timer to be directly be awaited
+  awaitable<result<void>> operator co_await () { return wait(); }
+};
+
+awaitable<result<void>> sleep(const steady_timer::time_point& expiry_time);
+awaitable<result<void>> sleep(const steady_timer::duration& expiry_duration);
+----
+
+==== Example
+
+[source,cpp]
+----
+async::promise<void> do_delay()
+{
+   co_await sleep(std::chrono::milliseconds(100));
+}
+----

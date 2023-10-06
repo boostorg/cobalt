@@ -29,7 +29,6 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/doc/index.html
 
 add_custom_target(boost_async_doc DEPENDS  ${CMAKE_CURRENT_BINARY_DIR}/doc/index.html)
 
-
 if(BOOST_ASYNC_IS_ROOT)
     #include(CTest)
 endif()
@@ -79,18 +78,56 @@ if (NOT MSVC)
 endif()
 
 add_library(boost_async
-            src/detail/exception.cpp
-            src/detail/util.cpp
-            src/error.cpp
-            src/channel.cpp
-            src/main.cpp
-            src/this_thread.cpp
-            src/thread.cpp)
+        src/detail/exception.cpp
+        src/detail/util.cpp
+        src/error.cpp
+        src/channel.cpp
+        src/main.cpp
+        src/this_thread.cpp
+        src/thread.cpp
+        src/io/buffers/circular_buffer.cpp
+        src/io/buffers/const_buffer_pair.cpp
+        src/io/buffers/const_buffer_subspan.cpp
+        src/io/buffers/mutable_buffer_pair.cpp
+        src/io/buffers/mutable_buffer_subspan.cpp
+        src/io/detail/duplicate.cpp
+        src/io/detail/stream.cpp
+        src/io/acceptor.cpp
+        src/io/datagram_socket.cpp
+        src/io/endpoint.cpp
+        src/io/pipe.cpp
+        src/io/resolver.cpp
+        src/io/serial_port.cpp
+        src/io/signal_set.cpp
+        src/io/seq_packet_socket.cpp
+        src/io/socket.cpp
+        src/io/ssl.cpp
+        src/io/steady_timer.cpp
+        src/io/stream_socket.cpp
+        src/io/system_timer.cpp
+        src/io/stream_file.cpp
+        src/io/random_access_file.cpp
+        src/io/file.cpp
+        src/io/read.cpp
+        src/io/read_all.cpp
+        src/io/read_at.cpp
+        src/io/read_until.cpp
+        src/io/popen.cpp
+        src/io/process.cpp
+        src/io/buffers/register.cpp
+        src/io/write.cpp
+        src/io/write_at.cpp
+        src/io/detail/random_access_device.cpp
+        src/io/copy.cpp
+        src/io/copy_n.cpp
+        src/io/sleep.cpp)
+
 target_include_directories(boost_async PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(boost_async PUBLIC
         Boost::system
         Threads::Threads)
 target_compile_definitions(boost_async PRIVATE BOOST_ASYNC_SOURCE=1 )
+target_compile_definitions(boost_async PUBLIC BOOST_PROCESS_USE_STD_FS=1)
 
 if (BOOST_ASYNC_USE_BOOST_CONTAINER)
     target_link_libraries(boost_async PUBLIC Boost::container)

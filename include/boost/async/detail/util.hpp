@@ -101,7 +101,8 @@ constexpr decltype(auto) get_last_variadic(First &&, Args  && ... args)
 }
 
 template<typename Awaitable>
-auto get_resume_result(Awaitable & aw) -> system::result<decltype(aw.await_resume()), std::exception_ptr>
+auto assign_resume_result(system::result<decltype(std::declval<Awaitable&>().await_resume()), std::exception_ptr> & res,
+                          Awaitable & aw) -> system::result<decltype(std::declval<Awaitable&>().await_resume()), std::exception_ptr> &
 {
   using type = decltype(aw.await_resume());
   try
@@ -109,14 +110,19 @@ auto get_resume_result(Awaitable & aw) -> system::result<decltype(aw.await_resum
     if constexpr (std::is_void_v<type>)
     {
       aw.await_resume();
-      return {};
+      res.emplace();
     }
     else
-      return aw.await_resume();
+      res.emplace(aw.await_resume());
+    return res;
   }
   catch(...)
   {
-    return std::current_exception();
+    // TODO: Talk to @pdimov.
+    res.~result();
+    return *new (&res) system::result<decltype(std::declval<Awaitable&>().await_resume()), std::exception_ptr>(
+        system::in_place_error,
+        std::current_exception());
   }
 }
 

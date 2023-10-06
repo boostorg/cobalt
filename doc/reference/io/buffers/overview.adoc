@@ -1,0 +1,29 @@
+////
+Copyright (c) 2023 Vinnie Falco (vinnie.falco@gmail.com)
+
+    Distributed under the Boost Software License, Version 1.0. (See accompanying
+    file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+    Official repository: https://github.com/CPPAlliance/buffers
+////
+
+==  Overview
+
+Boost.Buffers is a portable, low-level C++ library which provides
+containers and algorithms for describing contiguous buffers of
+arbitrary bytes.
+
+Boost.Buffers offers these features:
+
+* Require only C++11
+* Works without exceptions
+* Fast compilation, few templates
+* Does not require Asio
+
+=== Requirements
+
+* Requires Boost and a compiler supporting at least C++20
+* Aliases for standard types use their Boost equivalents
+* Link to a built static or dynamic Boost library, or use header-only (see below)
+* Supports `-fno-exceptions`, detected automatically
+
