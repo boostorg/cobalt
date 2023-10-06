@@ -17,7 +17,7 @@ int foo() {return bar();}
 
 int main()
 {
-    return bar();
+    return foo();
 }
 ----
 
