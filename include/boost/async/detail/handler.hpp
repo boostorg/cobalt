@@ -28,8 +28,9 @@ enum class completed_immediately_t
   no, maybe, yes, initiating
 };
 
-struct completion_handler_noop_executor : executor
+struct completion_handler_noop_executor
 {
+  executor exec;
   completed_immediately_t * completed_immediately = nullptr;
 
   template<typename Fn>
@@ -50,7 +51,7 @@ struct completion_handler_noop_executor : executor
     }
     else
     {
-      asio::post(*this, std::forward<Fn>(fn));
+      asio::post(exec, std::forward<Fn>(fn));
     }
   }
 
@@ -66,7 +67,7 @@ struct completion_handler_noop_executor : executor
 
   completion_handler_noop_executor(const completion_handler_noop_executor & rhs) noexcept = default;
   completion_handler_noop_executor(async::executor inner, completed_immediately_t * completed_immediately)
-        : async::executor(std::move(inner)), completed_immediately(completed_immediately)
+        : exec(std::move(inner)), completed_immediately(completed_immediately)
   {
   }
 

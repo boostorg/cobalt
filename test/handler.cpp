@@ -109,4 +109,56 @@ CO_TEST_CASE("immediate completion")
 
 #endif
 
+TEST_CASE("immediate_executor")
+{
+  asio::io_context ctx;
+  async::detail::completed_immediately_t completed_immediately = async::detail::completed_immediately_t::initiating;
+  async::detail::completion_handler_noop_executor chh{ctx.get_executor(), &completed_immediately};
+  bool called = false;
+
+  SUBCASE("initiating")
+  {
+    asio::dispatch(chh, [&] { called = true; });
+    CHECK(called);
+    CHECK(completed_immediately == async::detail::completed_immediately_t::initiating);
+  }
+
+  SUBCASE("maybe")
+  {
+    completed_immediately = async::detail::completed_immediately_t::maybe;
+    asio::dispatch(chh, [&] { called = true; completed_immediately = async::detail::completed_immediately_t::yes; });
+    CHECK(called);
+    CHECK(completed_immediately == async::detail::completed_immediately_t::yes);
+  }
+
+
+  SUBCASE("maybe-not")
+  {
+    completed_immediately = async::detail::completed_immediately_t::maybe;
+    asio::dispatch(chh, [&] { called = true; });
+    CHECK(called);
+    CHECK(completed_immediately == async::detail::completed_immediately_t::initiating);
+  }
+
+  SUBCASE("no")
+  {
+    completed_immediately = async::detail::completed_immediately_t::no;
+    asio::dispatch(chh, [&] { called = true; });
+    CHECK(!called);
+    CHECK(completed_immediately == async::detail::completed_immediately_t::no);
+    CHECK(ctx.run() == 1u);
+    CHECK(called);
+  }
+
+  SUBCASE("no")
+  {
+    completed_immediately = async::detail::completed_immediately_t::no;
+    asio::dispatch(chh, [&] { called = true; });
+    CHECK(!called);
+    CHECK(completed_immediately == async::detail::completed_immediately_t::no);
+    CHECK(ctx.run() == 1u);
+    CHECK(called);
+  }
+}
+
 TEST_SUITE_END();

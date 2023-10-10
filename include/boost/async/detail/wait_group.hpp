@@ -62,7 +62,7 @@ struct select_wrapper
    private:
     std::optional<impl_type::awaitable> impl_;
     std::list<promise<void>> &waitables_;
-    std::mt19937 &random_{detail::random_device()};
+    std::mt19937 &random_{detail::prng()};
 
   };
   awaitable_type operator co_await() &&
