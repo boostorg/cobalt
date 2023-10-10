@@ -78,8 +78,9 @@ include::reference/error.adoc[]
 include::reference/config.adoc[]
 include::reference/leaf.adoc[]
 
-= Technical Background
+= In-Depth
 
+include::background/custom_executors.adoc[]
 include::background/stackless.adoc[]
 include::background/lazy_eager.adoc[]
 
