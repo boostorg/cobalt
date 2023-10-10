@@ -59,31 +59,6 @@ struct python_executor
     return asio::execution::blocking.never;
   }
 
-  static constexpr asio::execution::relationship_t
-  query(asio::execution::relationship_t) noexcept
-  {
-    return asio::execution::relationship.fork;
-  }
-
-  static constexpr asio::execution::outstanding_work_t
-  query(asio::execution::outstanding_work_t) noexcept
-  {
-    return asio::execution::outstanding_work.tracked;
-  }
-
-  template < typename OtherAllocator >
-  static constexpr auto query(
-      asio::execution::allocator_t< OtherAllocator >) noexcept
-  {
-    return std::allocator<void>();
-  }
-
-  static constexpr auto
-  query(asio::execution::allocator_t< void >) noexcept
-  {
-    return std::allocator<void>();
-  }
-
   // this function takes the function F and runs it on the event loop.
   template<class F>
   void
