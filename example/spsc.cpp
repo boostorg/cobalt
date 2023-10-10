@@ -50,7 +50,11 @@ struct awaitable_spsc_queue
     void await_suspend(std::coroutine_handle<Promise> h)
     {
       // Capture the read_executor.
-      this_->read_executor = boost::asio::get_associated_executor(h.promise());
+      if constexpr (requires {h.promise().get_executor();})
+        this_->read_executor = h.promise().get_executor();
+      else
+        this_->read_executor = async::this_thread::get_executor();
+
       // Make sure there's only one coroutine awaiting the read
       assert(this_->reader == nullptr);
       // Store the handle of the awaiter.
@@ -87,7 +91,12 @@ struct awaitable_spsc_queue
     template<typename Promise>
     void await_suspend(std::coroutine_handle<Promise> h)
     {
-      this_->write_executor = boost::asio::get_associated_executor(h.promise());
+      // Capture the read_executor.
+      if constexpr (requires {h.promise().get_executor();})
+        this_->write_executor = h.promise().get_executor();
+      else
+        this_->write_executor = async::this_thread::get_executor();
+
       assert(this_->writer == nullptr);
       this_->writer.store(h.address());
     }
