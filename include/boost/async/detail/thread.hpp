@@ -119,10 +119,10 @@ struct thread_awaitable
 {
   asio::cancellation_slot cl;
   std::optional<std::tuple<std::exception_ptr>> res;
-  bool await_ready() const
+  bool await_ready(const boost::source_location & loc = BOOST_CURRENT_LOCATION) const
   {
     if (state_ == nullptr)
-      throw std::logic_error("Thread expired");
+      boost::throw_exception(std::invalid_argument("Thread expired"), loc);
     std::lock_guard<std::mutex> lock{state_->mtx};
     return state_->done;
   }

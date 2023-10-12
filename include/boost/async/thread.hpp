@@ -26,7 +26,7 @@ struct thread
   void join();
   bool joinable() const;
   void detach();
-  // Allow the thread to be awaited
+  // Allow the thread to be awaited. NOOP if the thread is invalid.
   auto operator co_await() &-> detail::thread_awaitable; //<1>
   auto operator co_await() && -> detail::thread_awaitable; //<2>
 

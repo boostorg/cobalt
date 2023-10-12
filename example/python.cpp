@@ -193,7 +193,7 @@ struct py_coroutine
   void initiate(py::object loop, py::object future)
   {
     if (!handle_)
-      throw std::logic_error("Awaited invalid coroutine");
+      throw std::invalid_argument("Awaited invalid coroutine");
 
     if (handle_->done_)
       throw py::stop_iteration("coroutine completed");

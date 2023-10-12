@@ -104,13 +104,9 @@ async::promise<void> throw_post()
 }
 
 
-CO_TEST_CASE("get")
+TEST_CASE("get")
 {
-  auto r = delay_r(co_await async::this_coro::executor, 100);
-  CHECK_THROWS(r.get());
   CHECK_THROWS(throw_().get());
-
-  co_await r;
 
 }
 

@@ -215,8 +215,8 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
         return {system::in_place_error, ex};
       if (self->exception)
         return {system::in_place_error, std::exchange(self->exception, nullptr)};
-      if (!self->result)
-        return {system::in_place_error, std::make_exception_ptr(std::logic_error("async::generator returned"))};
+      if (!self->result) // missing co_return this is accepted behaviour, if the compiler agrees
+        return {system::in_place_error, std::make_exception_ptr(std::runtime_error("async::generator returned void"))};
 
       if (to_push.index() > 0)
       {

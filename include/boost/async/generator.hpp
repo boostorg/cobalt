@@ -35,7 +35,7 @@ struct [[nodiscard]] generator
   // Check if a value is available
   bool ready() const;
 
-  // Get the return value. Throws if `ready()` returns false.
+  // Get the returned value. If !ready() this function has undefined behaviour.
   Yield get();
 
   // Cancel & detach the generator.
@@ -99,8 +99,7 @@ inline bool generator<Yield, Push>::ready() const  { return receiver_.result || 
 template<typename Yield, typename Push >
 inline Yield generator<Yield, Push>::get()
 {
-  if (!ready())
-    boost::throw_exception(std::logic_error("generator not ready"));
+  BOOST_ASSERT(ready());
   receiver_.rethrow_if();
   return receiver_.get_result();
 }

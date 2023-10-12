@@ -193,7 +193,7 @@ struct select_variadic_impl
 
       auto transaction = [&this_, idx = Idx] {
         if (this_.has_result())
-          boost::throw_exception(std::logic_error("Another transaction already started"));
+          boost::throw_exception(std::runtime_error("Another transaction already started"));
         this_.cancel[idx] = nullptr;
         // reserve the index early bc
         this_.index = idx;
@@ -514,7 +514,7 @@ struct select_ranged_impl
 
       auto transaction = [&this_, idx = idx] {
         if (this_.has_result())
-          boost::throw_exception(std::logic_error("Another transaction already started"));
+          boost::throw_exception(std::runtime_error("Another transaction already started"));
         this_.cancel[idx] = nullptr;
         // reserve the index early bc
         this_.index = idx;

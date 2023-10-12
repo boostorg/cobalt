@@ -41,15 +41,13 @@ struct [[nodiscard]] promise
     // end::outline[]
 
     /* tag::outline[]
-    // Get the return value if ready - otherwise throw
+    // Get the return value. If !ready() this function has undefined behaviour.
     Return get();
     end::outline[] */
 
     Return get(const boost::source_location & loc = BOOST_CURRENT_LOCATION)
     {
-      if (!ready())
-        boost::throw_exception(std::logic_error("promise not ready"), loc);
-
+      BOOST_ASSERT(ready());
       return receiver_.get_result().value(loc);
     }
 
