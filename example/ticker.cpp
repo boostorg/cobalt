@@ -186,7 +186,7 @@ try
     auto rd = json_reader(ws); // <2>
     while (ws.is_open()) // <3>
     {
-      switch (auto msg = co_await async::select(rd, subc.read()); msg.index()) // <4>
+      switch (auto msg = co_await async::race(rd, subc.read()); msg.index()) // <4>
       {
         case 0: // <5>
           if (auto ms = get<0>(msg);

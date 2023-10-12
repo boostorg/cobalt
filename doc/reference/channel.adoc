@@ -45,7 +45,7 @@ the second operation gets posted to the executor for later completion.
 NOTE: A channel type can be `void`, in which case `write` takes no parameter.
 
 The channel operations can be cancelled without losing data.
-This makes them usable with <<select, select>>.
+This makes them usable with <<race, race>>.
 
 [source,cpp]
 ----
@@ -54,7 +54,7 @@ generator<variant2::variant<int, double>> merge(
     channel<double> & c2)
 {
     while (c1 && c2)
-       co_yield co_await select(c1, c2);
+       co_yield co_await race(c1, c2);
 }
 ----
 

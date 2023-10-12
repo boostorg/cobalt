@@ -9,7 +9,7 @@
 #include <boost/asio/system_timer.hpp>
 #include <boost/async.hpp>
 #include <boost/async/promise.hpp>
-#include <boost/async/select.hpp>
+#include <boost/async/race.hpp>
 #include <boost/async/this_thread.hpp>
 #include <boost/beast.hpp>
 

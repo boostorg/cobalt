@@ -1,7 +1,7 @@
-[#select]
-== async/select.hpp
+[#race]
+== async/race.hpp
 
-The `select` function can be used to `co_await` one <<awaitable, awaitable>> out of a set of them.
+The `race` function can be used to `co_await` one <<awaitable, awaitable>> out of a set of them.
 
 It can be called as a variadic function with multiple <<awaitable, awaitable>> or as on a range of <<awaitable, awaitables>>.
 
@@ -12,50 +12,50 @@ async::promise<void> task2();
 
 async::promise<void> do_wait()
 {
-  co_await async::select(task1(), task2()); // <1>
+  co_await async::race(task1(), task2()); // <1>
   std::vector<async::promise<void>> aws {task1(), task2()};
-  co_await async::select(aws); // <2>
+  co_await async::race(aws); // <2>
 }
 ----
 <1> Wait for a variadic set of <<awaitable, awaitables>>
 <2> wait for a vector of <<awaitable, awaitables>>
 
-The first parameter so `select` can be a https://en.cppreference.com/w/cpp/named_req/UniformRandomBitGenerator::[uniform random bit generator].
+The first parameter so `race` can be a https://en.cppreference.com/w/cpp/named_req/UniformRandomBitGenerator::[uniform random bit generator].
 
 
-.Signatures of select
+.Signatures of race
 [source, cpp]
 ----
 extern promise<void> pv1, pv2;
 std::vector<promise<void>> pvv;
 
 std::default_random_engine rdm{1};
-// if everything returns void select returns the index
-std::size_t r1 = co_await select(pv1, pv2);
-std::size_t r2 = co_await select(rdm, pv1, pv2);
-std::size_t r3 = co_await select(pvv);
-std::size_t r4 = co_await select(rdm, pvv);
+// if everything returns void race returns the index
+std::size_t r1 = co_await race(pv1, pv2);
+std::size_t r2 = co_await race(rdm, pv1, pv2);
+std::size_t r3 = co_await race(pvv);
+std::size_t r4 = co_await race(rdm, pvv);
 
 // variant if not everything is void. void become monostate
 extern promise<int> pi1, pi2;
-variant2::variant<monostate, int, int> r5 = co_await select(pv1, pi1, pi2);
-variant2::variant<monostate, int, int> r6 = co_await select(rdm, pv1, pi1, pi2);
+variant2::variant<monostate, int, int> r5 = co_await race(pv1, pi1, pi2);
+variant2::variant<monostate, int, int> r6 = co_await race(rdm, pv1, pi1, pi2);
 
 // a range returns a pair of the index and the result if non-void
 std::vector<promise<int>> piv;
-std::pair<std::size_t, int> r7 = co_await select(piv);
-std::pair<std::size_t, int> r8 = co_await select(rdm, piv);
+std::pair<std::size_t, int> r7 = co_await race(piv);
+std::pair<std::size_t, int> r8 = co_await race(rdm, piv);
 ----
 
 [#interrupt_await]
 === Interrupt Wait
 
-When arguments are passed as rvalue reference, the select will attempt to use `.interrupt_await`
+When arguments are passed as rvalue reference, the race will attempt to use `.interrupt_await`
 on the <<awaitable, awaitable>> to signal the awaitable to complete now and that the result will be ignored.
 If supported, the <<awaitable>> must resume the awaiting coroutine before `interrupt_await` returns.
-If the `select` doesn't detect the function, it will send a cancellation.
+If the `race` doesn't detect the function, it will send a cancellation.
 
-This means that you can reuse select like this:
+This means that you can reuse race like this:
 
 [source,cpp]
 ----
@@ -64,8 +64,8 @@ async::promise<void> do_wait()
 {
   auto t1 = task1();
   auto t2 = task2();
-  co_await async::select(t1, t2); // <1>
-  co_await async::select(t1, t2); // <2>
+  co_await async::race(t1, t2); // <1>
+  co_await async::race(t1, t2); // <2>
 }
 ----
 <1> Wait for the first task to complete
@@ -73,50 +73,50 @@ async::promise<void> do_wait()
 
 This is supported by <<promise, promise>>, <<generator, generator>> and <<gather, gather>>.
 
-The `select` will invoke the functions of the `awaitable` as if used in a `co_await` expression
+The `race` will invoke the functions of the `awaitable` as if used in a `co_await` expression
 or not evaluate them at all.
 
-[#left_select]
-=== `left_select`
+[#left_race]
+=== `left_race`
 
-The `left_select` functions are like `select` but follow a strict left-to-right scan.
+The `left_race` functions are like `race` but follow a strict left-to-right scan.
 This can lead to starvation issues, which is why this is not the recommended default, but can
 be useful for prioritization if proper care is taken.
 
 
-[#select-outline]
+[#race-outline]
 === Outline
 
 [source,cpp,subs=+quotes]
 ----
 // Concept for the random number generator.
-include::../../include/boost/async/select.hpp[tag=concept]
+include::../../include/boost/async/race.hpp[tag=concept]
 
-// Variadic select with a custom random number generator
+// Variadic race with a custom random number generator
 template<asio::cancellation_type Ct = asio::cancellation_type::all,
          uniform_random_bit_generator URBG, awaitable ... Promise>
-__awaitable__ select(URBG && g, Promise && ... p);
+__awaitable__ race(URBG && g, Promise && ... p);
 
-// Ranged select with a custom random number generator
+// Ranged race with a custom random number generator
 template<asio::cancellation_type Ct = asio::cancellation_type::all,
          uniform_random_bit_generator URBG, range<awaitable> PromiseRange>
-__awaitable__ select(URBG && g, PromiseRange && p);
+__awaitable__ race(URBG && g, PromiseRange && p);
 
-// Variadic select with the default random number generator
+// Variadic race with the default random number generator
 template<asio::cancellation_type Ct = asio::cancellation_type::all, awaitable... Promise>
-__awaitable__ select(Promise && ... p);
+__awaitable__ race(Promise && ... p);
 
-// Ranged select with the default random number generator
+// Ranged race with the default random number generator
 template<asio::cancellation_type Ct = asio::cancellation_type::all, range<awaitable>>
-__awaitable__ select(PromiseRange && p);
+__awaitable__ race(PromiseRange && p);
 
-// Variadic left select
+// Variadic left race
 template<asio::cancellation_type Ct = asio::cancellation_type::all, awaitable... Promise>
-__awaitable__ left_select(Promise && ... p);
+__awaitable__ left_race(Promise && ... p);
 
-// Ranged left select
+// Ranged left race
 template<asio::cancellation_type Ct = asio::cancellation_type::all, range<awaitable>>
-__awaitable__ left_select(PromiseRange && p);
+__awaitable__ left_race(PromiseRange && p);
 ----
 
 NOTE: Selecting an empty range will cause an exception to be thrown.

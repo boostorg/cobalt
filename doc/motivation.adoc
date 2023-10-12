@@ -19,7 +19,7 @@ It takes a collection of concepts from other languages and provides them based o
  - <<promise, promise>> & <<generator, generator>> types
  - <<op, operation wrappers>>
  - an <<with, async scope>>
- - <<select, select>>
+ - <<race, race>>
  - <<channel, channel>>
 
 Unlike `asio::awaitable` and `asio::experimental::coro`, `async` coroutines are open.
@@ -27,6 +27,6 @@ That is, an `asio::awaitable` can only await and be awaited by other `asio::awai
 and does not provide coroutine specific synchronization mechanisms.
 
 `async` on the other hand provides a coroutine specific `channel`
-and different wait types (`select`, `gather` etc.) that are optimized
+and different wait types (`race`, `gather` etc.) that are optimized
 to work with coroutines and awaitables.
 

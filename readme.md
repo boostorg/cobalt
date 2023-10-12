@@ -232,9 +232,9 @@ async::main co_main(int argc, char ** argv)
 ```
 
 
-## select
+## race
 
-[`select`](doc/reference/select.adoc) let's you await multiple awaitables at once. 
+[`race`](doc/reference/race.adoc) let's you await multiple awaitables at once. 
 
 ```cpp
 async::promise<void> delay(int ms)
@@ -246,7 +246,7 @@ async::promise<void> delay(int ms)
 
 async::main co_main(int argc, char ** argv)
 {
-  auto res = co_await select(delay(100), delay(50));
+  auto res = co_await race(delay(100), delay(50));
   asert(res == 1); // delay(50) completes earlier, delay(100) is not cancelled  
   co_return 0u;
 }

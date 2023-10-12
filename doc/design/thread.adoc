@@ -1,8 +1,8 @@
 == Threading
 
 This library is single-threaded by design, because this simplifies resumption
-and thus more performant handling of synchronizations like <<select, select>>.
-<<select, select>> would need to lock every selected awaitable to avoid data loss
+and thus more performant handling of synchronizations like <<race, race>>.
+<<race, race>> would need to lock every raceed awaitable to avoid data loss
 which would need to be blocking and get worse with every additional element.
 
 IMPORTANT: you can't have any coroutines be resumed on a different thread than created on,

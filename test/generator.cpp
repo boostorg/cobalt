@@ -7,7 +7,7 @@
 
 #include <boost/async/generator.hpp>
 #include <boost/async/promise.hpp>
-#include <boost/async/select.hpp>
+#include <boost/async/race.hpp>
 #include <boost/async/op.hpp>
 #include <boost/core/ignore_unused.hpp>
 
@@ -131,7 +131,7 @@ async::generator<int> lazy_delay_gen(std::chrono::milliseconds tick)
 
 #if !defined(BOOST_ASYNC_NO_SELF_DELETE)
 
-CO_TEST_CASE("generator-left_select")
+CO_TEST_CASE("generator-left_race")
 {
   asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::milliseconds(50)};
   auto g1 = delay_gen(std::chrono::milliseconds(200));
@@ -142,22 +142,22 @@ CO_TEST_CASE("generator-left_select")
   auto v1 = [](int value) -> v {return v{variant2::in_place_index<0u>, value};};
   auto v2 = [](int value) -> v {return v{variant2::in_place_index<1u>, value};};
 
-  CHECK(v1(0) == co_await left_select(g1, g2));
-  CHECK(v2(0) == co_await left_select(g1, g2));
-  CHECK(v2(1) == co_await left_select(g1, g2));
-  CHECK(v1(1) == co_await left_select(g1, g2));
-  CHECK(v2(2) == co_await left_select(g1, g2));
-  CHECK(v2(3) == co_await left_select(g1, g2));
-  CHECK(v1(2) == co_await left_select(g1, g2));
-  CHECK(v2(4) == co_await left_select(g1, g2));
-  CHECK(v2(5) == co_await left_select(g1, g2));
-  CHECK(v1(3) == co_await left_select(g1, g2));
-  CHECK(v2(6) == co_await left_select(g1, g2));
-  CHECK(v2(7) == co_await left_select(g1, g2));
-  CHECK(v1(4) == co_await left_select(g1, g2));
-  CHECK(v2(8) == co_await left_select(g1, g2));
-  CHECK(v2(9) == co_await left_select(g1, g2));
-  CHECK(v2(10) == co_await left_select(g1, g2));
+  CHECK(v1(0) == co_await left_race(g1, g2));
+  CHECK(v2(0) == co_await left_race(g1, g2));
+  CHECK(v2(1) == co_await left_race(g1, g2));
+  CHECK(v1(1) == co_await left_race(g1, g2));
+  CHECK(v2(2) == co_await left_race(g1, g2));
+  CHECK(v2(3) == co_await left_race(g1, g2));
+  CHECK(v1(2) == co_await left_race(g1, g2));
+  CHECK(v2(4) == co_await left_race(g1, g2));
+  CHECK(v2(5) == co_await left_race(g1, g2));
+  CHECK(v1(3) == co_await left_race(g1, g2));
+  CHECK(v2(6) == co_await left_race(g1, g2));
+  CHECK(v2(7) == co_await left_race(g1, g2));
+  CHECK(v1(4) == co_await left_race(g1, g2));
+  CHECK(v2(8) == co_await left_race(g1, g2));
+  CHECK(v2(9) == co_await left_race(g1, g2));
+  CHECK(v2(10) == co_await left_race(g1, g2));
 
 
   CHECK(!g2);
@@ -166,7 +166,7 @@ CO_TEST_CASE("generator-left_select")
 }
 
 
-CO_TEST_CASE("lazy-generator-left_select")
+CO_TEST_CASE("lazy-generator-left_race")
 {
   asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::milliseconds(50)};
   auto g1 = lazy_delay_gen(std::chrono::milliseconds(200));
@@ -177,22 +177,22 @@ CO_TEST_CASE("lazy-generator-left_select")
   auto v1 = [](int value) -> v {return v{variant2::in_place_index<0u>, value};};
   auto v2 = [](int value) -> v {return v{variant2::in_place_index<1u>, value};};
 
-  CHECK(v1(0) == co_await left_select(g1, g2));
-  CHECK(v2(0) == co_await left_select(g1, g2));
-  CHECK(v2(1) == co_await left_select(g1, g2));
-  CHECK(v2(2) == co_await left_select(g1, g2));
-  CHECK(v1(1) == co_await left_select(g1, g2));
-  CHECK(v2(3) == co_await left_select(g1, g2));
-  CHECK(v2(4) == co_await left_select(g1, g2));
-  CHECK(v1(2) == co_await left_select(g1, g2));
-  CHECK(v2(5) == co_await left_select(g1, g2));
-  CHECK(v2(6) == co_await left_select(g1, g2));
-  CHECK(v1(3) == co_await left_select(g1, g2));
-  CHECK(v2(7) == co_await left_select(g1, g2));
-  CHECK(v2(8) == co_await left_select(g1, g2));
-  CHECK(v1(4) == co_await left_select(g1, g2));
-  CHECK(v2(9) == co_await left_select(g1, g2));
-  CHECK(v2(10) == co_await left_select(g1, g2));
+  CHECK(v1(0) == co_await left_race(g1, g2));
+  CHECK(v2(0) == co_await left_race(g1, g2));
+  CHECK(v2(1) == co_await left_race(g1, g2));
+  CHECK(v2(2) == co_await left_race(g1, g2));
+  CHECK(v1(1) == co_await left_race(g1, g2));
+  CHECK(v2(3) == co_await left_race(g1, g2));
+  CHECK(v2(4) == co_await left_race(g1, g2));
+  CHECK(v1(2) == co_await left_race(g1, g2));
+  CHECK(v2(5) == co_await left_race(g1, g2));
+  CHECK(v2(6) == co_await left_race(g1, g2));
+  CHECK(v1(3) == co_await left_race(g1, g2));
+  CHECK(v2(7) == co_await left_race(g1, g2));
+  CHECK(v2(8) == co_await left_race(g1, g2));
+  CHECK(v1(4) == co_await left_race(g1, g2));
+  CHECK(v2(9) == co_await left_race(g1, g2));
+  CHECK(v2(10) == co_await left_race(g1, g2));
 
 
   CHECK(!g2);

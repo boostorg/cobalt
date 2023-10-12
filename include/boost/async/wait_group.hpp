@@ -42,9 +42,9 @@ struct wait_group
     __wait_op__ await_exit(std::exception_ptr ep);
      end::outline[] */
 
-    auto wait_one() -> detail::select_wrapper
+    auto wait_one() -> detail::race_wrapper
     {
-        return  detail::select_wrapper(waitables_);
+        return  detail::race_wrapper(waitables_);
     }
 
     detail::gather_wrapper wait()

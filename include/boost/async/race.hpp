@@ -5,11 +5,11 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_ASYNC_SELECT_HPP
-#define BOOST_ASYNC_SELECT_HPP
+#ifndef BOOST_ASYNC_RACE_HPP
+#define BOOST_ASYNC_RACE_HPP
 
 #include <boost/async/concepts.hpp>
-#include <boost/async/detail/select.hpp>
+#include <boost/async/detail/race.hpp>
 #include <boost/async/detail/wrapper.hpp>
 #include <random>
 
@@ -45,9 +45,9 @@ template<typename G>
 template<asio::cancellation_type Ct = asio::cancellation_type::all,
     uniform_random_bit_generator URBG,
     awaitable<detail::fork::promise_type> ... Promise>
-auto select(URBG && g, Promise && ... p) -> detail::select_variadic_impl<Ct, URBG, Promise ...>
+auto race(URBG && g, Promise && ... p) -> detail::race_variadic_impl<Ct, URBG, Promise ...>
 {
-  return detail::select_variadic_impl<Ct, URBG, Promise ...>(std::forward<URBG>(g), static_cast<Promise&&>(p)...);
+  return detail::race_variadic_impl<Ct, URBG, Promise ...>(std::forward<URBG>(g), static_cast<Promise&&>(p)...);
 }
 
 
@@ -56,52 +56,52 @@ template<asio::cancellation_type Ct = asio::cancellation_type::all,
     typename PromiseRange>
 requires awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>,
     detail::fork::promise_type>
-auto select(URBG && g, PromiseRange && p) -> detail::select_ranged_impl<Ct, URBG, PromiseRange>
+auto race(URBG && g, PromiseRange && p) -> detail::race_ranged_impl<Ct, URBG, PromiseRange>
 {
   if (std::empty(p))
-    throw_exception(std::invalid_argument("empty range selected"));
+    throw_exception(std::invalid_argument("empty range raceed"));
 
-  return detail::select_ranged_impl<Ct, URBG, PromiseRange>{std::forward<URBG>(g), static_cast<PromiseRange&&>(p)};
+  return detail::race_ranged_impl<Ct, URBG, PromiseRange>{std::forward<URBG>(g), static_cast<PromiseRange&&>(p)};
 }
 
 template<asio::cancellation_type Ct = asio::cancellation_type::all,
          awaitable<detail::fork::promise_type> ... Promise>
-auto select(Promise && ... p) -> detail::select_variadic_impl<Ct, std::default_random_engine&, Promise ...>
+auto race(Promise && ... p) -> detail::race_variadic_impl<Ct, std::default_random_engine&, Promise ...>
 {
-  return select<Ct>(detail::prng(), static_cast<Promise&&>(p)...);
+  return race<Ct>(detail::prng(), static_cast<Promise&&>(p)...);
 }
 
 
 template<asio::cancellation_type Ct = asio::cancellation_type::all, typename PromiseRange>
   requires awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>,
       detail::fork::promise_type>
-auto select(PromiseRange && p) -> detail::select_ranged_impl<Ct, std::default_random_engine&, PromiseRange>
+auto race(PromiseRange && p) -> detail::race_ranged_impl<Ct, std::default_random_engine&, PromiseRange>
 {
   if (std::empty(p))
-    throw_exception(std::invalid_argument("empty range selected"));
+    throw_exception(std::invalid_argument("empty range raceed"));
 
-  return select<Ct>(detail::prng(), static_cast<PromiseRange&&>(p));
+  return race<Ct>(detail::prng(), static_cast<PromiseRange&&>(p));
 }
 
 template<asio::cancellation_type Ct = asio::cancellation_type::all,
     awaitable<detail::fork::promise_type> ... Promise>
-auto left_select(Promise && ... p) -> detail::select_variadic_impl<Ct, detail::left_select_tag, Promise ...>
+auto left_race(Promise && ... p) -> detail::race_variadic_impl<Ct, detail::left_race_tag, Promise ...>
 {
-  return detail::select_variadic_impl<Ct, detail::left_select_tag, Promise ...>(
-      detail::left_select_tag{}, static_cast<Promise&&>(p)...);
+  return detail::race_variadic_impl<Ct, detail::left_race_tag, Promise ...>(
+      detail::left_race_tag{}, static_cast<Promise&&>(p)...);
 }
 
 
 template<asio::cancellation_type Ct = asio::cancellation_type::all, typename PromiseRange>
 requires awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>,
     detail::fork::promise_type>
-auto left_select(PromiseRange && p)  -> detail::select_ranged_impl<Ct, detail::left_select_tag, PromiseRange>
+auto left_race(PromiseRange && p)  -> detail::race_ranged_impl<Ct, detail::left_race_tag, PromiseRange>
 {
   if (std::empty(p))
-    throw_exception(std::invalid_argument("empty range left_selected"));
+    throw_exception(std::invalid_argument("empty range left_raceed"));
 
-  return detail::select_ranged_impl<Ct, detail::left_select_tag, PromiseRange>{
-      detail::left_select_tag{}, static_cast<PromiseRange&&>(p)};
+  return detail::race_ranged_impl<Ct, detail::left_race_tag, PromiseRange>{
+      detail::left_race_tag{}, static_cast<PromiseRange&&>(p)};
 }
 
 
@@ -109,4 +109,4 @@ auto left_select(PromiseRange && p)  -> detail::select_ranged_impl<Ct, detail::l
 
 }
 
-#endif //BOOST_ASYNC_SELECT_HPP
+#endif //BOOST_ASYNC_RACE_HPP

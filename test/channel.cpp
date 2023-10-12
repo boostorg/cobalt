@@ -7,7 +7,7 @@
 
 #include <boost/async/channel.hpp>
 #include <boost/async/promise.hpp>
-#include <boost/async/select.hpp>
+#include <boost/async/race.hpp>
 #include <boost/async/gather.hpp>
 #include <boost/async/async_for.hpp>
 
@@ -211,23 +211,23 @@ CO_TEST_CASE("str")
     CHECK(seq[15] == 17);
 }
 
-CO_TEST_CASE("selectable")
+CO_TEST_CASE("raceable")
 {
     async::channel<int>  ci{0u};
     async::channel<void> cv{0u};
-    auto [r1, r2] = co_await async::gather(async::select(ci.read(), cv.read()), cv.write());
+    auto [r1, r2] = co_await async::gather(async::race(ci.read(), cv.read()), cv.write());
     r1.value();
     REQUIRE(r1.has_value());
     CHECK(r1->index() == 1u);
     CHECK(!r2.has_error());
 }
 
-CO_TEST_CASE("selectable-1")
+CO_TEST_CASE("raceable-1")
 {
   async::channel<int>  ci{1u};
   async::channel<void> cv{1u};
   auto [r1, r2] = co_await async::gather(
-      async::select(ci.read(), cv.read()),
+      async::race(ci.read(), cv.read()),
       cv.write());
   CHECK(r1->index() == 1u);
   CHECK(!r2.has_error());
@@ -266,7 +266,7 @@ async::promise<void> test()
 
 CO_TEST_CASE("issue-93")
 {
-  co_await async::select(test(), boost::asio::post(async::use_op));
+  co_await async::race(test(), boost::asio::post(async::use_op));
 }
 
 async::promise<void> writer(async::channel<int> & c)
