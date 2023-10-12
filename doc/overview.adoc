@@ -23,7 +23,7 @@ Here's a list of relevant features in async:
 .Synchronization Functions
 [cols="1,5"]
 |===
-|<<select,select>>
+|<<race,race>>
 |A function that waits for one coroutine out of a set that is ready in a pseudo-random way, to avoid starvation.
 
 |<<join,join>>
@@ -33,8 +33,8 @@ Here's a list of relevant features in async:
 |<<gather,gather>>
 |A function that waits for a set of coroutines and returns all of them as `result`, capturing all exceptions individually.
 
-|<<left_select,left_select>>
-|A deterministic `select` that evaluates left-to-right.
+|<<left_race,left_race>>
+|A deterministic `race` that evaluates left-to-right.
 |===
 
 .Utilities

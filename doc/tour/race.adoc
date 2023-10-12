@@ -1,8 +1,8 @@
-[#tour-select]
-== select
+[#tour-race]
+== race
 
 If multiple <<awaitable, awaitables>> work in parallel,
-but we want to be notified if either completes, we shall use <<select, select>>.
+but we want to be notified if either completes, we shall use <<race, race>>.
 
 [source,cpp]
 ----
@@ -21,7 +21,7 @@ async::main co_main(int argc, char * argv[])
 
     while (g1 && g2)
     {
-        switch(variant2::variant<int, double> nx = co_await async::select(g1, g2))
+        switch(variant2::variant<int, double> nx = co_await async::race(g1, g2))
         {
             case 0:
                 res1 = variant2::get<0>(nx);
@@ -37,5 +37,5 @@ async::main co_main(int argc, char * argv[])
 }
 ----
 
-NOTE: `select` in this context will not cause any data loss.
+NOTE: `race` in this context will not cause any data loss.
 

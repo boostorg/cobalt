@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_ASYNC_DETAIL_SELECT_HPP
-#define BOOST_ASYNC_DETAIL_SELECT_HPP
+#ifndef BOOST_ASYNC_DETAIL_RACE_HPP
+#define BOOST_ASYNC_DETAIL_RACE_HPP
 
 #include <boost/async/detail/await_result_helper.hpp>
 #include <boost/async/detail/fork.hpp>
@@ -35,14 +35,14 @@
 namespace boost::async::detail
 {
 
-struct left_select_tag {};
+struct left_race_tag {};
 
 // helpers it determining the type of things;
 template<typename Base, // range of aw
          typename Awaitable = Base>
-struct select_traits
+struct race_traits
 {
-  // for a ranges select this is based on the range, not the AW in it.
+  // for a ranges race this is based on the range, not the AW in it.
   constexpr static bool is_lvalue = std::is_lvalue_reference_v<Base>;
 
   // what the value is supposed to be cast to before the co_await_operator
@@ -82,11 +82,11 @@ struct interruptible_base
 };
 
 template<asio::cancellation_type Ct, typename URBG, typename ... Args>
-struct select_variadic_impl
+struct race_variadic_impl
 {
 
   template<typename URBG_>
-  select_variadic_impl(URBG_ && g, Args && ... args)
+  race_variadic_impl(URBG_ && g, Args && ... args)
       : args{std::forward<Args>(args)...}, g(std::forward<URBG_>(g))
   {
   }
@@ -107,7 +107,7 @@ struct select_variadic_impl
     awaitable(std::tuple<Args...> & args, URBG & g, std::index_sequence<Idx...>) :
         aws{args}
     {
-      if constexpr (!std::is_same_v<URBG, left_select_tag>)
+      if constexpr (!std::is_same_v<URBG, left_race_tag>)
         std::shuffle(impls.begin(), impls.end(), g);
       std::fill(working.begin(), working.end(), nullptr);
     }
@@ -167,7 +167,7 @@ struct select_variadic_impl
     static detail::fork await_impl(awaitable & this_)
     try
     {
-      using traits = select_traits<mp11::mp_at_c<mp11::mp_list<Args...>, Idx>>;
+      using traits = race_traits<mp11::mp_at_c<mp11::mp_list<Args...>, Idx>>;
 
       typename traits::actual_awaitable aw_{
           get_awaitable_type(
@@ -373,12 +373,12 @@ struct select_variadic_impl
 
 
 template<asio::cancellation_type Ct, typename URBG, typename Range>
-struct select_ranged_impl
+struct race_ranged_impl
 {
 
   using result_type = co_await_result_t<std::decay_t<decltype(*std::begin(std::declval<Range>()))>>;
   template<typename URBG_>
-  select_ranged_impl(URBG_ && g, Range && rng)
+  race_ranged_impl(URBG_ && g, Range && rng)
       : range{std::forward<Range>(rng)}, g(std::forward<URBG_>(g))
   {
   }
@@ -394,7 +394,7 @@ struct select_ranged_impl
 #endif
 
     using type = std::decay_t<decltype(*std::begin(std::declval<Range>()))>;
-    using traits = select_traits<Range, type>;
+    using traits = race_traits<Range, type>;
 
     std::size_t index{std::numeric_limits<std::size_t>::max()};
 
@@ -462,7 +462,7 @@ struct select_ranged_impl
       std::generate(reorder.begin(), reorder.end(), [i = std::size_t(0u)]() mutable {return i++;});
       if constexpr (traits::interruptible)
         std::fill(working.begin(), working.end(), nullptr);
-      if constexpr (!std::is_same_v<URBG, left_select_tag>)
+      if constexpr (!std::is_same_v<URBG, left_race_tag>)
         std::shuffle(reorder.begin(), reorder.end(), g);
     }
 
@@ -681,4 +681,4 @@ struct select_ranged_impl
 
 }
 
-#endif //BOOST_ASYNC_DETAIL_SELECT_HPP
+#endif //BOOST_ASYNC_DETAIL_RACE_HPP

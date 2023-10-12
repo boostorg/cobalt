@@ -32,7 +32,7 @@ Alternatively, the `pmr` use can be disabled with
  - `BOOST_ASYNC_NO_PMR`.
 
 In this case, async will use a non-pmr monotonic resource for the
-synchronization functions (<<select,select>>, <<gather, gather>> and <<join, join>>).
+synchronization functions (<<race,race>>, <<gather, gather>> and <<join, join>>).
 
 `use_op` uses a small-buffer-optimized resource which's size can be set by defining
 `BOOST_ASYNC_SBO_BUFFER_SIZE` and defaults to 4096 bytes.

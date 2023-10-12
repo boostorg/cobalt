@@ -22,7 +22,7 @@
 #include <boost/async/op.hpp>
 #include <boost/async/promise.hpp>
 #include <boost/async/run.hpp>
-#include <boost/async/select.hpp>
+#include <boost/async/race.hpp>
 #include <boost/async/spawn.hpp>
 #include <boost/async/task.hpp>
 #include <boost/async/this_coro.hpp>

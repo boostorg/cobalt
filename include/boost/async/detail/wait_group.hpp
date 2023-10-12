@@ -9,7 +9,7 @@
 #define BOOST_ASYNC_DETAIL_WAIT_GROUP_HPP
 
 #include <boost/async/promise.hpp>
-#include <boost/async/select.hpp>
+#include <boost/async/race.hpp>
 #include <boost/async/gather.hpp>
 
 #include <list>
@@ -18,12 +18,12 @@
 namespace boost::async::detail
 {
 
-struct select_wrapper
+struct race_wrapper
 {
-  using impl_type = decltype(select(std::declval<std::list<promise<void>> &>()));
+  using impl_type = decltype(race(std::declval<std::list<promise<void>> &>()));
   std::list<promise<void>> &waitables_;
 
-  select_wrapper(std::list<promise<void>> &waitables) : waitables_(waitables)
+  race_wrapper(std::list<promise<void>> &waitables) : waitables_(waitables)
   {
   }
 

@@ -1,7 +1,7 @@
-[#design:select]
+[#design:race]
 == Select
 
-The most important synchronization mechanism is the `select` function.
+The most important synchronization mechanism is the `race` function.
 
 It awaits multiple <<awaitable,awaitable>>s in a pseudo-random order
 and will return the result of the first one completion, before disregarding the rest.
@@ -20,7 +20,7 @@ async::promise<void> p()
   auto g2 = gen2();
   while (!co_await async::this_coro::cancelled)
   {
-    switch(auto v = co_await select(g1, g2); v.index())
+    switch(auto v = co_await race(g1, g2); v.index())
     {
     case 0:
       printf("Got int %d\n", get<0>(v));
@@ -33,19 +33,19 @@ async::promise<void> p()
 }
 ----
 
-The `select` must however internally wait  for all awaitable to complete
+The `race` must however internally wait  for all awaitable to complete
 once it initiates to `co_await`.
 Therefor, once the first <<awaitable, awaitable>> completes,
 it tries to <<interrupt_await, interrupt>> the rest, and if that fails cancels them.
 
-`select` is the preferred way to trigger cancellations, e.g:
+`race` is the preferred way to trigger cancellations, e.g:
 
 [source,cpp]
 ----
 async::promise<void> timeout();
 async::promise<void> work();
 
-select(timeout(), work());
+race(timeout(), work());
 ----
 
 [#design:interrupt_await]
@@ -73,14 +73,14 @@ struct awaitable
 ----
 
 If the `interrupt_await` doesn't result in immediate resumption (of `h`),
-`select` will send a cancel signal.
+`race` will send a cancel signal.
 
-`select` applies these with the correct reference qualification:
+`race` applies these with the correct reference qualification:
 
 [source,cpp]
 ----
 auto g = gen1();
-select(g, gen2());
+race(g, gen2());
 ----
 
 The above will call a `interrupt_await() &` function for `g1` and `interrupt_await() &&` for `g2` if available.

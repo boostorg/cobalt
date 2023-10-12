@@ -43,7 +43,7 @@ struct fork
     {
     }
 #endif
-    // the coro awaiting the fork statement, e.g. awaiting select
+    // the coro awaiting the fork statement, e.g. awaiting race
     unique_handle<void> coro;
     std::size_t use_count = 0u;
 
