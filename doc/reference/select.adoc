@@ -29,7 +29,7 @@ The first parameter so `select` can be a https://en.cppreference.com/w/cpp/named
 extern promise<void> pv1, pv2;
 std::vector<promise<void>> pvv;
 
-std::mt1337 rdm{1};
+std::default_random_engine rdm{1};
 // if everything returns void select returns the index
 std::size_t r1 = co_await select(pv1, pv2);
 std::size_t r2 = co_await select(rdm, pv1, pv2);

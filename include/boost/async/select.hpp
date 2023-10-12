@@ -19,9 +19,9 @@ namespace boost::async
 namespace detail
 {
 
-inline std::mt19937 &prng()
+inline std::default_random_engine &prng()
 {
-  thread_local static std::mt19937 g(std::random_device{}());
+  thread_local static std::default_random_engine g(std::random_device{}());
   return g;
 }
 
@@ -66,7 +66,7 @@ auto select(URBG && g, PromiseRange && p) -> detail::select_ranged_impl<Ct, URBG
 
 template<asio::cancellation_type Ct = asio::cancellation_type::all,
          awaitable<detail::fork::promise_type> ... Promise>
-auto select(Promise && ... p) -> detail::select_variadic_impl<Ct, std::mt19937&, Promise ...>
+auto select(Promise && ... p) -> detail::select_variadic_impl<Ct, std::default_random_engine&, Promise ...>
 {
   return select<Ct>(detail::prng(), static_cast<Promise&&>(p)...);
 }
@@ -75,7 +75,7 @@ auto select(Promise && ... p) -> detail::select_variadic_impl<Ct, std::mt19937&,
 template<asio::cancellation_type Ct = asio::cancellation_type::all, typename PromiseRange>
   requires awaitable<std::decay_t<decltype(*std::declval<PromiseRange>().begin())>,
       detail::fork::promise_type>
-auto select(PromiseRange && p) -> detail::select_ranged_impl<Ct, std::mt19937&, PromiseRange>
+auto select(PromiseRange && p) -> detail::select_ranged_impl<Ct, std::default_random_engine&, PromiseRange>
 {
   if (std::empty(p))
     throw_exception(std::invalid_argument("empty range selected"));
