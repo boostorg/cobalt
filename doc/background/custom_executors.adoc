@@ -1,7 +1,7 @@
 == Custom Executors
 
-One of the reasons async defaults to https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/reference/any_io_executor.html::[`asio::any_io_executor`]
-is that it is a type-erased executor, i.e. you can provide your own event-loop without needing to recompile `async`.
+One of the reasons cobalt defaults to https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/reference/any_io_executor.html::[`asio::any_io_executor`]
+is that it is a type-erased executor, i.e. you can provide your own event-loop without needing to recompile `cobalt`.
 
 However, during the development of the Executor TS, the executor concepts got a bit unintuitive, to put it mildly.
 
@@ -149,7 +149,7 @@ struct minimal_executor
 };
 ----
 
-NOTE: See https://github.com/klemens-morgenstern/async/tree/master/example/python.cpp[example/python.cpp]
+NOTE: See https://github.com/boostorg/cobalt/tree/master/example/python.cpp[example/python.cpp]
 for an implementation using python's `asyncio` event-loop.
 
 === Adding a work guard.
