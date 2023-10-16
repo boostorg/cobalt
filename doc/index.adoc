@@ -1,4 +1,4 @@
-= Documentation boost.async
+= Documentation boost.cobalt
 Klemens Morgenstern <klemens.morgenstern@gmx.net>
 Version 0.1, 29.01.2023
 :source-highlighter: rouge

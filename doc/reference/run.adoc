@@ -1,10 +1,10 @@
 [#run]
-== async/run.hpp
+== cobalt/run.hpp
 
 The `run` function is similar to <<spawn, spawn>> but running synchronously.
 It will internally setup an execution context and the memory resources.
 
-This can be useful when integrating a piece of async code into a synchronous application.
+This can be useful when integrating a piece of cobalt code into a synchronous application.
 
 [#run-outline]
 === Outline
@@ -20,7 +20,7 @@ T run(task<T> t);
 
 [source,cpp]
 ----
-async::task<int> work();
+cobalt::task<int> work();
 
 int main(int argc, char *argv[])
 {

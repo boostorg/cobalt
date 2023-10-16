@@ -2,12 +2,12 @@
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef BOOST_ASYNC_TEST2_HPP
-#define BOOST_ASYNC_TEST2_HPP
+#ifndef BOOST_COBALT_TEST2_HPP
+#define BOOST_COBALT_TEST2_HPP
 
-#include <boost/async/task.hpp>
-#include <boost/async/run.hpp>
-#include <boost/async/spawn.hpp>
+#include <boost/cobalt/task.hpp>
+#include <boost/cobalt/run.hpp>
+#include <boost/cobalt/spawn.hpp>
 
 #include "doctest.h"
 
@@ -29,16 +29,16 @@ struct doctest::StringMaker<std::exception_ptr>
   }
 };
 
-inline void test_run(boost::async::task<void> (*func) ())
+inline void test_run(boost::cobalt::task<void> (*func) ())
 {
   using namespace boost;
-#if !defined(BOOST_ASYNC_NO_PMR)
-  async::pmr::unsynchronized_pool_resource res;
-  async::this_thread::set_default_resource(&res);
+#if !defined(BOOST_COBALT_NO_PMR)
+  cobalt::pmr::unsynchronized_pool_resource res;
+  cobalt::this_thread::set_default_resource(&res);
 #endif
   {
     asio::io_context ctx;
-    async::this_thread::set_executor(ctx.get_executor());
+    cobalt::this_thread::set_executor(ctx.get_executor());
     spawn(ctx, func(),
           +[](std::exception_ptr e)
           {
@@ -47,7 +47,7 @@ inline void test_run(boost::async::task<void> (*func) ())
     std::size_t n;
     n = ctx.run();
 
-    if (::getenv("BOOST_ASYNC_BRUTE_FORCE"))
+    if (::getenv("BOOST_COBALT_BRUTE_FORCE"))
       while (n-- > 0)
       {
         ctx.restart();
@@ -60,19 +60,19 @@ inline void test_run(boost::async::task<void> (*func) ())
           ctx.run_one();
       }
   }
-#if !defined(BOOST_ASYNC_NO_PMR)
-  async::this_thread::set_default_resource(async::pmr::get_default_resource());
+#if !defined(BOOST_COBALT_NO_PMR)
+  cobalt::this_thread::set_default_resource(cobalt::pmr::get_default_resource());
 #endif
 }
 
 // tag::test_case_macro[]
 #define CO_TEST_CASE_IMPL(Function, ...)                                                                           \
-static ::boost::async::task<void> Function();                                                                      \
+static ::boost::cobalt::task<void> Function();                                                                      \
 DOCTEST_TEST_CASE(__VA_ARGS__)                                                                                     \
 {                                                                                                                  \
     test_run(&Function);                                                                                           \
 }                                                                                                                  \
-static ::boost::async::task<void> Function()
+static ::boost::cobalt::task<void> Function()
 
 #define CO_TEST_CASE(...) CO_TEST_CASE_IMPL(DOCTEST_ANONYMOUS(CO_DOCTEST_ANON_FUNC_), __VA_ARGS__)
 // end::test_case_macro[]
@@ -80,7 +80,7 @@ static ::boost::async::task<void> Function()
 struct stop
 {
   bool await_ready() {return false;}
-  void await_suspend(std::coroutine_handle<> h) { boost::async::detail::self_destroy(h); }
+  void await_suspend(std::coroutine_handle<> h) { boost::cobalt::detail::self_destroy(h); }
   void await_resume() {}
 };
 
@@ -139,7 +139,7 @@ struct posted
   void await_suspend(std::coroutine_handle<> h)
   {
     CHECK(state++ == 1);
-    boost::asio::post(boost::async::this_thread::get_executor(), h);
+    boost::asio::post(boost::cobalt::this_thread::get_executor(), h);
   }
   void await_resume() {CHECK(state++ == 2);}
   ~posted()
@@ -157,7 +157,7 @@ struct posted_bool
   bool await_suspend(std::coroutine_handle<> h)
   {
     CHECK(state++ == 1);
-    boost::asio::post(boost::async::this_thread::get_executor(), h);
+    boost::asio::post(boost::cobalt::this_thread::get_executor(), h);
     return true;
   }
   void await_resume() {CHECK(state++ == 2);}
@@ -176,8 +176,8 @@ struct posted_handle
   std::coroutine_handle<> await_suspend(std::coroutine_handle<> h)
   {
     CHECK(state++ == 1);
-    return boost::async::detail::post_coroutine(
-        boost::async::this_thread::get_executor(), h
+    return boost::cobalt::detail::post_coroutine(
+        boost::cobalt::this_thread::get_executor(), h
         );
   }
   void await_resume() {CHECK(state++ == 2);}
@@ -188,4 +188,4 @@ struct posted_handle
   }
 };
 
-#endif //BOOST_ASYNC_TEST2_HPP
+#endif //BOOST_COBALT_TEST2_HPP

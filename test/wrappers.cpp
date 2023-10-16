@@ -3,7 +3,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/async/detail/wrapper.hpp>
+#include <boost/cobalt/detail/wrapper.hpp>
 
 #include <boost/asio/detached.hpp>
 #include <boost/asio/io_context.hpp>
@@ -17,20 +17,20 @@ TEST_SUITE_BEGIN("wrappers");
 TEST_CASE("regular")
 {
     boost::asio::io_context ctx;
-    boost::async::this_thread::set_executor(ctx.get_executor());
+    boost::cobalt::this_thread::set_executor(ctx.get_executor());
     bool ran = false;
 
-#if !defined(BOOST_ASYNC_NO_PMR)
+#if !defined(BOOST_COBALT_NO_PMR)
     char buf[512];
-    boost::async::pmr::monotonic_buffer_resource res{buf, 512};
-    auto p = boost::async::detail::post_coroutine(ctx.get_executor(),
+    boost::cobalt::pmr::monotonic_buffer_resource res{buf, 512};
+    auto p = boost::cobalt::detail::post_coroutine(ctx.get_executor(),
                                               boost::asio::bind_allocator(
-                                              boost::async::pmr::polymorphic_allocator<void>(&res),
+                                              boost::cobalt::pmr::polymorphic_allocator<void>(&res),
                                               [&]{ran = true;}
                                               )
                                           );
 #else
-  auto p = boost::async::detail::post_coroutine(ctx.get_executor(), [&]{ran = true;});
+  auto p = boost::cobalt::detail::post_coroutine(ctx.get_executor(), [&]{ran = true;});
 #endif
     CHECK(p);
     CHECK(!ran);
@@ -44,9 +44,9 @@ TEST_CASE("expire")
 {
 
   boost::asio::io_context ct2;
-  boost::async::this_thread::set_executor(ct2.get_executor());
-  auto h = boost::async::detail::post_coroutine(ct2.get_executor(), boost::asio::detached);
-  boost::async::detail::self_destroy(h);
+  boost::cobalt::this_thread::set_executor(ct2.get_executor());
+  auto h = boost::cobalt::detail::post_coroutine(ct2.get_executor(), boost::asio::detached);
+  boost::cobalt::detail::self_destroy(h);
 }
 
 

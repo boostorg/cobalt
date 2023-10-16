@@ -1,6 +1,6 @@
 # run from the build folder
 import asyncio
-import boost_async_example_python
+import boost_cobalt_example_python
 
 
 async def my_cor():
@@ -15,7 +15,6 @@ async def use_cpp():
     print("Cpp promise gave us", await boost_async_example_python.test_promise())
 
     # having C++ await our python coros
-
     await boost_async_example_python.test_py_promise(my_cor())
 
 

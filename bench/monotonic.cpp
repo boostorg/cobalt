@@ -4,9 +4,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 
-#include <boost/async.hpp>
-#include <boost/async/detail/monotonic_resource.hpp>
-#include <boost/async/detail/sbo_resource.hpp>
+#include <boost/cobalt.hpp>
+#include <boost/cobalt/detail/monotonic_resource.hpp>
+#include <boost/cobalt/detail/sbo_resource.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/yield.hpp>
 
@@ -50,7 +50,7 @@ struct my_composed_op : asio::coroutine
 template<typename Token>
 auto my_composed(asio::io_context & ctx, Token && token)
 {
-  return asio::async_compose<Token, void()>(my_composed_op{}, token, ctx.get_executor());
+  return asio::cobalt_compose<Token, void()>(my_composed_op{}, token, ctx.get_executor());
 }
 
 
@@ -66,15 +66,15 @@ struct std_test
 };
 
 alignas(std::max_align_t) char buf[1024];
-async::detail::monotonic_resource res{buf, sizeof(buf)};
+cobalt::detail::monotonic_resource res{buf, sizeof(buf)};
 
 struct mono_test
 {
   asio::io_context & ctx;
   std::size_t i = 0u;
 
-  using allocator_type = async::detail::monotonic_allocator<void>;
-  allocator_type get_allocator() const { return async::detail::monotonic_allocator<void>{&res}; }
+  using allocator_type = cobalt::detail::monotonic_allocator<void>;
+  allocator_type get_allocator() const { return cobalt::detail::monotonic_allocator<void>{&res}; }
 
   void operator()()
   {
@@ -84,15 +84,15 @@ struct mono_test
   }
 };
 
-async::pmr::monotonic_buffer_resource pmr_res{buf, sizeof(buf)};
+cobalt::pmr::monotonic_buffer_resource pmr_res{buf, sizeof(buf)};
 
 struct pmr_test
 {
   asio::io_context & ctx;
   std::size_t i = 0u;
 
-  using allocator_type = async::pmr::polymorphic_allocator<void>;
-  allocator_type get_allocator() const { return async::pmr::polymorphic_allocator<void>{&pmr_res}; }
+  using allocator_type = cobalt::pmr::polymorphic_allocator<void>;
+  allocator_type get_allocator() const { return cobalt::pmr::polymorphic_allocator<void>{&pmr_res}; }
 
   void operator()()
   {
@@ -103,15 +103,15 @@ struct pmr_test
 };
 
 
-async::detail::sbo_resource sbo_res{buf, sizeof(buf)};
+cobalt::detail::sbo_resource sbo_res{buf, sizeof(buf)};
 
 struct sbo_test
 {
   asio::io_context & ctx;
   std::size_t i = 0u;
 
-  using allocator_type = async::detail::sbo_allocator<void>;
-  allocator_type get_allocator() const { return async::detail::sbo_allocator<void>{&sbo_res}; }
+  using allocator_type = cobalt::detail::sbo_allocator<void>;
+  allocator_type get_allocator() const { return cobalt::detail::sbo_allocator<void>{&sbo_res}; }
 
   void operator()()
   {
@@ -141,7 +141,7 @@ int main(int argc, char * argv[])
     mono_test{ctx}();
     ctx.run();
     auto end = std::chrono::steady_clock::now();
-    printf("async::monotonic: %ld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    printf("cobalt::monotonic: %ld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
   }
 
   {
@@ -160,7 +160,7 @@ int main(int argc, char * argv[])
     sbo_test{ctx}();
     ctx.run();
     auto end = std::chrono::steady_clock::now();
-    printf("async::sbo: %ld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    printf("cobalt::sbo: %ld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
   }
 
 

@@ -5,10 +5,10 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/detail/exception.hpp>
-#include <boost/async/error.hpp>
+#include <boost/cobalt/detail/exception.hpp>
+#include <boost/cobalt/error.hpp>
 
-namespace boost::async::detail
+namespace boost::cobalt::detail
 {
 
 std::exception_ptr moved_from_exception()

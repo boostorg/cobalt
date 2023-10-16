@@ -30,9 +30,9 @@ E.g.:
 
 [source,cpp]
 ----
-async::promise<void> delay(std::chrono::milliseconds);
+cobalt::promise<void> delay(std::chrono::milliseconds);
 
-async::task<void> example()
+cobalt::task<void> example()
 {
   co_await delay(std::chrono::milliseconds(50));
 }
@@ -42,15 +42,15 @@ A `co_await` expression can yield a value, depending on what it is awaiting.
 
 [source,cpp]
 ----
-async::promise<std::string> read_some();
+cobalt::promise<std::string> read_some();
 
-async::task<void> example()
+cobalt::task<void> example()
 {
   std::string res = co_await read_some();
 }
 ----
 
-NOTE: In `async` most coroutine primitives are also <<awaitables>>.
+NOTE: In `cobalt` most coroutine primitives are also <<awaitables>>.
 
 === `co_yield` 
 
@@ -61,7 +61,7 @@ For example:
 
 [source,cpp]
 ----
-async::generator<int> iota(int max)
+cobalt::generator<int> iota(int max)
 {
   int i = 0;
   while (i < max)
@@ -76,7 +76,7 @@ which allows the user of yielding coroutine to push values into it.
 
 [source,cpp]
 ----
-async::generator<int> iota()
+cobalt::generator<int> iota()
 {
   int i = 0;
   bool more = false;

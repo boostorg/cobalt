@@ -3,8 +3,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/async/leaf.hpp>
-#include <boost/async/promise.hpp>
+#include <boost/cobalt/leaf.hpp>
+#include <boost/cobalt/promise.hpp>
 #include <boost/leaf/result.hpp>
 
 #include "doctest.h"
@@ -17,8 +17,8 @@ TEST_SUITE_BEGIN("leaf");
 
 CO_TEST_CASE("try_catch")
 {
-  CHECK(co_await async::try_catch(
-      []() -> async::promise<int>
+  CHECK(co_await cobalt::try_catch(
+      []() -> cobalt::promise<int>
       {
         throw std::runtime_error("TestException");
         co_return 42;
@@ -34,8 +34,8 @@ CO_TEST_CASE("try_catch")
           return -2;
       }) == -1);
 
-  CHECK(co_await async::try_catch(
-      []() -> async::promise<int>
+  CHECK(co_await cobalt::try_catch(
+      []() -> cobalt::promise<int>
       {
         co_return 42;
       }(),
@@ -54,8 +54,8 @@ CO_TEST_CASE("try_catch")
 
 CO_TEST_CASE("try_handle_all")
 {
-  CHECK(co_await async::try_handle_all(
-      []() -> async::promise<leaf::result<int>>
+  CHECK(co_await cobalt::try_handle_all(
+      []() -> cobalt::promise<leaf::result<int>>
       {
         throw std::runtime_error("TestException");
         co_return 42;
@@ -76,8 +76,8 @@ CO_TEST_CASE("try_handle_all")
         return -3;
       }) == -1);
 
-  CHECK(co_await async::try_handle_all(
-      []() -> async::promise<leaf::result<int>>
+  CHECK(co_await cobalt::try_handle_all(
+      []() -> cobalt::promise<leaf::result<int>>
       {
         co_return 42;
       }(),
@@ -101,8 +101,8 @@ CO_TEST_CASE("try_handle_all")
 
 CO_TEST_CASE("try_handle_all")
 {
-  CHECK((co_await async::try_handle_some(
-      []() -> async::promise<leaf::result<int>>
+  CHECK((co_await cobalt::try_handle_some(
+      []() -> cobalt::promise<leaf::result<int>>
       {
         throw std::runtime_error("TestException");
         co_return 42;
@@ -123,8 +123,8 @@ CO_TEST_CASE("try_handle_all")
         return -3;
       })).value() == -1);
 
-  CHECK((co_await async::try_handle_some(
-      []() -> async::promise<leaf::result<int>>
+  CHECK((co_await cobalt::try_handle_some(
+      []() -> cobalt::promise<leaf::result<int>>
       {
         co_return 42;
       }(),

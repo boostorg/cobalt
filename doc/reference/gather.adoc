@@ -1,5 +1,5 @@
 [#gather]
-== async/gather.hpp
+== cobalt/gather.hpp
 
 The `gather` function can be used to `co_await` multiple <<awaitable, awaitables>>
 at once with cancellations being passed through.
@@ -11,14 +11,14 @@ It can be called as a variadic function with multiple <<awaitable>> or as on a r
 
 [source,cpp]
 ----
-async::promise<void> task1();
-async::promise<void> task2();
+cobalt::promise<void> task1();
+cobalt::promise<void> task2();
 
-async::promise<void> do_gather()
+cobalt::promise<void> do_gather()
 {
-  co_await async::gather(task1(), task2()); // <1>
-  std::vector<async::promise<void>> aws {task1(), task2()};
-  co_await async::gather(aws); // <2>
+  co_await cobalt::gather(task1(), task2()); // <1>
+  std::vector<cobalt::promise<void>> aws {task1(), task2()};
+  co_await cobalt::gather(aws); // <2>
 }
 ----
 <1> Wait for a variadic set of <<awaitable, awaitables>>

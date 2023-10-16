@@ -4,16 +4,16 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 
-#include <boost/async/channel.hpp>
-#include <boost/async/main.hpp>
-#include <boost/async/promise.hpp>
+#include <boost/cobalt/channel.hpp>
+#include <boost/cobalt/main.hpp>
+#include <boost/cobalt/promise.hpp>
 
 #include <iostream>
 
-namespace async = boost::async;
+namespace cobalt = boost::cobalt;
 
 // tag::channel_example[]
-async::promise<void> producer(async::channel<int> & chan)
+cobalt::promise<void> producer(cobalt::channel<int> & chan)
 {
   for (int i = 0; i < 4; i++)
     co_await chan.write(i);
@@ -21,9 +21,9 @@ async::promise<void> producer(async::channel<int> & chan)
   chan.close();
 }
 
-async::main co_main(int argc, char * argv[])
+cobalt::main co_main(int argc, char * argv[])
 {
-  async::channel<int> c;
+  cobalt::channel<int> c;
 
   auto p = producer(c);
   while (c.is_open())

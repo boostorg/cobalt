@@ -7,10 +7,10 @@
 
 
 #include <boost/signals2.hpp>
-#include <boost/async.hpp>
+#include <boost/cobalt.hpp>
 #include <boost/callable_traits/args.hpp>
 
-namespace async = boost::async;
+namespace cobalt = boost::cobalt;
 namespace signals = boost::signals2;
 
 template<typename Signal>
@@ -49,7 +49,7 @@ struct signal_awaitable
   // capture it for lazy initialization
   Signal & signal;
   // capture the ownership of the awaiting coroutine
-  async::unique_handle<void> awaited_from;
+  cobalt::unique_handle<void> awaited_from;
   // store the result from the call
   std::optional<args_type> result_cache;
 
@@ -77,12 +77,12 @@ auto operator co_await(signals::signal<Args...> & sig) -> signal_awaitable<signa
 
 }
 
-async::promise<int> await_signal(signals::signal<void(int)>  & sig)
+cobalt::promise<int> await_signal(signals::signal<void(int)>  & sig)
 {
   co_return co_await sig;
 }
 
-async::main co_main(int argc, char * argv[])
+cobalt::main co_main(int argc, char * argv[])
 {
 
   signals::signal<void(int)> sig;

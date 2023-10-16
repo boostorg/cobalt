@@ -1,5 +1,5 @@
 [#with]
-== async/with.hpp
+== cobalt/with.hpp
 
 The `with` facility provides a way to perform asynchronous tear-down of coroutines.
 That is it like an asynchronous destructor call.
@@ -8,14 +8,14 @@ That is it like an asynchronous destructor call.
 ----
 struct my_resource
 {
-  async::promise<void> await_exit(std::exception_ptr e);
+  cobalt::promise<void> await_exit(std::exception_ptr e);
 };
 
-async::promise<void> work(my_resource & res);
+cobalt::promise<void> work(my_resource & res);
 
-async::promise<void> outer()
+cobalt::promise<void> outer()
 {
-  co_await async::with(my_resource(), &work);
+  co_await cobalt::with(my_resource(), &work);
 }
 ----
 
@@ -25,19 +25,19 @@ that returns an <<awaitable, awaitable>> or by providing the teardown as the thi
 [source,cpp]
 ----
 using ws_stream = beast::websocket::stream<asio::ip::tcp::socket>>;
-async::promise<ws_stream> connect(urls::url); // <1>
-async::promise<void>   disconnect(ws_stream &ws); // <2>
+cobalt::promise<ws_stream> connect(urls::url); // <1>
+cobalt::promise<void>   disconnect(ws_stream &ws); // <2>
 
-auto teardown(const boost::async::with_exit_tag & wet , ws_stream & ws, std::exception_ptr e)
+auto teardown(const boost::cobalt::with_exit_tag & wet , ws_stream & ws, std::exception_ptr e)
 {
   return disconnect(ws);
 }
 
-async::promise<void> run_session(ws_stream & ws);
+cobalt::promise<void> run_session(ws_stream & ws);
 
-async::main co_main(int argc, char * argv[])
+cobalt::main co_main(int argc, char * argv[])
 {
-  co_await async::with(co_await connect(argv[1]), &run_session, &teardown);
+  co_await cobalt::with(co_await connect(argv[1]), &run_session, &teardown);
   co_return 0;
 }
 ----

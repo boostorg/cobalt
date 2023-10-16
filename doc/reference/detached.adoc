@@ -1,19 +1,19 @@
 [#detached]
-== async/detached.hpp
+== cobalt/detached.hpp
 
 A detached is an eager coroutine that can `co_await` but not `co_return` values.
 That is, it cannot be resumed and is usually not awaited.
 
 [source,cpp]
 ----
-async::detached delayed_print(std::chrono::milliseconds ms)
+cobalt::detached delayed_print(std::chrono::milliseconds ms)
 {
-  asio::steady_timer tim{co_await async::this_coro::executor, ms};
-  co_await tim.async_wait(async::use_op);
+  asio::steady_timer tim{co_await cobalt::this_coro::executor, ms};
+  co_await tim.async_wait(cobalt::use_op);
   printf("Hello world\n");
 }
 
-async::main co_main(int argc, char *argv[])
+cobalt::main co_main(int argc, char *argv[])
 {
   delayed_print();
   co_return 0;
@@ -24,9 +24,9 @@ Detached is used to run coroutines in the background easily.
 
 [source,cpp]
 ----
-async::detached my_task();
+cobalt::detached my_task();
 
-async::main co_main(int argc, char *argv[])
+cobalt::main co_main(int argc, char *argv[])
 {
   my_task(); // <1>
   co_await delay(std::chrono::milliseconds(50));
@@ -41,13 +41,13 @@ A detached can assign itself a new cancellation source like this:
 [source,cpp]
 ----
 
-async::detached my_task(asio::cancellation_slot sl)
+cobalt::detached my_task(asio::cancellation_slot sl)
 {
    co_await this_coro::reset_cancellation_source(sl);
    // do somework
 }
 
-async::main co_main(int argc, char *argv[])
+cobalt::main co_main(int argc, char *argv[])
 {
   asio::cancellation_signal sig;
   my_task(sig.slot()); // <1>
@@ -66,7 +66,7 @@ in any position followed by the executor argument.
 
 [source, cpp]
 ----
-async::detached my_gen(asio::executor_arg_t, asio::io_context::executor_type exec_to_use);
+cobalt::detached my_gen(asio::executor_arg_t, asio::io_context::executor_type exec_to_use);
 ----
 
 === Memory Resource
@@ -77,7 +77,7 @@ unless a `std::allocator_arg` is used in any position followed by a `polymorphic
 
 [source, cpp]
 ----
-async::detached my_gen(std::allocator_arg_t, pmr::polymorphic_allocator<void> alloc);
+cobalt::detached my_gen(std::allocator_arg_t, pmr::polymorphic_allocator<void> alloc);
 ----
 
 [#detached-outline]

@@ -14,16 +14,16 @@
 #include <chrono>
 #include <memory>
 
-#include "boost/async/main.hpp"
-#include "boost/async/op.hpp"
+#include "boost/cobalt/main.hpp"
+#include "boost/cobalt/op.hpp"
 
 #include "test.hpp"
 
-namespace async = boost::async;
+namespace cobalt = boost::cobalt;
 
 TEST_SUITE_BEGIN("any_completion_token");
 
-void async_sleep_impl(
+void cobalt_sleep_impl(
     boost::asio::any_completion_handler<void(boost::system::error_code)> handler,
     boost::asio::any_io_executor ex,
     std::chrono::nanoseconds duration
@@ -34,14 +34,14 @@ void async_sleep_impl(
 }
 
 template <typename CompletionToken>
-inline auto async_sleep(
+inline auto cobalt_sleep(
     boost::asio::any_io_executor ex,
     std::chrono::nanoseconds duration,
     CompletionToken&& token
 )
 {
   return boost::asio::async_initiate<CompletionToken, void(boost::system::error_code)>(
-      async_sleep_impl,
+      cobalt_sleep_impl,
       token,
       std::move(ex),
       duration
@@ -51,7 +51,7 @@ inline auto async_sleep(
 
 CO_TEST_CASE("sleep_any_cpl_token")
 {
-  co_await async_sleep(co_await async::this_coro::executor, std::chrono::milliseconds(1), async::use_op);
+  co_await cobalt_sleep(co_await cobalt::this_coro::executor, std::chrono::milliseconds(1), cobalt::use_op);
 }
 
 TEST_SUITE_END();

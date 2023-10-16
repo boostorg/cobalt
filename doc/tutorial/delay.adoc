@@ -11,7 +11,7 @@ include::../../example/delay.cpp[tag=timer_example]
 and is the easiest way to set up an environment to run asynchronous code.
 <2> Take the executor from the current coroutine promise.
 <3> Use an argument to set the timeout
-<4> Perform the wait by using <<use_op, async::use_op>>.
+<4> Perform the wait by using <<use_op, cobalt::use_op>>.
 <5> Return a value that gets returned from the implicit main.
 
 In this example we use the <<main>> header, which provides us with a main coroutine if `co_main`
@@ -26,5 +26,5 @@ Not to be confused with <<promise>>) which we can obtain through the dummy-<<awa
 the <<this_coro, this_coro>> namespace.
 
 We can then construct a timer and initiate the `async_wait` with <<use_op>>.
-`async` provides multiple ways to `co_await` to interact with asio, of which <<use_op>> is the easiest.
+`cobalt` provides multiple ways to `co_await` to interact with asio, of which <<use_op>> is the easiest.
 

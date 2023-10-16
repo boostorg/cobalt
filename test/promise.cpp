@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/promise.hpp>
-#include <boost/async/op.hpp>
+#include <boost/cobalt/promise.hpp>
+#include <boost/cobalt/op.hpp>
 
 #include "doctest.h"
 #include "test.hpp"
@@ -20,85 +20,85 @@ using namespace boost;
 
 TEST_SUITE_BEGIN("promise");
 
-async::promise<void> test0()
+cobalt::promise<void> test0()
 {
     co_return;
 }
 
-async::promise<double> test2(int i)
+cobalt::promise<double> test2(int i)
 {
     co_await test0();
     co_return i;
 }
 
 
-async::promise<int> test1(asio::any_io_executor exec)
+cobalt::promise<int> test1(asio::any_io_executor exec)
 {
     co_await test2(42);
     co_await test2(42);
 
     CHECK(test2(42).get() == 42);
 
-    co_await asio::post(exec, async::use_op);
+    co_await asio::post(exec, cobalt::use_op);
     co_return 452;
 }
 
 
-CO_TEST_CASE("async-1")
+CO_TEST_CASE("cobalt-1")
 {
     co_await test1(co_await asio::this_coro::executor);
     co_return;
 }
 
 
-async::promise<void> should_unwind(asio::io_context & ctx)
+cobalt::promise<void> should_unwind(asio::io_context & ctx)
 {
-  co_await asio::post(ctx, async::use_op);
+  co_await asio::post(ctx, cobalt::use_op);
 }
 
 TEST_CASE("unwind")
 {
   asio::io_context ctx;
-  boost::async::this_thread::set_executor(ctx.get_executor());
+  boost::cobalt::this_thread::set_executor(ctx.get_executor());
   +should_unwind(ctx);
 }
 
-async::promise<int> return_(std::size_t ms)
+cobalt::promise<int> return_(std::size_t ms)
 {
   co_return 1234u;
 }
 
-async::promise<int> return_(std::size_t ms, asio::executor_arg_t,
-                            boost::async::executor )
+cobalt::promise<int> return_(std::size_t ms, asio::executor_arg_t,
+                            boost::cobalt::executor )
 {
   co_return 1234u;
 }
 
-async::promise<std::size_t> delay_r(asio::io_context &ctx, std::size_t ms,
+cobalt::promise<std::size_t> delay_r(asio::io_context &ctx, std::size_t ms,
                                     asio::executor_arg_t, asio::any_io_executor )
 {
-  auto tim = async::use_op.as_default_on(asio::steady_timer(ctx, std::chrono::milliseconds{ms}));
+  auto tim = cobalt::use_op.as_default_on(asio::steady_timer(ctx, std::chrono::milliseconds{ms}));
   co_await tim.async_wait();
   co_return ms;
 }
 
 
-async::promise<std::size_t> delay_r(asio::any_io_executor exec, std::size_t ms)
+cobalt::promise<std::size_t> delay_r(asio::any_io_executor exec, std::size_t ms)
 {
-   auto tim = async::use_op.as_default_on(asio::steady_timer(exec, std::chrono::milliseconds{ms}));
+   auto tim = cobalt::use_op.as_default_on(asio::steady_timer(exec, std::chrono::milliseconds{ms}));
   co_await tim.async_wait();
   co_return ms;
 }
 
-async::promise<void> throw_()
+cobalt::promise<void> throw_()
 {
   throw std::runtime_error("throw_");
   co_return ;
 }
 
-async::promise<void> throw_post()
+cobalt::promise<void> throw_post()
 {
-  co_await asio::post(async::this_thread::get_executor(), async::use_op);
+  co_await asio::post(cobalt::this_thread::get_executor(), cobalt::use_op);
   throw std::runtime_error("throw_");
   co_return ;
 }
@@ -111,10 +111,10 @@ TEST_CASE("get")
 }
 
 
-async::promise<void> delay_v(asio::io_context &ctx, std::size_t ms)
+cobalt::promise<void> delay_v(asio::io_context &ctx, std::size_t ms)
 {
   asio::steady_timer tim(ctx, std::chrono::milliseconds{ms});
-  co_await tim.async_wait(boost::async::use_op);
+  co_await tim.async_wait(boost::cobalt::use_op);
 }
 
 
@@ -134,7 +134,7 @@ CO_TEST_CASE("stop")
 {
   CHECK_THROWS(
     co_await
-        []() -> async::promise<void>
+        []() -> cobalt::promise<void>
         {
           co_await stop();
         }());

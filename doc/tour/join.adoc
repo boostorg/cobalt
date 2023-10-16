@@ -6,12 +6,12 @@ If multiple <<awaitable, awaitables>> work in parallel they can be awaited simul
 
 [source,cpp]
 ----
-async::promise<int> some_work();
-async::promise<double> more_work();
+cobalt::promise<int> some_work();
+cobalt::promise<double> more_work();
 
-async::main co_main(int argc, char * argv[])
+cobalt::main co_main(int argc, char * argv[])
 {
-    std::tuple<int, double> res = async::join(some_work(), more_work());
+    std::tuple<int, double> res = cobalt::join(some_work(), more_work());
     co_return 0;
 }
 ----

@@ -5,12 +5,12 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async.hpp>
+#include <boost/cobalt.hpp>
 
 #include <boost/asio/post.hpp>
 #include <boost/lockfree/spsc_queue.hpp>
 
-namespace async = boost::async;
+namespace cobalt = boost::cobalt;
 
 /// This is a simple class making a lockfree::spsc_queue awaitable. It's not movable, since the spsc_queue isn't.
 template<typename T, typename ... Options>
@@ -34,7 +34,7 @@ struct awaitable_spsc_queue
   std::atomic<void*> reader{nullptr}, writer{nullptr};
 
   // capture the read & write executor
-  async::executor read_executor, write_executor;
+  cobalt::executor read_executor, write_executor;
 
   // the awaitable to read a value from the queue
   struct read_op
@@ -53,7 +53,7 @@ struct awaitable_spsc_queue
       if constexpr (requires {h.promise().get_executor();})
         this_->read_executor = h.promise().get_executor();
       else
-        this_->read_executor = async::this_thread::get_executor();
+        this_->read_executor = cobalt::this_thread::get_executor();
 
       // Make sure there's only one coroutine awaiting the read
       assert(this_->reader == nullptr);
@@ -66,7 +66,7 @@ struct awaitable_spsc_queue
       // Grab the value from the queue
       this_->queue.pop(res);
       // if a writer is waiting post it to complete on it's thread
-      auto w = async::unique_handle<void>::from_address(this_->writer.exchange(nullptr));
+      auto w = cobalt::unique_handle<void>::from_address(this_->writer.exchange(nullptr));
       if (w)
         boost::asio::post(this_->write_executor, std::move(w));
 
@@ -95,7 +95,7 @@ struct awaitable_spsc_queue
       if constexpr (requires {h.promise().get_executor();})
         this_->write_executor = h.promise().get_executor();
       else
-        this_->write_executor = async::this_thread::get_executor();
+        this_->write_executor = cobalt::this_thread::get_executor();
 
       assert(this_->writer == nullptr);
       this_->writer.store(h.address());
@@ -107,7 +107,7 @@ struct awaitable_spsc_queue
     {
       this_->queue.push(std::move(value));
       // if a writer is waiting post it
-      auto r = async::unique_handle<void>::from_address(this_->reader.exchange(nullptr));
+      auto r = cobalt::unique_handle<void>::from_address(this_->reader.exchange(nullptr));
       if (r)
         boost::asio::post(this_->read_executor, std::move(r));
     }
@@ -118,7 +118,7 @@ struct awaitable_spsc_queue
 };
 
 // Dummy thread blasting out values.
-async::thread thr(awaitable_spsc_queue<int> & q)
+cobalt::thread thr(awaitable_spsc_queue<int> & q)
 {
   for (int i = 0; i <= 100000000; i++)
     co_await q.write(i);
@@ -126,7 +126,7 @@ async::thread thr(awaitable_spsc_queue<int> & q)
   co_await q.write(-1);
 }
 
-async::main co_main(int argc, char * argv[])
+cobalt::main co_main(int argc, char * argv[])
 {
   awaitable_spsc_queue<int> queue{1024};
   auto t = thr(queue);

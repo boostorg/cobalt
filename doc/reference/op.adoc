@@ -1,33 +1,17 @@
-[#async_operation]
-== async/op.hpp
+[#cobalt_operation]
+== cobalt/op.hpp
 
-An async operation is an <<awaitable, awaitable>> wrapping an `asio` operation.
-
-E.g. this is an `async_operation` with the completion signature  `void()`.
-
-[source,cpp]
-----
-auto op = asio::post(ctx, async::use_op);
-----
-
-Or the async_operation can be templated like this:
-
-[source,cpp]
-----
-auto op = [&ctx](auto token) {return asio::post(ctx, std::move(token)); };
-----
+An operation in `cobalt` is an <<awaitable, awaitable>> wrapping an `asio` operation.
 
 [#use_op]
 === use_op
 
 The `use_op` token is the direct to create an op,
-i.e. using `async::use_op` as the completion token will create the required awaitable.
-
-It also supports `defaults_on` so that async_ops can be awaited without the token:
+i.e. using `cobalt::use_op` as the completion token will create the required awaitable.
 
 [source,cpp]
 ----
-auto tim = async::use_op.as_default_on(asio::steady_timer{co_await async::this_coro::executor});
+auto tim = cobalt::use_op.as_default_on(asio::steady_timer{co_await cobalt::this_coro::executor});
 co_await tim.async_wait();
 ----
 
@@ -53,7 +37,7 @@ NOTE:  `use_op` will never complete immediately, i.e. `await_ready` will always 
 [#op]
 === Hand coded Operations
 
-Operations are a more advanced implementation of the <<async_operation>> feature.
+Operations are a more advanced implementation of the <<cobalt_operation>> feature.
 
 This library makes it easy to create asynchronous operations with an early completion condition,
 i.e. a condition that avoids suspension of coroutines altogether.
@@ -62,18 +46,18 @@ We can for example create a `wait_op` that does nothing if the timer is already 
 
 [source,cpp]
 ----
-struct wait_op : async::op<system::error_code> // <1>
+struct wait_op : cobalt::op<system::error_code> // <1>
 {
   asio::steady_timer & tim;
 
   wait_op(asio::steady_timer & tim) : tim(tim) {}
 
-  bool ready(async::handler<system::error_code> ) // <2>
+  bool ready(cobalt::handler<system::error_code> ) // <2>
   {
     if (tim.expiry() < std::chrono::steady_clock::now())
         h(system::error_code{});
   }
-  void initiate(async::completion_handler<system::error_code> complete) // <3>
+  void initiate(cobalt::completion_handler<system::error_code> complete) // <3>
   {
     tim.async_wait(std::move(complete));
   }
@@ -81,5 +65,5 @@ struct wait_op : async::op<system::error_code> // <1>
 ----
 <1> Inherit `op` with the matching signature `await_transform` picks it up
 <2> Check if the operation is ready - called from `await_ready`
-<3> Initiate the async operation if its not ready.
+<3> Initiate the operation if its not ready.
 

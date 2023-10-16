@@ -5,7 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/this_thread.hpp>
+#include <boost/cobalt/this_thread.hpp>
 #include <boost/asio/any_io_executor.hpp>
 
 #include <boost/asio/executor.hpp>
@@ -14,19 +14,19 @@
 
 #include <optional>
 
-namespace boost::async::this_thread
+namespace boost::cobalt::this_thread
 {
 
 namespace detail
 {
-#if !defined(BOOST_ASYNC_NO_PMR)
+#if !defined(BOOST_COBALT_NO_PMR)
 thread_local pmr::memory_resource *default_coro_memory_resource = pmr::get_default_resource();
 #endif
 
 thread_local std::optional<executor> executor;
 }
 
-#if !defined(BOOST_ASYNC_NO_PMR)
+#if !defined(BOOST_COBALT_NO_PMR)
 pmr::memory_resource* get_default_resource() noexcept
 {
   return detail::default_coro_memory_resource;
@@ -79,10 +79,10 @@ void set_executor(executor exec) noexcept
 }
 }
 
-namespace boost::async::detail
+namespace boost::cobalt::detail
 {
 
-#if defined(BOOST_ASYNC_CUSTOM_EXECUTOR) || defined(BOOST_ASYNC_USE_IO_CONTEXT)
+#if defined(BOOST_COBALT_CUSTOM_EXECUTOR) || defined(BOOST_COBALT_USE_IO_CONTEXT)
 executor
 extract_executor(asio::any_io_executor exec)
 {

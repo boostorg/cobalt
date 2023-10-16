@@ -1,5 +1,5 @@
 [#channel]
-== async/channel.hpp
+== cobalt/channel.hpp
 
 Channels can be used to exchange data between different coroutines
 on a single thread.
@@ -10,7 +10,7 @@ on a single thread.
 [example]
 [source,cpp,subs=+quotes]
 ----
-include::../../include/boost/async/channel.hpp[tag=outline]
+include::../../include/boost/cobalt/channel.hpp[tag=outline]
 ----
 
 === Description
@@ -67,16 +67,16 @@ include::../../example/channel.cpp[tag=channel_example]
 ----
 
 Additionally, a `channel_reader` is provided to make reading channels more convenient & usable with
-<<async_for, BOOST_ASYNC_FOR>>.
+<<async_for, BOOST_COBALT_FOR>>.
 
 [source,cpp]
 ----
-async::main co_main(int argc, char * argv[])
+cobalt::main co_main(int argc, char * argv[])
 {
-  async::channel<int> c;
+  cobalt::channel<int> c;
 
   auto p = producer(c);
-  BOOST_ASYNC_FOR(int value, async::channel_reader(c))
+  BOOST_COBALT_FOR(int value, cobalt::channel_reader(c))
     std::cout << value << std::endl;
 
   co_await p;

@@ -5,11 +5,11 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/task.hpp>
-#include <boost/async/main.hpp>
-#include <boost/async/op.hpp>
-#include <boost/async/spawn.hpp>
-#include <boost/async/join.hpp>
+#include <boost/cobalt/task.hpp>
+#include <boost/cobalt/main.hpp>
+#include <boost/cobalt/op.hpp>
+#include <boost/cobalt/spawn.hpp>
+#include <boost/cobalt/join.hpp>
 
 #include "doctest.h"
 #include "test.hpp"
@@ -32,24 +32,24 @@ TEST_SUITE_BEGIN("task");
 namespace
 {
 
-async::task<void> test0()
+cobalt::task<void> test0()
 {
     co_return;
 }
 
-async::task<double> test2(int i)
+cobalt::task<double> test2(int i)
 {
     co_await test0();
     co_return i;
 }
 
-async::task<int> test1()
+cobalt::task<int> test1()
 {
     co_await test2(42);
     co_await test2(42);
 
 
-    co_await asio::post(co_await async::this_coro::executor, async::use_task);
+    co_await asio::post(co_await cobalt::this_coro::executor, cobalt::use_task);
     co_return 452;
 }
 }
@@ -61,9 +61,9 @@ TEST_CASE("test-1")
 
     asio::io_context ctx;
     asio::steady_timer tim{ctx};
-    async::this_thread::set_executor(ctx.get_executor());
+    cobalt::this_thread::set_executor(ctx.get_executor());
 
-    async::spawn(
+    cobalt::spawn(
           ctx.get_executor(),
           test1(),
           [&](std::exception_ptr ex, int res)
@@ -77,49 +77,49 @@ TEST_CASE("test-1")
     CHECK(done);
 }
 
-CO_TEST_CASE("async-1")
+CO_TEST_CASE("cobalt-1")
 {
     co_await test1();
     co_return;
 }
 
 
-static async::task<void> should_unwind(asio::io_context & ctx)
+static cobalt::task<void> should_unwind(asio::io_context & ctx)
 {
-  co_await asio::post(ctx, async::use_op);
+  co_await asio::post(ctx, cobalt::use_op);
 }
 
 TEST_CASE("unwind")
 {
   asio::io_context ctx;
-  boost::async::this_thread::set_executor(ctx.get_executor());
+  boost::cobalt::this_thread::set_executor(ctx.get_executor());
   boost::ignore_unused(should_unwind(ctx));
 }
 namespace
 {
 
 
-async::task<int> return_([[maybe_unused]] std::size_t ms,
-                         asio::executor_arg_t, boost::async::executor )
+cobalt::task<int> return_([[maybe_unused]] std::size_t ms,
+                         asio::executor_arg_t, boost::cobalt::executor )
 {
   co_return 1234u;
 }
 
-async::task<void> delay_r(asio::io_context &ctx, std::size_t ms)
+cobalt::task<void> delay_r(asio::io_context &ctx, std::size_t ms)
 {
-  auto tim = async::use_op.as_default_on(asio::steady_timer(ctx, std::chrono::milliseconds{ms}));
+  auto tim = cobalt::use_op.as_default_on(asio::steady_timer(ctx, std::chrono::milliseconds{ms}));
   co_await tim.async_wait();
 }
 
-async::task<void> throw_()
+cobalt::task<void> throw_()
 {
   throw std::runtime_error("throw_");
   co_return ;
 }
 
-async::task<void> throw_post()
+cobalt::task<void> throw_post()
 {
-  co_await asio::post(async::this_thread::get_executor(), async::use_op);
+  co_await asio::post(cobalt::this_thread::get_executor(), cobalt::use_op);
   throw std::runtime_error("throw_");
   co_return ;
 }
@@ -130,7 +130,7 @@ async::task<void> throw_post()
 TEST_CASE("cancel-void")
 {
   asio::io_context ctx;
-  async::this_thread::set_executor(ctx.get_executor());
+  cobalt::this_thread::set_executor(ctx.get_executor());
   asio::cancellation_signal signal;
 
 
@@ -154,17 +154,17 @@ TEST_CASE("cancel-void")
   ctx.run();
 }
 
-static async::task<void> delay_v(asio::io_context &ctx, std::size_t ms)
+static cobalt::task<void> delay_v(asio::io_context &ctx, std::size_t ms)
 {
   asio::steady_timer tim(ctx, std::chrono::milliseconds{ms});
-  co_await tim.async_wait(async::use_op);
+  co_await tim.async_wait(cobalt::use_op);
 }
 
 
 TEST_CASE("cancel-int")
 {
   asio::io_context ctx;
-  async::this_thread::set_executor(ctx.get_executor());
+  cobalt::this_thread::set_executor(ctx.get_executor());
   asio::cancellation_signal signal;
 
   spawn(ctx, delay_v(ctx, 10000u), asio::bind_cancellation_slot(
@@ -189,7 +189,7 @@ TEST_CASE("cancel-int")
 TEST_CASE("throw-cpl")
 {
   asio::io_context ctx;
-  async::this_thread::set_executor(ctx.get_executor());
+  cobalt::this_thread::set_executor(ctx.get_executor());
   asio::cancellation_signal signal;
 
   spawn(ctx, throw_(),
@@ -205,7 +205,7 @@ TEST_CASE("throw-cpl")
 TEST_CASE("throw-cpl-delay")
 {
   asio::io_context ctx;
-  async::this_thread::set_executor(ctx.get_executor());
+  cobalt::this_thread::set_executor(ctx.get_executor());
   asio::cancellation_signal signal;
 
   spawn(ctx, throw_post(),
@@ -223,7 +223,7 @@ CO_TEST_CASE("stop")
 {
   CHECK_THROWS(
       co_await
-          []() -> async::task<int>
+          []() -> cobalt::task<int>
           {
             co_await stop();
             co_return 42;
@@ -231,15 +231,15 @@ CO_TEST_CASE("stop")
 }
 
 
-async::task<void> throw_if_test(asio::cancellation_signal & sig)
+cobalt::task<void> throw_if_test(asio::cancellation_signal & sig)
 {
 
-  CHECK(co_await async::this_coro::cancelled
+  CHECK(co_await cobalt::this_coro::cancelled
         == asio::cancellation_type::none);
   sig.emit(asio::cancellation_type::terminal);
-  CHECK(co_await async::this_coro::cancelled
+  CHECK(co_await cobalt::this_coro::cancelled
         == asio::cancellation_type::terminal);
-  CHECK_THROWS(co_await asio::post(async::use_op));
+  CHECK_THROWS(co_await asio::post(cobalt::use_op));
 }
 
 
@@ -248,8 +248,8 @@ TEST_CASE("throw_if_cancelled")
   asio::cancellation_signal sig;
 
   asio::io_context ctx;
-  boost::async::this_thread::set_executor(ctx.get_executor());
-  async::spawn(ctx, throw_if_test(sig),
+  boost::cobalt::this_thread::set_executor(ctx.get_executor());
+  cobalt::spawn(ctx, throw_if_test(sig),
                asio::bind_cancellation_slot(sig.slot(), asio::detached));
   ctx.run();
 }
@@ -262,34 +262,34 @@ CO_TEST_CASE("reawait")
 }
 
 
-async::task<int> test_strand1(asio::any_io_executor exec)
+cobalt::task<int> test_strand1(asio::any_io_executor exec)
 {
-  REQUIRE(exec == co_await async::this_coro::executor);
-  co_await asio::post(co_await async::this_coro::executor, async::use_task);
+  REQUIRE(exec == co_await cobalt::this_coro::executor);
+  co_await asio::post(co_await cobalt::this_coro::executor, cobalt::use_task);
   co_return 31;
 }
 
-async::task<void> test_strand()
+cobalt::task<void> test_strand()
 {
-  auto e = co_await async::this_coro::executor;
-  co_await async::join(test_strand1(e), test_strand1(e), test_strand1(e), test_strand1(e));
+  auto e = co_await cobalt::this_coro::executor;
+  co_await cobalt::join(test_strand1(e), test_strand1(e), test_strand1(e), test_strand1(e));
 }
 
-#if !defined(BOOST_ASYNC_USE_IO_CONTEXT)
+#if !defined(BOOST_COBALT_USE_IO_CONTEXT)
 
 TEST_CASE("stranded")
 {
 
   asio::thread_pool ctx;
-  boost::async::this_thread::set_executor(ctx.get_executor());
-  async::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
-  async::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
-  async::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
-  async::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
-  async::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
-  async::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
-  async::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
-  async::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
+  boost::cobalt::this_thread::set_executor(ctx.get_executor());
+  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
+  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
+  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
+  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
+  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
+  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
+  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
+  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { CHECK(!ep); });
   ctx.join();
 }
 

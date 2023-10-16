@@ -10,7 +10,7 @@ in this library, nor is it possible to `co_await` any of those types from within
 `asio::awaitable`. They can however interact through `asio::co_spawn` or <<spawn>>.
 
 The way `asio::awaitable` blocks `co_await`-ing is by strict `await_transform` in its promises.
-It prohibits being awaited by a strict definition of `async_resume`:
+It prohibits being awaited by a strict definition of `await_suspend`:
 
 [source,cpp]
 ----

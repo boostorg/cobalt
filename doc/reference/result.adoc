@@ -1,5 +1,5 @@
 [#result]
-== async/result.hpp
+== cobalt/result.hpp
 
 Awaitables can be modified to return `system::result` or
 `std::tuple` instead of using exceptions.
@@ -10,20 +10,20 @@ Awaitables can be modified to return `system::result` or
 T res = co_await foo();
 
 // as result
-system::result<T, std::exception_ptr> res = co_await async::as_result(foo());
+system::result<T, std::exception_ptr> res = co_await cobalt::as_result(foo());
 
 // as tuple
-std::tuple<std::exception_ptr, T> res = co_await async::as_tuple(foo());
+std::tuple<std::exception_ptr, T> res = co_await cobalt::as_tuple(foo());
 ----
 
 
 Awaitables can also provide custom ways to handle results and tuples,
-by providing `await_resume` overloads using `async::as_result_tag` and `async::as_tuple_tag`.:
+by providing `await_resume` overloads using `cobalt::as_result_tag` and `cobalt::as_tuple_tag`.:
 
 [source,cpp, subs="+quotes"]
 ----
-__your_result_type__ await_resume(async::as_result_tag);
-__your_tuple_type__  await_resume(async::as_tuple_tag);
+__your_result_type__ await_resume(cobalt::as_result_tag);
+__your_tuple_type__  await_resume(cobalt::as_tuple_tag);
 ----
 
 This allows an awaitable to provide other error types than `std::exception_ptr`,
@@ -32,8 +32,8 @@ for example `system::error_code`. This is done by <<op,op>> and <<channel,channe
 [source,cpp]
 ----
 // example of an op with result system::error_code, std::size_t
-system::result<std::size_t>                 await_resume(async::as_result_tag);
-std::tuple<system::error_code, std::size_t> await_resume(async::as_tuple_tag);
+system::result<std::size_t>                 await_resume(cobalt::as_result_tag);
+std::tuple<system::error_code, std::size_t> await_resume(cobalt::as_tuple_tag);
 ----
 
 NOTE: Awaitables are still allowed to throw exceptions, e.g. for critical exceptions such as OOM.

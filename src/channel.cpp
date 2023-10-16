@@ -5,10 +5,10 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/channel.hpp>
+#include <boost/cobalt/channel.hpp>
 #include <boost/asio/defer.hpp>
 
-namespace boost::async
+namespace boost::cobalt
 {
 
 channel<void>::~channel()

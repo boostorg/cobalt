@@ -5,10 +5,10 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/gather.hpp>
-#include <boost/async/generator.hpp>
-#include <boost/async/promise.hpp>
-#include <boost/async/op.hpp>
+#include <boost/cobalt/gather.hpp>
+#include <boost/cobalt/generator.hpp>
+#include <boost/cobalt/promise.hpp>
+#include <boost/cobalt/op.hpp>
 
 #include <boost/asio/steady_timer.hpp>
 
@@ -17,25 +17,25 @@
 
 using namespace boost;
 
-static async::promise<std::size_t> wdummy(asio::any_io_executor exec,
+static cobalt::promise<std::size_t> wdummy(asio::any_io_executor exec,
                                           std::chrono::milliseconds ms = std::chrono::milliseconds(25))
 {
   if (ms == std::chrono::milliseconds ::max())
     throw std::runtime_error("wdummy_throw");
 
   asio::steady_timer tim{exec, ms};
-  co_await tim.async_wait(async::use_op);
+  co_await tim.async_wait(cobalt::use_op);
   co_return ms.count();
 }
 
-static async::generator<int> wgen(asio::any_io_executor exec)
+static cobalt::generator<int> wgen(asio::any_io_executor exec)
 {
   asio::steady_timer tim{exec, std::chrono::milliseconds(25)};
-  co_await tim.async_wait(async::use_op);
+  co_await tim.async_wait(cobalt::use_op);
   co_return 123;
 }
 
-static async::promise<void> wthrow()
+static cobalt::promise<void> wthrow()
 {
   throw std::runtime_error("wthrow");
   co_return;
@@ -74,7 +74,7 @@ CO_TEST_CASE("variadic")
 CO_TEST_CASE("list")
 {
   auto exec = co_await asio::this_coro::executor;
-  std::vector<async::promise<std::size_t>> vec;
+  std::vector<cobalt::promise<std::size_t>> vec;
   vec.push_back(wdummy(exec, std::chrono::milliseconds(100)));
   vec.push_back(wdummy(exec, std::chrono::milliseconds( 50)));
   vec.push_back(wdummy(exec, std::chrono::milliseconds(150)));

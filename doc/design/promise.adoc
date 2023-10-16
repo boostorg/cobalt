@@ -7,7 +7,7 @@ promises that do not suspend, like this:
 
 [source,cpp]
 ----
-async::promise<void> noop()
+cobalt::promise<void> noop()
 {
   co_return;
 }

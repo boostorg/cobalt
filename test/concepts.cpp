@@ -3,7 +3,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/async/concepts.hpp>
+#include <boost/cobalt/concepts.hpp>
 
 
 struct foo_aw
@@ -31,18 +31,18 @@ struct special_aw
 
 
 
-static_assert(boost::async::awaitable_type<std::suspend_never>);
-static_assert(boost::async::awaitable_type<foo_aw>);
-static_assert(!boost::async::awaitable_type<foo>);
+static_assert(boost::cobalt::awaitable_type<std::suspend_never>);
+static_assert(boost::cobalt::awaitable_type<foo_aw>);
+static_assert(!boost::cobalt::awaitable_type<foo>);
 
-static_assert(boost::async::awaitable<std::suspend_never>);
-static_assert(boost::async::awaitable<foo_aw>);
-static_assert(boost::async::awaitable<foo>);
+static_assert(boost::cobalt::awaitable<std::suspend_never>);
+static_assert(boost::cobalt::awaitable<foo_aw>);
+static_assert(boost::cobalt::awaitable<foo>);
 
-static_assert(boost::async::awaitable<std::suspend_never, int>);
-static_assert(boost::async::awaitable<foo_aw, std::noop_coroutine_promise>);
-static_assert(boost::async::awaitable<foo, std::noop_coroutine_promise>);
+static_assert(boost::cobalt::awaitable<std::suspend_never, int>);
+static_assert(boost::cobalt::awaitable<foo_aw, std::noop_coroutine_promise>);
+static_assert(boost::cobalt::awaitable<foo, std::noop_coroutine_promise>);
 
-static_assert(!boost::async::awaitable<special_aw, std::noop_coroutine_promise>);
-static_assert(!boost::async::awaitable<special_aw>);
-static_assert(boost::async::awaitable<special_aw, my_promise>);
+static_assert(!boost::cobalt::awaitable<special_aw, std::noop_coroutine_promise>);
+static_assert(!boost::cobalt::awaitable<special_aw>);
+static_assert(boost::cobalt::awaitable<special_aw, my_promise>);

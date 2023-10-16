@@ -7,10 +7,10 @@
 #include <boost/asio/executor_work_guard.hpp>
 #include <boost/asio/steady_timer.hpp>
 
-#include <boost/async.hpp>
+#include <boost/cobalt.hpp>
 #include <thread>
 
-/** In this example we'll connect async and
+/** In this example we'll connect cobalt and
  * pythons asyncio using nanobind (a C++17 successor to pybind11).
  *
  */
@@ -203,8 +203,8 @@ struct py_coroutine
     handle_->exec_ = python_executor(handle_->loop);
     handle_->owner = this;
 
-    if (!async::this_thread::has_executor())
-      async::this_thread::set_executor(handle_->exec_);
+    if (!cobalt::this_thread::has_executor())
+      cobalt::this_thread::set_executor(handle_->exec_);
     std::coroutine_handle<promise_type>::from_promise(*handle_.release()).resume();
   }
 
@@ -247,7 +247,7 @@ struct py_awaitable
     if constexpr (requires (T & p) {p.get_executor();})
       exec = h.promise().get_executor();
     else
-      exec = async::this_thread::get_executor();
+      exec = cobalt::this_thread::get_executor();
 
     auto loop = get_loop();
     auto task = getattr(loop, "create_task")(target);
@@ -255,7 +255,7 @@ struct py_awaitable
     struct wrapper
     {
       asio::any_io_executor exec;
-      mutable async::unique_handle<void> awaiter;
+      mutable cobalt::unique_handle<void> awaiter;
       py_awaitable * res;
 
       void operator()(py::object t) const
@@ -273,7 +273,7 @@ struct py_awaitable
 
     getattr(task, "add_done_callback")(py::cpp_function(wrapper{
           std::move(exec),
-          async::unique_handle<void>{h.address()},
+          cobalt::unique_handle<void>{h.address()},
           this
         }));
 
@@ -310,16 +310,16 @@ struct py_awaitable
   }
 };
 
-async::generator<int> test_generator()
+cobalt::generator<int> test_generator()
 {
   for (auto i = 1; i < 10; i++)
     co_yield i;
   co_return 10;
 }
 
-async::promise<int> test_promise()
+cobalt::promise<int> test_promise()
 {
-  asio::steady_timer tim{co_await async::this_coro::executor,
+  asio::steady_timer tim{co_await cobalt::this_coro::executor,
                          std::chrono::milliseconds(100)};
 
   co_await tim.async_wait(async::use_op);
@@ -327,18 +327,16 @@ async::promise<int> test_promise()
 }
 
 
-async::promise<void> await_py_coroutine(py_awaitable aw)
+cobalt::promise<void> await_py_coroutine(py_awaitable aw)
 {
   auto res = co_await std::move(aw);
   printf("Python coroutine gave %s\n", py::str(res).c_str());
 }
 
 
-NB_MODULE(boost_async_example_python, m)
+NB_MODULE(boost_cobalt_example_python, m)
 {
   namespace execution = asio::execution;
-  // async::this_thread::set_executor(python_executor{context});
-  //m.def("something_awaitable", &something_awaitable);
   m.def("__rethrow_exception", &std::rethrow_exception);
 
   py::class_<std::unique_ptr<asio::execution_context>>(m, "__asio__execution_context");
@@ -365,7 +363,7 @@ NB_MODULE(boost_async_example_python, m)
 
   py::object aiter_impl = locals["__aiter_impl"];
 
-  py::class_<py_coroutine> ct(m, "__async_coroutine");
+  py::class_<py_coroutine> ct(m, "__cobalt_coroutine");
   ct.def("initiate", &py_coroutine::initiate)
     .def_prop_ro("done", &py_coroutine::done);
   setattr(ct, "__await__", await_impl);
@@ -374,7 +372,7 @@ NB_MODULE(boost_async_example_python, m)
   m.def("test_generator",
         []() -> py_coroutine
         {
-            BOOST_ASYNC_FOR(auto v, test_generator())
+            BOOST_COBALT_FOR(auto v, test_generator())
               co_yield v;
             co_return py::none();
         });

@@ -1,5 +1,5 @@
 [#spawn]
-== async/spawn.hpp
+== cobalt/spawn.hpp
 
 The `spawn` functions allow to run <<task, task>> on an asio `executor`/`execution_context`
 and consume the result with a https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/overview/model/completion_tokens.html[completion token].
@@ -19,7 +19,7 @@ That is, `spawn` can be used to cross threads.
 
 [source,cpp]
 ----
-async::task<int> work();
+cobalt::task<int> work();
 
 int main(int argc, char *argv[])
 {

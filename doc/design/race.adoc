@@ -11,14 +11,14 @@ awaitable is found to be ready or completed immediately.
 
 [source,cpp]
 ----
-async::generator<int> gen1();
-async::generator<double> gen2();
+cobalt::generator<int> gen1();
+cobalt::generator<double> gen2();
 
-async::promise<void> p()
+cobalt::promise<void> p()
 {
   auto g1 = gen1();
   auto g2 = gen2();
-  while (!co_await async::this_coro::cancelled)
+  while (!co_await cobalt::this_coro::cancelled)
   {
     switch(auto v = co_await race(g1, g2); v.index())
     {
@@ -42,8 +42,8 @@ it tries to <<interrupt_await, interrupt>> the rest, and if that fails cancels t
 
 [source,cpp]
 ----
-async::promise<void> timeout();
-async::promise<void> work();
+cobalt::promise<void> timeout();
+cobalt::promise<void> work();
 
 race(timeout(), work());
 ----
@@ -85,7 +85,7 @@ race(g, gen2());
 
 The above will call a `interrupt_await() &` function for `g1` and `interrupt_await() &&` for `g2` if available.
 
-NOTE: Generally speaking, the coroutines in async support lvalue interruption, i.e. `interrupt_await() &`.
+NOTE: Generally speaking, the coroutines in `cobalt` support lvalue interruption, i.e. `interrupt_await() &`.
 <<channel,channel>> operations are unqualified, i.e. work in both cases.
 
 <<join,join>> and <<gather, gather>> will forward interruptions,

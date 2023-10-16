@@ -5,10 +5,10 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/join.hpp>
-#include <boost/async/generator.hpp>
-#include <boost/async/promise.hpp>
-#include <boost/async/op.hpp>
+#include <boost/cobalt/join.hpp>
+#include <boost/cobalt/generator.hpp>
+#include <boost/cobalt/promise.hpp>
+#include <boost/cobalt/op.hpp>
 
 #include <boost/asio/steady_timer.hpp>
 
@@ -17,37 +17,37 @@
 
 using namespace boost;
 
-static async::promise<std::size_t> wdummy(asio::any_io_executor exec,
+static cobalt::promise<std::size_t> wdummy(asio::any_io_executor exec,
                                   std::chrono::milliseconds ms = std::chrono::milliseconds(25))
 {
   if (ms == std::chrono::milliseconds ::max())
     throw std::runtime_error("wdummy_throw");
 
   asio::steady_timer tim{exec, ms};
-  co_await tim.async_wait(async::use_op);
+  co_await tim.async_wait(cobalt::use_op);
   co_return ms.count();
 }
 
-static async::generator<int> wgen(asio::any_io_executor exec)
+static cobalt::generator<int> wgen(asio::any_io_executor exec)
 {
   asio::steady_timer tim{exec, std::chrono::milliseconds(25)};
-  co_await tim.async_wait(async::use_op);
+  co_await tim.async_wait(cobalt::use_op);
   co_return 123;
 }
 
-static async::promise<void> wthrow(bool throw_ = false)
+static cobalt::promise<void> wthrow(bool throw_ = false)
 {
   if (throw_)
-    co_await asio::post(co_await async::this_coro::executor, async::use_op);
+    co_await asio::post(co_await cobalt::this_coro::executor, cobalt::use_op);
   throw std::runtime_error("wthrow");
   co_return;
 }
 
-static async::promise<void> wnever()
+static cobalt::promise<void> wnever()
 {
-  asio::steady_timer tim{async::this_thread::get_executor(),
+  asio::steady_timer tim{cobalt::this_thread::get_executor(),
                          std::chrono::steady_clock::time_point::max()};
-  co_await tim.async_wait(async::use_op);
+  co_await tim.async_wait(cobalt::use_op);
   co_return;
 }
 
@@ -84,7 +84,7 @@ CO_TEST_CASE("variadic-throw")
 CO_TEST_CASE("list")
 {
   auto exec = co_await asio::this_coro::executor;
-  std::vector<async::promise<std::size_t>> vec;
+  std::vector<cobalt::promise<std::size_t>> vec;
   vec.push_back(wdummy(exec, std::chrono::milliseconds(100)));
   vec.push_back(wdummy(exec, std::chrono::milliseconds( 50)));
   vec.push_back(wdummy(exec, std::chrono::milliseconds(150)));
@@ -99,7 +99,7 @@ CO_TEST_CASE("list")
 CO_TEST_CASE("list-exception")
 {
   auto exec = co_await asio::this_coro::executor;
-  std::vector<async::promise<void>> vec;
+  std::vector<cobalt::promise<void>> vec;
   vec.push_back(wthrow());
   vec.push_back(wnever());
 
@@ -108,22 +108,22 @@ CO_TEST_CASE("list-exception")
 
 CO_TEST_CASE("exception-after-post")
 {
-  CHECK_THROWS(co_await async::join(wthrow(true), wnever()));
-  CHECK_THROWS(co_await async::join(wnever(), wthrow(true)));
+  CHECK_THROWS(co_await cobalt::join(wthrow(true), wnever()));
+  CHECK_THROWS(co_await cobalt::join(wnever(), wthrow(true)));
 }
 
 
 CO_TEST_CASE("exception-after-list")
 try
 {
-   std::vector<async::promise<void>> vec;
+   std::vector<cobalt::promise<void>> vec;
    vec.push_back(wthrow(true));
    vec.push_back(wnever());
-   CHECK_THROWS(co_await async::join(vec));
+   CHECK_THROWS(co_await cobalt::join(vec));
    vec.clear();
    vec.push_back(wnever());
    vec.push_back(wthrow(true));
-   CHECK_THROWS(co_await async::join(vec));
+   CHECK_THROWS(co_await cobalt::join(vec));
 }
 catch(...)
 {
