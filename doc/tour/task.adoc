@@ -4,13 +4,13 @@
 
 [source,cpp]
 ----
-async::task<int> my_task()
+cobalt::task<int> my_task()
 {
    co_await do_the_thing();
    co_return 0;
 }
 
-async::main co_main(int argc, char * argv[])
+cobalt::main co_main(int argc, char * argv[])
 {
     // create the task here
     auto t = my_task();

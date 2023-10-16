@@ -16,8 +16,8 @@ project : requirements
   <target-os>linux:<linkflags>-lpthread
 ;
 
-exe delay       : delay.cpp         /boost//async ;
-exe delay_op    : delay_op.cpp      /boost//async ;
-exe echo_server : echo_server.cpp   /boost//async ;
-exe outcome     : outcome.cpp       /boost//async ;
-# exe ticker      : ticker.cpp    /boost//json      /boost//async ;
+exe delay       : delay.cpp         /boost//cobalt ;
+exe delay_op    : delay_op.cpp      /boost//cobalt ;
+exe echo_server : echo_server.cpp   /boost//cobalt ;
+exe outcome     : outcome.cpp       /boost//cobalt ;
+# exe ticker      : ticker.cpp    /boost//json      /boost//cobalt ;

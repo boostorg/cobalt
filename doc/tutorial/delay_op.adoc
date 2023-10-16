@@ -2,10 +2,10 @@
 
 We've used the `use_op` so far, to use an implicit operation based on asio's completion token mechanic.
 
-We can however implement our own ops, that can also utilize the `async_ready` optimization.
+We can however implement our own ops, that can also utilize the `await_ready` optimization.
 Unlike immediate completion, the coroutine will never suspend when `await_ready` returns true.
 
-To leverage this coroutine feature, `async` provides an easy way to create a skipable operation:
+To leverage this coroutine feature, `cobalt` provides an easy way to create a skipable operation:
 
 .example/delay_op.cpp
 [example]

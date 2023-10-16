@@ -1,17 +1,17 @@
 [#promise]
-== async/promise.hpp
+== cobalt/promise.hpp
 
 A promise is an eager coroutine that can `co_await` and `co_return` values. That is, it cannot use `co_yield`.
 
 [source,cpp]
 ----
-async::promise<void> delay(std::chrono::milliseconds ms)
+cobalt::promise<void> delay(std::chrono::milliseconds ms)
 {
-  asio::steady_timer tim{co_await async::this_coro::executor, ms};
-  co_await tim.async_wait(async::use_op);
+  asio::steady_timer tim{co_await cobalt::this_coro::executor, ms};
+  co_await tim.async_wait(cobalt::use_op);
 }
 
-async::main co_main(int argc, char *argv[])
+cobalt::main co_main(int argc, char *argv[])
 {
   co_await delay(std::chrono::milliseconds(50));
   co_return 0;
@@ -27,9 +27,9 @@ A detached promise will not send a cancellation on destruction.
 
 [source,cpp]
 ----
-async::promise<void> my_task();
+cobalt::promise<void> my_task();
 
-async::main co_main(int argc, char *argv[])
+cobalt::main co_main(int argc, char *argv[])
 {
   +my_task(); // <1>
   co_await delay(std::chrono::milliseconds(50));
@@ -46,7 +46,7 @@ in any position followed by the executor argument.
 
 [source, cpp]
 ----
-async::promise<int> my_gen(asio::executor_arg_t, asio::io_context::executor_type exec_to_use);
+cobalt::promise<int> my_gen(asio::executor_arg_t, asio::io_context::executor_type exec_to_use);
 ----
 
 === Memory Resource
@@ -57,7 +57,7 @@ unless a `std::allocator_arg` is used in any position followed by a `polymorphic
 
 [source, cpp]
 ----
-async::promise<int> my_gen(std::allocator_arg_t, pmr::polymorphic_allocator<void> alloc);
+cobalt::promise<int> my_gen(std::allocator_arg_t, pmr::polymorphic_allocator<void> alloc);
 ----
 
 [#promise-outline]
@@ -66,7 +66,7 @@ async::promise<int> my_gen(std::allocator_arg_t, pmr::polymorphic_allocator<void
 
 [source,cpp]
 ----
-include::../../include/boost/async/promise.hpp[tag=outline]
+include::../../include/boost/cobalt/promise.hpp[tag=outline]
 ----
 <1> Supports <<interrupt_await>>
 <2> This allows to create promise running in parallel with a simple `+my_task()` expression.

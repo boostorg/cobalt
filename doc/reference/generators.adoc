@@ -1,11 +1,11 @@
 [#generator]
-== async/generator.hpp
+== cobalt/generator.hpp
 
 A generator is an eager coroutine that can `co_await` and `co_yield` values to the caller.
 
 [source,cpp]
 ----
-async::generator<int> example()
+cobalt::generator<int> example()
 {
   printf("In coro 1\n");
   co_yield 2;
@@ -13,7 +13,7 @@ async::generator<int> example()
   co_return 4;
 }
 
-async::main co_main(int argc, char * argv[])
+cobalt::main co_main(int argc, char * argv[])
 {
   printf("In main 0\n");
   auto f = example(); // call and let it run until the first co_yield
@@ -53,7 +53,7 @@ Values can be pushed into the generator, when `Push` (the second template parame
 
 [source,cpp]
 ----
-async::generator<int, int> example()
+cobalt::generator<int, int> example()
 {
   printf("In coro 1\n");
   int i =  co_yield 2;
@@ -61,7 +61,7 @@ async::generator<int, int> example()
   co_return 4;
 }
 
-async::main co_main(int argc, char * argv[])
+cobalt::main co_main(int argc, char * argv[])
 {
   printf("In main 0\n");
   auto f = example(); // call and let it run until the first co_yield
@@ -88,16 +88,16 @@ and then process the newly pushed value and resume at the next co_yield.
 
 [source,cpp]
 ----
-async::generator<int, int> example()
+cobalt::generator<int, int> example()
 {
-  int v = co_await async::this_coro::initial;
+  int v = co_await cobalt::this_coro::initial;
   printf("In coro %d\n", v);
   co_yield 2;
   printf("In coro %d\n", v);
   co_return 4;
 }
 
-async::main co_main(int argc, char * argv[])
+cobalt::main co_main(int argc, char * argv[])
 {
   printf("In main 0\n");
   auto f = example(); // call and let it run until the first co_yield
@@ -140,7 +140,7 @@ in any position followed by the executor argument.
 
 [source, cpp]
 ----
-async::generator<int> my_gen(asio::executor_arg_t, asio::io_context::executor_type exec_to_use);
+cobalt::generator<int> my_gen(asio::executor_arg_t, asio::io_context::executor_type exec_to_use);
 ----
 
 [#generator-allocator]
@@ -151,7 +151,7 @@ unless a `std::allocator_arg` is used in any position followed by a `polymorphic
 
 [source, cpp]
 ----
-async::generator<int> my_gen(std::allocator_arg_t, pmr::polymorphic_allocator<void> alloc);
+cobalt::generator<int> my_gen(std::allocator_arg_t, pmr::polymorphic_allocator<void> alloc);
 ----
 
 [#generator-outline]
@@ -159,7 +159,7 @@ async::generator<int> my_gen(std::allocator_arg_t, pmr::polymorphic_allocator<vo
 
 [source,cpp,subs=+quotes]
 ----
-include::../../include/boost/async/generator.hpp[tag=outline]
+include::../../include/boost/cobalt/generator.hpp[tag=outline]
 ----
 <1> This allows code like `while (gen) co_await gen:`
 <2> Supports <<interrupt_await>>

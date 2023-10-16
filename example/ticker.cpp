@@ -3,9 +3,9 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/async.hpp>
-#include <boost/async/main.hpp>
-#include <boost/async/join.hpp>
+#include <boost/cobalt.hpp>
+#include <boost/cobalt/main.hpp>
+#include <boost/cobalt/join.hpp>
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -30,7 +30,7 @@
 using namespace boost;
 
 // tag::decls[]
-using executor_type = async::use_op_t::executor_with_default<async::executor>;
+using executor_type = cobalt::use_op_t::executor_with_default<cobalt::executor>;
 using socket_type   = typename asio::ip::tcp::socket::rebind_executor<executor_type>::other;
 using acceptor_type = typename asio::ip::tcp::acceptor::rebind_executor<executor_type>::other;
 using websocket_type = beast::websocket::stream<asio::ssl::stream<socket_type>>;
@@ -38,13 +38,13 @@ namespace http = beast::http;
 // end::decls[]
 
 // tag::connect[]
-async::promise<asio::ssl::stream<socket_type>> connect(
+cobalt::promise<asio::ssl::stream<socket_type>> connect(
         std::string host, boost::asio::ssl::context & ctx)
 {
-    asio::ip::tcp::resolver res{async::this_thread::get_executor()};
-    auto ep = co_await res.async_resolve(host, "https", async::use_op); // <1>
+    asio::ip::tcp::resolver res{cobalt::this_thread::get_executor()};
+    auto ep = co_await res.async_resolve(host, "https", cobalt::use_op); // <1>
 
-    asio::ssl::stream<socket_type> sock{async::this_thread::get_executor(), ctx};
+    asio::ssl::stream<socket_type> sock{cobalt::this_thread::get_executor(), ctx};
     co_await sock.next_layer().async_connect(*ep.begin()); // <2>
     co_await sock.async_handshake(asio::ssl::stream_base::client); // <3>
 
@@ -53,13 +53,13 @@ async::promise<asio::ssl::stream<socket_type>> connect(
 // end::connect[]
 
 // tag::ws_upgrade[]
-async::promise<void> connect_to_blockchain_info(websocket_type & ws)
+cobalt::promise<void> connect_to_blockchain_info(websocket_type & ws)
 {
  ws.set_option(beast::websocket::stream_base::decorator(
      [](beast::websocket::request_type& req)
      {
        req.set(http::field::user_agent,
-               std::string(BOOST_BEAST_VERSION_STRING) + " async-ticker");
+               std::string(BOOST_BEAST_VERSION_STRING) + " cobalt-ticker");
        req.set(http::field::origin,
                "https://exchange.blockchain.com"); // <1>
      }));
@@ -69,7 +69,7 @@ async::promise<void> connect_to_blockchain_info(websocket_type & ws)
 // end::ws_upgrade[]
 
 // tag::json_reader[]
-async::generator<json::object> json_reader(websocket_type & ws)
+cobalt::generator<json::object> json_reader(websocket_type & ws)
 try
 {
     beast::flat_buffer buf;
@@ -91,12 +91,12 @@ catch (std::exception & e)
 // end::json_reader[]
 
 // tag::subscription_types[]
-using subscription = std::pair<std::string, std::weak_ptr<async::channel<json::object>>>;
-using subscription_channel = std::weak_ptr<async::channel<json::object>>;
+using subscription = std::pair<std::string, std::weak_ptr<cobalt::channel<json::object>>>;
+using subscription_channel = std::weak_ptr<cobalt::channel<json::object>>;
 using subscription_map = boost::unordered_multimap<std::string, subscription_channel>;
 // end::subscription_types[]
 
-async::promise<void> handle_rejections(
+cobalt::promise<void> handle_rejections(
     std::list<std::string> & unconfirmed,
     subscription_map & subs,
     const json::object & ms)
@@ -116,7 +116,7 @@ async::promise<void> handle_rejections(
   subs.erase(r.first, r.second);
 }
 
-async::promise<void> handle_update(
+cobalt::promise<void> handle_update(
    std::list<std::string> & unconfirmed,
    subscription_map & subs,
    const json::object & ms,
@@ -151,7 +151,7 @@ async::promise<void> handle_update(
   }
 }
 
-async::promise<void> handle_new_subscription(
+cobalt::promise<void> handle_new_subscription(
     std::list<std::string> & unconfirmed,
     subscription_map & subs,
     subscription msg,
@@ -173,7 +173,7 @@ async::promise<void> handle_new_subscription(
 }
 
 // tag::run_blockchain_info[]
-async::promise<void> run_blockchain_info(async::channel<subscription> & subc)
+cobalt::promise<void> run_blockchain_info(cobalt::channel<subscription> & subc)
 try
 {
     asio::ssl::context ctx{asio::ssl::context_base::tls_client};
@@ -186,7 +186,7 @@ try
     auto rd = json_reader(ws); // <2>
     while (ws.is_open()) // <3>
     {
-      switch (auto msg = co_await async::race(rd, subc.read()); msg.index()) // <4>
+      switch (auto msg = co_await cobalt::race(rd, subc.read()); msg.index()) // <4>
       {
         case 0: // <5>
           if (auto ms = get<0>(msg);
@@ -217,18 +217,18 @@ catch(std::exception & e)
 // end::run_blockchain_info[]
 
 // tag::read_and_close[]
-async::promise<void> read_and_close(beast::websocket::stream<socket_type> & st, beast::flat_buffer buf)
+cobalt::promise<void> read_and_close(beast::websocket::stream<socket_type> & st, beast::flat_buffer buf)
 {
     system::error_code ec;
-    co_await st.async_read(buf, asio::as_tuple(async::use_op));
-    co_await st.async_close(beast::websocket::close_code::going_away, asio::as_tuple(async::use_op));
+    co_await st.async_read(buf, asio::as_tuple(cobalt::use_op));
+    co_await st.async_close(beast::websocket::close_code::going_away, asio::as_tuple(cobalt::use_op));
     st.next_layer().close(ec);
 }
 // end::read_and_close[]
 
 // tag::run_session[]
-async::promise<void> run_session(beast::websocket::stream<socket_type> st,
-                                 async::channel<subscription> & subc)
+cobalt::promise<void> run_session(beast::websocket::stream<socket_type> st,
+                                 cobalt::channel<subscription> & subc)
 try
 {
     http::request<http::empty_body> req;
@@ -254,7 +254,7 @@ try
     // close when data gets sent
     auto p = read_and_close(st, std::move(buf)); // <4>
 
-    auto ptr = std::make_shared<async::channel<json::object>>(1u); // <5>
+    auto ptr = std::make_shared<cobalt::channel<json::object>>(1u); // <5>
     co_await subc.write(subscription{sym, ptr}); // <6>
 
     while (ptr->is_open() && st.is_open()) // <7>
@@ -264,7 +264,7 @@ try
     }
 
     co_await st.async_close(beast::websocket::close_code::going_away,
-                            asio::as_tuple(async::use_op)); // <8>
+                            asio::as_tuple(cobalt::use_op)); // <8>
     st.next_layer().close();
     co_await p; // <9>
 
@@ -276,24 +276,24 @@ catch(std::exception & e)
 // end::run_session[]
 
 // tag::main[]
-async::main co_main(int argc, char * argv[])
+cobalt::main co_main(int argc, char * argv[])
 {
-    acceptor_type acc{co_await async::this_coro::executor,
+    acceptor_type acc{co_await cobalt::this_coro::executor,
                       asio::ip::tcp::endpoint (asio::ip::tcp::v4(), 8080)};
     std::cout << "Listening on localhost:8080" << std::endl;
 
     constexpr int limit = 10; // allow 10 ongoing sessions
-    async::channel<subscription> sub_manager; // <1>
+    cobalt::channel<subscription> sub_manager; // <1>
 
     co_await join( // <2>
       run_blockchain_info(sub_manager),
-      async::with( // <3>
-        async::wait_group(
+      cobalt::with( // <3>
+        cobalt::wait_group(
             asio::cancellation_type::all,
             asio::cancellation_type::all),
-        [&](async::wait_group & sessions) -> async::promise<void>
+        [&](cobalt::wait_group & sessions) -> cobalt::promise<void>
         {
-          while (!co_await async::this_coro::cancelled) // <4>
+          while (!co_await cobalt::this_coro::cancelled) // <4>
           {
             if (sessions.size() >= limit) // <5>
               co_await sessions.wait_one();

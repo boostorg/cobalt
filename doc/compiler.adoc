@@ -2,7 +2,7 @@
 
 == Libraries
 
-Boost.async requires a C++20 compilers and directly depends on the following boost libraries:
+Boost.cobalt requires a C++20 compilers and directly depends on the following boost libraries:
 
 - boost.asio
 - boost.system

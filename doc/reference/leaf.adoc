@@ -1,5 +1,5 @@
 [#leaf]
-== async/leaf.hpp
+== cobalt/leaf.hpp
 
 Async provides integration with boost.leaf.
 It provides functions similar to leaf that take an <<awaitable, awaitables>>

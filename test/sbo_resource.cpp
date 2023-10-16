@@ -5,7 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/detail/sbo_resource.hpp>
+#include <boost/cobalt/detail/sbo_resource.hpp>
 
 #include "doctest.h"
 
@@ -14,10 +14,10 @@ TEST_SUITE_BEGIN("sbo_resource");
 TEST_CASE("basic")
 {
   char buf[1024];
-  boost::async::detail::sbo_resource res{buf, sizeof(buf)};
+  boost::cobalt::detail::sbo_resource res{buf, sizeof(buf)};
 
   {
-    std::vector<int, boost::async::detail::sbo_allocator<int>> vec{&res};
+    std::vector<int, boost::cobalt::detail::sbo_allocator<int>> vec{&res};
 
     for (int i = 0u; i < 4000; i++)
       vec.push_back(i);
@@ -27,10 +27,10 @@ TEST_CASE("basic")
 TEST_CASE("too-small")
 {
   char buf[1];
-  boost::async::detail::sbo_resource res{buf, sizeof(buf)};
+  boost::cobalt::detail::sbo_resource res{buf, sizeof(buf)};
 
   {
-    std::vector<int, boost::async::detail::sbo_allocator<int>> vec{&res};
+    std::vector<int, boost::cobalt::detail::sbo_allocator<int>> vec{&res};
 
     for (int i = 0u; i < 4000; i++)
       vec.push_back(i);
@@ -39,9 +39,9 @@ TEST_CASE("too-small")
 
 TEST_CASE("no-buf")
 {
-  boost::async::detail::sbo_resource res;
+  boost::cobalt::detail::sbo_resource res;
   {
-    std::vector<int, boost::async::detail::sbo_allocator<int>> vec{&res};
+    std::vector<int, boost::cobalt::detail::sbo_allocator<int>> vec{&res};
 
     for (int i = 0u; i < 4000; i++)
       vec.push_back(i);

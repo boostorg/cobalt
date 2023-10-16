@@ -5,10 +5,10 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/race.hpp>
-#include <boost/async/generator.hpp>
-#include <boost/async/promise.hpp>
-#include <boost/async/op.hpp>
+#include <boost/cobalt/race.hpp>
+#include <boost/cobalt/generator.hpp>
+#include <boost/cobalt/promise.hpp>
+#include <boost/cobalt/op.hpp>
 
 #include <boost/asio/steady_timer.hpp>
 
@@ -18,20 +18,20 @@
 using namespace boost;
 
 
-static  async::promise<std::size_t> dummy(asio::any_io_executor exec,
+static  cobalt::promise<std::size_t> dummy(asio::any_io_executor exec,
                                   std::chrono::milliseconds ms = std::chrono::milliseconds(50))
 {
   asio::steady_timer tim{exec, ms};
-  co_await tim.async_wait(async::use_op);
+  co_await tim.async_wait(cobalt::use_op);
   co_return ms.count();
 }
 
 
-static  async::promise<std::size_t> nothrow_dummy(asio::any_io_executor exec,
+static  cobalt::promise<std::size_t> nothrow_dummy(asio::any_io_executor exec,
                                           std::chrono::milliseconds ms = std::chrono::milliseconds(50))
 try {
   asio::steady_timer tim{exec, ms};
-  co_await tim.async_wait(async::use_op);
+  co_await tim.async_wait(cobalt::use_op);
   co_return ms.count();
 }
 catch(...)
@@ -39,10 +39,10 @@ catch(...)
   co_return std::numeric_limits<std::size_t>::max();
 }
 
-static async::generator<int> gen(asio::any_io_executor exec)
+static cobalt::generator<int> gen(asio::any_io_executor exec)
 {
   asio::steady_timer tim{exec, std::chrono::milliseconds(50000)};
-  co_await tim.async_wait(async::use_op);
+  co_await tim.async_wait(cobalt::use_op);
   co_return 123;
 }
 
@@ -89,7 +89,7 @@ CO_TEST_CASE("list")
   std::mt19937 src{seed};
 
   auto exec = co_await asio::this_coro::executor;
-  std::vector<async::promise<std::size_t>> vec;
+  std::vector<cobalt::promise<std::size_t>> vec;
   vec.push_back(dummy(exec, std::chrono::milliseconds(100)));
   vec.push_back(dummy(exec, std::chrono::milliseconds( 50)));
   vec.push_back(dummy(exec, std::chrono::milliseconds(100000)));
@@ -112,7 +112,7 @@ CO_TEST_CASE("list")
 CO_TEST_CASE("empty-list")
 {
   auto exec = co_await asio::this_coro::executor;
-  std::vector<async::promise<std::size_t>> vec;
+  std::vector<cobalt::promise<std::size_t>> vec;
   CHECK_THROWS(co_await race(vec));
 }
 

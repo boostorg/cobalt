@@ -1,5 +1,5 @@
 [#join]
-== async/join.hpp
+== cobalt/join.hpp
 
 The `join` function can be used to `co_await` multiple <<awaitable, awaitable>> at once with properly connected cancellations.
 
@@ -13,14 +13,14 @@ It can be called as a variadic function with multiple <<awaitable>> or as on a r
 
 [source,cpp]
 ----
-async::promise<void> task1();
-async::promise<void> task2();
+cobalt::promise<void> task1();
+cobalt::promise<void> task2();
 
-async::promise<void> do_join()
+cobalt::promise<void> do_join()
 {
-  co_await async::join(task1(), task2()); // <1>
-  std::vector<async::promise<void>> aws {task1(), task2()};
-  co_await async::join(aws); // <2>
+  co_await cobalt::join(task1(), task2()); // <1>
+  std::vector<cobalt::promise<void>> aws {task1(), task2()};
+  co_await cobalt::join(aws); // <2>
 }
 ----
 <1> Wait for a variadic set of <<awaitable, awaitables>>

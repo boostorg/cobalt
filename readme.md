@@ -1,4 +1,4 @@
-# boost.async
+# boost.cobalt
 
 > [!NOTE]  
 > This is not yet an official boost library.
@@ -9,7 +9,7 @@ yet still want to have linear & readable code (i..e. avoid callbacks).
 
 A minimum of Boost 1.82 is necessary as the ASIO in that version has needed support. C++ 20 is needed for C++ coroutines.
 
-Below is a showcase of features, if you're new to coroutines or asynchronous programming, please see the [primer](https://klemens.dev/async/#coroutine_primer).
+Below is a showcase of features, if you're new to coroutines or asynchronous programming, please see the [primer](https://klemens.dev/cobalt/#coroutine_primer).
 
 The assumptions are:
 
@@ -22,13 +22,13 @@ The assumptions are:
 
 ```cpp
 // a single threaded main running on an io_context
-async::main co_main(int argc, char ** argv)
+cobalt::main co_main(int argc, char ** argv)
 {
     // wrapper around asio::steady_timer
-    asio::steady_timer tim{co_await async::this_coro::executor};
+    asio::steady_timer tim{co_await cobalt::this_coro::executor};
     dt.expires_after(std::chrono::milliseconds(100));
 
-    co_await tim.async_wait(async::use_op);
+    co_await tim.async_wait(cobalt::use_op);
     co_return 0;
 }
 ```
@@ -40,12 +40,12 @@ It also hooks up signals, so that things like `Ctrl+C` get forwarded as cancella
 Alternatively, [`run`](doc/reference/run.adoc) can be used manually.
 
 ```cpp
-async::task<int> main_func()
+cobalt::task<int> main_func()
 {
-    asio::steady_timer tim{co_await async::this_coro::executor};
+    asio::steady_timer tim{co_await cobalt::this_coro::executor};
     dt.expires_after(std::chrono::milliseconds(100));
 
-    co_await tim.async_wait(async::use_op);
+    co_await tim.async_wait(cobalt::use_op);
     co_return 0;
 }
 
@@ -58,20 +58,20 @@ int main(int argc, char ** argv)
 
 ## Promises
 
-The core primitive for creating your own functions is [`async::promise<T>`](doc/reference/promise.adoc).
+The core primitive for creating your own functions is [`cobalt::promise<T>`](doc/reference/promise.adoc).
 It is eager, i.e. it starts execution immediately, before you `co_await`.
 
 ```cpp
-async::promise<void> test()
+cobalt::promise<void> test()
 {
     printf("test-1\n");
-    asio::steady_timer tim{co_await async::this_coro::executor};
+    asio::steady_timer tim{co_await cobalt::this_coro::executor};
     dt.expires_after(std::chrono::milliseconds(100));
-    co_await tim.async_wait(async::use_op);
+    co_await tim.async_wait(cobalt::use_op);
     printf("test-2\n");
 }
 
-async::main co_main(int argc, char ** argv)
+cobalt::main co_main(int argc, char ** argv)
 {
     printf("main-1\n");
     auto tt = test();
@@ -96,9 +96,9 @@ Unlike ops, returned by .wait, the promise can be disregarded; disregarding the 
 spin up multiple tasks to run in parallel. In order to avoid accidental detaching the promise type uses `nodiscard` unless one uses `+` to detach it:
 
 ```cpp
-async::promise<void> my_task();
+cobalt::promise<void> my_task();
 
-async::main co_main()
+cobalt::main co_main()
 {
     // warns & cancels the task
     my_task();
@@ -112,14 +112,14 @@ async::main co_main()
 
 A [`task`](doc/reference/task.adoc) is a lazy alternative to a promise, that can be spawned onto or `co_await`ed on another executor.
 
-An `async::task` can also be used with `spawn` to turn it into an asio operation.
+An `cobalt::task` can also be used with `spawn` to turn it into an asio operation.
 
 ## Generator
 
 A [`generator`](doc/reference/generator.adoc) is a coroutine that produces a series of values instead of one, but otherwise similar to `promise`.
 
 ```cpp
-async::generator<int> test()
+cobalt::generator<int> test()
 {
   printf("test-1\n");
   co_yield 1;
@@ -129,7 +129,7 @@ async::generator<int> test()
   co_return 3;
 }
 
-async::main co_main(int argc, char ** argv)
+cobalt::main co_main(int argc, char ** argv)
 {
     printf("main-1\n");
     auto tt = test();
@@ -161,16 +161,16 @@ Channels are modeled on golang; they are different from boost.asio channels in t
 Instead they directly context switch when possible.
 
 ```cpp
-async::promise<void> test(async::channel<int> & chan)
+cobalt::promise<void> test(cobalt::channel<int> & chan)
 {
   printf("Reader 1: %d\n", co_await chan.read());
   printf("Reader 2: %d\n", co_await chan.read());
   printf("Reader 3: %d\n", co_await chan.read());
 }
 
-async::main co_main(int argc, char ** argv)
+cobalt::main co_main(int argc, char ** argv)
 {
-  async::channel<int> chan{0u /* buffer size */};
+  cobalt::channel<int> chan{0u /* buffer size */};
   
   auto p = test(chan);
   
@@ -199,33 +199,33 @@ Writer-4
 
 ## Ops
 
-To make writing asio operations that have an early completion easier, async has an op-helper:
+To make writing asio operations that have an early completion easier, cobalt has an op-helper:
 
 ```cpp
 template<typename Timer>
-struct wait_op : async::op<system::error_code> // enable_op is to use ADL
+struct wait_op : cobalt::op<system::error_code> // enable_op is to use ADL
 {
   Timer & tim;
 
   wait_op(Timer & tim) : tim(tim) {}
   
   // this gets used to determine if it needs to suspend for the op
-  void ready(async::handler<system::error_code> h)
+  void ready(cobalt::handler<system::error_code> h)
   {
     if (tim.expiry() < Timer::clock_type::now())
       h(system::error_code(asio::error::operation_aborted));
   }
   
   // this gets used to initiate the op if ti needs to suspend
-  void initiate(async::completion_handler<system::error_code> complete)
+  void initiate(cobalt::completion_handler<system::error_code> complete)
   {
     tim.async_wait(std::move(complete));
   }
 };
 
-async::main co_main(int argc, char ** argv)
+cobalt::main co_main(int argc, char ** argv)
 {
-  async::steady_timer tim{co_await async::this_coro::executor}; // already expired
+  cobalt::steady_timer tim{co_await cobalt::this_coro::executor}; // already expired
   co_await wait_op(tim); // will not suspend, since its ready
 }
 
@@ -237,14 +237,14 @@ async::main co_main(int argc, char ** argv)
 [`race`](doc/reference/race.adoc) let's you await multiple awaitables at once. 
 
 ```cpp
-async::promise<void> delay(int ms)
+cobalt::promise<void> delay(int ms)
 {
-    asio::steady_timer tim{co_await async::this_coro::executor};
+    asio::steady_timer tim{co_await cobalt::this_coro::executor};
     dt.expires_after(std::chrono::milliseconds(ms));
-    co_await tim.async_wait(async::use_op);
+    co_await tim.async_wait(cobalt::use_op);
 }
 
-async::main co_main(int argc, char ** argv)
+cobalt::main co_main(int argc, char ** argv)
 {
   auto res = co_await race(delay(100), delay(50));
   asert(res == 1); // delay(50) completes earlier, delay(100) is not cancelled  

@@ -4,20 +4,20 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 
-#include <boost/async.hpp>
+#include <boost/cobalt.hpp>
 #include <boost/asio.hpp>
 
-#if defined(BOOST_ASYNC_BENCH_WITH_CONTEXT)
+#if defined(BOOST_COBALT_BENCH_WITH_CONTEXT)
 #include <boost/asio/spawn.hpp>
 #endif
 
 using namespace boost;
 constexpr std::size_t n = 50'000'000ull;
 
-async::task<void> atest()
+cobalt::task<void> atest()
 {
   for (std::size_t i = 0u; i < n; i++)
-    co_await asio::post(async::use_op);
+    co_await asio::post(cobalt::use_op);
 }
 
 asio::awaitable<void> awtest()
@@ -26,7 +26,7 @@ asio::awaitable<void> awtest()
     co_await asio::post(asio::deferred);
 }
 
-#if defined(BOOST_ASYNC_BENCH_WITH_CONTEXT)
+#if defined(BOOST_COBALT_BENCH_WITH_CONTEXT)
 
 void stest(asio::yield_context ctx)
 {
@@ -41,9 +41,9 @@ int main(int argc, char * argv[])
 {
   {
     auto start = std::chrono::steady_clock::now();
-    async::run(atest());
+    cobalt::run(atest());
     auto end = std::chrono::steady_clock::now();
-    printf("async    : %ld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    printf("cobalt    : %ld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
   }
 
   {
@@ -55,7 +55,7 @@ int main(int argc, char * argv[])
     printf("awaitable: %ld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
   }
 
-#if defined(BOOST_ASYNC_BENCH_WITH_CONTEXT)
+#if defined(BOOST_COBALT_BENCH_WITH_CONTEXT)
   {
     auto start = std::chrono::steady_clock::now();
     asio::io_context ctx{BOOST_ASIO_CONCURRENCY_HINT_1};

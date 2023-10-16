@@ -5,14 +5,14 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include "boost/async/main.hpp"
+#include "boost/cobalt/main.hpp"
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
 #include <boost/asio/signal_set.hpp>
 
 
-namespace boost::async::detail
+namespace boost::cobalt::detail
 {
 
 auto main_promise::final_suspend() noexcept -> std::suspend_never
@@ -23,10 +23,10 @@ auto main_promise::final_suspend() noexcept -> std::suspend_never
   return std::suspend_never(); // enable_yielding_tasks::final_suspend();
 }
 
-int main_promise::run_main(::boost::async::main mn)
+int main_promise::run_main(::boost::cobalt::main mn)
 {
   asio::io_context ctx{BOOST_ASIO_CONCURRENCY_HINT_1};
-  boost::async::this_thread::set_executor(ctx.get_executor());
+  boost::cobalt::this_thread::set_executor(ctx.get_executor());
   int res = -1;
   mn.promise->result = &res;
   mn.promise->exec.emplace(ctx.get_executor());

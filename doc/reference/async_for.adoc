@@ -1,16 +1,16 @@
 [#async_for]
-== async/async_for.hpp
+== cobalt/async_for.hpp
 
-For types like generators a `BOOST_ASYNC_FOR` macro is provided, to emulate an `async for` loop.
+For types like generators a `BOOST_COBALT_FOR` macro is provided, to emulate an `for co_await` loop.
 
 
 [source,cpp]
 ----
-async::generator<int> gen();
+cobalt::generator<int> gen();
 
-async::main co_main(int argc, char * argv[])
+cobalt::main co_main(int argc, char * argv[])
 {
-    BOOST_ASYNC_FOR(auto i, gen())
+    BOOST_COBALT_FOR(auto i, gen())
         printf("Generated value %d\n", i);
 
     co_return 0;

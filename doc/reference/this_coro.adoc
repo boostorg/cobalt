@@ -1,5 +1,5 @@
 [#this_coro]
-== async/this_coro.hpp
+== cobalt/this_coro.hpp
 
 The `this_coro` namespace provides utilities to access the internal state of a coroutine promise.
 
@@ -7,7 +7,7 @@ Pseudo-awaitables:
 
 [source,cpp,subs="+quotes"]
 ----
-include::../../include/boost/async/this_coro.hpp[tag=outline]
+include::../../include/boost/cobalt/this_coro.hpp[tag=outline]
 ----
 
 
@@ -19,14 +19,14 @@ The allocator of a coroutine supporting `enable_await_allocator` can be obtained
 
 [source,cpp]
 ----
-co_await async::this_coro::allocator;
+co_await cobalt::this_coro::allocator;
 ----
 
 In order to enable this for your own coroutine you can inherit `enable_await_allocator` with the CRTP pattern:
 
 [source,cpp]
 ----
-struct my_promise : async::enable_await_allocator<my_promise>
+struct my_promise : cobalt::enable_await_allocator<my_promise>
 {
   using allocator_type = __your_allocator_type__;
   allocator_type get_allocator();
@@ -43,14 +43,14 @@ The allocator of a coroutine supporting `enable_await_executor` can be obtained 
 
 [source,cpp]
 ----
-co_await async::this_coro::executor;
+co_await cobalt::this_coro::executor;
 ----
 
 In order to enable this for your own coroutine you can inherit `enable_await_executor` with the CRTP pattern:
 
 [source,cpp]
 ----
-struct my_promise : async::enable_await_executor<my_promise>
+struct my_promise : cobalt::enable_await_executor<my_promise>
 {
   using executor_type = __your_executor_type__;
   executor_type get_executor();
@@ -74,7 +74,7 @@ to turn throw an exception when another actual <<awaitable, awaitable>> is await
 
 [source,cpp]
 ----
-co_await async::this_coro::throw_if_cancelled;
+co_await cobalt::this_coro::throw_if_cancelled;
 ----
 
 [#promise_cancellation_base]
@@ -86,14 +86,14 @@ https://www.boost.org/doc/libs/master/doc/html/boost_asio/reference/this_coro__r
 
 [source,cpp]
 ----
-co_await async::this_coro::reset_cancellation_state();
+co_await cobalt::this_coro::reset_cancellation_state();
 ----
 
 For convenience there is also a short-cut to check the current cancellation status:
 
 [source,cpp]
 ----
-asio::cancellation_type ct = (co_await async::this_coro::cancellation_state).cancelled();
-asio::cancellation_type ct = co_await async::this_coro::cancelled; // same as above
+asio::cancellation_type ct = (co_await cobalt::this_coro::cancellation_state).cancelled();
+asio::cancellation_type ct = co_await cobalt::this_coro::cancelled; // same as above
 ----
 

@@ -45,18 +45,18 @@ Operating systems provide APIs that allow IO to be performed asynchronously,
 and libraries such as https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio.html[boost.asio]
 provide portable ways to manage asynchronous operations.
 Asio itself does not dictate a way to handle the completions.
-This library (boost.async) provides a way to manage this all through coroutines/awaitables.
+This library (boost.cobalt) provides a way to manage this all through coroutines/awaitables.
 
 [source,cpp]
 ----
-async::promise<std::string> http_async_get(std:string_view url);
+cobalt::promise<std::string> http_cobalt_get(std:string_view url);
 
-async::main co_main(int argc, char * argv[])
+cobalt::main co_main(int argc, char * argv[])
 {
     auto [res, other_res] =
-            async::join(
-                http_async_get(("https://boost.org"),
-                http_async_get(("https://cppalliance.org")
+            cobalt::join(
+                http_cobalt_get(("https://boost.org"),
+                http_cobalt_get(("https://cppalliance.org")
             );
 
     printf("%s", res.c_str());
@@ -69,6 +69,6 @@ In the above code the asynchronous function to perform the request
 takes advantage of the operating system APIs so that the actual IO doesn't block.
 This means that while we're waiting for both functions to complete,
 the operations are interleaved and non-blocking.
-At the same time async provides the coroutine primitives that keep us out of callback hell.
+At the same time cobalt provides the coroutine primitives that keep us out of callback hell.
 
 

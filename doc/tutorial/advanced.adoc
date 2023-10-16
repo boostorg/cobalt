@@ -1,4 +1,4 @@
-:example-path: https://github.com/klemens-morgenstern/async/tree/master/example
+:example-path: https://github.com/boostorg/cobalt/tree/master/example
 
 == Advanced examples
 
@@ -15,7 +15,7 @@ More examples are provided in the repository as code only. All examples are list
 | Using the `boost.outcome` coroutine types.
 
 |{example-path}/python.cpp[example/python.cpp] & {example-path}/python.py[example/python.py]
-| Uisng nanobind to integrate async with python.
+| Using nanobind to integrate cobalt with python.
 It uses python's asyncio as executor and allows C++ to co_await python functions et vice versa.
 
 |{example-path}/signals.cpp[example/signals.cpp]

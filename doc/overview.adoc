@@ -1,6 +1,6 @@
 = Overview
 
-Here's a list of relevant features in async:
+Here's a list of relevant features in cobalt:
 
 .Coroutine types
 [cols="1,5"]

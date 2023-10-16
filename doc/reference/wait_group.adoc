@@ -1,5 +1,5 @@
 [#wait_group]
-== async/wait_group.hpp
+== cobalt/wait_group.hpp
 
 The `wait_group` function can be used to manage
 multiple coroutines of type `promise<void>`.
@@ -11,6 +11,6 @@ a `gather` function (`wait_all`) and will clean up on scope exit.
 
 [source,cpp,subs="+quotes"]
 ----
-include::../../include/boost/async/wait_group.hpp[tag=outline]
+include::../../include/boost/cobalt/wait_group.hpp[tag=outline]
 ----
 

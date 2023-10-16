@@ -3,12 +3,12 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/async.hpp>
+#include <boost/cobalt.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/asio/io_context_strand.hpp>
 
-#if defined(BOOST_ASYNC_USE_BOOST_CONTAINER_PMR)
+#if defined(BOOST_COBALT_USE_BOOST_CONTAINER_PMR)
 #include <boost/container/pmr/synchronized_pool_resource.hpp>
 #endif
 
@@ -20,12 +20,12 @@ using namespace boost;
 
 TEST_SUITE_BEGIN("strand");
 
-async::promise<void> do_the_thing()
+cobalt::promise<void> do_the_thing()
 {
   static std::atomic<int> unique = 0;
 
-  asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::milliseconds(50)};
-  co_await tim.async_wait(async::use_op);
+  asio::steady_timer tim{co_await cobalt::this_coro::executor, std::chrono::milliseconds(50)};
+  co_await tim.async_wait(cobalt::use_op);
 
 
   unique++;
@@ -33,7 +33,7 @@ async::promise<void> do_the_thing()
   unique--;
 }
 
-#if !defined(BOOST_ASYNC_USE_IO_CONTEXT)
+#if !defined(BOOST_COBALT_USE_IO_CONTEXT)
 
 TEST_CASE("strand")
 {
@@ -41,8 +41,8 @@ TEST_CASE("strand")
 
   asio::io_context ctx;
   asio::any_io_executor exec{asio::make_strand(ctx.get_executor())};
-#if !defined(BOOST_ASYNC_NO_PMR)
-  async::pmr::synchronized_pool_resource sync;
+#if !defined(BOOST_COBALT_NO_PMR)
+  cobalt::pmr::synchronized_pool_resource sync;
 #endif
 
   for (int i = 0; i < 8; i++)
@@ -50,10 +50,10 @@ TEST_CASE("strand")
         std::thread{
           [&]
           {
-#if !defined(BOOST_ASYNC_NO_PMR)
-            async::this_thread::set_default_resource(&sync);
+#if !defined(BOOST_COBALT_NO_PMR)
+            cobalt::this_thread::set_default_resource(&sync);
 #endif
-            async::this_thread::set_executor(exec);
+            cobalt::this_thread::set_executor(exec);
             +do_the_thing();
             ctx.run();
           }});

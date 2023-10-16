@@ -5,10 +5,10 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/generator.hpp>
-#include <boost/async/promise.hpp>
-#include <boost/async/race.hpp>
-#include <boost/async/op.hpp>
+#include <boost/cobalt/generator.hpp>
+#include <boost/cobalt/promise.hpp>
+#include <boost/cobalt/race.hpp>
+#include <boost/cobalt/op.hpp>
 #include <boost/core/ignore_unused.hpp>
 
 #include <boost/asio/steady_timer.hpp>
@@ -40,7 +40,7 @@ struct doctest::StringMaker<variant2::variant<Ts...>>
 
 TEST_SUITE_BEGIN("generator");
 
-async::generator<int> gen()
+cobalt::generator<int> gen()
 {
   for (int i = 0; i <10; i ++)
     co_yield i;
@@ -71,7 +71,7 @@ CO_TEST_CASE("generator-int")
 }
 
 
-async::generator<int, int> gen_push()
+cobalt::generator<int, int> gen_push()
 {
   int val = 1u;
   for (int i = 0; i < 10; i++)
@@ -103,25 +103,25 @@ CO_TEST_CASE("generator-push")
   co_return ;
 }
 
-async::generator<int> delay_gen(std::chrono::milliseconds tick)
+cobalt::generator<int> delay_gen(std::chrono::milliseconds tick)
 {
-  asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::steady_clock::now()};
+  asio::steady_timer tim{co_await cobalt::this_coro::executor, std::chrono::steady_clock::now()};
   for (int i = 0; i < 10; i ++)
   {
-    co_await tim.async_wait(async::use_op);
+    co_await tim.async_wait(cobalt::use_op);
     tim.expires_at(tim.expiry() + tick);
     co_yield i;
   }
   co_return 10;
 }
 
-async::generator<int> lazy_delay_gen(std::chrono::milliseconds tick)
+cobalt::generator<int> lazy_delay_gen(std::chrono::milliseconds tick)
 {
-  co_await async::this_coro::initial;
-  asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::steady_clock::now()};
+  co_await cobalt::this_coro::initial;
+  asio::steady_timer tim{co_await cobalt::this_coro::executor, std::chrono::steady_clock::now()};
   for (int i = 0; i < 10; i ++)
   {
-    co_await tim.async_wait(async::use_op);
+    co_await tim.async_wait(cobalt::use_op);
     tim.expires_at(tim.expiry() + tick);
     co_yield i;
   }
@@ -129,13 +129,13 @@ async::generator<int> lazy_delay_gen(std::chrono::milliseconds tick)
 }
 
 
-#if !defined(BOOST_ASYNC_NO_SELF_DELETE)
+#if !defined(BOOST_COBALT_NO_SELF_DELETE)
 
 CO_TEST_CASE("generator-left_race")
 {
-  asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::milliseconds(50)};
+  asio::steady_timer tim{co_await cobalt::this_coro::executor, std::chrono::milliseconds(50)};
   auto g1 = delay_gen(std::chrono::milliseconds(200));
-  co_await tim.async_wait(async::use_op);
+  co_await tim.async_wait(cobalt::use_op);
   auto g2 = delay_gen(std::chrono::milliseconds(100));
 
   using v = variant2::variant<int, int>;
@@ -168,9 +168,9 @@ CO_TEST_CASE("generator-left_race")
 
 CO_TEST_CASE("lazy-generator-left_race")
 {
-  asio::steady_timer tim{co_await async::this_coro::executor, std::chrono::milliseconds(50)};
+  asio::steady_timer tim{co_await cobalt::this_coro::executor, std::chrono::milliseconds(50)};
   auto g1 = lazy_delay_gen(std::chrono::milliseconds(200));
-  co_await tim.async_wait(async::use_op);
+  co_await tim.async_wait(cobalt::use_op);
   auto g2 = lazy_delay_gen(std::chrono::milliseconds(100));
 
   using v = variant2::variant<int, int>;
@@ -202,21 +202,21 @@ CO_TEST_CASE("lazy-generator-left_race")
 
 #endif
 
-async::generator<int> gshould_unwind(asio::io_context & ctx)
+cobalt::generator<int> gshould_unwind(asio::io_context & ctx)
 {
-  co_await asio::post(ctx, async::use_op);
+  co_await asio::post(ctx, cobalt::use_op);
   co_return 0;
 }
 
 TEST_CASE("unwind")
 {
   asio::io_context ctx;
-  boost::async::this_thread::set_executor(ctx.get_executor());
+  boost::cobalt::this_thread::set_executor(ctx.get_executor());
   boost::ignore_unused(gshould_unwind(ctx));
 }
 
 
-async::generator<int> gen_stop()
+cobalt::generator<int> gen_stop()
 {
   int val = 1u;
   for (int i = 0; i < 10; i++)
@@ -239,9 +239,9 @@ CO_TEST_CASE("stop")
   auto gg =std::move(g);
 }
 
-async::generator<int, int> eager()
+cobalt::generator<int, int> eager()
 {
-  int i = co_await async::this_coro::initial;
+  int i = co_await cobalt::this_coro::initial;
   for (; i < 10; i += co_yield i);
 
   co_return i;

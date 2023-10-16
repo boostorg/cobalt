@@ -67,8 +67,8 @@ def git_boost_steps(branch, image="alpine/git", env_win_style=False):
             "image": image,
             "commands": [
                 "cd boost/libs",
-                "git clone {}".format("$Env:DRONE_GIT_HTTP_URL" if env_win_style else "$DRONE_GIT_HTTP_URL"),
-                "cd async",
+                "git clone {} cobalt".format("$Env:DRONE_GIT_HTTP_URL" if env_win_style else "$DRONE_GIT_HTTP_URL"),
+                "cd cobalt",
                 "git checkout {}".format("$Env:DRONE_COMMIT" if env_win_style else "$DRONE_COMMIT")
             ]
         }
@@ -97,7 +97,7 @@ def linux_build_steps(image, **kwargs):
             "name": "build",
             "image": image,
             "commands" : [
-                "cd boost/libs/async",
+                "cd boost/libs/cobalt",
                 "../../b2 build -j8 " + args
             ]
         },
@@ -105,7 +105,7 @@ def linux_build_steps(image, **kwargs):
             "name": "test",
             "image": image,
             "commands" : [
-                "cd boost/libs/async",
+                "cd boost/libs/cobalt",
                 "../../b2 test -j8 " + args
             ]
         }
@@ -127,7 +127,7 @@ def windows_build_steps(image, **kwargs):
             "name" : "build",
             "image" : image,
             "commands": [
-                "cd boost/libs/async",
+                "cd boost/libs/cobalt",
                 "..\\\\..\\\\b2 build -j8 " + args
             ]
         },
@@ -135,7 +135,7 @@ def windows_build_steps(image, **kwargs):
             "name": "test",
             "image": image,
             "commands": [
-                "cd boost/libs/async",
+                "cd boost/libs/cobalt",
                 "..\\\\..\\\\b2 test -j8 " + args
             ]
         }
@@ -192,12 +192,12 @@ def main(ctx):
         linux("gcc-13 (asan)",          branch, "docker.io/library/gcc:13",  variant="release", cxxstd="20", debug_symbols="on", address_sanitizer="on"),
         linux("gcc-13 (usan)",          branch, "docker.io/library/gcc:13",  variant="release", cxxstd="20", debug_symbols="on", undefined_sanitizer="on"),
         linux("gcc-13 (tsan)",          branch, "docker.io/library/gcc:13",  variant="release", cxxstd="20", debug_symbols="on", thread_sanitizer="on"),
-        linux("gcc-13 (io_context)",    branch, "docker.io/library/gcc:13",  variant="release", cxxstd="20", **{'boost.async.executor': 'use_io_context'}),
-        linux("gcc-13 (container.pmr)", branch, "docker.io/library/gcc:13",  variant="release", cxxstd="20", **{'boost.async.pmr': 'boost-container'}),
-        linux("gcc-13 (no pmr)",        branch, "docker.io/library/gcc:13",  variant="release", cxxstd="20", **{'boost.async.pmr': 'no'}),
+        linux("gcc-13 (io_context)",    branch, "docker.io/library/gcc:13",  variant="release", cxxstd="20", **{'boost.cobalt.executor': 'use_io_context'}),
+        linux("gcc-13 (container.pmr)", branch, "docker.io/library/gcc:13",  variant="release", cxxstd="20", **{'boost.cobalt.pmr': 'boost-container'}),
+        linux("gcc-13 (no pmr)",        branch, "docker.io/library/gcc:13",  variant="release", cxxstd="20", **{'boost.cobalt.pmr': 'no'}),
         linux("clang",                  branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20"),
-        linux("clang (container.pmr)",  branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", **{'boost.async.pmr': 'boost-container'}),
-        linux("clang (no pmr)",         branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", **{'boost.async.pmr': 'no'}),
+        linux("clang (container.pmr)",  branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", **{'boost.cobalt.pmr': 'boost-container'}),
+        linux("clang (no pmr)",         branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", **{'boost.cobalt.pmr': 'no'}),
         linux("clang (asan)",           branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", debug_symbols="on", address_sanitizer="on"),
         linux("clang (usan)",           branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", debug_symbols="on", undefined_sanitizer="on"),
         linux("clang (tsan)",           branch, "docker.io/silkeh/clang", toolset='clang', variant="release", cxxstd="20", debug_symbols="on",  thread_sanitizer="on"),

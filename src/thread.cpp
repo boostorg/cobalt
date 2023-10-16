@@ -5,13 +5,13 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/thread.hpp>
+#include <boost/cobalt/thread.hpp>
 
 #include <boost/asio/append.hpp>
 #include <boost/asio/bind_executor.hpp>
 
 
-namespace boost::async::detail
+namespace boost::cobalt::detail
 {
 
 thread_promise::thread_promise()
@@ -26,15 +26,15 @@ void run_thread(
     unique_handle<thread_promise> h)
 {
 
-#if !defined(BOOST_ASYNC_NO_PMR)
+#if !defined(BOOST_COBALT_NO_PMR)
   pmr::unsynchronized_pool_resource resource;
-  boost::async::this_thread::set_default_resource(&resource);
+  boost::cobalt::this_thread::set_default_resource(&resource);
   h->resource = &resource;
 #endif
 
   h->reset_cancellation_source(st->signal.slot());
   h->set_executor(st->ctx.get_executor());
-  boost::async::this_thread::set_executor(st->ctx.get_executor());
+  boost::cobalt::this_thread::set_executor(st->ctx.get_executor());
 
   asio::post(
       st->ctx.get_executor(),
@@ -65,10 +65,10 @@ void run_thread(
 }
 
 
-boost::async::thread detail::thread_promise::get_return_object()
+boost::cobalt::thread detail::thread_promise::get_return_object()
 {
   auto st = std::make_shared<thread_state>();
-  boost::async::thread res{std::thread{
+  boost::cobalt::thread res{std::thread{
       [st,
        h = unique_handle<detail::thread_promise>::from_promise(*this)]() mutable
       {

@@ -5,7 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/main.hpp>
+#include <boost/cobalt/main.hpp>
 #include <boost/outcome/coroutine_support.hpp>
 
 using namespace boost;
@@ -21,7 +21,7 @@ outcome_v2::awaitables::eager<int> eager_func(int x)
 }
 
 
-async::main co_main(int argc, char * argv[])
+cobalt::main co_main(int argc, char * argv[])
 {
   [[maybe_unused]] auto lr = co_await lazy_func(10);
 

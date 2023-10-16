@@ -1,5 +1,5 @@
 [#race]
-== async/race.hpp
+== cobalt/race.hpp
 
 The `race` function can be used to `co_await` one <<awaitable, awaitable>> out of a set of them.
 
@@ -7,14 +7,14 @@ It can be called as a variadic function with multiple <<awaitable, awaitable>> o
 
 [source,cpp]
 ----
-async::promise<void> task1();
-async::promise<void> task2();
+cobalt::promise<void> task1();
+cobalt::promise<void> task2();
 
-async::promise<void> do_wait()
+cobalt::promise<void> do_wait()
 {
-  co_await async::race(task1(), task2()); // <1>
-  std::vector<async::promise<void>> aws {task1(), task2()};
-  co_await async::race(aws); // <2>
+  co_await cobalt::race(task1(), task2()); // <1>
+  std::vector<cobalt::promise<void>> aws {task1(), task2()};
+  co_await cobalt::race(aws); // <2>
 }
 ----
 <1> Wait for a variadic set of <<awaitable, awaitables>>
@@ -60,12 +60,12 @@ This means that you can reuse race like this:
 [source,cpp]
 ----
 
-async::promise<void> do_wait()
+cobalt::promise<void> do_wait()
 {
   auto t1 = task1();
   auto t2 = task2();
-  co_await async::race(t1, t2); // <1>
-  co_await async::race(t1, t2); // <2>
+  co_await cobalt::race(t1, t2); // <1>
+  co_await cobalt::race(t1, t2); // <2>
 }
 ----
 <1> Wait for the first task to complete
@@ -90,7 +90,7 @@ be useful for prioritization if proper care is taken.
 [source,cpp,subs=+quotes]
 ----
 // Concept for the random number generator.
-include::../../include/boost/async/race.hpp[tag=concept]
+include::../../include/boost/cobalt/race.hpp[tag=concept]
 
 // Variadic race with a custom random number generator
 template<asio::cancellation_type Ct = asio::cancellation_type::all,

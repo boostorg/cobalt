@@ -1,7 +1,7 @@
 [#error]
-== async/error.hpp
+== cobalt/error.hpp
 
-In order to make errors easier to manage, async provides an `error_category` to be used with
+In order to make errors easier to manage, cobalt provides an `error_category` to be used with
 `boost::system::error_code`.
 
 [source,cpp]
@@ -16,7 +16,7 @@ enum class error
   allocation_failed
 };
 
-system::error_category & async_category();
+system::error_category & cobalt_category();
 system::error_code make_error_code(error e);
 ----
 

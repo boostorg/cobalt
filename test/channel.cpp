@@ -5,39 +5,39 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/channel.hpp>
-#include <boost/async/promise.hpp>
-#include <boost/async/race.hpp>
-#include <boost/async/gather.hpp>
-#include <boost/async/async_for.hpp>
+#include <boost/cobalt/channel.hpp>
+#include <boost/cobalt/promise.hpp>
+#include <boost/cobalt/race.hpp>
+#include <boost/cobalt/gather.hpp>
+#include <boost/cobalt/async_for.hpp>
 
-#include <boost/async/join.hpp>
+#include <boost/cobalt/join.hpp>
 #include <boost/asio/steady_timer.hpp>
 
 #include "test.hpp"
 #include "doctest.h"
 
-namespace async = boost::async;
+namespace cobalt = boost::cobalt;
 
-async::promise<void> do_write(async::channel<void> &chn, std::vector<int> & seq)
+cobalt::promise<void> do_write(cobalt::channel<void> &chn, std::vector<int> & seq)
 {
   seq.push_back(0);
   co_await chn.write(); seq.push_back(1);
   co_await chn.write(); seq.push_back(2);
-  (co_await async::as_result(chn.write())).value(); seq.push_back(3);
-  co_await async::as_tuple(chn.write()); seq.push_back(4);
+  (co_await cobalt::as_result(chn.write())).value(); seq.push_back(3);
+  co_await cobalt::as_tuple(chn.write()); seq.push_back(4);
   co_await chn.write(); seq.push_back(5);
   co_await chn.write(); seq.push_back(6);
   co_await chn.write(); seq.push_back(7);
 }
 
-async::promise<void> do_read(async::channel<void> &chn, std::vector<int> & seq)
+cobalt::promise<void> do_read(cobalt::channel<void> &chn, std::vector<int> & seq)
 {
   seq.push_back(10);
   co_await chn.read(); seq.push_back(11);
   co_await chn.read(); seq.push_back(12);
-  (co_await async::as_result(chn.read())).value(); seq.push_back(13);
-  co_await async::as_tuple(chn.read()); seq.push_back(14);
+  (co_await cobalt::as_result(chn.read())).value(); seq.push_back(13);
+  co_await cobalt::as_tuple(chn.read()); seq.push_back(14);
   co_await chn.read(); seq.push_back(15);
   co_await chn.read(); seq.push_back(16);
   co_await chn.read(); seq.push_back(17);
@@ -47,7 +47,7 @@ TEST_SUITE_BEGIN("channel");
 
 CO_TEST_CASE("void")
 {
-  async::channel<void> chn{2u, co_await async::this_coro::executor};
+  cobalt::channel<void> chn{2u, co_await cobalt::this_coro::executor};
 
   std::vector<int> seq;
   auto r = do_read(chn, seq);
@@ -76,7 +76,7 @@ CO_TEST_CASE("void")
 
 CO_TEST_CASE("void-0")
 {
-    async::channel<void> chn{0u, co_await async::this_coro::executor};
+    cobalt::channel<void> chn{0u, co_await cobalt::this_coro::executor};
 
     std::vector<int> seq;
     auto r = do_read(chn, seq);
@@ -103,25 +103,25 @@ CO_TEST_CASE("void-0")
     CHECK(seq[15] == 7);
 }
 
-async::promise<void> do_write(async::channel<int> &chn, std::vector<int> & seq)
+cobalt::promise<void> do_write(cobalt::channel<int> &chn, std::vector<int> & seq)
 {
   seq.push_back(0);
   co_await chn.write(1); seq.push_back(1);
   co_await chn.write(2); seq.push_back(2);
-  (co_await async::as_result(chn.write(3))).value(); seq.push_back(3);
-  co_await async::as_tuple(chn.write(4)); seq.push_back(4);
+  (co_await cobalt::as_result(chn.write(3))).value(); seq.push_back(3);
+  co_await cobalt::as_tuple(chn.write(4)); seq.push_back(4);
   co_await chn.write(5); seq.push_back(5);
   co_await chn.write(6); seq.push_back(6);
   co_await chn.write(7); seq.push_back(7);
 }
 
-async::promise<void> do_read(async::channel<int> &chn, std::vector<int> & seq)
+cobalt::promise<void> do_read(cobalt::channel<int> &chn, std::vector<int> & seq)
 {
   seq.push_back(10);
   CHECK(1 == co_await chn.read()); seq.push_back(11);
   CHECK(2 == co_await chn.read()); seq.push_back(12);
-  CHECK(3 == (co_await async::as_result(chn.read())).value()); seq.push_back(13);
-  CHECK(4 == std::get<1>(co_await async::as_tuple(chn.read()))); seq.push_back(14);
+  CHECK(3 == (co_await cobalt::as_result(chn.read())).value()); seq.push_back(13);
+  CHECK(4 == std::get<1>(co_await cobalt::as_tuple(chn.read()))); seq.push_back(14);
   CHECK(5 == co_await chn.read()); seq.push_back(15);
   CHECK(6 == co_await chn.read()); seq.push_back(16);
   CHECK(7 == co_await chn.read()); seq.push_back(17);
@@ -130,7 +130,7 @@ async::promise<void> do_read(async::channel<int> &chn, std::vector<int> & seq)
 
 CO_TEST_CASE("int")
 {
-  async::channel<int> chn{2u, co_await async::this_coro::executor};
+  cobalt::channel<int> chn{2u, co_await cobalt::this_coro::executor};
 
   std::vector<int> seq;
   auto w = do_write(chn, seq);
@@ -157,7 +157,7 @@ CO_TEST_CASE("int")
   CHECK(seq[15] == 17);
 }
 
-async::promise<void> do_write(async::channel<std::string> &chn, std::vector<int> & seq)
+cobalt::promise<void> do_write(cobalt::channel<std::string> &chn, std::vector<int> & seq)
 {
     seq.push_back(0);
     co_await chn.write(std::string("1")); seq.push_back(1);
@@ -169,7 +169,7 @@ async::promise<void> do_write(async::channel<std::string> &chn, std::vector<int>
     co_await chn.write(std::string("7 but we need to be sure we get ouf of SSO")); seq.push_back(7);
 }
 
-async::promise<void> do_read(async::channel<std::string> &chn, std::vector<int> & seq)
+cobalt::promise<void> do_read(cobalt::channel<std::string> &chn, std::vector<int> & seq)
 {
     seq.push_back(10);
     CHECK("1" == co_await chn.read()); seq.push_back(11);
@@ -184,7 +184,7 @@ async::promise<void> do_read(async::channel<std::string> &chn, std::vector<int> 
 
 CO_TEST_CASE("str")
 {
-    async::channel<std::string> chn{0u, co_await async::this_coro::executor};
+    cobalt::channel<std::string> chn{0u, co_await cobalt::this_coro::executor};
 
     std::vector<int> seq;
     auto w = do_write(chn, seq);
@@ -213,9 +213,9 @@ CO_TEST_CASE("str")
 
 CO_TEST_CASE("raceable")
 {
-    async::channel<int>  ci{0u};
-    async::channel<void> cv{0u};
-    auto [r1, r2] = co_await async::gather(async::race(ci.read(), cv.read()), cv.write());
+    cobalt::channel<int>  ci{0u};
+    cobalt::channel<void> cv{0u};
+    auto [r1, r2] = co_await cobalt::gather(cobalt::race(ci.read(), cv.read()), cv.write());
     r1.value();
     REQUIRE(r1.has_value());
     CHECK(r1->index() == 1u);
@@ -224,10 +224,10 @@ CO_TEST_CASE("raceable")
 
 CO_TEST_CASE("raceable-1")
 {
-  async::channel<int>  ci{1u};
-  async::channel<void> cv{1u};
-  auto [r1, r2] = co_await async::gather(
-      async::race(ci.read(), cv.read()),
+  cobalt::channel<int>  ci{1u};
+  cobalt::channel<void> cv{1u};
+  auto [r1, r2] = co_await cobalt::gather(
+      cobalt::race(ci.read(), cv.read()),
       cv.write());
   CHECK(r1->index() == 1u);
   CHECK(!r2.has_error());
@@ -238,13 +238,13 @@ CO_TEST_CASE("raceable-1")
 namespace issue_53
 {
 
-async::promise<void> timeout_and_write(async::channel<std::string> &channel)
+cobalt::promise<void> timeout_and_write(cobalt::channel<std::string> &channel)
 {
-  while (!co_await async::this_coro::cancelled)
+  while (!co_await cobalt::this_coro::cancelled)
   {
-    boost::asio::steady_timer timer{co_await async::this_coro::executor};
+    boost::asio::steady_timer timer{co_await cobalt::this_coro::executor};
     timer.expires_after(std::chrono::seconds{20});
-    co_await timer.async_wait(async::use_op);
+    co_await timer.async_wait(cobalt::use_op);
     std::string val("Test!");
     co_await channel.write(val);
   }
@@ -252,24 +252,24 @@ async::promise<void> timeout_and_write(async::channel<std::string> &channel)
   co_return;
 }
 
-async::promise<void> read(async::channel<std::string> &channel)
+cobalt::promise<void> read(cobalt::channel<std::string> &channel)
 {
-  while (!co_await async::this_coro::cancelled)
+  while (!co_await cobalt::this_coro::cancelled)
     co_await channel.read();
 }
 
-async::promise<void> test()
+cobalt::promise<void> test()
 {
-  async::channel<std::string> channel;
-  co_await async::join(timeout_and_write(channel), read(channel));
+  cobalt::channel<std::string> channel;
+  co_await cobalt::join(timeout_and_write(channel), read(channel));
 }
 
 CO_TEST_CASE("issue-93")
 {
-  co_await async::race(test(), boost::asio::post(async::use_op));
+  co_await cobalt::race(test(), boost::asio::post(cobalt::use_op));
 }
 
-async::promise<void> writer(async::channel<int> & c)
+cobalt::promise<void> writer(cobalt::channel<int> & c)
 {
   for (int i = 0; i < 10; i++)
     co_await c.write(i);
@@ -278,11 +278,11 @@ async::promise<void> writer(async::channel<int> & c)
 
 CO_TEST_CASE("reader")
 {
-  async::channel<int> c;
+  cobalt::channel<int> c;
 
   +writer(c);
   int i = 0;
-  BOOST_ASYNC_FOR(int value, async::channel_reader(c))
+  BOOST_COBALT_FOR(int value, cobalt::channel_reader(c))
     CHECK(value == i++);
 
 }

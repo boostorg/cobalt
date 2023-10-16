@@ -3,7 +3,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/async/detail/handler.hpp>
+#include <boost/cobalt/detail/handler.hpp>
 
 #include "doctest.h"
 #include "test.hpp"
@@ -22,7 +22,7 @@ struct dummy_promise
 static_assert(boost::asio::detail::has_executor_type<dummy_promise>::value);
 
 
-void test(boost::async::completion_handler<> ch)
+void test(boost::cobalt::completion_handler<> ch)
 {
   boost::asio::post(std::move(ch));
 }
@@ -34,25 +34,25 @@ struct immediate_aw
   bool await_ready() {return false;}
 
   std::optional<std::tuple<>> result;
-  async::detail::completed_immediately_t completed_immediately;
+  cobalt::detail::completed_immediately_t completed_immediately;
 
   template<typename T>
   bool await_suspend(std::coroutine_handle<T> h)
   {
-    async::completion_handler<> ch{h, result,
-#if !defined(BOOST_ASYNC_NO_PMR)
-                                   async::this_thread::get_default_resource(),
+    cobalt::completion_handler<> ch{h, result,
+#if !defined(BOOST_COBALT_NO_PMR)
+                                   cobalt::this_thread::get_default_resource(),
 #endif
                                    &completed_immediately};
 
     auto exec = asio::get_associated_immediate_executor(ch, h.promise().get_executor());
-    completed_immediately = async::detail::completed_immediately_t::initiating;
+    completed_immediately = cobalt::detail::completed_immediately_t::initiating;
     asio::dispatch(exec, std::move(ch));
 
     CHECK(result);
-    CHECK(completed_immediately == async::detail::completed_immediately_t::yes);
+    CHECK(completed_immediately == cobalt::detail::completed_immediately_t::yes);
 
-    return completed_immediately != async::detail::completed_immediately_t::yes;
+    return completed_immediately != cobalt::detail::completed_immediately_t::yes;
   }
 
   void await_resume()
@@ -62,20 +62,20 @@ struct immediate_aw
   }
 };
 
-#if !defined(BOOST_ASYNC_USE_IO_CONTEXT)
+#if !defined(BOOST_COBALT_USE_IO_CONTEXT)
 
 struct non_immediate_aw
 {
   bool await_ready() {return false;}
 
   std::optional<std::tuple<>> result;
-  async::detail::completed_immediately_t completed_immediately;
-  async::detail::sbo_resource res;
+  cobalt::detail::completed_immediately_t completed_immediately;
+  cobalt::detail::sbo_resource res;
 
   template<typename T>
   bool await_suspend(std::coroutine_handle<T> h)
   {
-    async::completion_handler<> ch{h, result, &res, &completed_immediately};
+    cobalt::completion_handler<> ch{h, result, &res, &completed_immediately};
 
     auto exec = asio::get_associated_immediate_executor(ch, h.promise().get_executor());
     asio::dispatch(exec,
@@ -86,14 +86,14 @@ struct non_immediate_aw
                        }))(std::move(ch));
 
     CHECK(!result);
-    CHECK(completed_immediately != async::detail::completed_immediately_t::yes);
+    CHECK(completed_immediately != cobalt::detail::completed_immediately_t::yes);
 
-    return completed_immediately != async::detail::completed_immediately_t::yes;
+    return completed_immediately != cobalt::detail::completed_immediately_t::yes;
   }
 
   void await_resume()
   {
-    CHECK(completed_immediately != async::detail::completed_immediately_t::yes);
+    CHECK(completed_immediately != cobalt::detail::completed_immediately_t::yes);
     CHECK(result);
   }
 };
@@ -112,50 +112,50 @@ CO_TEST_CASE("immediate completion")
 TEST_CASE("immediate_executor")
 {
   asio::io_context ctx;
-  async::detail::completed_immediately_t completed_immediately = async::detail::completed_immediately_t::initiating;
-  async::detail::completion_handler_noop_executor chh{ctx.get_executor(), &completed_immediately};
+  cobalt::detail::completed_immediately_t completed_immediately = cobalt::detail::completed_immediately_t::initiating;
+  cobalt::detail::completion_handler_noop_executor chh{ctx.get_executor(), &completed_immediately};
   bool called = false;
 
   SUBCASE("initiating")
   {
     asio::dispatch(chh, [&] { called = true; });
     CHECK(called);
-    CHECK(completed_immediately == async::detail::completed_immediately_t::initiating);
+    CHECK(completed_immediately == cobalt::detail::completed_immediately_t::initiating);
   }
 
   SUBCASE("maybe")
   {
-    completed_immediately = async::detail::completed_immediately_t::maybe;
-    asio::dispatch(chh, [&] { called = true; completed_immediately = async::detail::completed_immediately_t::yes; });
+    completed_immediately = cobalt::detail::completed_immediately_t::maybe;
+    asio::dispatch(chh, [&] { called = true; completed_immediately = cobalt::detail::completed_immediately_t::yes; });
     CHECK(called);
-    CHECK(completed_immediately == async::detail::completed_immediately_t::yes);
+    CHECK(completed_immediately == cobalt::detail::completed_immediately_t::yes);
   }
 
 
   SUBCASE("maybe-not")
   {
-    completed_immediately = async::detail::completed_immediately_t::maybe;
+    completed_immediately = cobalt::detail::completed_immediately_t::maybe;
     asio::dispatch(chh, [&] { called = true; });
     CHECK(called);
-    CHECK(completed_immediately == async::detail::completed_immediately_t::initiating);
+    CHECK(completed_immediately == cobalt::detail::completed_immediately_t::initiating);
   }
 
   SUBCASE("no")
   {
-    completed_immediately = async::detail::completed_immediately_t::no;
+    completed_immediately = cobalt::detail::completed_immediately_t::no;
     asio::dispatch(chh, [&] { called = true; });
     CHECK(!called);
-    CHECK(completed_immediately == async::detail::completed_immediately_t::no);
+    CHECK(completed_immediately == cobalt::detail::completed_immediately_t::no);
     CHECK(ctx.run() == 1u);
     CHECK(called);
   }
 
   SUBCASE("no")
   {
-    completed_immediately = async::detail::completed_immediately_t::no;
+    completed_immediately = cobalt::detail::completed_immediately_t::no;
     asio::dispatch(chh, [&] { called = true; });
     CHECK(!called);
-    CHECK(completed_immediately == async::detail::completed_immediately_t::no);
+    CHECK(completed_immediately == cobalt::detail::completed_immediately_t::no);
     CHECK(ctx.run() == 1u);
     CHECK(called);
   }

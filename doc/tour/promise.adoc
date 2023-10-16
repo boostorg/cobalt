@@ -5,13 +5,13 @@ They're eager and thus easily usable for ad-hoc concurrecy.
 
 [source,cpp]
 ----
-async::promise<int> my_promise()
+cobalt::promise<int> my_promise()
 {
    co_await do_the_thing();
    co_return 0;
 }
 
-async::main co_main(int argc, char * argv[])
+cobalt::main co_main(int argc, char * argv[])
 {
     // start the promise here
     auto p = my_promise();

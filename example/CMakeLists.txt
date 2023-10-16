@@ -6,9 +6,9 @@ foreach(SRC ${ALL_EXAMPLES})
     # ticker requires
     if (NAME STREQUAL ticker)
         if (TARGET Boost::json)
-            add_executable(boost_async_example_${NAME} ${SRC} )
-            target_link_libraries(boost_async_example_${NAME} PUBLIC Boost::async Boost::json Boost::url)
-            target_compile_definitions(boost_async_example_${NAME} PUBLIC)
+            add_executable(boost_cobalt_example_${NAME} ${SRC} )
+            target_link_libraries(boost_cobalt_example_${NAME} PUBLIC Boost::cobalt Boost::json Boost::url)
+            target_compile_definitions(boost_cobalt_example_${NAME} PUBLIC)
         endif()
         continue()
     endif()
@@ -28,17 +28,17 @@ foreach(SRC ${ALL_EXAMPLES})
             message(WARNING "nanobind not found, skipping python example")
             continue()
         endif()
-        nanobind_add_module(boost_async_example_python python.cpp)
-        target_link_libraries(boost_async_example_python PRIVATE Boost::async)
+        nanobind_add_module(boost_cobalt_example_python python.cpp)
+        target_link_libraries(boost_cobalt_example_python PRIVATE Boost::cobalt)
         add_custom_command(
-                TARGET boost_async_example_python
+                TARGET boost_cobalt_example_python
                 COMMAND ${CMAKE_COMMAND} -E copy
                 ${CMAKE_CURRENT_SOURCE_DIR}/python.py
                 ${CMAKE_CURRENT_BINARY_DIR}/python.py)
         continue()
     endif()
 
-    add_executable(boost_async_example_${NAME} ${SRC})
-    target_link_libraries(boost_async_example_${NAME} PUBLIC Boost::async)
-    target_compile_definitions(boost_async_example_${NAME} PUBLIC)
+    add_executable(boost_cobalt_example_${NAME} ${SRC})
+    target_link_libraries(boost_cobalt_example_${NAME} PUBLIC Boost::cobalt)
+    target_compile_definitions(boost_cobalt_example_${NAME} PUBLIC)
 endforeach()

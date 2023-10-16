@@ -5,9 +5,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async/promise.hpp>
-#include <boost/async/op.hpp>
-#include <boost/async/with.hpp>
+#include <boost/cobalt/promise.hpp>
+#include <boost/cobalt/op.hpp>
+#include <boost/cobalt/with.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/this_coro.hpp>
 
@@ -20,7 +20,7 @@ namespace asio = boost::asio;
 
 struct finalizer_test
 {
-    using executor_type = boost::async::executor ;
+    using executor_type = boost::cobalt::executor ;
     executor_type exec;
     executor_type get_executor()
     {
@@ -34,7 +34,7 @@ struct finalizer_test
     {
         exit_called = true;
         e = ee;
-        return asio::post(exec, boost::async::use_op);
+        return asio::post(exec, boost::cobalt::use_op);
     }
 
     ~finalizer_test()
@@ -45,7 +45,7 @@ struct finalizer_test
 
 struct value_finalizer_test
 {
-  using executor_type = boost::async::executor ;
+  using executor_type = boost::cobalt::executor ;
   executor_type exec;
   executor_type get_executor()
   {
@@ -59,17 +59,17 @@ struct value_finalizer_test
   {
     exit_called = true;
     CHECK(!ee);
-    return asio::post(exec, boost::async::use_op);
+    return asio::post(exec, boost::cobalt::use_op);
   }
 
 };
 
 CO_TEST_CASE("sync")
 {
-    finalizer_test ft{co_await boost::async::this_coro::executor};
+    finalizer_test ft{co_await boost::cobalt::this_coro::executor};
 
     CHECK_THROWS(
-        co_await boost::async::with (
+        co_await boost::cobalt::with (
             &ft,
             [](finalizer_test *)
             {
@@ -84,14 +84,14 @@ CO_TEST_CASE("sync")
     CHECK(ft.e != nullptr);
 }
 
-CO_TEST_CASE("async")
+CO_TEST_CASE("cobalt")
 {
-    finalizer_test ft{co_await boost::async::this_coro::executor};
+    finalizer_test ft{co_await boost::cobalt::this_coro::executor};
 
     CHECK_THROWS(
-            co_await boost::async::with (
+            co_await boost::cobalt::with (
                     &ft,
-                    [](finalizer_test * ft) -> boost::async::promise<void>
+                    [](finalizer_test * ft) -> boost::cobalt::promise<void>
                     {
                       throw std::runtime_error("42");
                       co_return;
@@ -107,10 +107,10 @@ CO_TEST_CASE("async")
 
 CO_TEST_CASE("sync-int")
 {
-  value_finalizer_test ft{co_await boost::async::this_coro::executor};
+  value_finalizer_test ft{co_await boost::cobalt::this_coro::executor};
 
   CHECK(23 ==
-      co_await boost::async::with (
+      co_await boost::cobalt::with (
           &ft,
           [](value_finalizer_test * ft)
           {
@@ -125,15 +125,15 @@ CO_TEST_CASE("sync-int")
   CHECK(ft.e == nullptr);
 }
 
-CO_TEST_CASE("async-int")
+CO_TEST_CASE("cobalt-int")
 {
-  value_finalizer_test ft{co_await boost::async::this_coro::executor};
+  value_finalizer_test ft{co_await boost::cobalt::this_coro::executor};
 
   CHECK(
       42 ==
-      co_await boost::async::with (
+      co_await boost::cobalt::with (
           &ft,
-          [](value_finalizer_test * ft) -> boost::async::promise<int>
+          [](value_finalizer_test * ft) -> boost::cobalt::promise<int>
           {
             co_return 42;
           },

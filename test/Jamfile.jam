@@ -18,12 +18,12 @@ project : requirements
 
 import testing ;
 
-lib test_impl : doctest.cpp /boost//async :
+lib test_impl : doctest.cpp /boost//cobalt :
         <link>static
         ;
 
-run main.cpp         /boost//async ;
-run main_compile.cpp /boost//async ;
+run main.cpp         /boost//cobalt ;
+run main_compile.cpp /boost//cobalt ;
 
 for local src in [ glob *.cpp : main.cpp main_compile.cpp ]
 {

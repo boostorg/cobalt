@@ -1,5 +1,5 @@
 [#concepts]
-== async/concepts.hpp
+== cobalt/concepts.hpp
 
 [#awaitable]
 === Awaitable
@@ -8,7 +8,7 @@ An awaitable is an expression that can be used with `co_await`.
 
 [source,cpp]
 ----
-include::../../include/boost/async/concepts.hpp[tag=outline]
+include::../../include/boost/cobalt/concepts.hpp[tag=outline]
 ----
 
 WARNING: <<awaitable,awaitables>> in this library require that the coroutine promise

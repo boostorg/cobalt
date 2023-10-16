@@ -3,8 +3,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/async/this_coro.hpp>
-#include <boost/async/detail/util.hpp>
+#include <boost/cobalt/this_coro.hpp>
+#include <boost/cobalt/detail/util.hpp>
 
 
 
@@ -20,19 +20,19 @@ struct sig_helper
 
 struct coro_feature_tester
       : sig_helper,
-        async::promise_cancellation_base<>,
-        async::promise_throw_if_cancelled_base,
-        async::enable_await_allocator<coro_feature_tester>
+        cobalt::promise_cancellation_base<>,
+        cobalt::promise_throw_if_cancelled_base,
+        cobalt::enable_await_allocator<coro_feature_tester>
 {
-  using async::promise_cancellation_base<>::await_transform;
-  using async::promise_throw_if_cancelled_base::await_transform;
-  using async::enable_await_allocator<coro_feature_tester>::await_transform;
+  using cobalt::promise_cancellation_base<>::await_transform;
+  using cobalt::promise_throw_if_cancelled_base::await_transform;
+  using cobalt::enable_await_allocator<coro_feature_tester>::await_transform;
 
   std::suspend_never initial_suspend() {return {};}
   std::suspend_never final_suspend() noexcept {return {};}
 
   coro_feature_tester(coro_feature_tester * & ref)
-    : async::promise_cancellation_base<>(sig.slot())
+    : cobalt::promise_cancellation_base<>(sig.slot())
   {
     ref = this;
   }
@@ -40,9 +40,9 @@ struct coro_feature_tester
   void unhandled_exception() {throw;}
   void get_return_object() {}
 
-#if !defined(BOOST_ASYNC_NO_PMR)
-  async::pmr::unsynchronized_pool_resource res;
-  using allocator_type = async::pmr::polymorphic_allocator<void>;
+#if !defined(BOOST_COBALT_NO_PMR)
+  cobalt::pmr::unsynchronized_pool_resource res;
+  using allocator_type = cobalt::pmr::polymorphic_allocator<void>;
   allocator_type get_allocator() {return alloc;}
   allocator_type alloc{&res};
 #endif
@@ -80,7 +80,7 @@ SELF_TEST_CASE("promise_cancellation_base")
   CHECK(this_->cancelled() == asio::cancellation_type::terminal);
   CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::terminal);
 
-  co_await async::this_coro::reset_cancellation_state();
+  co_await cobalt::this_coro::reset_cancellation_state();
 
   CHECK(!this_->cancelled());
   CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::none);
@@ -90,7 +90,7 @@ SELF_TEST_CASE("promise_cancellation_base")
   CHECK(this_->cancelled() == asio::cancellation_type::terminal);
   CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::terminal);
 
-  co_await async::this_coro::reset_cancellation_state(asio::enable_partial_cancellation());
+  co_await cobalt::this_coro::reset_cancellation_state(asio::enable_partial_cancellation());
 
   CHECK(!this_->cancelled());
   CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::none);
@@ -103,7 +103,7 @@ SELF_TEST_CASE("promise_cancellation_base")
   CHECK(this_->cancelled() == (asio::cancellation_type::terminal | asio::cancellation_type::partial));
 
 
-  co_await async::this_coro::reset_cancellation_state(
+  co_await cobalt::this_coro::reset_cancellation_state(
       asio::enable_partial_cancellation(),
       asio::enable_terminal_cancellation());
 
@@ -126,10 +126,10 @@ SELF_TEST_CASE("promise_throw_if_cancelled_base")
   CHECK(!co_await asio::this_coro::throw_if_cancelled());
 }
 
-#if !defined(BOOST_ASYNC_NO_PMR)
+#if !defined(BOOST_COBALT_NO_PMR)
 SELF_TEST_CASE("enable_await_allocator")
 {
-  CHECK(this_->get_allocator() == co_await async::this_coro::allocator);
+  CHECK(this_->get_allocator() == co_await cobalt::this_coro::allocator);
 }
 #endif
 

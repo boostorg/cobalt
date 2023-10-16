@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/async.hpp>
-#include <boost/async/main.hpp>
+#include <boost/cobalt.hpp>
+#include <boost/cobalt/main.hpp>
 
 #include <boost/asio/detached.hpp>
 #include <boost/asio/io_context.hpp>
@@ -16,16 +16,16 @@
 #include <list>
 
 // tag::decls[]
-namespace async = boost::async;
+namespace cobalt = boost::cobalt;
 using boost::asio::ip::tcp;
 using boost::asio::detached;
-using tcp_acceptor = async::use_op_t::as_default_on_t<tcp::acceptor>;
-using tcp_socket   = async::use_op_t::as_default_on_t<tcp::socket>;
-namespace this_coro = boost::async::this_coro;
+using tcp_acceptor = cobalt::use_op_t::as_default_on_t<tcp::acceptor>;
+using tcp_socket   = cobalt::use_op_t::as_default_on_t<tcp::socket>;
+namespace this_coro = boost::cobalt::this_coro;
 //end::decls[]
 
 // tag::echo[]
-async::promise<void> echo(tcp_socket socket)
+cobalt::promise<void> echo(tcp_socket socket)
 {
   try // <1>
   {
@@ -45,9 +45,9 @@ async::promise<void> echo(tcp_socket socket)
 
 
 // tag::listen[]
-async::generator<tcp_socket> listen()
+cobalt::generator<tcp_socket> listen()
 {
-  tcp_acceptor acceptor({co_await async::this_coro::executor}, {tcp::v4(), 55555});
+  tcp_acceptor acceptor({co_await cobalt::this_coro::executor}, {tcp::v4(), 55555});
   for (;;) // <1>
   {
     tcp_socket sock = co_await acceptor.async_accept(); // <2>
@@ -58,7 +58,7 @@ async::generator<tcp_socket> listen()
 // end::listen[]
 
 // tag::run_server[]
-async::promise<void> run_server(async::wait_group & workers)
+cobalt::promise<void> run_server(cobalt::wait_group & workers)
 {
   auto l = listen(); // <1>
   while (true)
@@ -72,9 +72,9 @@ async::promise<void> run_server(async::wait_group & workers)
 // end::run_server[]
 
 // tag::main[]
-async::main co_main(int argc, char ** argv)
+cobalt::main co_main(int argc, char ** argv)
 {
-  co_await async::with(async::wait_group(), &run_server); // <1>
+  co_await cobalt::with(cobalt::wait_group(), &run_server); // <1>
   co_return 0u;
 }
 // end::main[]

@@ -1,12 +1,12 @@
 [#this_thread]
-== async/this_thread.hpp
+== cobalt/this_thread.hpp
 
 Since everything is single threaded this library provides an executor
 & default memory-resource for every thread.
 
 [source,cpp]
 ----
-namespace boost::async::this_thread
+namespace boost::cobalt::this_thread
 {
 
 pmr::memory_resource* get_default_resource() noexcept; // <1>
@@ -26,5 +26,5 @@ void set_executor(asio::io_context::executor_type exec) noexcept; // <5>
 
 The coroutines will use these as defaults, but keep a copy just in case.
 
-NOTE: The only exception is the initialization of an async-operation,
+NOTE: The only exception is the initialization of an cobalt-operation,
 which will use the this_thread::executor to rethrow from.

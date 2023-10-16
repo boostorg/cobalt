@@ -5,7 +5,7 @@
 
 /// This example shows how to use threads to offload cpu_intense work.
 
-#include <boost/async.hpp>
+#include <boost/cobalt.hpp>
 
 #include <boost/asio/as_tuple.hpp>
 #include <boost/asio/redirect_error.hpp>
@@ -15,21 +15,21 @@
 #include <boost/asio/thread_pool.hpp>
 
 
-namespace async = boost::async;
+namespace cobalt = boost::cobalt;
 using boost::system::error_code;
 
 // this is a function doing some CPU heavy work that should be offloaded onto a thread_pool
-async::promise<int> cpu_intense_work(
+cobalt::promise<int> cpu_intense_work(
     int a, int b,
-    boost::asio::executor_arg_t = {}, async::executor = async::this_thread::get_executor())
+    boost::asio::executor_arg_t = {}, cobalt::executor = cobalt::this_thread::get_executor())
     // ^set the executor manually. but default it so we can still use it with the thread_local one if present
 {
   co_return a + b;
 }
 
-async::task<void> work(int min_a, int max_a, int b)
+cobalt::task<void> work(int min_a, int max_a, int b)
 {
-  auto exec = co_await async::this_coro::executor;
+  auto exec = co_await cobalt::this_coro::executor;
   for (int a = min_a; a <= max_a; a++)
   {
     // the following two calls offload the work to another thread.
@@ -58,9 +58,9 @@ int main(int , char * [])
             }
           };
 
-  async::spawn(boost::asio::make_strand(tp.get_executor()), work(0, 10, 32),   cpl);
-  async::spawn(boost::asio::make_strand(tp.get_executor()), work(10, 20, 22),  cpl);
-  async::spawn(boost::asio::make_strand(tp.get_executor()), work(50, 60, -18), cpl);
+  cobalt::spawn(boost::asio::make_strand(tp.get_executor()), work(0, 10, 32),   cpl);
+  cobalt::spawn(boost::asio::make_strand(tp.get_executor()), work(10, 20, 22),  cpl);
+  cobalt::spawn(boost::asio::make_strand(tp.get_executor()), work(50, 60, -18), cpl);
 
   // wait them so they don't leak.
   tp.join();
