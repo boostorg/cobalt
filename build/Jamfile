@@ -50,7 +50,7 @@ lib boost_cobalt
    : requirements <define>BOOST_COBALT_SOURCE=1
      <link>shared:<define>BOOST_COBALT_DYN_LINK=1
      [ requires 
-        cpp_concepts_20
+        cxx20_hdr_concepts
      ]
    : usage-requirements
      <link>shared:<define>BOOST_COBALT_DYN_LINK=1
