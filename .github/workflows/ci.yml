@@ -30,36 +30,6 @@ jobs:
             container: ubuntu:23.04
             install: g++-13
           - toolset: clang
-            compiler: clang++-8
-            cxxstd: "2a"
-            stdlib: libc++
-            os: ubuntu-20.04
-            install: clang-8
-          - toolset: clang
-            compiler: clang++-9
-            cxxstd: "2a"
-            stdlib: libc++
-            os: ubuntu-20.04
-            install: "clang-9 libc++-9-dev"
-          - toolset: clang
-            compiler: clang++-10
-            cxxstd: "2a"
-            stdlib: libc++
-            os: ubuntu-20.04
-            install: "clang-10 libc++-10-dev"
-          - toolset: clang
-            compiler: clang++-11
-            cxxstd: "2a"
-            stdlib: libc++
-            os: ubuntu-20.04
-            install: "clang-11 libc++-11-dev"
-          - toolset: clang
-            compiler: clang++-12
-            cxxstd: "2a"
-            stdlib: libc++
-            os: ubuntu-20.04
-            install: "clang-12 libc++-12-dev"
-          - toolset: clang
             compiler: clang++-13
             cxxstd: "20,2b"
             stdlib: libc++
