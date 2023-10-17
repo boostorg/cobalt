@@ -32,52 +32,58 @@ jobs:
           - toolset: clang
             compiler: clang++-8
             cxxstd: "2a"
+            stdlib: libc++
             os: ubuntu-20.04
             install: clang-8
           - toolset: clang
             compiler: clang++-9
             cxxstd: "2a"
+            stdlib: libc++
             os: ubuntu-20.04
             install: clang-9
           - toolset: clang
             compiler: clang++-10
             cxxstd: "2a"
+            stdlib: libc++
             os: ubuntu-20.04
             install: clang-10
           - toolset: clang
             compiler: clang++-11
             cxxstd: "2a"
+            stdlib: libc++
             os: ubuntu-20.04
             install: clang-11
           - toolset: clang
             compiler: clang++-12
             cxxstd: "2a"
+            stdlib: libc++
             os: ubuntu-20.04
             install: clang-12
           - toolset: clang
             compiler: clang++-13
             cxxstd: "20,2b"
+            stdlib: libc++
             os: ubuntu-22.04
             install: clang-13
           - toolset: clang
             compiler: clang++-14
             cxxstd: "20,2b"
+            stdlib: libc++
             os: ubuntu-22.04
             install: clang-14
           - toolset: clang
             compiler: clang++-15
             cxxstd: "20,2b"
+            stdlib: libc++
             os: ubuntu-22.04
             install: clang-15
           - toolset: clang
             compiler: clang++-16
             cxxstd: "20,2b"
+            stdlib: libc++
             os: ubuntu-latest
             container: ubuntu:23.04
             install: clang-16
-          - toolset: clang
-            cxxstd: "2a"
-            os: macos-11
           - toolset: clang
             cxxstd: "20,2b"
             os: macos-12
@@ -138,7 +144,8 @@ jobs:
       - name: Run tests
         run: |
           cd ../boost-root
-          ./b2 -j3 libs/$LIBRARY/test toolset=${{matrix.toolset}} cxxstd=${{matrix.cxxstd}} variant=debug,release
+          export STDLIB=${{matrix.stdlib}}
+          ./b2 -j3 libs/$LIBRARY/test toolset=${{matrix.toolset}} cxxstd=${{matrix.cxxstd}} ${STDLIB:+stdlib=$STDLIB} variant=debug,release
 
   windows:
     strategy:
