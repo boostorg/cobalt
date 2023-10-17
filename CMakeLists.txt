@@ -97,6 +97,9 @@ if (BOOST_COBALT_USE_BOOST_CONTAINER)
     target_compile_definitions(boost_cobalt PUBLIC BOOST_COBALT_USE_BOOST_CONTAINER_PMR=1 )
 endif()
 
+target_compile_features(boost_cobalt PUBLIC cxx_std_20)
+
+
 add_library(Boost::cobalt ALIAS boost_cobalt)
 
 if(BUILD_SHARED_LIBS)
@@ -112,7 +115,6 @@ if(BOOST_COBALT_INSTALL AND NOT BOOST_SUPERPROJECT_VERSION)
             ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
             )
 endif()
-
 
 if(BOOST_COBALT_BUILD_TESTS)
     add_subdirectory(test)
