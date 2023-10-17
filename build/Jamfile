@@ -6,6 +6,9 @@
 
 import os ;
 import feature ;
+import ../../config/checks/config : requires ;
+
+
 project : requirements
   <define>BOOST_ASIO_NO_DEPRECATED
   <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
@@ -46,6 +49,9 @@ lib boost_cobalt
    : cobalt_sources
    : requirements <define>BOOST_COBALT_SOURCE=1
      <link>shared:<define>BOOST_COBALT_DYN_LINK=1
+     [ requires 
+        cpp_concepts_20
+     ]
    : usage-requirements <boost.cobalt.pmr>boost-container:<library>/boost//container
 
    ;
