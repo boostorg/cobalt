@@ -6,24 +6,11 @@ cmake_minimum_required(VERSION 3.5...3.20)
 
 project(cmake_subdir_test LANGUAGES CXX)
 
-add_subdirectory(../.. boostorg/timer)
-
-set(deps
-
-  # Primary dependencies
-  config
-  io
-  predef
-)
-
-foreach(dep IN LISTS deps)
-
-  add_subdirectory(../../../${dep} boostorg/${dep})
-
-endforeach()
+set(BOOST_INCLUDE_LIBRARIES cobalt)
+add_subdirectory(../../../.. boostorg/boost)
 
 add_executable(main main.cpp)
-target_link_libraries(main Boost::timer)
+target_link_libraries(main Boost::cobalt)
 
 enable_testing()
 add_test(main main)
