@@ -200,10 +200,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-20.04
-            shared: OFF
-          - os: ubuntu-20.04
-            shared: ON
           - os: ubuntu-22.04
             shared: OFF
           - os: ubuntu-22.04
@@ -264,10 +260,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-20.04
-            shared: OFF
-          - os: ubuntu-20.04
-            shared: ON
           - os: ubuntu-22.04
             shared: OFF
           - os: ubuntu-22.04
@@ -344,10 +336,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-20.04
-            shared: OFF
-          - os: ubuntu-20.04
-            shared: ON
           - os: ubuntu-22.04
             shared: OFF
           - os: ubuntu-22.04
