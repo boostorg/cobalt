@@ -52,8 +52,9 @@ lib boost_cobalt
      [ requires 
         cpp_concepts_20
      ]
-   : usage-requirements <boost.cobalt.pmr>boost-container:<library>/boost//container
-
+   : usage-requirements
+     <link>shared:<define>BOOST_COBALT_DYN_LINK=1
+     <boost.cobalt.pmr>boost-container:<library>/boost//container
    ;
 
 boost-install boost_cobalt ;

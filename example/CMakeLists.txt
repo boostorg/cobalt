@@ -1,13 +1,15 @@
 
 file(GLOB_RECURSE ALL_EXAMPLES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
+find_package(OpenSSL)
+
 foreach(SRC ${ALL_EXAMPLES})
     get_filename_component(NAME ${SRC} NAME_WLE )
     # ticker requires
     if (NAME STREQUAL ticker)
         if (TARGET Boost::json)
             add_executable(boost_cobalt_example_${NAME} ${SRC} )
-            target_link_libraries(boost_cobalt_example_${NAME} PUBLIC Boost::cobalt Boost::json Boost::url)
+            target_link_libraries(boost_cobalt_example_${NAME} PUBLIC Boost::cobalt Boost::json Boost::url ${OPENSSL_LIBRARIES})
             target_compile_definitions(boost_cobalt_example_${NAME} PUBLIC)
         endif()
         continue()
@@ -39,6 +41,6 @@ foreach(SRC ${ALL_EXAMPLES})
     endif()
 
     add_executable(boost_cobalt_example_${NAME} ${SRC})
-    target_link_libraries(boost_cobalt_example_${NAME} PUBLIC Boost::cobalt)
+    target_link_libraries(boost_cobalt_example_${NAME} PUBLIC Boost::cobalt ${OPENSSL_LIBRARIES})
     target_compile_definitions(boost_cobalt_example_${NAME} PUBLIC)
 endforeach()

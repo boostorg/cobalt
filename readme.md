@@ -1,8 +1,5 @@
 # boost.cobalt
 
-> [!NOTE]  
-> This is not yet an official boost library.
-
 This library provides a set of easy to use coroutine primitives & utilities running on top of boost.asio.
 These will be of interest for applications that perform a lot of IO that want to not block unnecessarily,
 yet still want to have linear & readable code (i..e. avoid callbacks).
