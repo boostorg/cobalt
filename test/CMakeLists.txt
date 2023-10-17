@@ -1,9 +1,10 @@
-enable_testing()
+if(NOT TARGET tests)
+    add_custom_target(tests)
+    set_property(TARGET tests PROPERTY FOLDER _deps)
+endif()
 
 add_library(boost_cobalt_static_tests concepts.cpp util.cpp)
-target_link_libraries(boost_cobalt_static_tests Boost::headers)
-target_compile_features(boost_cobalt_static_tests PUBLIC cxx_std_20)
-
+target_link_libraries(boost_cobalt_static_tests Boost::cobalt)
 
 add_executable(boost_cobalt_main         main.cpp)
 add_executable(boost_cobalt_main_compile main_compile.cpp)
@@ -16,7 +17,9 @@ target_link_libraries(boost_cobalt_main         Boost::cobalt)
 target_link_libraries(boost_cobalt_main_compile Boost::cobalt)
 target_link_libraries(boost_cobalt_basic_tests  Boost::cobalt)
 
-add_test(NAME boost_cobalt-main COMMAND boost_cobalt_main)
-add_test(NAME boost_cobalt-basic_tests COMMAND boost_cobalt_basic_tests)
+add_test(NAME boost_cobalt_main COMMAND boost_cobalt_main)
+add_test(NAME boost_cobalt_basic_tests COMMAND boost_cobalt_basic_tests)
 target_compile_features(boost_cobalt PUBLIC cxx_std_20)
+
+add_dependencies(tests boost_cobalt_main boost_cobalt_basic_tests boost_cobalt_static_tests)
 

@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.12...3.20)
 
 if(BOOST_SUPERPROJECT_VERSION)
-    set(BOOST_REQUESTS_VERSION ${BOOST_SUPERPROJECT_VERSION})
+    set(BOOST_COBALT_VERSION ${BOOST_SUPERPROJECT_VERSION})
 endif()
 
 project(boost_cobalt VERSION "${BOOST_COBALT_VERSION}" LANGUAGES CXX)
@@ -26,7 +26,6 @@ if (NOT BOOST_COBALT_IS_ROOT)
     # https://www.boost.org/LICENSE_1_0.txt
 
     # 12 for cxx_std_20
-    cmake_minimum_required(VERSION 3.12...3.20)
 
     project(boost_cobalt VERSION "${BOOST_SUPERPROJECT_VERSION}" LANGUAGES CXX)
 
