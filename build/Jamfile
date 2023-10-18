@@ -20,7 +20,8 @@ project : requirements
 ;
 
 
-feature.feature boost.cobalt.pmr : std boost-container custom no : propagated composite ;
+feature.feature boost.cobalt.pmr : default std boost-container custom no : propagated composite ;
+feature.compose <boost.cobalt.pmr>default : ;
 feature.compose <boost.cobalt.pmr>std             : <define>BOOST_COBALT_USE_STD_PMR=1 ;
 feature.compose <boost.cobalt.pmr>boost-container : <define>BOOST_COBALT_USE_BOOST_CONTAINER_PMR=1 ;
 feature.compose <boost.cobalt.pmr>custom          : <define>BOOST_COBALT_USE_CUSTOM_PMR=1 ;
@@ -55,7 +56,10 @@ lib boost_cobalt
    : usage-requirements
      <link>shared:<define>BOOST_COBALT_DYN_LINK=1
      <boost.cobalt.pmr>boost-container:<library>/boost//container
-   ;
+     <boost.cobalt.pmr>default,<toolset>clang-15:<library>/boost//container
+     <boost.cobalt.pmr>default,<toolset>clang-14:<library>/boost//container
+     <link>shared:<define>BOOST_COBALT_DYN_LINK=1
+  ;
 
 boost-install boost_cobalt ;
 
