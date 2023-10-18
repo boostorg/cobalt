@@ -35,7 +35,7 @@ CO_TEST_CASE("grp")
 {
   auto e = co_await cobalt::this_coro::executor;
 
-  using std::chrono::operator""ms;
+  using namespace std;
 
   cobalt::wait_group wg;
   wg.push_back(gdelay(e));

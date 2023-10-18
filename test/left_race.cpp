@@ -18,7 +18,8 @@
 using namespace boost;
 
 
-static cobalt::promise<std::size_t> dummy(asio::any_io_executor exec,
+static cobalt::promise<std::chrono::milliseconds::rep> dummy(
+                                  asio::any_io_executor exec,
                                   std::chrono::milliseconds ms = std::chrono::milliseconds(50))
 {
   asio::steady_timer tim{exec, ms};
@@ -61,7 +62,7 @@ CO_TEST_CASE("variadic")
 CO_TEST_CASE("list")
 {
   auto exec = co_await asio::this_coro::executor;
-  std::vector<cobalt::promise<std::size_t>> vec;
+  std::vector<cobalt::promise<std::chrono::milliseconds::rep>> vec;
   vec.push_back(dummy(exec, std::chrono::milliseconds(100)));
   vec.push_back(dummy(exec, std::chrono::milliseconds( 50)));
   vec.push_back(dummy(exec, std::chrono::milliseconds(100000)));

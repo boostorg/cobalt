@@ -18,7 +18,8 @@
 using namespace boost;
 
 
-static  cobalt::promise<std::size_t> dummy(asio::any_io_executor exec,
+static  cobalt::promise<std::chrono::milliseconds::rep> dummy(
+                                  asio::any_io_executor exec,
                                   std::chrono::milliseconds ms = std::chrono::milliseconds(50))
 {
   asio::steady_timer tim{exec, ms};
@@ -27,8 +28,9 @@ static  cobalt::promise<std::size_t> dummy(asio::any_io_executor exec,
 }
 
 
-static  cobalt::promise<std::size_t> nothrow_dummy(asio::any_io_executor exec,
-                                          std::chrono::milliseconds ms = std::chrono::milliseconds(50))
+static  cobalt::promise<std::chrono::milliseconds::rep> nothrow_dummy(
+                                  asio::any_io_executor exec,
+                                  std::chrono::milliseconds ms = std::chrono::milliseconds(50))
 try {
   asio::steady_timer tim{exec, ms};
   co_await tim.async_wait(cobalt::use_op);
@@ -36,7 +38,7 @@ try {
 }
 catch(...)
 {
-  co_return std::numeric_limits<std::size_t>::max();
+  co_return std::numeric_limits<std::chrono::milliseconds::rep>::max();
 }
 
 static cobalt::generator<int> gen(asio::any_io_executor exec)
@@ -89,7 +91,7 @@ CO_TEST_CASE("list")
   std::mt19937 src{seed};
 
   auto exec = co_await asio::this_coro::executor;
-  std::vector<cobalt::promise<std::size_t>> vec;
+  std::vector<cobalt::promise<std::chrono::milliseconds::rep>> vec;
   vec.push_back(dummy(exec, std::chrono::milliseconds(100)));
   vec.push_back(dummy(exec, std::chrono::milliseconds( 50)));
   vec.push_back(dummy(exec, std::chrono::milliseconds(100000)));

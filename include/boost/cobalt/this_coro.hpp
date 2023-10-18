@@ -363,9 +363,9 @@ void *allocate_coroutine(const std::size_t size, AllocatorType alloc_)
     using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<unsigned char>;
     alloc_type alloc{alloc_};
 
-    const auto align_needed = size % alignof(alloc_type);
-    const auto align_offset = align_needed != 0 ? alignof(alloc_type) - align_needed : 0ull;
-    const auto alloc_size = size + sizeof(alloc_type) + align_offset;
+    const std::size_t align_needed = size % alignof(alloc_type);
+    const std::size_t align_offset = align_needed != 0 ? alignof(alloc_type) - align_needed : 0ull;
+    const std::size_t alloc_size = size + sizeof(alloc_type) + align_offset;
     const auto raw = std::allocator_traits<alloc_type>::allocate(alloc, alloc_size);
     new(raw + size + align_offset) alloc_type(std::move(alloc));
 
@@ -379,9 +379,9 @@ void deallocate_coroutine(void *raw_, const std::size_t size)
     using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<unsigned char>;
     const auto raw = static_cast<unsigned char *>(raw_);
 
-    const auto align_needed = size % alignof(alloc_type);
-    const auto align_offset = align_needed != 0 ? alignof(alloc_type) - align_needed : 0ull;
-    const auto alloc_size = size + sizeof(alloc_type) + align_offset;
+    const std::size_t align_needed = size % alignof(alloc_type);
+    const std::size_t align_offset = align_needed != 0 ? alignof(alloc_type) - align_needed : 0ull;
+    const std::size_t alloc_size = size + sizeof(alloc_type) + align_offset;
     auto alloc_p = reinterpret_cast<alloc_type *>(raw + size + align_offset);
 
     auto alloc = std::move(*alloc_p);

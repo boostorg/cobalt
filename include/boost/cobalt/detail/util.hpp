@@ -121,9 +121,12 @@ auto get_resume_result(Awaitable & aw) -> system::result<decltype(aw.await_resum
 }
 
 #if BOOST_COBALT_NO_SELF_DELETE
-BOOST_COBALT_DECL void self_destroy(std::coroutine_handle<void> h, const cobalt::executor & exec) noexcept;
+
+BOOST_COBALT_DECL
+void self_destroy(std::coroutine_handle<void> h, const cobalt::executor & exec) noexcept;
+
 template<typename T>
-BOOST_COBALT_DECL void self_destroy(std::coroutine_handle<T> h) noexcept
+inline void self_destroy(std::coroutine_handle<T> h) noexcept
 {
   if constexpr (requires {h.promise().get_executor();})
     self_destroy(h, h.promise().get_executor());
@@ -131,8 +134,8 @@ BOOST_COBALT_DECL void self_destroy(std::coroutine_handle<T> h) noexcept
     self_destroy(h, this_thread::get_executor());
 }
 
-
 #else
+
 template<typename T>
 inline void self_destroy(std::coroutine_handle<T> h) noexcept
 {
@@ -144,6 +147,7 @@ inline void self_destroy(std::coroutine_handle<T> h, const Executor &) noexcept
 {
   h.destroy();
 }
+
 #endif
 
 template<typename T>
