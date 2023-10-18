@@ -75,8 +75,6 @@ struct join_variadic_impl
     template<std::size_t Idx>
     void cancel_step()
     {
-      using type = std::tuple_element_t<Idx, tuple_type>;
-
       auto &r = cancel[Idx];
       if (r)
         std::exchange(r, nullptr)->emit(asio::cancellation_type::all);
