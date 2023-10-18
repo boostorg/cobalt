@@ -14,6 +14,8 @@ project : requirements
   <toolset>msvc:<cxxflags>/bigobj
   <target-os>windows:<define>WIN32_LEAN_AND_MEAN
   <target-os>linux:<linkflags>-lpthread
+  <toolset>clang-15:<boost.cobalt.pmr>boost-container
+  <toolset>clang-14:<boost.cobalt.pmr>boost-container
 ;
 
 import testing ;
@@ -22,8 +24,8 @@ lib test_impl : doctest.cpp /boost//cobalt :
         <link>static
         ;
 
-run main.cpp         /boost//cobalt ;
-run main_compile.cpp /boost//cobalt ;
+run main.cpp         /boost//cobalt  ;
+run main_compile.cpp /boost//cobalt  ;
 
 for local src in [ glob *.cpp : main.cpp main_compile.cpp ]
 {
