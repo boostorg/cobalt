@@ -76,9 +76,6 @@ struct join_variadic_impl
     void cancel_step()
     {
       using type = std::tuple_element_t<Idx, tuple_type>;
-      using t = std::conditional_t<std::is_reference_v<std::tuple_element_t<Idx, std::tuple<Args...>>>,
-          type &,
-          type &&>;
 
       auto &r = cancel[Idx];
       if (r)

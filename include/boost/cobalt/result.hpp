@@ -154,7 +154,7 @@ auto as_result(Aw && aw)
       return as_result(std::forward<Aw>(aw).operator co_await());
     }
   };
-  return lazy_tuple(std::forward<Aw>(aw));
+  return lazy_tuple{std::forward<Aw>(aw)};
 }
 
 template<typename Aw>
