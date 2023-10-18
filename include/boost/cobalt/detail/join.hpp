@@ -292,7 +292,6 @@ struct join_ranged_impl
 
   struct awaitable : fork::shared_state
   {
-
     struct dummy
     {
       template<typename ... Args>

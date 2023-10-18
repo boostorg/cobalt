@@ -306,45 +306,46 @@ struct generator_promise
   }
 
   std::suspend_never initial_suspend() {return {};}
+
+  struct final_awaitable
+  {
+    generator_promise * generator;
+    bool await_ready() const noexcept
+    {
+      return generator->receiver && generator->receiver->awaited_from.get() == nullptr;
+    }
+
+    auto await_suspend(std::coroutine_handle<generator_promise> h) noexcept
+    {
+      std::coroutine_handle<void> res = std::noop_coroutine();
+      if (generator->receiver && generator->receiver->awaited_from.get() != nullptr)
+        res = generator->receiver->awaited_from.release();
+      if (generator->receiver)
+        generator->receiver->done = true;
+
+
+      if (auto & rec = h.promise().receiver; rec != nullptr)
+      {
+        if (!rec->done && !rec->exception)
+          rec->exception = detail::completed_unexpected();
+        rec->done = true;
+        rec->awaited_from.reset(nullptr);
+        rec = nullptr;
+      }
+
+      detail::self_destroy(h);
+      return res;
+    }
+
+    void await_resume() noexcept
+    {
+      if (generator->receiver)
+        generator->receiver->done = true;
+    }
+  };
+
   auto final_suspend() noexcept
   {
-    struct final_awaitable
-    {
-      generator_promise * generator;
-      bool await_ready() const noexcept
-      {
-        return generator->receiver && generator->receiver->awaited_from.get() == nullptr;
-      }
-
-      auto await_suspend(std::coroutine_handle<generator_promise> h) noexcept
-      {
-        std::coroutine_handle<void> res = std::noop_coroutine();
-        if (generator->receiver && generator->receiver->awaited_from.get() != nullptr)
-          res = generator->receiver->awaited_from.release();
-        if (generator->receiver)
-            generator->receiver->done = true;
-
-
-        if (auto & rec = h.promise().receiver; rec != nullptr)
-        {
-          if (!rec->done && !rec->exception)
-            rec->exception = detail::completed_unexpected();
-          rec->done = true;
-          rec->awaited_from.reset(nullptr);
-          rec = nullptr;
-        }
-
-        detail::self_destroy(h);
-        return res;
-      }
-
-      void await_resume() noexcept
-      {
-        if (generator->receiver)
-          generator->receiver->done = true;
-      }
-    };
-
     return final_awaitable{this};
   }
 

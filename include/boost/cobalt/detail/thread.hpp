@@ -59,19 +59,20 @@ struct thread_promise : signal_helper_2,
 {
   BOOST_COBALT_DECL thread_promise();
 
+  struct initial_awaitable
+  {
+    bool await_ready() const {return false;}
+    void await_suspend(std::coroutine_handle<thread_promise> h)
+    {
+      h.promise().mtx.unlock();
+    }
+
+    void await_resume() {}
+  };
+
   auto initial_suspend() noexcept
   {
-    struct aw
-    {
-      bool await_ready() const {return false;}
-      void await_suspend(std::coroutine_handle<thread_promise> h)
-      {
-        h.promise().mtx.unlock();
-      }
-
-      void await_resume() {}
-    };
-    return aw{};
+    return initial_awaitable{};
   }
   std::suspend_never final_suspend() noexcept
   {

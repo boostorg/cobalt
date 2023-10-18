@@ -49,30 +49,11 @@ struct detached_promise
 
   [[nodiscard]] detached get_return_object();
 
-  auto await_transform(
+  std::suspend_never await_transform(
       cobalt::this_coro::reset_cancellation_source_t<asio::cancellation_slot> reset) noexcept
   {
-    struct result
-    {
-      detached_promise * promise;
-      asio::cancellation_slot slot;
-
-      constexpr bool await_ready() const noexcept
-      {
-        return true;
-      }
-
-      void await_suspend(std::coroutine_handle<void>) noexcept
-      {
-      }
-
-      auto await_resume()
-      {
-        promise->reset_cancellation_source(std::move(slot));
-      }
-    };
-
-    return result{this, std::move(reset.source)};
+    this->reset_cancellation_source(reset.source);
+    return {};
   }
 
   using executor_type = executor;

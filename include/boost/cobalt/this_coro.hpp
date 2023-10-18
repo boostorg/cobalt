@@ -98,7 +98,6 @@ struct promise_cancellation_base
         : source_(slot), state_{source_, filter} {}
 
 
-
     // This await transformation resets the associated cancellation state.
     auto await_transform(cobalt::this_coro::cancelled_t) noexcept
     {
