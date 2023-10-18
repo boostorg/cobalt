@@ -136,39 +136,40 @@ struct fork
     cancellation_slot_type get_cancellation_slot() const { return cancel; }
 
     constexpr static std::suspend_never initial_suspend() noexcept {return {};}
-    auto final_suspend()  noexcept
+
+    struct final_awaitable
+    {
+      promise_type * self;
+      bool await_ready() noexcept
+      {
+        return self->state->use_count != 1u;
+      }
+
+      std::coroutine_handle<void> await_suspend(std::coroutine_handle<promise_type> h) noexcept
+      {
+        auto pp = h.promise().state.detach();
+
+#if defined(BOOST_COBALT_NO_SELF_DELETE)
+        h.promise().~promise_type();
+#else
+        // mem is in a monotonic_resource, this is fine on msvc- gcc doesn't like it though
+        h.destroy();
+#endif
+        pp->use_count--;
+        BOOST_ASSERT(pp->use_count == 0u);
+        if (pp->coro)
+          return pp->coro.release();
+        else
+          return std::noop_coroutine();
+      }
+
+      constexpr static void await_resume() noexcept {}
+    };
+    final_awaitable final_suspend()  noexcept
     {
       if (cancel.is_connected())
         cancel.clear();
-      struct awaitable
-      {
-        promise_type * self;
-        bool await_ready() noexcept
-        {
-          return self->state->use_count != 1u;
-        }
-
-        std::coroutine_handle<void> await_suspend(std::coroutine_handle<promise_type> h) noexcept
-        {
-          auto pp = h.promise().state.detach();
-
-#if defined(BOOST_COBALT_NO_SELF_DELETE)
-          h.promise().~promise_type();
-#else
-          // mem is in a monotonic_resource, this is fine on msvc- gcc doesn't like it though
-          h.destroy();
-#endif
-          pp->use_count--;
-          BOOST_ASSERT(pp->use_count == 0u);
-          if (pp->coro)
-            return pp->coro.release();
-          else
-            return std::noop_coroutine();
-        }
-
-        constexpr static void await_resume() noexcept {}
-      };
-      return awaitable{this};
+      return final_awaitable{this};
     }
     void return_void()
     {
@@ -204,22 +205,22 @@ struct fork
       return wrapped_awaitable{aw};
     }
 
+    struct wired_up_awaitable
+    {
+      promise_type * promise;
+      bool await_ready() const noexcept
+      {
+        return promise->state->wired_up();
+      }
+      void await_suspend(std::coroutine_handle<promise_type>)
+      {
+      }
+      constexpr static void await_resume() noexcept {}
+    };
+
     auto await_transform(wired_up_t)
     {
-      struct awaitable
-      {
-        promise_type * promise;
-        bool await_ready() const noexcept
-        {
-          return promise->state->wired_up();
-        }
-        void await_suspend(std::coroutine_handle<promise_type>)
-        {
-        }
-        constexpr static void await_resume() noexcept {}
-      };
-
-      return awaitable{this};
+      return wired_up_awaitable{this};
     }
 
 
