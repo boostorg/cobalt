@@ -51,9 +51,11 @@ jobs:
           - toolset: clang
             cxxstd: "20,2b"
             os: macos-12
+            stdlib: libc++
           - toolset: clang
             cxxstd: "20,2b"
             os: macos-13
+            stdlib: libc++
 
     runs-on: ${{matrix.os}}
     container: ${{matrix.container}}
