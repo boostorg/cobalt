@@ -30,6 +30,7 @@
 
 #include <coroutine>
 #include <optional>
+#include <algorithm>
 
 
 namespace boost::cobalt::detail

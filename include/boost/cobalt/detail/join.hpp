@@ -29,6 +29,7 @@
 
 #include <array>
 #include <coroutine>
+#include <algorithm>
 
 namespace boost::cobalt::detail
 {
