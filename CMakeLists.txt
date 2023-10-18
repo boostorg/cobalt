@@ -30,6 +30,8 @@ if (NOT BOOST_COBALT_IS_ROOT)
     project(boost_cobalt VERSION "${BOOST_SUPERPROJECT_VERSION}" LANGUAGES CXX)
 
     add_library(boost_cobalt
+            src/detail/exception.cpp
+            src/detail/util.cpp
             src/channel.cpp
             src/error.cpp
             src/main.cpp
