@@ -90,268 +90,272 @@ template<typename CancellationSlot = asio::cancellation_slot,
          typename DefaultFilter = asio::enable_terminal_cancellation>
 struct promise_cancellation_base
 {
-    using cancellation_slot_type = asio::cancellation_slot;
-    cancellation_slot_type get_cancellation_slot() const {return state_.slot();}
+  using cancellation_slot_type = asio::cancellation_slot;
+  cancellation_slot_type get_cancellation_slot() const {return state_.slot();}
 
-    template<typename InitialFilter = asio::enable_terminal_cancellation>
-    promise_cancellation_base(CancellationSlot slot = {}, InitialFilter filter = {})
-        : source_(slot), state_{source_, filter} {}
+  template<typename InitialFilter = asio::enable_terminal_cancellation>
+  promise_cancellation_base(CancellationSlot slot = {}, InitialFilter filter = {})
+      : source_(slot), state_{source_, filter} {}
 
 
-    // This await transformation resets the associated cancellation state.
-    auto await_transform(cobalt::this_coro::cancelled_t) noexcept
+  // This await transformation resets the associated cancellation state.
+  auto await_transform(cobalt::this_coro::cancelled_t) noexcept
+  {
+    return cancelled_t_awaitable{state_.cancelled()};
+  }
+
+  // This await transformation resets the associated cancellation state.
+  auto await_transform(asio::this_coro::cancellation_state_t) noexcept
+  {
+    return cancellation_state_t_awaitable{state_};
+  }
+
+  // This await transformation resets the associated cancellation state.
+  auto await_transform(asio::this_coro::reset_cancellation_state_0_t) noexcept
+  {
+    return reset_cancellation_state_0_t_awaitable{state_, source_};
+  }
+
+  // This await transformation resets the associated cancellation state.
+  template <typename Filter>
+  auto await_transform(
+          asio::this_coro::reset_cancellation_state_1_t<Filter> reset) noexcept
+  {
+    return reset_cancellation_state_1_t_awaitable<Filter>{state_, BOOST_ASIO_MOVE_CAST(Filter)(reset.filter), source_};
+  }
+
+  // This await transformation resets the associated cancellation state.
+  template <typename InFilter, typename OutFilter>
+  auto await_transform(
+          asio::this_coro::reset_cancellation_state_2_t<InFilter, OutFilter> reset)
+  noexcept
+  {
+      return reset_cancellation_state_2_t_awaitable<InFilter, OutFilter>{state_,
+                    BOOST_ASIO_MOVE_CAST(InFilter)(reset.in_filter),
+                    BOOST_ASIO_MOVE_CAST(OutFilter)(reset.out_filter),
+                    source_};
+  }
+  const asio::cancellation_state & cancellation_state() const {return state_;}
+  asio::cancellation_state & cancellation_state() {return state_;}
+  asio::cancellation_type cancelled() const
+  {
+    return state_.cancelled();
+  }
+
+  cancellation_slot_type get_cancellation_slot() {return state_.slot();}
+
+  void reset_cancellation_source(CancellationSlot source = CancellationSlot())
+  {
+    source_ = source;
+    state_ = asio::cancellation_state{source, DefaultFilter()};
+    state_.clear();
+  }
+
+        CancellationSlot & source() {return source_;}
+  const CancellationSlot & source() const {return source_;}
+ private:
+  CancellationSlot source_;
+  asio::cancellation_state state_{source_, DefaultFilter() };
+
+  struct cancelled_t_awaitable
+  {
+    asio::cancellation_type state;
+
+    bool await_ready() const noexcept
     {
-      struct result
-      {
-        asio::cancellation_type state;
-
-        bool await_ready() const noexcept
-        {
-          return true;
-        }
-
-        void await_suspend(std::coroutine_handle<void>) noexcept
-        {
-        }
-
-        auto await_resume() const
-        {
-          return state;
-        }
-      };
-      return result{state_.cancelled()};
+      return true;
     }
 
-    // This await transformation resets the associated cancellation state.
-    auto await_transform(asio::this_coro::cancellation_state_t) noexcept
+    void await_suspend(std::coroutine_handle<void>) noexcept
     {
-        struct result
-        {
-            asio::cancellation_state &state;
-
-            bool await_ready() const noexcept
-            {
-                return true;
-            }
-
-            void await_suspend(std::coroutine_handle<void>) noexcept
-            {
-            }
-
-            auto await_resume() const
-            {
-                return state;
-            }
-        };
-        return result{state_};
     }
 
-    // This await transformation resets the associated cancellation state.
-    auto await_transform(asio::this_coro::reset_cancellation_state_0_t) noexcept
+    auto await_resume() const
     {
-        struct result
-        {
-            asio::cancellation_state &state;
-            CancellationSlot &source;
+      return state;
+    }
+  };
 
-            bool await_ready() const noexcept
-            {
-                return true;
-            }
+  struct cancellation_state_t_awaitable
+  {
+    asio::cancellation_state &state;
 
-            void await_suspend(std::coroutine_handle<void>) noexcept
-            {
-            }
-
-            auto await_resume() const
-            {
-                state = asio::cancellation_state(source, DefaultFilter());
-            }
-        };
-        return result{state_, source_};
+    bool await_ready() const noexcept
+    {
+      return true;
     }
 
-    // This await transformation resets the associated cancellation state.
-    template <typename Filter>
-    auto await_transform(
-            asio::this_coro::reset_cancellation_state_1_t<Filter> reset) noexcept
+    void await_suspend(std::coroutine_handle<void>) noexcept
     {
-        struct result
-        {
-            asio::cancellation_state & state;
-            Filter filter_;
-            CancellationSlot &source;
-
-            bool await_ready() const noexcept
-            {
-                return true;
-            }
-
-            void await_suspend(std::coroutine_handle<void>) noexcept
-            {
-            }
-
-            auto await_resume()
-            {
-                state = asio::cancellation_state(
-                        source,
-                        BOOST_ASIO_MOVE_CAST(Filter)(filter_));
-            }
-        };
-
-        return result{state_, BOOST_ASIO_MOVE_CAST(Filter)(reset.filter), source_};
     }
 
-    // This await transformation resets the associated cancellation state.
-    template <typename InFilter, typename OutFilter>
-    auto await_transform(
-            asio::this_coro::reset_cancellation_state_2_t<InFilter, OutFilter> reset)
-    noexcept
+    auto await_resume() const
     {
-        struct result
-        {
-            asio::cancellation_state & state;
-            InFilter in_filter_;
-            OutFilter out_filter_;
-            CancellationSlot &source;
-
-
-            bool await_ready() const noexcept
-            {
-                return true;
-            }
-
-            void await_suspend(std::coroutine_handle<void>) noexcept
-            {
-            }
-
-            auto await_resume()
-            {
-                state = asio::cancellation_state(
-                        source,
-                        BOOST_ASIO_MOVE_CAST(InFilter)(in_filter_),
-                        BOOST_ASIO_MOVE_CAST(OutFilter)(out_filter_));
-            }
-        };
-
-        return result{state_,
-                      BOOST_ASIO_MOVE_CAST(InFilter)(reset.in_filter),
-                      BOOST_ASIO_MOVE_CAST(OutFilter)(reset.out_filter),
-                      source_};
+      return state;
     }
-    const asio::cancellation_state & cancellation_state() const {return state_;}
-    asio::cancellation_state & cancellation_state() {return state_;}
-    asio::cancellation_type cancelled() const
+  };
+
+  struct reset_cancellation_state_0_t_awaitable
+  {
+    asio::cancellation_state &state;
+    CancellationSlot &source;
+
+    bool await_ready() const noexcept
     {
-      return state_.cancelled();
+      return true;
     }
 
-    cancellation_slot_type get_cancellation_slot() {return state_.slot();}
-
-    void reset_cancellation_source(CancellationSlot source = CancellationSlot())
+    void await_suspend(std::coroutine_handle<void>) noexcept
     {
-      source_ = source;
-      state_ = asio::cancellation_state{source, DefaultFilter()};
-      state_.clear();
     }
 
-          CancellationSlot & source() {return source_;}
-    const CancellationSlot & source() const {return source_;}
-  private:
-    CancellationSlot source_;
-    asio::cancellation_state state_{source_, DefaultFilter() };
+    auto await_resume() const
+    {
+      state = asio::cancellation_state(source, DefaultFilter());
+    }
+  };
 
+  template<typename Filter>
+  struct reset_cancellation_state_1_t_awaitable
+  {
+    asio::cancellation_state & state;
+    Filter filter_;
+    CancellationSlot &source;
+
+    bool await_ready() const noexcept
+    {
+      return true;
+    }
+
+    void await_suspend(std::coroutine_handle<void>) noexcept
+    {
+    }
+
+    auto await_resume()
+    {
+      state = asio::cancellation_state(
+          source,
+          BOOST_ASIO_MOVE_CAST(Filter)(filter_));
+    }
+  };
+
+  template<typename InFilter, typename OutFilter>
+  struct reset_cancellation_state_2_t_awaitable
+  {
+    asio::cancellation_state & state;
+    InFilter in_filter_;
+    OutFilter out_filter_;
+    CancellationSlot &source;
+
+
+    bool await_ready() const noexcept
+    {
+      return true;
+    }
+
+    void await_suspend(std::coroutine_handle<void>) noexcept
+    {
+    }
+
+    auto await_resume()
+    {
+      state = asio::cancellation_state(
+          source,
+          BOOST_ASIO_MOVE_CAST(InFilter)(in_filter_),
+          BOOST_ASIO_MOVE_CAST(OutFilter)(out_filter_));
+    }
+  };
 };
 
 struct promise_throw_if_cancelled_base
 {
-    promise_throw_if_cancelled_base(bool throw_if_cancelled = true) : throw_if_cancelled_(throw_if_cancelled) {}
+  promise_throw_if_cancelled_base(bool throw_if_cancelled = true) : throw_if_cancelled_(throw_if_cancelled) {}
 
-    // This await transformation determines whether cancellation is propagated as
-    // an exception.
-    auto await_transform(this_coro::throw_if_cancelled_0_t)
-    noexcept
+  // This await transformation determines whether cancellation is propagated as
+  // an exception.
+  auto await_transform(this_coro::throw_if_cancelled_0_t)
+  noexcept
+  {
+    return throw_if_cancelled_0_awaitable_{throw_if_cancelled_};
+  }
+
+  // This await transformation sets whether cancellation is propagated as an
+  // exception.
+  auto await_transform(this_coro::throw_if_cancelled_1_t throw_if_cancelled)
+  noexcept
+  {
+      return throw_if_cancelled_1_awaitable_{this, throw_if_cancelled.value};
+  }
+  bool throw_if_cancelled() const {return throw_if_cancelled_;}
+ protected:
+  bool throw_if_cancelled_{true};
+
+  struct throw_if_cancelled_0_awaitable_
+  {
+    bool value_;
+
+    bool await_ready() const noexcept
     {
-        struct result
-        {
-            bool value_;
-
-            bool await_ready() const noexcept
-            {
-                return true;
-            }
-
-            void await_suspend(std::coroutine_handle<void>) noexcept
-            {
-            }
-
-            auto await_resume()
-            {
-                return value_;
-            }
-        };
-
-        return result{throw_if_cancelled_};
+      return true;
     }
 
-    // This await transformation sets whether cancellation is propagated as an
-    // exception.
-    auto await_transform(this_coro::throw_if_cancelled_1_t throw_if_cancelled)
-    noexcept
+    void await_suspend(std::coroutine_handle<void>) noexcept
     {
-        struct result
-        {
-            promise_throw_if_cancelled_base* this_;
-            bool value_;
-
-            bool await_ready() const noexcept
-            {
-                return true;
-            }
-
-            void await_suspend(std::coroutine_handle<void>) noexcept
-            {
-            }
-
-            auto await_resume()
-            {
-                this_->throw_if_cancelled_ = value_;
-            }
-        };
-
-        return result{this, throw_if_cancelled.value};
     }
-    bool throw_if_cancelled() const {return throw_if_cancelled_;}
-  protected:
-    bool throw_if_cancelled_{true};
+
+    auto await_resume()
+    {
+      return value_;
+    }
+  };
+
+  struct throw_if_cancelled_1_awaitable_
+  {
+    promise_throw_if_cancelled_base* this_;
+    bool value_;
+
+    bool await_ready() const noexcept
+    {
+      return true;
+    }
+
+    void await_suspend(std::coroutine_handle<void>) noexcept
+    {
+    }
+
+    auto await_resume()
+    {
+      this_->throw_if_cancelled_ = value_;
+    }
+  };
 };
 
 struct promise_memory_resource_base
 {
 #if !defined(BOOST_COBALT_NO_PMR)
-    using allocator_type = pmr::polymorphic_allocator<void>;
-    allocator_type get_allocator() const {return allocator_type{resource};}
+  using allocator_type = pmr::polymorphic_allocator<void>;
+  allocator_type get_allocator() const {return allocator_type{resource};}
 
-    template<typename ... Args>
-    static void * operator new(const std::size_t size, Args & ... args)
-    {
-        auto res = detail::get_memory_resource_from_args(args...);
-        const auto p = res->allocate(size + sizeof(pmr::memory_resource *), alignof(pmr::memory_resource *));
-        auto pp = static_cast<pmr::memory_resource**>(p);
-        *pp = res;
-        return pp + 1;
-    }
+  template<typename ... Args>
+  static void * operator new(const std::size_t size, Args & ... args)
+  {
+    auto res = detail::get_memory_resource_from_args(args...);
+    const auto p = res->allocate(size + sizeof(pmr::memory_resource *), alignof(pmr::memory_resource *));
+    auto pp = static_cast<pmr::memory_resource**>(p);
+    *pp = res;
+    return pp + 1;
+  }
 
-    static void operator delete(void * raw, const std::size_t size) noexcept
-    {
-        const auto p = static_cast<pmr::memory_resource**>(raw) - 1;
-        pmr::memory_resource * res = *p;
-        res->deallocate(p, size + sizeof(pmr::memory_resource *), alignof(pmr::memory_resource *));
-    }
-    promise_memory_resource_base(pmr::memory_resource * resource = this_thread::get_default_resource()) : resource(resource) {}
+  static void operator delete(void * raw, const std::size_t size) noexcept
+  {
+    const auto p = static_cast<pmr::memory_resource**>(raw) - 1;
+    pmr::memory_resource * res = *p;
+    res->deallocate(p, size + sizeof(pmr::memory_resource *), alignof(pmr::memory_resource *));
+  }
+  promise_memory_resource_base(pmr::memory_resource * resource = this_thread::get_default_resource()) : resource(resource) {}
 
 private:
-    pmr::memory_resource * resource = this_thread::get_default_resource();
+  pmr::memory_resource * resource = this_thread::get_default_resource();
 #endif
 };
 
@@ -393,24 +397,25 @@ void deallocate_coroutine(void *raw_, const std::size_t size)
 template<typename Promise>
 struct enable_await_allocator
 {
-    auto await_transform(this_coro::allocator_t)
+  auto await_transform(this_coro::allocator_t)
+  {
+    return allocator_awaitable_{static_cast<Promise*>(this)->get_allocator()};
+
+  }
+ private:
+  struct allocator_awaitable_
+  {
+    using allocator_type = typename Promise::allocator_type;
+
+    allocator_type alloc;
+    constexpr static bool await_ready() { return true; }
+
+    bool await_suspend( std::coroutine_handle<void> ) { return false; }
+    allocator_type await_resume()
     {
-        struct awaitable
-        {
-            using allocator_type = typename Promise::allocator_type;
-
-            allocator_type alloc;
-            constexpr static bool await_ready() { return true; }
-
-            bool await_suspend( std::coroutine_handle<void> ) { return false; }
-            allocator_type await_resume()
-            {
-                return alloc;
-            }
-        };
-
-        return awaitable{static_cast<Promise*>(this)->get_allocator()};
+      return alloc;
     }
+  };
 };
 
 template<typename Promise>
@@ -418,22 +423,22 @@ struct enable_await_executor
 {
   auto await_transform(this_coro::executor_t)
   {
-    struct awaitable
-    {
-      using executor_type = typename Promise::executor_type;
-
-      executor_type exec;
-      constexpr static bool await_ready() { return true; }
-
-      bool await_suspend( std::coroutine_handle<void> ) { return false; }
-      executor_type await_resume()
-      {
-        return exec;
-      }
-    };
-
-    return awaitable{static_cast<Promise*>(this)->get_executor()};
+    return executor_awaitable_{static_cast<Promise*>(this)->get_executor()};
   }
+ private:
+  struct executor_awaitable_
+  {
+    using executor_type = typename Promise::executor_type;
+
+    executor_type exec;
+    constexpr static bool await_ready() { return true; }
+
+    bool await_suspend( std::coroutine_handle<void> ) { return false; }
+    executor_type await_resume()
+    {
+      return exec;
+    }
+  };
 };
 
 }
