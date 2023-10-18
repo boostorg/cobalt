@@ -30,12 +30,6 @@ jobs:
             container: ubuntu:23.04
             install: g++-13
           - toolset: clang
-            compiler: clang++-13
-            cxxstd: "20,2b"
-            stdlib: libc++
-            os: ubuntu-22.04
-            install: "clang-13 libc++-13-dev"
-          - toolset: clang
             compiler: clang++-14
             cxxstd: "20,2b"
             stdlib: libc++
