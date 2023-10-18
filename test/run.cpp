@@ -5,21 +5,21 @@
 
 #include <boost/cobalt/run.hpp>
 
-#include "doctest.h"
+#include <boost/test/unit_test.hpp>
 
 using namespace boost;
 
-TEST_SUITE_BEGIN("run");
+BOOST_AUTO_TEST_SUITE(run);
 
-TEST_CASE("run")
+BOOST_AUTO_TEST_CASE(run)
 {
-  CHECK(42 == run([]() -> cobalt::task<int> {co_return 42;}()));
+  BOOST_CHECK(42 == cobalt::run([]() -> cobalt::task<int> {co_return 42;}()));
 
   asio::io_context ctx;
   cobalt::this_thread::set_executor(ctx.get_executor());
-  CHECK(42 == run([]() -> cobalt::task<int> {co_return 42;}()));
+  BOOST_CHECK(42 == cobalt::run([]() -> cobalt::task<int> {co_return 42;}()));
 
-  CHECK(ctx.get_executor() == cobalt::this_thread::get_executor());
+  BOOST_CHECK(ctx.get_executor() == cobalt::this_thread::get_executor());
 }
 
-TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END();

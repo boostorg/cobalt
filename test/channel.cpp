@@ -15,7 +15,7 @@
 #include <boost/asio/steady_timer.hpp>
 
 #include "test.hpp"
-#include "doctest.h"
+#include <boost/test/unit_test.hpp>
 
 namespace cobalt = boost::cobalt;
 
@@ -43,9 +43,9 @@ cobalt::promise<void> do_read(cobalt::channel<void> &chn, std::vector<int> & seq
   co_await chn.read(); seq.push_back(17);
 }
 
-TEST_SUITE_BEGIN("channel");
+BOOST_AUTO_TEST_SUITE(channel);
 
-CO_TEST_CASE("void")
+CO_TEST_CASE(void_)
 {
   cobalt::channel<void> chn{2u, co_await cobalt::this_coro::executor};
 
@@ -55,26 +55,26 @@ CO_TEST_CASE("void")
 
   co_await r;
   co_await w;
-  REQUIRE(seq.size() == 16);
-  CHECK(seq[0] == 10);
-  CHECK(seq[1] == 0);
-  CHECK(seq[2] == 1);
-  CHECK(seq[3] == 2);
-  CHECK(seq[4] == 11);
-  CHECK(seq[5] == 12);
-  CHECK(seq[6] == 3);
-  CHECK(seq[7] == 4);
-  CHECK(seq[8] == 13);
-  CHECK(seq[9] == 14);
-  CHECK(seq[10] == 5);
-  CHECK(seq[11] == 6);
-  CHECK(seq[12] == 15);
-  CHECK(seq[13] == 16);
-  CHECK(seq[14] == 7);
-  CHECK(seq[15] == 17);
+  BOOST_REQUIRE(seq.size() == 16);
+  BOOST_CHECK(seq[0] == 10);
+  BOOST_CHECK(seq[1] == 0);
+  BOOST_CHECK(seq[2] == 1);
+  BOOST_CHECK(seq[3] == 2);
+  BOOST_CHECK(seq[4] == 11);
+  BOOST_CHECK(seq[5] == 12);
+  BOOST_CHECK(seq[6] == 3);
+  BOOST_CHECK(seq[7] == 4);
+  BOOST_CHECK(seq[8] == 13);
+  BOOST_CHECK(seq[9] == 14);
+  BOOST_CHECK(seq[10] == 5);
+  BOOST_CHECK(seq[11] == 6);
+  BOOST_CHECK(seq[12] == 15);
+  BOOST_CHECK(seq[13] == 16);
+  BOOST_CHECK(seq[14] == 7);
+  BOOST_CHECK(seq[15] == 17);
 }
 
-CO_TEST_CASE("void-0")
+CO_TEST_CASE(void_0)
 {
     cobalt::channel<void> chn{0u, co_await cobalt::this_coro::executor};
 
@@ -84,23 +84,23 @@ CO_TEST_CASE("void-0")
 
     co_await r;
     co_await w;
-    REQUIRE(seq.size() == 16);
-    CHECK(seq[0] == 10);
-    CHECK(seq[1] == 0);
-    CHECK(seq[2] == 11);
-    CHECK(seq[3] == 1);
-    CHECK(seq[4] == 12);
-    CHECK(seq[5] == 2);
-    CHECK(seq[6] == 13);
-    CHECK(seq[7] == 3);
-    CHECK(seq[8] == 14);
-    CHECK(seq[9] == 4);
-    CHECK(seq[10] == 15);
-    CHECK(seq[11] == 5);
-    CHECK(seq[12] == 16);
-    CHECK(seq[13] == 6);
-    CHECK(seq[14] == 17);
-    CHECK(seq[15] == 7);
+    BOOST_REQUIRE(seq.size() == 16);
+    BOOST_CHECK(seq[0] == 10);
+    BOOST_CHECK(seq[1] == 0);
+    BOOST_CHECK(seq[2] == 11);
+    BOOST_CHECK(seq[3] == 1);
+    BOOST_CHECK(seq[4] == 12);
+    BOOST_CHECK(seq[5] == 2);
+    BOOST_CHECK(seq[6] == 13);
+    BOOST_CHECK(seq[7] == 3);
+    BOOST_CHECK(seq[8] == 14);
+    BOOST_CHECK(seq[9] == 4);
+    BOOST_CHECK(seq[10] == 15);
+    BOOST_CHECK(seq[11] == 5);
+    BOOST_CHECK(seq[12] == 16);
+    BOOST_CHECK(seq[13] == 6);
+    BOOST_CHECK(seq[14] == 17);
+    BOOST_CHECK(seq[15] == 7);
 }
 
 cobalt::promise<void> do_write(cobalt::channel<int> &chn, std::vector<int> & seq)
@@ -118,17 +118,17 @@ cobalt::promise<void> do_write(cobalt::channel<int> &chn, std::vector<int> & seq
 cobalt::promise<void> do_read(cobalt::channel<int> &chn, std::vector<int> & seq)
 {
   seq.push_back(10);
-  CHECK(1 == co_await chn.read()); seq.push_back(11);
-  CHECK(2 == co_await chn.read()); seq.push_back(12);
-  CHECK(3 == (co_await cobalt::as_result(chn.read())).value()); seq.push_back(13);
-  CHECK(4 == std::get<1>(co_await cobalt::as_tuple(chn.read()))); seq.push_back(14);
-  CHECK(5 == co_await chn.read()); seq.push_back(15);
-  CHECK(6 == co_await chn.read()); seq.push_back(16);
-  CHECK(7 == co_await chn.read()); seq.push_back(17);
+  BOOST_CHECK(1 == co_await chn.read()); seq.push_back(11);
+  BOOST_CHECK(2 == co_await chn.read()); seq.push_back(12);
+  BOOST_CHECK(3 == (co_await cobalt::as_result(chn.read())).value()); seq.push_back(13);
+  BOOST_CHECK(4 == std::get<1>(co_await cobalt::as_tuple(chn.read()))); seq.push_back(14);
+  BOOST_CHECK(5 == co_await chn.read()); seq.push_back(15);
+  BOOST_CHECK(6 == co_await chn.read()); seq.push_back(16);
+  BOOST_CHECK(7 == co_await chn.read()); seq.push_back(17);
 }
 
 
-CO_TEST_CASE("int")
+CO_TEST_CASE(int_)
 {
   cobalt::channel<int> chn{2u, co_await cobalt::this_coro::executor};
 
@@ -138,23 +138,23 @@ CO_TEST_CASE("int")
 
   co_await r;
   co_await w;
-  REQUIRE(seq.size() == 16);
-  CHECK(seq[0] == 0);
-  CHECK(seq[1] == 1);
-  CHECK(seq[2] == 2);
-  CHECK(seq[3] == 10);
-  CHECK(seq[4] == 11);
-  CHECK(seq[5] == 12);
-  CHECK(seq[6] == 3);
-  CHECK(seq[7] == 4);
-  CHECK(seq[8] == 13);
-  CHECK(seq[9] == 14);
-  CHECK(seq[10] == 5);
-  CHECK(seq[11] == 6);
-  CHECK(seq[12] == 15);
-  CHECK(seq[13] == 16);
-  CHECK(seq[14] == 7);
-  CHECK(seq[15] == 17);
+  BOOST_REQUIRE(seq.size() == 16);
+  BOOST_CHECK(seq[0] == 0);
+  BOOST_CHECK(seq[1] == 1);
+  BOOST_CHECK(seq[2] == 2);
+  BOOST_CHECK(seq[3] == 10);
+  BOOST_CHECK(seq[4] == 11);
+  BOOST_CHECK(seq[5] == 12);
+  BOOST_CHECK(seq[6] == 3);
+  BOOST_CHECK(seq[7] == 4);
+  BOOST_CHECK(seq[8] == 13);
+  BOOST_CHECK(seq[9] == 14);
+  BOOST_CHECK(seq[10] == 5);
+  BOOST_CHECK(seq[11] == 6);
+  BOOST_CHECK(seq[12] == 15);
+  BOOST_CHECK(seq[13] == 16);
+  BOOST_CHECK(seq[14] == 7);
+  BOOST_CHECK(seq[15] == 17);
 }
 
 cobalt::promise<void> do_write(cobalt::channel<std::string> &chn, std::vector<int> & seq)
@@ -172,17 +172,17 @@ cobalt::promise<void> do_write(cobalt::channel<std::string> &chn, std::vector<in
 cobalt::promise<void> do_read(cobalt::channel<std::string> &chn, std::vector<int> & seq)
 {
     seq.push_back(10);
-    CHECK("1" == co_await chn.read()); seq.push_back(11);
-    CHECK("2" == co_await chn.read()); seq.push_back(12);
-    CHECK("3" == co_await chn.read()); seq.push_back(13);
-    CHECK("4" == co_await chn.read()); seq.push_back(14);
-    CHECK("5" == co_await chn.read()); seq.push_back(15);
-    CHECK("6" == co_await chn.read()); seq.push_back(16);
-    CHECK("7 but we need to be sure we get ouf of SSO" == co_await chn.read()); seq.push_back(17);
+    BOOST_CHECK("1" == co_await chn.read()); seq.push_back(11);
+    BOOST_CHECK("2" == co_await chn.read()); seq.push_back(12);
+    BOOST_CHECK("3" == co_await chn.read()); seq.push_back(13);
+    BOOST_CHECK("4" == co_await chn.read()); seq.push_back(14);
+    BOOST_CHECK("5" == co_await chn.read()); seq.push_back(15);
+    BOOST_CHECK("6" == co_await chn.read()); seq.push_back(16);
+    BOOST_CHECK("7 but we need to be sure we get ouf of SSO" == co_await chn.read()); seq.push_back(17);
 }
 
 
-CO_TEST_CASE("str")
+CO_TEST_CASE(str)
 {
     cobalt::channel<std::string> chn{0u, co_await cobalt::this_coro::executor};
 
@@ -192,45 +192,45 @@ CO_TEST_CASE("str")
 
     co_await r;
     co_await w;
-    REQUIRE(seq.size() == 16);
-    CHECK(seq[0] == 0);
-    CHECK(seq[1] == 10);
-    CHECK(seq[2] == 1);
-    CHECK(seq[3] == 11);
-    CHECK(seq[4] == 2);
-    CHECK(seq[5] == 12);
-    CHECK(seq[6] == 3);
-    CHECK(seq[7] == 13);
-    CHECK(seq[8] == 4);
-    CHECK(seq[9] == 14);
-    CHECK(seq[10] == 5);
-    CHECK(seq[11] == 15);
-    CHECK(seq[12] == 6);
-    CHECK(seq[13] == 16);
-    CHECK(seq[14] == 7);
-    CHECK(seq[15] == 17);
+    BOOST_REQUIRE(seq.size() == 16);
+    BOOST_CHECK(seq[0] == 0);
+    BOOST_CHECK(seq[1] == 10);
+    BOOST_CHECK(seq[2] == 1);
+    BOOST_CHECK(seq[3] == 11);
+    BOOST_CHECK(seq[4] == 2);
+    BOOST_CHECK(seq[5] == 12);
+    BOOST_CHECK(seq[6] == 3);
+    BOOST_CHECK(seq[7] == 13);
+    BOOST_CHECK(seq[8] == 4);
+    BOOST_CHECK(seq[9] == 14);
+    BOOST_CHECK(seq[10] == 5);
+    BOOST_CHECK(seq[11] == 15);
+    BOOST_CHECK(seq[12] == 6);
+    BOOST_CHECK(seq[13] == 16);
+    BOOST_CHECK(seq[14] == 7);
+    BOOST_CHECK(seq[15] == 17);
 }
 
-CO_TEST_CASE("raceable")
+CO_TEST_CASE(raceable)
 {
     cobalt::channel<int>  ci{0u};
     cobalt::channel<void> cv{0u};
     auto [r1, r2] = co_await cobalt::gather(cobalt::race(ci.read(), cv.read()), cv.write());
     r1.value();
-    REQUIRE(r1.has_value());
-    CHECK(r1->index() == 1u);
-    CHECK(!r2.has_error());
+    BOOST_REQUIRE(r1.has_value());
+    BOOST_CHECK(r1->index() == 1u);
+    BOOST_CHECK(!r2.has_error());
 }
 
-CO_TEST_CASE("raceable-1")
+CO_TEST_CASE(raceable_1)
 {
   cobalt::channel<int>  ci{1u};
   cobalt::channel<void> cv{1u};
   auto [r1, r2] = co_await cobalt::gather(
       cobalt::race(ci.read(), cv.read()),
       cv.write());
-  CHECK(r1->index() == 1u);
-  CHECK(!r2.has_error());
+  BOOST_CHECK(r1->index() == 1u);
+  BOOST_CHECK(!r2.has_error());
 }
 
 
@@ -264,7 +264,7 @@ cobalt::promise<void> test()
   co_await cobalt::join(timeout_and_write(channel), read(channel));
 }
 
-CO_TEST_CASE("issue-93")
+CO_TEST_CASE(issue_93)
 {
   co_await cobalt::race(test(), boost::asio::post(cobalt::use_op));
 }
@@ -276,18 +276,18 @@ cobalt::promise<void> writer(cobalt::channel<int> & c)
   c.close();
 }
 
-CO_TEST_CASE("reader")
+CO_TEST_CASE(reader)
 {
   cobalt::channel<int> c;
 
   +writer(c);
   int i = 0;
   BOOST_COBALT_FOR(int value, cobalt::channel_reader(c))
-    CHECK(value == i++);
+    BOOST_CHECK(value == i++);
 
 }
 
 
 }
 
-TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END();

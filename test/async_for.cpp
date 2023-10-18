@@ -10,7 +10,7 @@
 
 #include <array>
 
-#include "doctest.h"
+#include <boost/test/unit_test.hpp>
 #include "test.hpp"
 
 using namespace boost;
@@ -41,10 +41,10 @@ cobalt::generator<int> throw_gen()
   co_return 0;
 }
 
-TEST_SUITE_BEGIN("async_for");
+BOOST_AUTO_TEST_SUITE(async_for);
 
 /// If the awaitable is not empty the loop must be entered for every value exactly once
-CO_TEST_CASE("empty_awaitable")
+CO_TEST_CASE(empty_awaitable)
 {
   auto tg = once_gen();
   co_await tg;
@@ -52,30 +52,31 @@ CO_TEST_CASE("empty_awaitable")
   /// also[lvalue]: The iterated expression can be an lvalue
   BOOST_COBALT_FOR(auto i, tg)
   {
-    CHECK(false);
+    BOOST_CHECK(false);
     boost::ignore_unused(i);
   }
 }
 
 /// If the awaitable is not empty the loop must be entered for every value exactly once
-CO_TEST_CASE("regular")
+CO_TEST_CASE(regular)
 {
   auto itr = test_data.begin();
   /// also[rvalue]: The iterated expression can be an rvalue
   BOOST_COBALT_FOR(auto i, test_data_gen())
     {
-      CHECK(i == *itr++);
+      BOOST_CHECK(i == *itr++);
     }
 }
 
 /// Any exception thrown from the co_await must be propagated.
-CO_TEST_CASE("exception")
+CO_TEST_CASE(exception)
 {
   auto inner = []() -> cobalt::generator<int>
   {
     BOOST_COBALT_FOR(auto i, throw_gen()) boost::ignore_unused(i); // should throw
     co_return -1;
   };
-
-  CHECK_THROWS(co_await inner());
+  try { BOOST_CHECK_THROW(co_await inner(), boost::system::system_error); } catch(...) {}
 }
+
+BOOST_AUTO_TEST_SUITE_END();

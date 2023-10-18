@@ -6,9 +6,7 @@
 #include <boost/cobalt/this_coro.hpp>
 #include <boost/cobalt/detail/util.hpp>
 
-
-
-#include "doctest.h"
+#include <boost/test/unit_test.hpp>
 #include "test.hpp"
 
 using namespace boost;
@@ -58,80 +56,78 @@ struct coroutine_traits<void, coro_feature_tester*> //< don't do THIS at
 };
 }
 
-#define SELF_TEST_CASE_IMPL(Function, ...)                                                                         \
-static void Function(coro_feature_tester * this_);                                                                 \
-DOCTEST_TEST_CASE(__VA_ARGS__)                                                                                     \
-{                                                                                                                  \
-    Function(nullptr);                                                                                             \
-}                                                                                                                  \
-static void Function(coro_feature_tester * this_)
+#define SELF_TEST_CASE(Function)                                                                                       \
+static void Function##_impl(coro_feature_tester * this_);                                                              \
+BOOST_AUTO_TEST_CASE(Function)                                                                                         \
+{                                                                                                                      \
+    Function##_impl(nullptr);                                                                                          \
+}                                                                                                                      \
+static void Function##_impl(coro_feature_tester * this_)
 
-#define SELF_TEST_CASE(...) SELF_TEST_CASE_IMPL(DOCTEST_ANONYMOUS(SELF_DOCTEST_ANON_FUNC_), __VA_ARGS__)
+BOOST_AUTO_TEST_SUITE(this_coro);
 
-TEST_SUITE_BEGIN("this_coro");
-
-SELF_TEST_CASE("promise_cancellation_base")
+SELF_TEST_CASE(promise_cancellation_base)
 {
-  CHECK(!this_->cancelled());
-  CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::none);
+  BOOST_CHECK(!this_->cancelled());
+  BOOST_CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::none);
 
   this_->sig.emit(asio::cancellation_type::terminal);
 
-  CHECK(this_->cancelled() == asio::cancellation_type::terminal);
-  CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::terminal);
+  BOOST_CHECK(this_->cancelled() == asio::cancellation_type::terminal);
+  BOOST_CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::terminal);
 
   co_await cobalt::this_coro::reset_cancellation_state();
 
-  CHECK(!this_->cancelled());
-  CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::none);
+  BOOST_CHECK(!this_->cancelled());
+  BOOST_CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::none);
 
   this_->sig.emit(asio::cancellation_type::terminal);
 
-  CHECK(this_->cancelled() == asio::cancellation_type::terminal);
-  CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::terminal);
+  BOOST_CHECK(this_->cancelled() == asio::cancellation_type::terminal);
+  BOOST_CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::terminal);
 
   co_await cobalt::this_coro::reset_cancellation_state(asio::enable_partial_cancellation());
 
-  CHECK(!this_->cancelled());
-  CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::none);
+  BOOST_CHECK(!this_->cancelled());
+  BOOST_CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::none);
 
   this_->sig.emit(asio::cancellation_type::total);
 
-  CHECK(!this_->cancelled());
-  CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::none);
+  BOOST_CHECK(!this_->cancelled());
+  BOOST_CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::none);
   this_->sig.emit(asio::cancellation_type::all);
-  CHECK(this_->cancelled() == (asio::cancellation_type::terminal | asio::cancellation_type::partial));
+  BOOST_CHECK(this_->cancelled() == (asio::cancellation_type::terminal | asio::cancellation_type::partial));
 
 
   co_await cobalt::this_coro::reset_cancellation_state(
       asio::enable_partial_cancellation(),
       asio::enable_terminal_cancellation());
 
-  CHECK(!this_->cancelled());
-  CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::none);
+  BOOST_CHECK(!this_->cancelled());
+  BOOST_CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::none);
 
   this_->sig.emit(asio::cancellation_type::total);
 
-  CHECK(!this_->cancelled());
-  CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::none);
+  BOOST_CHECK(!this_->cancelled());
+  BOOST_CHECK(this_->cancellation_state().cancelled() == asio::cancellation_type::none);
   this_->sig.emit(asio::cancellation_type::all);
-  CHECK(this_->cancelled() == (asio::cancellation_type::terminal | asio::cancellation_type::partial));
+  BOOST_CHECK(this_->cancelled() == (asio::cancellation_type::terminal | asio::cancellation_type::partial));
 }
 
 
-SELF_TEST_CASE("promise_throw_if_cancelled_base")
+SELF_TEST_CASE(promise_throw_if_cancelled_base)
 {
-  CHECK(co_await asio::this_coro::throw_if_cancelled());
+  BOOST_CHECK(co_await asio::this_coro::throw_if_cancelled());
   co_await asio::this_coro::throw_if_cancelled(false);
-  CHECK(!co_await asio::this_coro::throw_if_cancelled());
+  BOOST_CHECK(!co_await asio::this_coro::throw_if_cancelled());
 }
 
 #if !defined(BOOST_COBALT_NO_PMR)
-SELF_TEST_CASE("enable_await_allocator")
+SELF_TEST_CASE(enable_await_allocator)
 {
-  CHECK(this_->get_allocator() == co_await cobalt::this_coro::allocator);
+  BOOST_CHECK(this_->get_allocator() == co_await cobalt::this_coro::allocator);
 }
 #endif
 
 
-TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END();

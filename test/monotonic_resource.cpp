@@ -7,11 +7,11 @@
 
 #include <boost/cobalt/detail/monotonic_resource.hpp>
 
-#include "doctest.h"
+#include <boost/test/unit_test.hpp>
 
-TEST_SUITE_BEGIN("monotonic_resource");
+BOOST_AUTO_TEST_SUITE(monotonic_resource);
 
-TEST_CASE("basic")
+BOOST_AUTO_TEST_CASE(basic)
 {
   char buf[1024];
   boost::cobalt::detail::monotonic_resource res{buf, sizeof(buf)};
@@ -30,7 +30,7 @@ TEST_CASE("basic")
   }
 }
 
-TEST_CASE("too-small")
+BOOST_AUTO_TEST_CASE(too_small)
 {
   char buf[1];
   boost::cobalt::detail::monotonic_resource res{buf, sizeof(buf)};
@@ -49,7 +49,7 @@ TEST_CASE("too-small")
   }
 }
 
-TEST_CASE("no-buf")
+BOOST_AUTO_TEST_CASE(no_buf)
 {
   boost::cobalt::detail::monotonic_resource res;
 
@@ -67,4 +67,4 @@ TEST_CASE("no-buf")
   }
 }
 
-TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END();

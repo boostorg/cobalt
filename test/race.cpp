@@ -12,7 +12,7 @@
 
 #include <boost/asio/steady_timer.hpp>
 
-#include "doctest.h"
+#include <boost/test/unit_test.hpp>
 #include "test.hpp"
 
 using namespace boost;
@@ -48,9 +48,9 @@ static cobalt::generator<int> gen(asio::any_io_executor exec)
   co_return 123;
 }
 
-TEST_SUITE_BEGIN("race");
+BOOST_AUTO_TEST_SUITE(race_);
 
-CO_TEST_CASE("variadic")
+CO_TEST_CASE(variadic)
 {
   auto exec = co_await asio::this_coro::executor;
   auto d1 = dummy(exec, std::chrono::milliseconds(100));
@@ -58,36 +58,23 @@ CO_TEST_CASE("variadic")
   auto g = gen(exec);
   std::mt19937 src{1u};
   auto c = co_await race(src, d1, d2, dummy(exec, std::chrono::milliseconds(100000)), g);
-  CHECK(c.index() == 1u);
-  CHECK(boost::variant2::get<1>(c) == 50);
-  CHECK(d1);
-  //CHECK(!d1.ready()); NOTE: Inderministic on msvc, due to the additional post!
-  CHECK( d2.ready());
-  CHECK(100 == co_await d1);
-  CHECK(!d1);
-  CHECK( d1.ready());
+  BOOST_CHECK(c.index() == 1u);
+  BOOST_CHECK(boost::variant2::get<1>(c) == 50);
+  BOOST_CHECK(d1);
+  //BOOST_CHECK(!d1.ready()); NOTE: Inderministic on msvc, due to the additional post!
+  BOOST_CHECK( d2.ready());
+  BOOST_CHECK(100 == co_await d1);
+  BOOST_CHECK(!d1);
+  BOOST_CHECK( d1.ready());
   co_await d2;
 
   g.cancel();
-  CHECK_THROWS(co_await g);
+  BOOST_CHECK_THROW(co_await g, boost::system::system_error);
 }
 
 
-CO_TEST_CASE("list")
+cobalt::promise<void> list_step(std::default_random_engine::result_type seed)
 {
-
-  std::default_random_engine::result_type seed;
-  SUBCASE("1") {seed = 1u;}
-  SUBCASE("2") {seed = 2u;}
-  SUBCASE("3") {seed = 3u;}
-  SUBCASE("4") {seed = 4u;}
-  SUBCASE("5") {seed = 5u;}
-  SUBCASE("6") {seed = 6u;}
-  SUBCASE("7") {seed = 7u;}
-  SUBCASE("8") {seed = 8u;}
-  SUBCASE("9") {seed = 9u;}
-
-  CAPTURE(seed);
   std::mt19937 src{seed};
 
   auto exec = co_await asio::this_coro::executor;
@@ -97,68 +84,82 @@ CO_TEST_CASE("list")
   vec.push_back(dummy(exec, std::chrono::milliseconds(100000)));
 
   auto c = co_await race(src, vec);
-  CHECK(c.first == 1u);
-  CHECK(c.second == 50);
-  CHECK(!vec[0].ready());
-  CHECK( vec[1].ready());
-  CHECK(co_await vec[0]);
-  CHECK( vec[0].ready());
-  CHECK( vec[1].ready());
+  BOOST_CHECK(c.first == 1u);
+  BOOST_CHECK(c.second == 50);
+  BOOST_CHECK(!vec[0].ready());
+  BOOST_CHECK( vec[1].ready());
+  BOOST_CHECK(co_await vec[0]);
+  BOOST_CHECK( vec[0].ready());
+  BOOST_CHECK( vec[1].ready());
   vec[2].cancel();
-  CHECK( vec[2]);
-  CHECK_THROWS(co_await vec[2]);
-  CHECK_THROWS(co_await vec[2]);
-  CHECK(!vec[2]);
+  BOOST_CHECK( vec[2]);
+  BOOST_CHECK_THROW(co_await vec[2], boost::system::system_error);
+  BOOST_CHECK_THROW(co_await vec[2], boost::system::system_error);
+  BOOST_CHECK(!vec[2]);
 }
 
-CO_TEST_CASE("empty-list")
+CO_TEST_CASE(list_1u) { co_await list_step(1u);}
+CO_TEST_CASE(list_2u) { co_await list_step(2u);}
+CO_TEST_CASE(list_3u) { co_await list_step(3u);}
+CO_TEST_CASE(list_4u) { co_await list_step(4u);}
+CO_TEST_CASE(list_5u) { co_await list_step(5u);}
+CO_TEST_CASE(list_6u) { co_await list_step(6u);}
+CO_TEST_CASE(list_7u) { co_await list_step(7u);}
+CO_TEST_CASE(list_8u) { co_await list_step(8u);}
+CO_TEST_CASE(list_9u) { co_await list_step(9u);}
+
+CO_TEST_CASE(empty_list)
 {
   auto exec = co_await asio::this_coro::executor;
   std::vector<cobalt::promise<std::size_t>> vec;
-  CHECK_THROWS(co_await race(vec));
+  try
+  {
+    BOOST_CHECK_THROW(co_await race(vec),  boost::system::system_error);
+  }
+  catch(...) {}
 }
 
 
-CO_TEST_CASE("stop")
+CO_TEST_CASE(stop_)
 {
   auto d = nothrow_dummy(co_await asio::this_coro::executor,
                  std::chrono::milliseconds(10));
-  CHECK((co_await left_race(d, stop())).index() == 0);
+  BOOST_CHECK((co_await left_race(d, stop())).index() == 0);
 }
 
-CO_TEST_CASE("compliance")
+CO_TEST_CASE(compliance)
 {
   auto exec = co_await asio::this_coro::executor;
   auto d = dummy(exec, std::chrono::milliseconds(100000));
   {
     immediate i;
-    CHECK((co_await race(d, i)).index() == 1);
+    BOOST_CHECK((co_await race(d, i)).index() == 1);
   }
 
   {
     immediate_bool i;
-    CHECK((co_await race(d, i)).index() == 1);
+    BOOST_CHECK((co_await race(d, i)).index() == 1);
   }
 
   {
     immediate_handle i;
-    CHECK((co_await race(d, i)).index() == 1);
+    BOOST_CHECK((co_await race(d, i)).index() == 1);
   }
   {
     posted p;
-    CHECK((co_await race(d, p)).index() == 1);
+    BOOST_CHECK((co_await race(d, p)).index() == 1);
   }
   {
     posted_bool p;
-    CHECK((co_await race(d, p)).index() == 1);
+    BOOST_CHECK((co_await race(d, p)).index() == 1);
   }
   {
     posted_handle p;
-    CHECK((co_await race(d, p)).index() == 1);
+    BOOST_CHECK((co_await race(d, p)).index() == 1);
   }
   d.cancel();
-  CHECK_THROWS(co_await d);
+  BOOST_CHECK_THROW(co_await d, boost::system::system_error);
 }
 
 
-TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END();

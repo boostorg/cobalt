@@ -21,7 +21,7 @@
 
 namespace cobalt = boost::cobalt;
 
-TEST_SUITE_BEGIN("any_completion_token");
+BOOST_AUTO_TEST_SUITE(any_completion_token);
 
 void cobalt_sleep_impl(
     boost::asio::any_completion_handler<void(boost::system::error_code)> handler,
@@ -49,9 +49,9 @@ inline auto cobalt_sleep(
 }
 
 
-CO_TEST_CASE("sleep_any_cpl_token")
+CO_TEST_CASE(sleep_any_cpl_token)
 {
   co_await cobalt_sleep(co_await cobalt::this_coro::executor, std::chrono::milliseconds(1), cobalt::use_op);
 }
 
-TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END();

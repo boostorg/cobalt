@@ -12,13 +12,13 @@
 #include <boost/container/pmr/synchronized_pool_resource.hpp>
 #endif
 
-#include "doctest.h"
+#include <boost/test/unit_test.hpp>
 #include "test.hpp"
 
 using namespace boost;
 
 
-TEST_SUITE_BEGIN("strand");
+BOOST_AUTO_TEST_SUITE(strand);
 
 cobalt::promise<void> do_the_thing()
 {
@@ -29,13 +29,13 @@ cobalt::promise<void> do_the_thing()
 
 
   unique++;
-  CHECK(unique == 1);
+  BOOST_CHECK(unique == 1);
   unique--;
 }
 
 #if !defined(BOOST_COBALT_USE_IO_CONTEXT)
 
-TEST_CASE("strand")
+BOOST_AUTO_TEST_CASE(strand)
 {
   std::vector<std::thread> ths;
 
@@ -65,6 +65,6 @@ TEST_CASE("strand")
 
 }
 
-TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END();
 
 #endif
