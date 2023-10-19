@@ -69,7 +69,8 @@ CO_TEST_CASE(variadic)
   co_await d2;
 
   g.cancel();
-  BOOST_CHECK_THROW(co_await g, boost::system::system_error);
+  try { BOOST_CHECK_THROW(co_await g, boost::system::system_error); }
+  catch (boost::system::system_error &) {}
 }
 
 
