@@ -26,8 +26,6 @@ cobalt::promise<void> do_the_thing()
 
   asio::steady_timer tim{co_await cobalt::this_coro::executor, std::chrono::milliseconds(50)};
   co_await tim.async_wait(cobalt::use_op);
-
-
   unique++;
   BOOST_CHECK(unique == 1);
   unique--;
@@ -61,8 +59,6 @@ BOOST_AUTO_TEST_CASE(strand)
 
   for (auto & th : ths)
     th.join();
-
-
 }
 
 BOOST_AUTO_TEST_SUITE_END();

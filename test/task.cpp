@@ -264,7 +264,7 @@ CO_TEST_CASE(reawait)
 
 cobalt::task<int> test_strand1(asio::any_io_executor exec)
 {
-  BOOST_REQUIRE(exec == co_await cobalt::this_coro::executor);
+  BOOST_ASSERT(exec == co_await cobalt::this_coro::executor);
   co_await asio::post(co_await cobalt::this_coro::executor, cobalt::use_task);
   co_return 31;
 }
@@ -282,15 +282,15 @@ BOOST_AUTO_TEST_CASE(stranded)
 
   asio::thread_pool ctx;
   boost::cobalt::this_thread::set_executor(ctx.get_executor());
-  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { BOOST_CHECK(!ep); });
-  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { BOOST_CHECK(!ep); });
-  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { BOOST_CHECK(!ep); });
-  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { BOOST_CHECK(!ep); });
-  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { BOOST_CHECK(!ep); });
-  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { BOOST_CHECK(!ep); });
-  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { BOOST_CHECK(!ep); });
-  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { BOOST_CHECK(!ep); });
-  ctx.join();
+  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { if (ep) std::rethrow_exception(ep); });
+  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { if (ep) std::rethrow_exception(ep); });
+  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { if (ep) std::rethrow_exception(ep); });
+  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { if (ep) std::rethrow_exception(ep); });
+  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { if (ep) std::rethrow_exception(ep); });
+  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { if (ep) std::rethrow_exception(ep); });
+  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { if (ep) std::rethrow_exception(ep); });
+  cobalt::spawn(asio::make_strand(ctx.get_executor()), test_strand(),[](std::exception_ptr ep) { if (ep) std::rethrow_exception(ep); });
+  BOOST_CHECK_NO_THROW(ctx.join());
 }
 
 #endif

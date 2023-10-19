@@ -38,7 +38,7 @@ boost::cobalt::thread thr_stop()
 #if !defined(BOOST_COBALT_USE_IO_CONTEXT)
   auto exec = co_await boost::asio::this_coro::executor;
   auto &exc = *exec.target<boost::asio::io_context::executor_type>();
-  BOOST_REQUIRE(&exc != nullptr);
+  BOOST_ASSERT(&exc != nullptr);
 #else
   auto exc = co_await boost::asio::this_coro::executor;
 #endif
