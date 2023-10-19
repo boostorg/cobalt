@@ -25,9 +25,9 @@ lib test_impl : test_main.cpp /boost//cobalt :
         ;
 
 run main.cpp         /boost//cobalt  ;
-run main_compile.cpp /boost//cobalt  ;
+run main_compile.cpp /boost//cobalt util.cpp concepts.cpp ;
 
-for local src in [ glob *.cpp : main.cpp main_compile.cpp ]
+for local src in [ glob *.cpp : main.cpp main_compile.cpp test_main.cpp concepts.cpp ]
 {
    run $(src) test_impl ;
 }

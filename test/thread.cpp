@@ -77,13 +77,14 @@ CO_TEST_CASE(spawn_onto_thread)
   auto t = thr();
 
   auto id = co_await cobalt::spawn(t.get_executor(), on_thread(), cobalt::use_op);
-
   auto id2 = t.get_id();
-
   auto id3 = std::this_thread::get_id();
+
   BOOST_CHECK(id == id2);
   BOOST_CHECK(id3 != id);
-  t.join();
+
+  if (t.joinable())
+    t.join();
 }
 
 
