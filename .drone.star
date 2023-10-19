@@ -36,6 +36,7 @@ deps = [
     'libs/optional',
     'libs/predef',
     'libs/preprocessor',
+    'libs/range',
     'libs/ratio',
     'libs/smart_ptr',
     'libs/static_assert',
