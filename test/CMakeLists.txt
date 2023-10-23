@@ -17,6 +17,10 @@ target_link_libraries(boost_cobalt_main         Boost::cobalt)
 target_link_libraries(boost_cobalt_main_compile Boost::cobalt)
 target_link_libraries(boost_cobalt_basic_tests  Boost::cobalt)
 
+if (TARGET Boost::unit_test_framework)
+    target_link_libraries(boost_cobalt_basic_tests  Boost::unit_test_framework)
+endif()
+
 add_test(NAME boost_cobalt_main COMMAND boost_cobalt_main)
 add_test(NAME boost_cobalt_basic_tests COMMAND boost_cobalt_basic_tests)
 target_compile_features(boost_cobalt PUBLIC cxx_std_20)
