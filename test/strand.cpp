@@ -61,6 +61,10 @@ BOOST_AUTO_TEST_CASE(strand)
     th.join();
 }
 
+#else
+
+BOOST_AUTO_TEST_CASE(dummy) {}
+
 #endif
 
 BOOST_AUTO_TEST_SUITE_END();
