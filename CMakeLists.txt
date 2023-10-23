@@ -61,8 +61,8 @@ if (NOT BOOST_COBALT_IS_ROOT)
     )
 
     target_compile_definitions(boost_cobalt
-            PUBLIC BOOST_COBALT_NO_LIB
-            PRIVATE BOOST_COBALT_SOURCE
+            PUBLIC BOOST_COBALT_NO_LIB=1
+            PRIVATE BOOST_COBALT_SOURCE=1
     )
     target_compile_features(boost_cobalt PUBLIC cxx_std_20)
 
@@ -114,8 +114,8 @@ else()
         # Building inside Boost tree, but as a separate project e.g. on Travis or
         # other CI, or when producing Visual Studio Solution and Projects.
 
-        set(BOOST_INCLUDE_LIBRARIES COBALT)
-        set(BOOST_EXCLUDE_LIBRARIES COBALT)
+        set(BOOST_INCLUDE_LIBRARIES cobalt)
+        set(BOOST_EXCLUDE_LIBRARIES cobalt)
 
         set(CMAKE_FOLDER _deps)
         add_subdirectory(../.. _deps/boost EXCLUDE_FROM_ALL)
