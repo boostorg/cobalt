@@ -217,6 +217,9 @@ struct join_variadic_impl
       return true;
     }
 
+#if _MSC_VER
+    BOOST_NOINLINE
+#endif
     auto await_resume()
     {
       if (error)
@@ -510,6 +513,9 @@ struct join_ranged_impl
       }
     }
 
+#if _MSC_VER
+    BOOST_NOINLINE
+#endif
     auto await_resume()
     {
       if (error)

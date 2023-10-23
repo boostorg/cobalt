@@ -83,13 +83,6 @@ void thread::cancel(asio::cancellation_type type)
                });
 }
 
-inline void thread::join() {thread_.join();}
-inline bool thread::joinable() const {return thread_.joinable();}
-inline void thread::detach()
-{
-  thread_.detach();
-  state_ = nullptr;
-}
 
 inline
 auto thread::operator co_await() &-> detail::thread_awaitable
