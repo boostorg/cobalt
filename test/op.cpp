@@ -163,7 +163,7 @@ CO_TEST_CASE(immediate_executor)
   auto called = false;
   asio::post(co_await asio::this_coro::executor, [&]{called = true;});
   asio::experimental::channel<void(system::error_code)> chn{co_await asio::this_coro::executor, 2u};
-  BOOST_CHECK(chn.try_send(system::error_code()));
+  co_await chn.async_send(system::error_code(), cobalt::use_op);
   auto [ec] = co_await cobalt::as_tuple(chn.async_receive(cobalt::use_op));
   BOOST_CHECK(!ec);
 
