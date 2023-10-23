@@ -61,7 +61,8 @@ static ::boost::cobalt::task<void> Function##_impl()
 struct stop
 {
   bool await_ready() {return false;}
-  void await_suspend(std::coroutine_handle<> h) { boost::cobalt::detail::self_destroy(h); }
+  template<typename Promise>
+  void await_suspend(std::coroutine_handle<Promise> h) { boost::cobalt::detail::self_destroy(h); }
   void await_resume() {}
 };
 

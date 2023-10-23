@@ -216,7 +216,7 @@ CO_TEST_CASE(stop)
   while (g)
     co_await g;
 
-  auto gg =std::move(g);
+  auto gg = std::move(g);
 }
 
 cobalt::generator<int, int> eager()
