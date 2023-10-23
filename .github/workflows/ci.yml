@@ -99,6 +99,7 @@ jobs:
           cp -r $GITHUB_WORKSPACE/* libs/$LIBRARY
           git submodule update --init tools/boostdep
           python3 tools/boostdep/depinst/depinst.py --git_args "--jobs 3" $LIBRARY
+          git submodule update --init libs/test
           ./bootstrap.sh
           ./b2 -d0 headers
 
@@ -159,6 +160,7 @@ jobs:
           xcopy /s /e /q %GITHUB_WORKSPACE% libs\%LIBRARY%\
           git submodule update --init tools/boostdep
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" %LIBRARY%
+          git submodule update --init libs/test
           cmd /c bootstrap
           b2 -d0 headers
 
@@ -219,6 +221,7 @@ jobs:
           cp -r $GITHUB_WORKSPACE/* libs/$LIBRARY
           git submodule update --init tools/boostdep
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" $LIBRARY
+          git submodule update --init libs/test
 
       - name: Use library with add_subdirectory
         run: |
@@ -279,6 +282,7 @@ jobs:
           cp -r $GITHUB_WORKSPACE/* libs/$LIBRARY
           git submodule update --init tools/boostdep
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" $LIBRARY
+          git submodule update --init libs/test
 
       - name: Configure
         run: |
@@ -355,7 +359,7 @@ jobs:
           cp -r $GITHUB_WORKSPACE/* libs/$LIBRARY
           git submodule update --init tools/boostdep
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" $LIBRARY
-
+          git submodule update --init libs/test
       - name: Configure
         run: |
           cd ../boost-root
@@ -404,7 +408,7 @@ jobs:
           xcopy /s /e /q %GITHUB_WORKSPACE% libs\%LIBRARY%\
           git submodule update --init tools/boostdep
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" %LIBRARY%
-
+          git submodule update --init libs/test
       - name: Use library with add_subdirectory (Debug)
         shell: cmd
         run: |
@@ -455,7 +459,7 @@ jobs:
           xcopy /s /e /q %GITHUB_WORKSPACE% libs\%LIBRARY%\
           git submodule update --init tools/boostdep
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" %LIBRARY%
-
+          git submodule update --init libs/test
       - name: Configure
         shell: cmd
         run: |
@@ -526,7 +530,7 @@ jobs:
           xcopy /s /e /q %GITHUB_WORKSPACE% libs\%LIBRARY%\
           git submodule update --init tools/boostdep
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" %LIBRARY%
-
+          git submodule update --init libs/test
       - name: Configure
         shell: cmd
         run: |
