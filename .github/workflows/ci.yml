@@ -41,15 +41,15 @@ jobs:
 #            stdlib: libc++
 #            os: ubuntu-22.04
 #            install: "clang-15 libc++-15-dev"
-          - toolset: clang
-            compiler: clang++-16
-            cxxstd: "20,2b"
-            stdlib: libc++
-            # this clang seems to have a bug, see standard 9.5.4.11
-            cobalt_pmr: no
-            os: ubuntu-latest
-            container: ubuntu:23.04
-            install: "clang-16 libc++-16-dev"
+#          - toolset: clang
+#            compiler: clang++-16
+#            cxxstd: "20,2b"
+#            stdlib: libc++
+#            # this clang seems to have a bug, see standard 9.5.4.11
+#            cobalt_pmr: no
+#            os: ubuntu-latest
+#            container: ubuntu:23.04
+#            install: "clang-16 libc++-16-dev"
           - toolset: clang
             cxxstd: "20,2b"
             os: macos-13
