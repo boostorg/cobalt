@@ -52,6 +52,7 @@ lib boost_cobalt
      [ requires 
         cxx20_hdr_concepts
      ]
+     <boost.cobalt.pmr>boost-container:<library>/boost//container
      <toolset>clang-15:<boost.cobalt.pmr>boost-container
      <toolset>clang-14:<boost.cobalt.pmr>boost-container
    : usage-requirements

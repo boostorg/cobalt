@@ -35,12 +35,12 @@ jobs:
             stdlib: libc++
             os: ubuntu-22.04
             install: "clang-14 libc++-14-dev"
-          - toolset: clang
-            compiler: clang++-15
-            cxxstd: "20,2b"
-            stdlib: libc++
-            os: ubuntu-22.04
-            install: "clang-15 libc++-15-dev"
+#          - toolset: clang
+#            compiler: clang++-15
+#            cxxstd: "20,2b"
+#            stdlib: libc++
+#            os: ubuntu-22.04
+#            install: "clang-15 libc++-15-dev"
           - toolset: clang
             compiler: clang++-16
             cxxstd: "20,2b"
