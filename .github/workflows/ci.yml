@@ -45,6 +45,8 @@ jobs:
             compiler: clang++-16
             cxxstd: "20,2b"
             stdlib: libc++
+            # this clang seems to have a bug, see standard 9.5.4.11
+            cobalt_pmr: no
             os: ubuntu-latest
             container: ubuntu:23.04
             install: "clang-16 libc++-16-dev"
@@ -108,7 +110,8 @@ jobs:
         run: |
           cd ../boost-root
           export STDLIB=${{matrix.stdlib}}
-          ./b2 -j3 libs/$LIBRARY/test toolset=${{matrix.toolset}} cxxstd=${{matrix.cxxstd}} ${STDLIB:+stdlib=$STDLIB} variant=debug,release
+          export COBALT_PMR=${{matrix.cobalt_pmr}}
+          ./b2 -j3 libs/$LIBRARY/test toolset=${{matrix.toolset}} cxxstd=${{matrix.cxxstd}} ${STDLIB:+stdlib=$STDLIB} ${COBALT_PMR:+boost.cobalt.pmr=$COBALT_PMR} variant=debug,release
 
   windows:
     strategy:
