@@ -20,7 +20,7 @@ project : requirements
 
 import testing ;
 
-lib test_impl : test_main.cpp /boost//cobalt :
+lib test_impl : test_main.cpp /boost//cobalt /boost//unit_test_framework :
         <link>static
         ;
 

@@ -22,10 +22,7 @@ struct thread
   // Send a cancellation signal
   void cancel(asio::cancellation_type type = asio::cancellation_type::all);
 
-  // Add the functions similar to `std::thread`
-  void join();
-  bool joinable() const;
-  void detach();
+
   // Allow the thread to be awaited. NOOP if the thread is invalid.
   auto operator co_await() &-> detail::thread_awaitable; //<1>
   auto operator co_await() && -> detail::thread_awaitable; //<2>
@@ -42,8 +39,18 @@ struct thread
 
   // end::outline[]
   /* tag::outline[]
+  // Add the functions similar to `std::thread`
+  void join();
+  bool joinable() const;
+  void detach();
+
   executor_type get_executor() const;
   end::outline[] */
+
+
+  BOOST_COBALT_DECL void join();
+  BOOST_COBALT_DECL bool joinable() const;
+  BOOST_COBALT_DECL void detach();
 
   executor_type get_executor(const boost::source_location & loc = BOOST_CURRENT_LOCATION) const
   {
