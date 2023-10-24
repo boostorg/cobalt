@@ -209,6 +209,8 @@ cobalt::generator<int> gen_stop()
   co_return val;
 }
 
+#if !defined(BOOST_COBALT_USE_BOOST_CONTAINER_PMR)
+// clang-14 does not like this test.
 
 CO_TEST_CASE(stop)
 {
@@ -218,6 +220,8 @@ CO_TEST_CASE(stop)
 
   auto gg = std::move(g);
 }
+
+#endif
 
 cobalt::generator<int, int> eager()
 {
