@@ -22,6 +22,11 @@ if(NOT cxx_std_20 IN_LIST CMAKE_CXX_COMPILE_FEATURES)
     return()
 endif()
 
+if(MSVC_VERSION AND MSVC_VERSION LESS 1930)
+    message(STATUS "Boost.Cobalt: not building, the lowest supported MSVC version is 1930.  ${MSVC_VERSION} is not supported")
+    return()
+endif()
+
 option(BOOST_COBALT_USE_BOOST_CONTAINER "Boost.Cobalt: Use boost.container instead of std::pmr" ${BOOST_COBALT_SHOULD_USE_CONTAINER})
 
 
