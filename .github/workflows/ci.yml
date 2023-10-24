@@ -50,10 +50,6 @@ jobs:
             install: "clang-16 libc++-16-dev"
           - toolset: clang
             cxxstd: "20,2b"
-            os: macos-12
-            stdlib: libc++
-          - toolset: clang
-            cxxstd: "20,2b"
             os: macos-13
             stdlib: libc++
 
@@ -179,14 +175,6 @@ jobs:
             shared: OFF
           - os: ubuntu-22.04
             shared: ON
-          - os: macos-11
-            shared: OFF
-          - os: macos-11
-            shared: ON
-          - os: macos-12
-            shared: OFF
-          - os: macos-12
-            shared: ON
           - os: macos-13
             shared: OFF
           - os: macos-13
@@ -239,14 +227,6 @@ jobs:
           - os: ubuntu-22.04
             shared: OFF
           - os: ubuntu-22.04
-            shared: ON
-          - os: macos-11
-            shared: OFF
-          - os: macos-11
-            shared: ON
-          - os: macos-12
-            shared: OFF
-          - os: macos-12
             shared: ON
           - os: macos-13
             shared: OFF
@@ -316,14 +296,6 @@ jobs:
           - os: ubuntu-22.04
             shared: OFF
           - os: ubuntu-22.04
-            shared: ON
-          - os: macos-11
-            shared: OFF
-          - os: macos-11
-            shared: ON
-          - os: macos-12
-            shared: OFF
-          - os: macos-12
             shared: ON
           - os: macos-13
             shared: OFF
