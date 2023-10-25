@@ -1,3 +1,8 @@
+# Copyright (c) 2023 Klemens D. Morgenstern
+#
+# Distributed under the Boost Software License, Version 1.0. (See accompanying
+# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
 # 3.12 for cxx_std_20
 cmake_minimum_required(VERSION 3.12...3.20)
 
@@ -7,6 +12,8 @@ endif()
 
 project(boost_cobalt VERSION "${BOOST_COBALT_VERSION}" LANGUAGES CXX)
 
+include(cmake/CheckRequirements.cmake)
+
 set(BOOST_COBALT_IS_ROOT OFF)
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     set(BOOST_COBALT_IS_ROOT ON)
@@ -15,16 +22,6 @@ endif()
 set(BOOST_COBALT_SHOULD_USE_CONTAINER OFF)
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_COMPILER_VERSION LESS 16)
     set(BOOST_COBALT_SHOULD_USE_CONTAINER ON)
-endif()
-
-if(NOT cxx_std_20 IN_LIST CMAKE_CXX_COMPILE_FEATURES)
-    message(STATUS "Boost.Cobalt: not building, compiler doesn't support C++20.")
-    return()
-endif()
-
-if(MSVC_VERSION AND MSVC_VERSION LESS 1930)
-    message(STATUS "Boost.Cobalt: not building, the lowest supported MSVC version is 1930.  ${MSVC_VERSION} is not supported")
-    return()
 endif()
 
 option(BOOST_COBALT_USE_BOOST_CONTAINER "Boost.Cobalt: Use boost.container instead of std::pmr" ${BOOST_COBALT_SHOULD_USE_CONTAINER})

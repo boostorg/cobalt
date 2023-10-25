@@ -4,9 +4,9 @@
 
 import asciidoctor ;
 
-html cobalt.html : index.adoc : <flags>"-r asciidoctor-diagram" ;
+html index.html : index.adoc : <flags>"-r asciidoctor-diagram" ;
 
-install html_ : cobalt.html : <location>html ;
+install html_ : index.html : <location>html ;
 
 pdf cobalt.pdf : index.adoc ;
 explicit cobalt.pdf ;
@@ -18,3 +18,4 @@ alias boostdoc ;
 explicit boostdoc ;
 alias boostrelease : html_ ;
 explicit boostrelease ;
+
