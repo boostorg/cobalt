@@ -26,7 +26,7 @@ try_compile(
         OUTPUT_VARIABLE TRY_COMPILE_OUTPUT)
 
 if (NOT BOOST_COBALT_HAS_COROUTINE_INCLUDE)
-    message(STATUS "Boost.Cobalt: not building, can't include <coroutine> : ${TRY_COMPILE_OUTPUT}.")
+    message(STATUS "Boost.Cobalt: not building, can't include <coroutine>.")
     return()
 endif()
 
@@ -43,7 +43,25 @@ static_assert(std::convertible_to<int, double>);
         OUTPUT_VARIABLE TRY_COMPILE_OUTPUT)
 
 if (NOT BOOST_COBALT_HAS_CONCEPTS)
-    message(STATUS "Boost.Cobalt: not building, can't include <concepts> or use them: ${TRY_COMPILE_OUTPUT}.")
+    message(STATUS "Boost.Cobalt: not building, can't include <concepts> or use them.")
     return()
 endif()
+
+set(BOOST_COBALT_SHOULD_USE_CONTAINER OFF)
+
+try_compile(
+        BOOST_COBALT_HAS_CONCEPTS
+        SOURCE_FROM_CONTENT boost_cobalt_include_std_cconcepts.cpp
+        "#include <memory_resource>
+std::monotonic_resource res;
+"
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED 17
+        OUTPUT_VARIABLE TRY_COMPILE_OUTPUT)
+
+if (NOT TRY_COMPILE_OUTPUT)
+    set(BOOST_COBALT_SHOULD_USE_CONTAINER ON)
+endif()
+
+set(BOOST_COBALT_REQUIREMENTS_MATCHED ON)
 
