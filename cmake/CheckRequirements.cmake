@@ -18,48 +18,41 @@ set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
 try_compile(
         BOOST_COBALT_HAS_COROUTINE_INCLUDE
-        SOURCE_FROM_CONTENT boost_cobalt_include_std_coroutine.cpp
-        "#include <coroutine>
-"
+        ${CMAKE_CURRENT_BINARY_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/coroutine.cpp
         CXX_STANDARD 20
         CXX_STANDARD_REQUIRED 20
         OUTPUT_VARIABLE TRY_COMPILE_OUTPUT)
 
 if (NOT BOOST_COBALT_HAS_COROUTINE_INCLUDE)
     message(STATUS "Boost.Cobalt: not building, can't include <coroutine>.")
+    message(DEBUG ${TRY_COMPILE_OUTPUT})
     return()
 endif()
 
 try_compile(
         BOOST_COBALT_HAS_CONCEPTS
-        SOURCE_FROM_CONTENT boost_cobalt_include_std_cconcepts.cpp
-        "#include <concepts>
-static_assert(!std::derived_from<int, double>);
-static_assert(std::same_as<int, int>);
-static_assert(std::convertible_to<int, double>);
-"
+        ${CMAKE_CURRENT_BINARY_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/concepts.cpp
         CXX_STANDARD 20
         CXX_STANDARD_REQUIRED 20
         OUTPUT_VARIABLE TRY_COMPILE_OUTPUT)
 
 if (NOT BOOST_COBALT_HAS_CONCEPTS)
     message(STATUS "Boost.Cobalt: not building, can't include <concepts> or use them.")
+    message(DEBUG ${TRY_COMPILE_OUTPUT})
     return()
 endif()
 
 set(BOOST_COBALT_SHOULD_USE_CONTAINER OFF)
 
-try_compile(
-        BOOST_COBALT_HAS_CONCEPTS
-        SOURCE_FROM_CONTENT boost_cobalt_include_std_cconcepts.cpp
-        "#include <memory_resource>
-std::monotonic_resource res;
-"
+try_compile(BOOST_COBALT_HAS_STD_PMR
+        ${CMAKE_CURRENT_BINARY_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/memory_resource.cpp
         CXX_STANDARD 17
-        CXX_STANDARD_REQUIRED 17
-        OUTPUT_VARIABLE TRY_COMPILE_OUTPUT)
+        CXX_STANDARD_REQUIRED 17)
 
-if (NOT TRY_COMPILE_OUTPUT)
+if (NOT BOOST_COBALT_HAS_STD_PMR)
     set(BOOST_COBALT_SHOULD_USE_CONTAINER ON)
 endif()
 
