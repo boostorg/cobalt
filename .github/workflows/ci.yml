@@ -100,7 +100,8 @@ jobs:
           git submodule update --init libs/test
           # Temporary workaround
           git submodule update --init libs/chrono
-
+          git submodule update --init libs/ratio
+          
           ./bootstrap.sh
           ./b2 -d0 headers
 
@@ -165,6 +166,7 @@ jobs:
           git submodule update --init libs/test
           # temporary workaround, 
           git submodule update --init libs/chrono
+          git submodule update --init libs/ratio
           cmd /c bootstrap
           b2 -d0 headers
 
@@ -220,6 +222,7 @@ jobs:
           git submodule update --init libs/test
           # Temporary workaround
           git submodule update --init libs/chrono
+          git submodule update --init libs/ratio
 
       - name: Use library with add_subdirectory
         run: |
@@ -275,6 +278,7 @@ jobs:
           git submodule update --init libs/test
           # Temporary workaround
           git submodule update --init libs/chrono
+          git submodule update --init libs/ratio
 
 
       - name: Configure
@@ -347,6 +351,7 @@ jobs:
           git submodule update --init libs/test
           # Temporary workaround
           git submodule update --init libs/chrono
+          git submodule update --init libs/ratio
 
       - name: Configure
         run: |
@@ -399,6 +404,7 @@ jobs:
           git submodule update --init libs/test
           # Temporary workaround
           git submodule update --init libs/chrono
+          git submodule update --init libs/ratio
 
       - name: Use library with add_subdirectory (Debug)
         shell: cmd
@@ -453,6 +459,7 @@ jobs:
           git submodule update --init libs/test
           # Temporary workaround
           git submodule update --init libs/chrono
+          git submodule update --init libs/ratio
 
       - name: Configure
         shell: cmd
@@ -527,6 +534,7 @@ jobs:
           git submodule update --init libs/test
           # Temporary workaround
           git submodule update --init libs/chrono
+          git submodule update --init libs/ratio
 
       - name: Configure
         shell: cmd
