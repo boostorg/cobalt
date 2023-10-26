@@ -23,14 +23,23 @@ BOOST_AUTO_TEST_CASE(regular)
 #if !defined(BOOST_COBALT_NO_PMR)
     char buf[512];
     boost::cobalt::pmr::monotonic_buffer_resource res{buf, 512};
+    struct completion
+    {
+      bool & ran;
+      using allocator_type = boost::cobalt::pmr::polymorphic_allocator<void>;
+      allocator_type get_allocator() const { return alloc; }
+      boost::cobalt::pmr::polymorphic_allocator<void> alloc;
+      void operator()()
+      {
+        ran = true;
+      }
+    };
+
     auto p = boost::cobalt::detail::post_coroutine(ctx.get_executor(),
-                                              boost::asio::bind_allocator(
-                                              boost::cobalt::pmr::polymorphic_allocator<void>(&res),
-                                              [&]{ran = true;}
-                                              )
+                                              completion{ran, boost::cobalt::pmr::polymorphic_allocator<void>(&res)}
                                           );
 #else
-  auto p = boost::cobalt::detail::post_coroutine(ctx.get_executor(), [&]{ran = true;});
+    auto p = boost::cobalt::detail::post_coroutine(ctx.get_executor(), [&]{ran = true;});
 #endif
     BOOST_CHECK(p);
     BOOST_CHECK(!ran);
