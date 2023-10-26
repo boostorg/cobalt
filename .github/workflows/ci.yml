@@ -98,6 +98,9 @@ jobs:
           git submodule update --init tools/boostdep
           python3 tools/boostdep/depinst/depinst.py --git_args "--jobs 3" $LIBRARY
           git submodule update --init libs/test
+          # Temporary workaround
+          git submodule update --init libs/chrono
+
           ./bootstrap.sh
           ./b2 -d0 headers
 
@@ -160,6 +163,8 @@ jobs:
           git submodule update --init tools/boostdep
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" %LIBRARY%
           git submodule update --init libs/test
+          # temporary workaround, 
+          git submodule update --init libs/chrono
           cmd /c bootstrap
           b2 -d0 headers
 
@@ -213,6 +218,8 @@ jobs:
           git submodule update --init tools/boostdep
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" $LIBRARY
           git submodule update --init libs/test
+          # Temporary workaround
+          git submodule update --init libs/chrono
 
       - name: Use library with add_subdirectory
         run: |
@@ -266,6 +273,9 @@ jobs:
           git submodule update --init tools/boostdep
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" $LIBRARY
           git submodule update --init libs/test
+          # Temporary workaround
+          git submodule update --init libs/chrono
+
 
       - name: Configure
         run: |
@@ -335,6 +345,9 @@ jobs:
           git submodule update --init tools/boostdep
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" $LIBRARY
           git submodule update --init libs/test
+          # Temporary workaround
+          git submodule update --init libs/chrono
+
       - name: Configure
         run: |
           cd ../boost-root
@@ -384,6 +397,9 @@ jobs:
           git submodule update --init tools/boostdep
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" %LIBRARY%
           git submodule update --init libs/test
+          # Temporary workaround
+          git submodule update --init libs/chrono
+
       - name: Use library with add_subdirectory (Debug)
         shell: cmd
         run: |
@@ -435,6 +451,9 @@ jobs:
           git submodule update --init tools/boostdep
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" %LIBRARY%
           git submodule update --init libs/test
+          # Temporary workaround
+          git submodule update --init libs/chrono
+
       - name: Configure
         shell: cmd
         run: |
@@ -506,6 +525,9 @@ jobs:
           git submodule update --init tools/boostdep
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" %LIBRARY%
           git submodule update --init libs/test
+          # Temporary workaround
+          git submodule update --init libs/chrono
+
       - name: Configure
         shell: cmd
         run: |
