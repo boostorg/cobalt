@@ -54,15 +54,15 @@ struct async_initiate_spawn
     {
       using allocator_type = std::decay_t<decltype(alloc)>;
 
-      allocator_type get_allocator() const { return alloc; }
-      allocator_type alloc;
+      allocator_type get_allocator() const { return alloc_; }
+      allocator_type alloc_;
 
       using executor_type = std::decay_t<decltype(asio::get_associated_executor(h, exec))>;
-      const executor_type &get_executor() const { return exec; }
-      executor_type exec;
+      const executor_type &get_executor() const { return exec_; }
+      executor_type exec_;
 
       decltype(recs) r;
-      Handler h;
+      Handler handler;
 
       void operator()()
       {
@@ -71,7 +71,7 @@ struct async_initiate_spawn
         if (r->result)
           rr = std::move(*r->result);
         r.reset();
-        std::move(h)(ex, std::move(rr));
+        std::move(handler)(ex, std::move(rr));
       }
     };
 
@@ -116,22 +116,22 @@ struct async_initiate_spawn
     {
       using allocator_type = std::decay_t<decltype(alloc)>;
 
-      const allocator_type &get_allocator() const { return alloc; }
+      const allocator_type &get_allocator() const { return alloc_; }
 
-      allocator_type alloc;
+      allocator_type alloc_;
 
       using executor_type = std::decay_t<decltype(asio::get_associated_executor(h, exec))>;
-      const executor_type &get_executor() const { return exec; }
+      const executor_type &get_executor() const { return exec_; }
 
-      executor_type exec;
+      executor_type exec_;
       decltype(recs) r;
-      Handler h;
+      Handler handler;
 
       void operator()()
       {
         auto ex = r->exception;
         r.reset();
-        std::move(h)(ex);
+        std::move(handler)(ex);
       }
     };
 
