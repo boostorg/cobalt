@@ -246,5 +246,26 @@ CO_TEST_CASE(eager_2)
   auto gg =std::move(g);
 }
 
+struct generator_move_only
+{
+  generator_move_only() = default;
+  generator_move_only(generator_move_only &&) = default;
+  generator_move_only & operator=(generator_move_only &&) = delete;
+};
+
+cobalt::generator<generator_move_only, generator_move_only> gen_move_only_test()
+{
+  co_yield generator_move_only{};
+  co_return generator_move_only{};
+}
+
+CO_TEST_CASE(move_only)
+{
+  auto g = gen_move_only_test();
+
+  co_await g(generator_move_only{});
+  co_await g(generator_move_only{});
+}
+
 
 BOOST_AUTO_TEST_SUITE_END();

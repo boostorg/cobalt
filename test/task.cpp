@@ -295,4 +295,22 @@ BOOST_AUTO_TEST_CASE(stranded)
 
 #endif
 
+struct task_move_only
+{
+  task_move_only() = default;
+  task_move_only(task_move_only &&) = default;
+  task_move_only & operator=(task_move_only &&) = delete;
+};
+
+cobalt::task<task_move_only> task_move_only_test()
+{
+  co_return task_move_only{};
+}
+
+CO_TEST_CASE(move_only)
+{
+  co_await task_move_only_test();
+}
+
+
 BOOST_AUTO_TEST_SUITE_END();

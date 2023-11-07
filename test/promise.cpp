@@ -142,5 +142,21 @@ catch(...)
 {
 }
 
+struct promise_move_only
+{
+  promise_move_only() = default;
+  promise_move_only(promise_move_only &&) = default;
+  promise_move_only & operator=(promise_move_only &&) = delete;
+};
+
+cobalt::promise<promise_move_only> pro_move_only_test()
+{
+  co_return promise_move_only{};
+}
+
+CO_TEST_CASE(move_only)
+{
+  co_await pro_move_only_test();
+}
 
 BOOST_AUTO_TEST_SUITE_END();

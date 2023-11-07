@@ -36,7 +36,8 @@ struct with_promise_value
 
   void return_value(std::optional<T> && value)
   {
-    result = std::move(value);
+    if (value) // so non-move-assign types work
+      result.emplace(std::move(*value));
   }
 
   T get_result()

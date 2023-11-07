@@ -56,13 +56,13 @@ struct promise_value_holder
 
   void return_value(T && ret)
   {
-    result = std::move(ret);
+    result.emplace(std::move(ret));
     static_cast<promise_receiver<T>*>(this)->set_done();
   }
 
   void return_value(const T & ret)
   {
-    result = ret;
+    result.emplace(ret);
     static_cast<promise_receiver<T>*>(this)->set_done();
   }
 
