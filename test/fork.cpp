@@ -9,10 +9,10 @@
 #include <boost/cobalt/config.hpp>
 using namespace boost;
 
-#include "doctest.h"
+#include <boost/test/unit_test.hpp>
 #include "test.hpp"
 
-TEST_SUITE_BEGIN("fork");
+BOOST_AUTO_TEST_SUITE(fork_);
 
 struct tester : cobalt::detail::fork::shared_state
 {
@@ -28,16 +28,16 @@ struct tester : cobalt::detail::fork::shared_state
   }
 };
 
-CO_TEST_CASE("fork")
+CO_TEST_CASE(fork)
 {
   tester t;
   auto x = tester::step(t);
-  CHECK(x.done());
+  BOOST_CHECK(x.done());
 
   x = tester::step(t, 42);
 
-  CHECK(!x.done());
+  BOOST_CHECK(!x.done());
   co_return;
 }
 
-TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END();

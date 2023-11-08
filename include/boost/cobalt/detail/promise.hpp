@@ -56,13 +56,13 @@ struct promise_value_holder
 
   void return_value(T && ret)
   {
-    result = std::move(ret);
+    result.emplace(std::move(ret));
     static_cast<promise_receiver<T>*>(this)->set_done();
   }
 
   void return_value(const T & ret)
   {
-    result = ret;
+    result.emplace(ret);
     static_cast<promise_receiver<T>*>(this)->set_done();
   }
 
@@ -320,38 +320,6 @@ struct cobalt_promise
   std::suspend_never initial_suspend()        {return {};}
   auto final_suspend() noexcept
   {
-    struct final_awaitable
-    {
-      cobalt_promise * promise;
-      bool await_ready() const noexcept
-      {
-        return promise->receiver && promise->receiver->awaited_from.get() == nullptr;
-      }
-
-      std::coroutine_handle<void> await_suspend(std::coroutine_handle<cobalt_promise> h) noexcept
-      {
-        std::coroutine_handle<void> res = std::noop_coroutine();
-        if (promise->receiver && promise->receiver->awaited_from.get() != nullptr)
-          res = promise->receiver->awaited_from.release();
-
-
-        if (auto &rec = h.promise().receiver; rec != nullptr)
-        {
-          if (!rec->done && !rec->exception)
-            rec->exception = completed_unexpected();
-          rec->set_done();
-          rec->awaited_from.reset(nullptr);
-          rec = nullptr;
-        }
-        detail::self_destroy(h);
-        return res;
-      }
-
-      void await_resume() noexcept
-      {
-      }
-    };
-
     return final_awaitable{this};
   }
 
@@ -374,6 +342,39 @@ struct cobalt_promise
     }
 
   }
+ private:
+  struct final_awaitable
+  {
+    cobalt_promise * promise;
+    bool await_ready() const noexcept
+    {
+      return promise->receiver && promise->receiver->awaited_from.get() == nullptr;
+    }
+
+    std::coroutine_handle<void> await_suspend(std::coroutine_handle<cobalt_promise> h) noexcept
+    {
+      std::coroutine_handle<void> res = std::noop_coroutine();
+      if (promise->receiver && promise->receiver->awaited_from.get() != nullptr)
+        res = promise->receiver->awaited_from.release();
+
+
+      if (auto &rec = h.promise().receiver; rec != nullptr)
+      {
+        if (!rec->done && !rec->exception)
+          rec->exception = completed_unexpected();
+        rec->set_done();
+        rec->awaited_from.reset(nullptr);
+        rec = nullptr;
+      }
+      detail::self_destroy(h);
+      return res;
+    }
+
+    void await_resume() noexcept
+    {
+    }
+  };
+
 
 };
 

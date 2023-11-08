@@ -58,8 +58,8 @@ struct monotonic_resource
     {
       auto p = nx;
       nx = nx->next;
-      const auto size = sizeof(block_) + p->size;
 #if defined(__cpp_sized_deallocation)
+      const auto size = sizeof(block_) + p->size;
       operator delete(p->p, size, p->aligned);
 #else
       operator delete(p->p, p->aligned);

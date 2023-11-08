@@ -40,7 +40,7 @@ template<typename Yield, typename Push>
 struct generator_receiver_base
 {
   std::optional<Push> pushed_value;
-  auto get_awaitable(const Push  & push)
+  auto get_awaitable(const Push  & push) requires std::is_copy_constructible_v<Push>
   {
     using impl = generator_receiver<Yield, Push>;
     return typename impl::awaitable{static_cast<impl*>(this), &push};
@@ -72,7 +72,18 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 {
   std::exception_ptr exception;
   std::optional<Yield> result, result_buffer;
-  Yield get_result() {return *std::exchange(result, std::exchange(result_buffer, std::nullopt));}
+  Yield get_result()
+  {
+    if (result_buffer)
+    {
+      auto res = *std::exchange(result, std::nullopt);
+      if (result_buffer)
+        result.emplace(*std::exchange(result_buffer, std::nullopt));
+      return res;
+    }
+    else
+      return *std::exchange(result, std::nullopt);
+  }
   bool done = false;
   unique_handle<void> awaited_from{nullptr};
   unique_handle<generator_promise<Yield, Push>> yield_from{nullptr};
@@ -115,7 +126,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
   static yield_awaitable terminator()   {return {nullptr}; }
 
   template<typename T>
-  void yield_value( T&& t)
+  void yield_value(T && t)
   {
     if (!result)
       result.emplace(std::forward<T>(t));
@@ -139,7 +150,8 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
     awaitable(generator_receiver * self, Push * to_push) : self(self), to_push(to_push)
     {
     }
-    awaitable(generator_receiver * self, const Push * to_push) : self(self), to_push(to_push)
+    awaitable(generator_receiver * self, const Push * to_push)
+        : self(self), to_push(to_push)
     {
     }
 
@@ -185,7 +197,14 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
           if (to_push.index() == 1)
             self->pushed_value.emplace(std::move(*variant2::get<1>(to_push)));
           else
-            self->pushed_value.emplace(std::move(*variant2::get<2>(to_push)));
+          {
+            if constexpr (std::is_copy_constructible_v<Push>)
+              self->pushed_value.emplace(std::move(*variant2::get<2>(to_push)));
+            else
+            {
+              BOOST_ASSERT(!"push value is not movable");
+            }
+          }
         }
         to_push = variant2::monostate{};
       }
@@ -228,7 +247,15 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
           if (to_push.index() == 1)
             self->pushed_value.emplace(std::move(*variant2::get<1>(to_push)));
           else
-            self->pushed_value.emplace(std::move(*variant2::get<2>(to_push)));
+          {
+            if constexpr (std::is_copy_constructible_v<Push>)
+              self->pushed_value.emplace(std::move(*variant2::get<2>(to_push)));
+            else
+            {
+              BOOST_ASSERT(!"push value is not movable");
+            }
+          }
+
         }
         to_push = variant2::monostate{};
       }
@@ -306,45 +333,46 @@ struct generator_promise
   }
 
   std::suspend_never initial_suspend() {return {};}
+
+  struct final_awaitable
+  {
+    generator_promise * generator;
+    bool await_ready() const noexcept
+    {
+      return generator->receiver && generator->receiver->awaited_from.get() == nullptr;
+    }
+
+    auto await_suspend(std::coroutine_handle<generator_promise> h) noexcept
+    {
+      std::coroutine_handle<void> res = std::noop_coroutine();
+      if (generator->receiver && generator->receiver->awaited_from.get() != nullptr)
+        res = generator->receiver->awaited_from.release();
+      if (generator->receiver)
+        generator->receiver->done = true;
+
+
+      if (auto & rec = h.promise().receiver; rec != nullptr)
+      {
+        if (!rec->done && !rec->exception)
+          rec->exception = detail::completed_unexpected();
+        rec->done = true;
+        rec->awaited_from.reset(nullptr);
+        rec = nullptr;
+      }
+
+      detail::self_destroy(h);
+      return res;
+    }
+
+    void await_resume() noexcept
+    {
+      if (generator->receiver)
+        generator->receiver->done = true;
+    }
+  };
+
   auto final_suspend() noexcept
   {
-    struct final_awaitable
-    {
-      generator_promise * generator;
-      bool await_ready() const noexcept
-      {
-        return generator->receiver && generator->receiver->awaited_from.get() == nullptr;
-      }
-
-      auto await_suspend(std::coroutine_handle<generator_promise> h) noexcept
-      {
-        std::coroutine_handle<void> res = std::noop_coroutine();
-        if (generator->receiver && generator->receiver->awaited_from.get() != nullptr)
-          res = generator->receiver->awaited_from.release();
-        if (generator->receiver)
-            generator->receiver->done = true;
-
-
-        if (auto & rec = h.promise().receiver; rec != nullptr)
-        {
-          if (!rec->done && !rec->exception)
-            rec->exception = detail::completed_unexpected();
-          rec->done = true;
-          rec->awaited_from.reset(nullptr);
-          rec = nullptr;
-        }
-
-        detail::self_destroy(h);
-        return res;
-      }
-
-      void await_resume() noexcept
-      {
-        if (generator->receiver)
-          generator->receiver->done = true;
-      }
-    };
-
     return final_awaitable{this};
   }
 
@@ -356,7 +384,7 @@ struct generator_promise
       throw ;
   }
 
-  void return_value(const Yield & res)
+  void return_value(const Yield & res) requires std::is_copy_constructible_v<Yield>
   {
     if (this->receiver)
       this->receiver->yield_value(res);
@@ -517,7 +545,7 @@ struct generator_base
   {
     return static_cast<generator<Yield, Push>*>(this)->receiver_.get_awaitable(std::move(push));
   }
-  auto operator()(const Push &  push)
+  auto operator()(const Push &  push) requires std::is_copy_constructible_v<Push>
   {
     return static_cast<generator<Yield, Push>*>(this)->receiver_.get_awaitable(push);
   }

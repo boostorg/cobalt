@@ -36,7 +36,8 @@ struct with_promise_value
 
   void return_value(std::optional<T> && value)
   {
-    result = std::move(value);
+    if (value) // so non-move-assign types work
+      result.emplace(std::move(*value));
   }
 
   T get_result()
@@ -59,53 +60,55 @@ struct with_impl<T>::promise_type
           enable_awaitables<promise_type>,
           enable_await_allocator<promise_type>
 {
-    using enable_awaitables<promise_type>::await_transform;
-    using enable_await_allocator<promise_type>::await_transform;
+  using enable_awaitables<promise_type>::await_transform;
+  using enable_await_allocator<promise_type>::await_transform;
 
 
-    using executor_type = executor;
-    const executor_type & get_executor() const {return *exec;}
-    std::optional<executor_type> exec;
+  using executor_type = executor;
+  const executor_type & get_executor() const {return *exec;}
+  std::optional<executor_type> exec;
 
-    with_impl get_return_object()
+  with_impl get_return_object()
+  {
+      return with_impl{*this};
+  }
+
+  std::exception_ptr e;
+  void unhandled_exception()
+  {
+    e = std::current_exception();
+  }
+
+  std::suspend_always initial_suspend() {return {};}
+
+  struct final_awaitable
+  {
+    promise_type *promise;
+
+    bool await_ready() const noexcept
     {
-        return with_impl{*this};
+      return false;
+    }
+    BOOST_NOINLINE
+    auto await_suspend(std::coroutine_handle<promise_type> h) noexcept -> std::coroutine_handle<void>
+    {
+      return std::coroutine_handle<void>::from_address(h.promise().awaited_from.address());
     }
 
-    std::exception_ptr e;
-    void unhandled_exception()
+    void await_resume() noexcept
     {
-        e = std::current_exception();
     }
+  };
 
-    std::suspend_always initial_suspend() {return {};}
-    auto final_suspend() noexcept
-    {
-        struct final_awaitable
-        {
-            promise_type *promise;
+  auto final_suspend() noexcept
+  {
+    return final_awaitable{this};
+  }
+  using cancellation_slot_type = asio::cancellation_slot;
+  cancellation_slot_type get_cancellation_slot() const {return slot_;}
+  asio::cancellation_slot slot_;
 
-            bool await_ready() const noexcept
-            {
-                return false;
-            }
-            BOOST_NOINLINE
-            auto await_suspend(std::coroutine_handle<promise_type> h) noexcept -> std::coroutine_handle<void>
-            {
-                return std::coroutine_handle<void>::from_address(h.promise().awaited_from.address());
-            }
-
-            void await_resume() noexcept
-            {
-            }
-        };
-        return final_awaitable{this};
-    }
-    using cancellation_slot_type = asio::cancellation_slot;
-    cancellation_slot_type get_cancellation_slot() const {return slot_;}
-    asio::cancellation_slot slot_;
-
-    std::coroutine_handle<void> awaited_from{nullptr};
+  std::coroutine_handle<void> awaited_from{nullptr};
 
 };
 

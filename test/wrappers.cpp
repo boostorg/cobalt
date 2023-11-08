@@ -10,11 +10,11 @@
 #include <boost/asio/bind_allocator.hpp>
 
 
-#include "doctest.h"
+#include <boost/test/unit_test.hpp>
 
-TEST_SUITE_BEGIN("wrappers");
+BOOST_AUTO_TEST_SUITE(wrappers);
 
-TEST_CASE("regular")
+BOOST_AUTO_TEST_CASE(regular)
 {
     boost::asio::io_context ctx;
     boost::cobalt::this_thread::set_executor(ctx.get_executor());
@@ -23,24 +23,33 @@ TEST_CASE("regular")
 #if !defined(BOOST_COBALT_NO_PMR)
     char buf[512];
     boost::cobalt::pmr::monotonic_buffer_resource res{buf, 512};
+    struct completion
+    {
+      bool & ran;
+      using allocator_type = boost::cobalt::pmr::polymorphic_allocator<void>;
+      allocator_type get_allocator() const { return alloc; }
+      boost::cobalt::pmr::polymorphic_allocator<void> alloc;
+      void operator()()
+      {
+        ran = true;
+      }
+    };
+
     auto p = boost::cobalt::detail::post_coroutine(ctx.get_executor(),
-                                              boost::asio::bind_allocator(
-                                              boost::cobalt::pmr::polymorphic_allocator<void>(&res),
-                                              [&]{ran = true;}
-                                              )
+                                              completion{ran, boost::cobalt::pmr::polymorphic_allocator<void>(&res)}
                                           );
 #else
-  auto p = boost::cobalt::detail::post_coroutine(ctx.get_executor(), [&]{ran = true;});
+    auto p = boost::cobalt::detail::post_coroutine(ctx.get_executor(), [&]{ran = true;});
 #endif
-    CHECK(p);
-    CHECK(!ran);
+    BOOST_CHECK(p);
+    BOOST_CHECK(!ran);
     p.resume();
-    CHECK(!ran);
+    BOOST_CHECK(!ran);
     ctx.run();
-    CHECK(ran);
+    BOOST_CHECK(ran);
 }
 
-TEST_CASE("expire")
+BOOST_AUTO_TEST_CASE(expire)
 {
 
   boost::asio::io_context ct2;
@@ -50,4 +59,4 @@ TEST_CASE("expire")
 }
 
 
-TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END();

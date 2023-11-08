@@ -11,7 +11,7 @@
 #include <boost/asio/any_io_executor.hpp>
 #include <boost/asio/steady_timer.hpp>
 
-#include "doctest.h"
+#include <boost/test/unit_test.hpp>
 #include "test.hpp"
 
 using namespace boost;
@@ -29,13 +29,13 @@ cobalt::promise<void> gdelay(asio::any_io_executor exec,
 }
 
 
-TEST_SUITE_BEGIN("wait_group");
+BOOST_AUTO_TEST_SUITE(wait_group);
 
-CO_TEST_CASE("grp")
+CO_TEST_CASE(grp)
 {
   auto e = co_await cobalt::this_coro::executor;
 
-  using std::chrono::operator""ms;
+  using namespace std;
 
   cobalt::wait_group wg;
   wg.push_back(gdelay(e));
@@ -44,19 +44,19 @@ CO_TEST_CASE("grp")
   wg.push_back(gdelay(e, 20ms));
 
   co_await asio::post(e, cobalt::use_op);
-  CHECK(wg.size() == 4u);
-  CHECK(wg.reap() == 1u);
-  CHECK(wg.size() == 3u);
+  BOOST_CHECK(wg.size() == 4u);
+  BOOST_CHECK(wg.reap() == 1u);
+  BOOST_CHECK(wg.size() == 3u);
 
   co_await wg.wait_one();
-  CHECK(wg.size() == 2u);
+  BOOST_CHECK(wg.size() == 2u);
 
   wg.cancel();
   co_await wg;
 
-  CHECK(wg.size() == 0u);
+  BOOST_CHECK(wg.size() == 0u);
 }
 
 
-TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END();
 

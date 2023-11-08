@@ -29,6 +29,7 @@
 
 #include <array>
 #include <coroutine>
+#include <algorithm>
 
 namespace boost::cobalt::detail
 {
@@ -186,6 +187,9 @@ struct gather_variadic_impl
     template<typename T>
     using result_part = system::result<co_await_result_t<T>, std::exception_ptr>;
 
+#if _MSC_VER
+    BOOST_NOINLINE
+#endif
     std::tuple<result_part<Args> ...> await_resume()
     {
       return mp11::tuple_transform(
@@ -378,6 +382,9 @@ struct gather_ranged_impl
       return true;
     }
 
+#if _MSC_VER
+    BOOST_NOINLINE
+#endif
     auto await_resume()
     {
 #if !defined(BOOST_COBALT_NO_PMR)

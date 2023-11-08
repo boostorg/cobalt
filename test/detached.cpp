@@ -11,16 +11,16 @@ using namespace boost;
 
 #include "test.hpp"
 
-TEST_SUITE_BEGIN("detached");
+BOOST_AUTO_TEST_SUITE(detached);
 
 cobalt::detached d(bool & done)
 {
   asio::steady_timer tim{co_await cobalt::this_coro::executor, std::chrono::milliseconds(10)};
-  CHECK_NOTHROW(co_await tim.async_wait(cobalt::use_op));
+  BOOST_CHECK_NO_THROW(co_await tim.async_wait(cobalt::use_op));
   done = true;
 }
 
-TEST_CASE("detached")
+BOOST_AUTO_TEST_CASE(detached)
 {
   asio::io_context ctx;
   cobalt::this_thread::set_executor(ctx.get_executor());
@@ -28,9 +28,9 @@ TEST_CASE("detached")
   bool done = false;
   d(done);
 
-  CHECK(!done);
+  BOOST_CHECK(!done);
   ctx.run();
-  CHECK(done);
+  BOOST_CHECK(done);
 }
 
-TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END();

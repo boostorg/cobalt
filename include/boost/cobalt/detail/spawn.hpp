@@ -49,25 +49,36 @@ struct async_initiate_spawn
 
     p->promise->exec.emplace(exec);
     p->promise->exec_ = exec;
-    p->awaited_from.reset(detail::post_coroutine(
-        asio::bind_executor(
-            asio::get_associated_executor(h, exec),
-            asio::bind_allocator(
-                alloc,
-                [r = std::move(recs),
-                 h = std::move(h)]() mutable
-                {
 
-                  auto ex = r->exception;
-                  T rr{};
-                  if (r->result)
-                     rr = std::move(*r->result);
-                  r.reset();
-                  h(ex, std::move(rr));
-                }
-            )
-        )
-    ).address());
+    struct completion_handler
+    {
+      using allocator_type = std::decay_t<decltype(alloc)>;
+
+      allocator_type get_allocator() const { return alloc_; }
+      allocator_type alloc_;
+
+      using executor_type = std::decay_t<decltype(asio::get_associated_executor(h, exec))>;
+      const executor_type &get_executor() const { return exec_; }
+      executor_type exec_;
+
+      decltype(recs) r;
+      Handler handler;
+
+      void operator()()
+      {
+        auto ex = r->exception;
+        T rr{};
+        if (r->result)
+          rr = std::move(*r->result);
+        r.reset();
+        std::move(handler)(ex, std::move(rr));
+      }
+    };
+
+    p->awaited_from.reset(detail::post_coroutine(
+        completion_handler{
+            alloc, asio::get_associated_executor(h, exec), std::move(recs), std::move(h)
+        }).address());
 
     asio::dispatch(exec, std::coroutine_handle<detail::task_promise<T>>::from_promise(*p->promise));
   }
@@ -100,22 +111,34 @@ struct async_initiate_spawn
 
     p->promise->exec.emplace(exec);
     p->promise->exec_ = exec;
-    p->awaited_from.reset(detail::post_coroutine(
-        asio::bind_executor(
-            asio::get_associated_executor(h, exec),
-            asio::bind_allocator(
-                alloc,
-                [r = std::move(recs),
-                 h = std::move(h)]() mutable
-                {
-                  auto ex = r->exception;
-                  r.reset();
-                  h(ex);
-                }
-            )
-        )
-    ).address());
-    
+
+    struct completion_handler
+    {
+      using allocator_type = std::decay_t<decltype(alloc)>;
+
+      const allocator_type &get_allocator() const { return alloc_; }
+
+      allocator_type alloc_;
+
+      using executor_type = std::decay_t<decltype(asio::get_associated_executor(h, exec))>;
+      const executor_type &get_executor() const { return exec_; }
+
+      executor_type exec_;
+      decltype(recs) r;
+      Handler handler;
+
+      void operator()()
+      {
+        auto ex = r->exception;
+        r.reset();
+        std::move(handler)(ex);
+      }
+    };
+
+    p->awaited_from.reset(detail::post_coroutine(completion_handler{
+        alloc, asio::get_associated_executor(h, exec), std::move(recs), std::forward<Handler>(h)
+      }).address());
+
     asio::dispatch(exec, std::coroutine_handle<detail::task_promise<void>>::from_promise(*p->promise));
   }
 };

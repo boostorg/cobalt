@@ -1,8 +1,11 @@
 # Copyright 2020-2023 Peter Dimov
 # Copyright 2023 Alexander Grund
-# Distributed under the Boost Software License, Version 1.0.
-# https://www.boost.org/LICENSE_1_0.txt
+# Copyright (c) 2023 Klemens D. Morgenstern
+#
+# Distributed under the Boost Software License, Version 1.0. (See accompanying
+# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+# 3.12 for cxx_std_20
 cmake_minimum_required(VERSION 3.12...3.20)
 
 if(BOOST_SUPERPROJECT_VERSION)
@@ -11,22 +14,23 @@ endif()
 
 project(boost_cobalt VERSION "${BOOST_COBALT_VERSION}" LANGUAGES CXX)
 
+include(cmake/CheckRequirements.cmake)
+if (NOT BOOST_COBALT_REQUIREMENTS_MATCHED)
+    return()
+endif()
+
 set(BOOST_COBALT_IS_ROOT OFF)
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     set(BOOST_COBALT_IS_ROOT ON)
 endif()
 
-set(BOOST_COBALT_USE_BOOST_CONTAINER_DEF OFF)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CLANG_VERSION_MAJOR LESS 16)
-    set(BOOST_COBALT_USE_BOOST_CONTAINER_DEF ON)
-endif()
-
-option(BOOST_COBALT_USE_BOOST_CONTAINER "Use boost.container instead of std::pmr" ${BOOST_COBALT_USE_BOOST_CONTAINER_DEF})
-
+option(BOOST_COBALT_USE_BOOST_CONTAINER "Boost.Cobalt: Use boost.container instead of std::pmr" ${BOOST_COBALT_SHOULD_USE_CONTAINER})
 
 if (NOT BOOST_COBALT_IS_ROOT)
 
     add_library(boost_cobalt
+            src/detail/exception.cpp
+            src/detail/util.cpp
             src/channel.cpp
             src/error.cpp
             src/main.cpp
@@ -55,10 +59,14 @@ if (NOT BOOST_COBALT_IS_ROOT)
     )
 
     target_compile_definitions(boost_cobalt
-            PUBLIC BOOST_COBALT_NO_LIB
-            PRIVATE BOOST_COBALT_SOURCE
+            PUBLIC BOOST_COBALT_NO_LIB=1
+            PRIVATE BOOST_COBALT_SOURCE=1
     )
     target_compile_features(boost_cobalt PUBLIC cxx_std_20)
+
+    if (MSVC)
+        target_compile_definitions(boost_cobalt PUBLIC _WIN32_WINNT=0x0601)
+    endif()
 
     if (BOOST_COBALT_USE_BOOST_CONTAINER)
         target_link_libraries(boost_cobalt PUBLIC Boost::container)
@@ -75,7 +83,16 @@ if (NOT BOOST_COBALT_IS_ROOT)
         add_subdirectory(test)
     endif()
 else()
-    option(BOOST_COBALT_BUILD_INLINE "Configure as if part of the boost source tree" OFF)
+    project(boost_cobalt VERSION "${BOOST_COBALT_VERSION}" LANGUAGES CXX)
+
+
+    if(BOOST_SUPERPROJECT_VERSION)
+        set(BOOST_COBALT_SHOULD_BE_INLINE ON)
+    else()
+        set(BOOST_COBALT_SHOULD_BE_INLINE OFF)
+    endif()
+
+    option(BOOST_COBALT_BUILD_INLINE "Configure as if part of the boost source tree" ${BOOST_COBALT_SHOULD_BE_INLINE})
 
     file(GLOB_RECURSE ADOC_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.adoc)
     add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/doc/index.html
@@ -107,7 +124,7 @@ else()
     if (NOT BOOST_COBALT_BUILD_INLINE)
         find_package(Threads REQUIRED)
         # Boost 1.82 is the first with a Boost.ASIO with necessary support
-        find_package(Boost 1.82 REQUIRED COMPONENTS system OPTIONAL_COMPONENTS json context url)
+        find_package(Boost REQUIRED COMPONENTS system OPTIONAL_COMPONENTS json context url unit_test_framework)
         if (BOOST_COBALT_USE_BOOST_CONTAINER)
             find_package(Boost REQUIRED container)
         endif()

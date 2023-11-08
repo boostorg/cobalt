@@ -12,12 +12,13 @@
 
 #include <boost/asio/steady_timer.hpp>
 
-#include "doctest.h"
+#include <boost/test/unit_test.hpp>
 #include "test.hpp"
 
 using namespace boost;
 
-static cobalt::promise<std::size_t> wdummy(asio::any_io_executor exec,
+static cobalt::promise<std::chrono::milliseconds::rep> wdummy(
+                                          asio::any_io_executor exec,
                                           std::chrono::milliseconds ms = std::chrono::milliseconds(25))
 {
   if (ms == std::chrono::milliseconds ::max())
@@ -42,61 +43,65 @@ static cobalt::promise<void> wthrow()
 }
 
 
-TEST_SUITE_BEGIN("gather");
+BOOST_AUTO_TEST_SUITE(gather_);
 
-CO_TEST_CASE("variadic")
+CO_TEST_CASE(variadic)
 {
   auto exec = co_await asio::this_coro::executor;
   auto d1 = wdummy(exec, std::chrono::milliseconds(100));
   auto d2 = wdummy(exec, std::chrono::milliseconds( 50));
   asio::steady_timer tim{co_await asio::this_coro::executor};
   auto g = wgen(exec);
-  auto c = co_await gather(d1, d2, wdummy(exec, std::chrono::milliseconds(150)),
+  auto c = co_await cobalt::gather(d1, d2, wdummy(exec, std::chrono::milliseconds(150)),
                            g, wthrow());
 
-  CHECK( std::get<0>(c).has_value());
-  CHECK(!std::get<0>(c).has_error());
-  CHECK(*std::get<0>(c) == 100);
-  CHECK( std::get<2>(c).has_value());
-  CHECK(!std::get<1>(c).has_error());
-  CHECK(*std::get<1>(c) ==  50);
-  CHECK( std::get<2>(c).has_value());
-  CHECK(!std::get<2>(c).has_error());
-  CHECK(*std::get<2>(c) ==  150);
-  CHECK( std::get<3>(c).has_value());
-  CHECK(!std::get<3>(c).has_error());
-  CHECK(*std::get<3>(c) ==  123);
-  CHECK(!std::get<4>(c).has_value());
-  CHECK( std::get<4>(c).has_error());
-  CHECK_THROWS(std::get<4>(c).value());
+  BOOST_CHECK( std::get<0>(c).has_value());
+  BOOST_CHECK(!std::get<0>(c).has_error());
+  BOOST_CHECK(*std::get<0>(c) == 100);
+  BOOST_CHECK( std::get<2>(c).has_value());
+  BOOST_CHECK(!std::get<1>(c).has_error());
+  BOOST_CHECK(*std::get<1>(c) ==  50);
+  BOOST_CHECK( std::get<2>(c).has_value());
+  BOOST_CHECK(!std::get<2>(c).has_error());
+  BOOST_CHECK(*std::get<2>(c) ==  150);
+  BOOST_CHECK( std::get<3>(c).has_value());
+  BOOST_CHECK(!std::get<3>(c).has_error());
+  BOOST_CHECK(*std::get<3>(c) ==  123);
+  BOOST_CHECK(!std::get<4>(c).has_value());
+  BOOST_CHECK( std::get<4>(c).has_error());
+  try {
+  BOOST_CHECK_THROW(std::get<4>(c).value(), boost::system::system_error);
+  } catch(...) {}
 }
 
-CO_TEST_CASE("list")
+CO_TEST_CASE(list)
 {
   auto exec = co_await asio::this_coro::executor;
-  std::vector<cobalt::promise<std::size_t>> vec;
+  std::vector<cobalt::promise<std::chrono::milliseconds::rep>> vec;
   vec.push_back(wdummy(exec, std::chrono::milliseconds(100)));
   vec.push_back(wdummy(exec, std::chrono::milliseconds( 50)));
   vec.push_back(wdummy(exec, std::chrono::milliseconds(150)));
   vec.push_back(wdummy(exec, std::chrono::milliseconds::max()));
 
   auto res = co_await gather(vec);
-  REQUIRE(res.size() == 4);
-  CHECK( res[0].has_value());
-  CHECK(!res[0].has_error());
-  CHECK( res[0].value() == 100);
-  CHECK( res[1].has_value());
-  CHECK(!res[1].has_error());
-  CHECK( res[1].value() == 50);
-  CHECK( res[2].has_value());
-  CHECK(!res[2].has_error());
-  CHECK( res[2].value() == 150);
-  CHECK(!res[3].has_value());
-  CHECK( res[3].has_error());
-  CHECK_THROWS(res[3].value());
+  BOOST_REQUIRE(res.size() == 4);
+  BOOST_CHECK( res[0].has_value());
+  BOOST_CHECK(!res[0].has_error());
+  BOOST_CHECK( res[0].value() == 100);
+  BOOST_CHECK( res[1].has_value());
+  BOOST_CHECK(!res[1].has_error());
+  BOOST_CHECK( res[1].value() == 50);
+  BOOST_CHECK( res[2].has_value());
+  BOOST_CHECK(!res[2].has_error());
+  BOOST_CHECK( res[2].value() == 150);
+  BOOST_CHECK(!res[3].has_value());
+  BOOST_CHECK( res[3].has_error());
+  try {
+    BOOST_CHECK_THROW(res[3].value(), boost::system::system_error);
+  } catch(...) {}
 }
 
-CO_TEST_CASE("compliance")
+CO_TEST_CASE(compliance)
 {
   auto exec = co_await asio::this_coro::executor;
   {
@@ -132,4 +137,4 @@ CO_TEST_CASE("compliance")
   }
 }
 
-TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END();

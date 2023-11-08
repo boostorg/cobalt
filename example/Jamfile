@@ -14,10 +14,16 @@ project : requirements
   <toolset>msvc:<cxxflags>/bigobj
   <target-os>windows:<define>WIN32_LEAN_AND_MEAN
   <target-os>linux:<linkflags>-lpthread
+  <toolset>clang-15:<boost.cobalt.pmr>boost-container
+  <toolset>clang-14:<boost.cobalt.pmr>boost-container
 ;
 
-exe delay       : delay.cpp         /boost//cobalt ;
-exe delay_op    : delay_op.cpp      /boost//cobalt ;
-exe echo_server : echo_server.cpp   /boost//cobalt ;
-exe outcome     : outcome.cpp       /boost//cobalt ;
-# exe ticker      : ticker.cpp    /boost//json      /boost//cobalt ;
+exe channel      : channel.cpp         /boost//cobalt ;
+exe delay        : delay.cpp         /boost//cobalt ;
+exe delay_op     : delay_op.cpp      /boost//cobalt ;
+exe echo_server  : echo_server.cpp   /boost//cobalt ;
+exe outcome      : outcome.cpp       /boost//cobalt ;
+exe thread       : thread.cpp        /boost//cobalt ;
+exe thread_pool  : thread_pool.cpp   /boost//cobalt ;
+# exe ticker     : ticker.cpp        /boost//json      /boost//cobalt ;
+

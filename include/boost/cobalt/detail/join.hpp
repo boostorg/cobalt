@@ -29,6 +29,7 @@
 
 #include <array>
 #include <coroutine>
+#include <algorithm>
 
 namespace boost::cobalt::detail
 {
@@ -74,11 +75,6 @@ struct join_variadic_impl
     template<std::size_t Idx>
     void cancel_step()
     {
-      using type = std::tuple_element_t<Idx, tuple_type>;
-      using t = std::conditional_t<std::is_reference_v<std::tuple_element_t<Idx, std::tuple<Args...>>>,
-          type &,
-          type &&>;
-
       auto &r = cancel[Idx];
       if (r)
         std::exchange(r, nullptr)->emit(asio::cancellation_type::all);
@@ -221,6 +217,9 @@ struct join_variadic_impl
       return true;
     }
 
+#if _MSC_VER
+    BOOST_NOINLINE
+#endif
     auto await_resume()
     {
       if (error)
@@ -292,7 +291,6 @@ struct join_ranged_impl
 
   struct awaitable : fork::shared_state
   {
-
     struct dummy
     {
       template<typename ... Args>
@@ -515,6 +513,9 @@ struct join_ranged_impl
       }
     }
 
+#if _MSC_VER
+    BOOST_NOINLINE
+#endif
     auto await_resume()
     {
       if (error)

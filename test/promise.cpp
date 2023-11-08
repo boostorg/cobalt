@@ -8,7 +8,7 @@
 #include <boost/cobalt/promise.hpp>
 #include <boost/cobalt/op.hpp>
 
-#include "doctest.h"
+#include <boost/test/unit_test.hpp>
 #include "test.hpp"
 #include <boost/asio/detached.hpp>
 #include <boost/asio/steady_timer.hpp>
@@ -18,7 +18,7 @@
 
 using namespace boost;
 
-TEST_SUITE_BEGIN("promise");
+BOOST_AUTO_TEST_SUITE(promise);
 
 cobalt::promise<void> test0()
 {
@@ -37,14 +37,14 @@ cobalt::promise<int> test1(asio::any_io_executor exec)
     co_await test2(42);
     co_await test2(42);
 
-    CHECK(test2(42).get() == 42);
+    BOOST_CHECK(test2(42).get() == 42);
 
     co_await asio::post(exec, cobalt::use_op);
     co_return 452;
 }
 
 
-CO_TEST_CASE("cobalt-1")
+CO_TEST_CASE(cobalt_1)
 {
     co_await test1(co_await asio::this_coro::executor);
     co_return;
@@ -56,7 +56,7 @@ cobalt::promise<void> should_unwind(asio::io_context & ctx)
   co_await asio::post(ctx, cobalt::use_op);
 }
 
-TEST_CASE("unwind")
+BOOST_AUTO_TEST_CASE(unwind)
 {
   asio::io_context ctx;
   boost::cobalt::this_thread::set_executor(ctx.get_executor());
@@ -104,12 +104,10 @@ cobalt::promise<void> throw_post()
 }
 
 
-TEST_CASE("get")
+BOOST_AUTO_TEST_CASE(get)
 {
-  CHECK_THROWS(throw_().get());
-
+  BOOST_CHECK_THROW(throw_().get(), std::exception);
 }
-
 
 cobalt::promise<void> delay_v(asio::io_context &ctx, std::size_t ms)
 {
@@ -118,27 +116,47 @@ cobalt::promise<void> delay_v(asio::io_context &ctx, std::size_t ms)
 }
 
 
-CO_TEST_CASE("cancel-int")
+CO_TEST_CASE(cancel_int)
 {
-  CHECK_THROWS(co_await throw_());
+  BOOST_CHECK_THROW(co_await throw_(), std::exception);
 }
 
 
 
-CO_TEST_CASE("throw-cpl-delay")
+CO_TEST_CASE(throw_cpl_delay)
 {
-  CHECK_THROWS(co_await throw_post());
+  BOOST_CHECK_THROW(co_await throw_post(), std::exception);
 }
 
-CO_TEST_CASE("stop")
+CO_TEST_CASE(stop_)
+try
 {
-  CHECK_THROWS(
+  BOOST_CHECK_THROW(
     co_await
         []() -> cobalt::promise<void>
         {
           co_await stop();
-        }());
+        }(), boost::system::system_error);
+}
+catch(...)
+{
 }
 
+struct promise_move_only
+{
+  promise_move_only() = default;
+  promise_move_only(promise_move_only &&) = default;
+  promise_move_only & operator=(promise_move_only &&) = delete;
+};
 
-TEST_SUITE_END();
+cobalt::promise<promise_move_only> pro_move_only_test()
+{
+  co_return promise_move_only{};
+}
+
+CO_TEST_CASE(move_only)
+{
+  co_await pro_move_only_test();
+}
+
+BOOST_AUTO_TEST_SUITE_END();

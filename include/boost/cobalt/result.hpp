@@ -154,7 +154,7 @@ auto as_result(Aw && aw)
       return as_result(std::forward<Aw>(aw).operator co_await());
     }
   };
-  return lazy_tuple(std::forward<Aw>(aw));
+  return lazy_tuple{std::forward<Aw>(aw)};
 }
 
 template<typename Aw>
@@ -172,7 +172,7 @@ auto as_result(Aw && aw)
       return as_result(operator co_await(std::forward<Aw>(aw)));
     }
   };
-  return lazy_tuple(std::forward<Aw>(aw));
+  return lazy_tuple{std::forward<Aw>(aw)};
 }
 
 
@@ -266,7 +266,7 @@ auto as_tuple(Aw && aw)
       return as_tuple(std::forward<Aw>(aw).operator co_await());
     }
   };
-  return lazy_tuple(std::forward<Aw>(aw));
+  return lazy_tuple{std::forward<Aw>(aw)};
 }
 
 template<typename Aw>
@@ -284,7 +284,7 @@ auto as_tuple(Aw && aw)
       return as_tuple(operator co_await(std::forward<Aw>(aw)));
     }
   };
-  return lazy_tuple(std::forward<Aw>(aw));
+  return lazy_tuple{std::forward<Aw>(aw)};
 }
 
 

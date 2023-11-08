@@ -8,7 +8,7 @@
 #include <boost/cobalt/thread.hpp>
 #include <boost/asio/steady_timer.hpp>
 
-#include "doctest.h"
+#include <boost/test/unit_test.hpp>
 #include "test.hpp"
 #include "boost/cobalt/spawn.hpp"
 
@@ -20,14 +20,14 @@ boost::cobalt::thread thr()
   co_await tim.async_wait(boost::cobalt::use_op);
 }
 
-TEST_SUITE_BEGIN("thread");
+BOOST_AUTO_TEST_SUITE(thread);
 
-TEST_CASE("run")
+BOOST_AUTO_TEST_CASE(run)
 {
   auto t = thr();
 
   t.join();
-  CHECK_THROWS(t.get_executor());
+  BOOST_CHECK_THROW(t.get_executor(), boost::asio::execution::bad_executor);
 }
 
 
@@ -37,8 +37,9 @@ boost::cobalt::thread thr_stop()
 
 #if !defined(BOOST_COBALT_USE_IO_CONTEXT)
   auto exec = co_await boost::asio::this_coro::executor;
-  auto &exc = *exec.target<boost::asio::io_context::executor_type>();
-  REQUIRE(&exc != nullptr);
+  auto execp = exec.target<boost::asio::io_context::executor_type>();
+  BOOST_ASSERT(execp != nullptr);
+  auto exc = *execp;
 #else
   auto exc = co_await boost::asio::this_coro::executor;
 #endif
@@ -47,13 +48,13 @@ boost::cobalt::thread thr_stop()
   co_await tim.async_wait(boost::cobalt::use_op);
 }
 
-TEST_CASE("stop")
+BOOST_AUTO_TEST_CASE(stop)
 {
   auto t = thr_stop();
   t.join();
 }
 
-CO_TEST_CASE("await-thread")
+CO_TEST_CASE(await_thread)
 {
   co_await thr();
 
@@ -61,7 +62,9 @@ CO_TEST_CASE("await-thread")
   boost::asio::steady_timer tim{co_await boost::asio::this_coro::executor, std::chrono::milliseconds(200)};
   co_await tim.async_wait(boost::cobalt::use_op);
   co_await th;
-  CHECK_THROWS(co_await th);
+  try {
+    BOOST_CHECK_THROW(co_await th, boost::system::system_error);
+  } catch(...) {}
 }
 
 boost::cobalt::task<std::thread::id> on_thread()
@@ -69,20 +72,21 @@ boost::cobalt::task<std::thread::id> on_thread()
   co_return std::this_thread::get_id();
 }
 
-CO_TEST_CASE("spawn_onto_thread")
+CO_TEST_CASE(spawn_onto_thread)
 {
   using namespace boost;
   auto t = thr();
 
   auto id = co_await cobalt::spawn(t.get_executor(), on_thread(), cobalt::use_op);
-
   auto id2 = t.get_id();
-
   auto id3 = std::this_thread::get_id();
-  CHECK(id == id2);
-  CHECK(id3 != id);
-  t.join();
+
+  BOOST_CHECK(id == id2);
+  BOOST_CHECK(id3 != id);
+
+  if (t.joinable())
+    t.join();
 }
 
 
-TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END();

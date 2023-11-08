@@ -14,7 +14,7 @@ Boost.cobalt requires a C++20 compilers and directly depends on the following bo
 
 == Compiler
 
-This library is supported since Clang 14, Gcc 10 & MSVC 19.28.
+This library is supported since Clang 14, Gcc 10 & MSVC 19.30 (Visual Studio 2022).
 
 IMPORTANT: Gcc versions 12.1 and 12.2 appear to have a bug for coroutines with out stack variables
 as can be seen [here](https://godbolt.org/z/6adGcqP1z) and should be avoided for coroutines.

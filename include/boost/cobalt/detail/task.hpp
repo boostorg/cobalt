@@ -51,12 +51,12 @@ struct task_value_holder
 
   void return_value(T && ret)
   {
-    result = std::move(ret);
+    result.emplace(std::move(ret));
     static_cast<task_receiver<T>*>(this)->set_done();
   }
   void return_value(const T & ret)
   {
-    result = ret;
+    result.emplace(ret);
     static_cast<task_receiver<T>*>(this)->set_done();
   }
 };
@@ -309,58 +309,60 @@ struct task_promise
     this->reset_cancellation_source(signal.slot());
   }
 
+  struct initial_awaitable
+  {
+    task_promise * promise;
+
+    bool await_ready() const noexcept {return false;}
+    void await_suspend(std::coroutine_handle<>) {}
+
+    void await_resume()
+    {
+      promise->started = true;
+    }
+  };
+
   auto initial_suspend()
   {
-    struct initial_awaitable
-    {
-      task_promise * promise;
 
-      bool await_ready() const noexcept {return false;}
-      void await_suspend(std::coroutine_handle<>) {}
-
-      void await_resume()
-      {
-        promise->started = true;
-      }
-    };
     return initial_awaitable{this};
   }
 
+  struct final_awaitable
+  {
+    task_promise * promise;
+    bool await_ready() const noexcept
+    {
+      return promise->receiver && promise->receiver->awaited_from.get() == nullptr;
+    }
+
+    BOOST_NOINLINE
+    auto await_suspend(std::coroutine_handle<task_promise> h) noexcept
+    {
+      std::coroutine_handle<void> res = std::noop_coroutine();
+      if (promise->receiver && promise->receiver->awaited_from.get() != nullptr)
+        res = promise->receiver->awaited_from.release();
+
+
+      if (auto & rec = h.promise().receiver; rec != nullptr)
+      {
+        if (!rec->done && !rec->exception)
+          rec->exception = completed_unexpected();
+        rec->set_done();
+        rec->awaited_from.reset(nullptr);
+        rec = nullptr;
+      }
+      detail::self_destroy(h);
+      return res;
+    }
+
+    void await_resume() noexcept
+    {
+    }
+  };
+
   auto final_suspend() noexcept
   {
-    struct final_awaitable
-    {
-      task_promise * promise;
-      bool await_ready() const noexcept
-      {
-        return promise->receiver && promise->receiver->awaited_from.get() == nullptr;
-      }
-
-      BOOST_NOINLINE
-      auto await_suspend(std::coroutine_handle<task_promise> h) noexcept
-      {
-        std::coroutine_handle<void> res = std::noop_coroutine();
-        if (promise->receiver && promise->receiver->awaited_from.get() != nullptr)
-          res = promise->receiver->awaited_from.release();
-
-
-        if (auto & rec = h.promise().receiver; rec != nullptr)
-        {
-          if (!rec->done && !rec->exception)
-            rec->exception = completed_unexpected();
-          rec->set_done();
-          rec->awaited_from.reset(nullptr);
-          rec = nullptr;
-        }
-        detail::self_destroy(h);
-        return res;
-      }
-
-      void await_resume() noexcept
-      {
-      }
-    };
-
     return final_awaitable{this};
   }
 

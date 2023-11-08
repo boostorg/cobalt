@@ -30,6 +30,7 @@
 
 #include <coroutine>
 #include <optional>
+#include <algorithm>
 
 
 namespace boost::cobalt::detail
@@ -336,6 +337,9 @@ struct race_variadic_impl
       return true;
     }
 
+#if _MSC_VER
+    BOOST_NOINLINE
+#endif
     auto await_resume()
     {
       if (error)
@@ -643,6 +647,9 @@ struct race_ranged_impl
       return true;
     }
 
+#if _MSC_VER
+    BOOST_NOINLINE
+#endif
     auto await_resume()
     {
       if (error)

@@ -9,25 +9,8 @@
 #include <boost/cobalt/run.hpp>
 #include <boost/cobalt/spawn.hpp>
 
-#include "doctest.h"
+#include <boost/test/unit_test.hpp>
 
-template<>
-struct doctest::StringMaker<std::exception_ptr>
-{
-  static String convert(std::exception_ptr ex)
-  {
-    if (!ex)
-      return "null";
-    try
-    {
-      std::rethrow_exception(ex);
-    }
-    catch(std::exception & ex)
-    {
-      return ex.what();
-    }
-  }
-};
 
 inline void test_run(boost::cobalt::task<void> (*func) ())
 {
@@ -42,7 +25,7 @@ inline void test_run(boost::cobalt::task<void> (*func) ())
     spawn(ctx, func(),
           +[](std::exception_ptr e)
           {
-            CHECK(e == nullptr);
+            BOOST_CHECK(e == nullptr);
           });
     std::size_t n;
     n = ctx.run();
@@ -54,7 +37,7 @@ inline void test_run(boost::cobalt::task<void> (*func) ())
         spawn(ctx, func(),
               +[](std::exception_ptr e)
               {
-                CHECK(e == nullptr);
+                BOOST_CHECK(e == nullptr);
               });
         for (std::size_t i = n; i > 0; i--)
           ctx.run_one();
@@ -66,21 +49,20 @@ inline void test_run(boost::cobalt::task<void> (*func) ())
 }
 
 // tag::test_case_macro[]
-#define CO_TEST_CASE_IMPL(Function, ...)                                                                           \
-static ::boost::cobalt::task<void> Function();                                                                      \
-DOCTEST_TEST_CASE(__VA_ARGS__)                                                                                     \
+#define CO_TEST_CASE(Function)                                                                                     \
+static ::boost::cobalt::task<void> Function##_impl();                                                              \
+BOOST_AUTO_TEST_CASE(Function)                                                                                     \
 {                                                                                                                  \
-    test_run(&Function);                                                                                           \
+    test_run(&Function##_impl);                                                                                           \
 }                                                                                                                  \
-static ::boost::cobalt::task<void> Function()
-
-#define CO_TEST_CASE(...) CO_TEST_CASE_IMPL(DOCTEST_ANONYMOUS(CO_DOCTEST_ANON_FUNC_), __VA_ARGS__)
+static ::boost::cobalt::task<void> Function##_impl()
 // end::test_case_macro[]
 
 struct stop
 {
   bool await_ready() {return false;}
-  void await_suspend(std::coroutine_handle<> h) { boost::cobalt::detail::self_destroy(h); }
+  template<typename Promise>
+  void await_suspend(std::coroutine_handle<Promise> h) { boost::cobalt::detail::self_destroy(h); }
   void await_resume() {}
 };
 
@@ -89,14 +71,14 @@ struct immediate
   int state = 0;
   immediate() = default;
   immediate(const immediate & i);
-  bool await_ready() {CHECK(state++ == 0  ); return true;}
-  void await_suspend(std::coroutine_handle<>) { REQUIRE(false); }
-  void await_resume() {CHECK(state++ == 1);}
+  bool await_ready() {BOOST_CHECK(state++ == 0  ); return true;}
+  void await_suspend(std::coroutine_handle<>) { BOOST_REQUIRE(false); }
+  void await_resume() {BOOST_CHECK(state++ == 1);}
 
   ~immediate()
   {
     if (state != 0)
-      CHECK(state == 2);
+      BOOST_CHECK(state == 2);
   }
 };
 
@@ -104,14 +86,14 @@ struct immediate_bool
 {
   int state = 0;
 
-  bool await_ready() {CHECK(state++ == 0); return false;}
-  bool await_suspend(std::coroutine_handle<>) { CHECK(state++ == 1); return false; }
-  void await_resume() {CHECK(state++ == 2);}
+  bool await_ready() {BOOST_CHECK(state++ == 0); return false;}
+  bool await_suspend(std::coroutine_handle<>) { BOOST_CHECK(state++ == 1); return false; }
+  void await_resume() {BOOST_CHECK(state++ == 2);}
 
   ~immediate_bool()
   {
     if (state != 0)
-      CHECK(state == 3);
+      BOOST_CHECK(state == 3);
   }
 };
 
@@ -119,14 +101,14 @@ struct immediate_handle
 {
   int state = 0;
 
-  bool await_ready() {CHECK(state++ == 0); return false;}
-  std::coroutine_handle<> await_suspend(std::coroutine_handle<> h) { CHECK(state++ == 1); return h; }
-  void await_resume() {CHECK(state++ == 2);}
+  bool await_ready() {BOOST_CHECK(state++ == 0); return false;}
+  std::coroutine_handle<> await_suspend(std::coroutine_handle<> h) { BOOST_CHECK(state++ == 1); return h; }
+  void await_resume() {BOOST_CHECK(state++ == 2);}
 
   ~immediate_handle()
   {
     if (state != 0)
-      CHECK(state == 3);
+      BOOST_CHECK(state == 3);
   }
 };
 
@@ -135,17 +117,17 @@ struct posted
 {
   int state = 0;
 
-  bool await_ready() {CHECK(state++ == 0); return false;}
+  bool await_ready() {BOOST_CHECK(state++ == 0); return false;}
   void await_suspend(std::coroutine_handle<> h)
   {
-    CHECK(state++ == 1);
+    BOOST_CHECK(state++ == 1);
     boost::asio::post(boost::cobalt::this_thread::get_executor(), h);
   }
-  void await_resume() {CHECK(state++ == 2);}
+  void await_resume() {BOOST_CHECK(state++ == 2);}
   ~posted()
   {
     if (state != 0)
-      CHECK(state == 3);
+      BOOST_CHECK(state == 3);
   }
 };
 
@@ -153,18 +135,18 @@ struct posted_bool
 {
   int state = 0;
 
-  bool await_ready() {CHECK(state++ == 0); return false;}
+  bool await_ready() {BOOST_CHECK(state++ == 0); return false;}
   bool await_suspend(std::coroutine_handle<> h)
   {
-    CHECK(state++ == 1);
+    BOOST_CHECK(state++ == 1);
     boost::asio::post(boost::cobalt::this_thread::get_executor(), h);
     return true;
   }
-  void await_resume() {CHECK(state++ == 2);}
+  void await_resume() {BOOST_CHECK(state++ == 2);}
   ~posted_bool()
   {
     if (state != 0)
-      CHECK(state == 3);
+      BOOST_CHECK(state == 3);
   }
 };
 
@@ -172,19 +154,19 @@ struct posted_handle
 {
   int state = 0;
 
-  bool await_ready() {CHECK(state++ == 0); return false;}
+  bool await_ready() {BOOST_CHECK(state++ == 0); return false;}
   std::coroutine_handle<> await_suspend(std::coroutine_handle<> h)
   {
-    CHECK(state++ == 1);
+    BOOST_CHECK(state++ == 1);
     return boost::cobalt::detail::post_coroutine(
         boost::cobalt::this_thread::get_executor(), h
         );
   }
-  void await_resume() {CHECK(state++ == 2);}
+  void await_resume() {BOOST_CHECK(state++ == 2);}
   ~posted_handle()
   {
     if (state != 0)
-      CHECK(state == 3);
+      BOOST_CHECK(state == 3);
   }
 };
 

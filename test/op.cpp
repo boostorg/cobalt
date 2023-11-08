@@ -13,12 +13,12 @@
 #include <boost/asio/experimental/channel.hpp>
 #include <boost/asio/steady_timer.hpp>
 
-#include "doctest.h"
+#include <boost/test/unit_test.hpp>
 #include "test.hpp"
 
 using namespace boost;
 
-TEST_SUITE_BEGIN("op");
+BOOST_AUTO_TEST_SUITE(op);
 
 template<typename Timer>
 struct test_wait_op : cobalt::op<system::error_code>
@@ -70,7 +70,7 @@ struct post_op : cobalt::op<>
 };
 
 
-CO_TEST_CASE("op")
+CO_TEST_CASE(op)
 {
 
   asio::steady_timer tim{co_await asio::this_coro::executor, std::chrono::milliseconds(10)};
@@ -81,7 +81,7 @@ CO_TEST_CASE("op")
   tim.expires_after(std::chrono::milliseconds(10));
 
   co_await test_wait_op_2{tim};
-  CHECK_THROWS(co_await test_wait_op_2{tim});
+  BOOST_CHECK_THROW(co_await test_wait_op_2{tim}, boost::system::system_error);
 
   (co_await cobalt::as_result(post_op(co_await asio::this_coro::executor))).value();
   (co_await cobalt::as_result(tim.async_wait(cobalt::use_op))).value();
@@ -105,16 +105,16 @@ auto op_throw(CompletionToken&& token)
 }
 
 
-TEST_CASE("op-throw")
+BOOST_AUTO_TEST_CASE(op_throw_)
 {
 
-  auto val = [&]() -> cobalt::task<void> {CHECK_THROWS(co_await op_throw(cobalt::use_op));};
+  auto val = [&]() -> cobalt::task<void> {BOOST_CHECK_THROW(co_await op_throw(cobalt::use_op), boost::system::system_error);};
 
   asio::io_context ctx;
   cobalt::this_thread::set_executor(ctx.get_executor());
-  CHECK_NOTHROW(spawn(ctx, val(), asio::detached));
+  BOOST_CHECK_NO_THROW(spawn(ctx, val(), asio::detached));
 
-  CHECK_NOTHROW(ctx.run());
+BOOST_CHECK_NO_THROW(ctx.run());
 }
 
 struct throw_op : cobalt::op<std::exception_ptr>
@@ -130,10 +130,13 @@ struct throw_op : cobalt::op<std::exception_ptr>
 };
 
 
-CO_TEST_CASE("exception-op")
+CO_TEST_CASE(exception_op)
+try
 {
-  CHECK_THROWS(co_await throw_op(co_await asio::this_coro::executor));
+  BOOST_CHECK_THROW(co_await throw_op(co_await asio::this_coro::executor), boost::system::system_error);
 }
+catch(...) {}
+
 
 struct initiate_op : cobalt::op<>
 {
@@ -149,23 +152,24 @@ struct initiate_op : cobalt::op<>
 };
 
 
-CO_TEST_CASE("initiate-exception-op")
+CO_TEST_CASE(initiate_exception_op)
+try
 {
-  CHECK_THROWS(co_await throw_op(co_await asio::this_coro::executor));
-}
+  BOOST_CHECK_THROW(co_await throw_op(co_await asio::this_coro::executor), boost::system::system_error);
+} catch(...) {}
 
-CO_TEST_CASE("immediate_executor")
+CO_TEST_CASE(immediate_executor)
 {
   auto called = false;
   asio::post(co_await asio::this_coro::executor, [&]{called = true;});
   asio::experimental::channel<void(system::error_code)> chn{co_await asio::this_coro::executor, 2u};
-  CHECK(chn.try_send(system::error_code()));
+  co_await chn.async_send(system::error_code(), cobalt::use_op);
   auto [ec] = co_await cobalt::as_tuple(chn.async_receive(cobalt::use_op));
-  CHECK(!ec);
+  BOOST_CHECK(!ec);
 
-  CHECK(!called);
+  BOOST_CHECK(!called);
   co_await cobalt::as_tuple(asio::post(co_await asio::this_coro::executor, cobalt::use_op));
-  CHECK(called);
+  BOOST_CHECK(called);
 }
 
 struct test_async_initiate
@@ -174,7 +178,7 @@ struct test_async_initiate
   template<typename Handler>
   void operator()(Handler && h, std::shared_ptr<int> ptr)
   {
-    CHECK(ptr);
+    BOOST_CHECK(ptr);
     asio::dispatch(
         asio::get_associated_immediate_executor(
             h, asio::get_associated_executor(h)),
@@ -188,15 +192,15 @@ auto test_cobalt(std::shared_ptr<int> & ptr, Token && token)
   return asio::async_initiate<Token, void()>(test_async_initiate{}, token, ptr);
 }
 
-CO_TEST_CASE("no-move-from")
+CO_TEST_CASE(no_move_from)
 {
   std::shared_ptr<int> p = std::make_shared<int>();
-  CHECK(p);
+  BOOST_CHECK(p);
   co_await test_cobalt(p, cobalt::use_op);
-  CHECK(p);
+  BOOST_CHECK(p);
 }
 
 
 
 
-TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END();

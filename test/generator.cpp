@@ -13,32 +13,12 @@
 
 #include <boost/asio/steady_timer.hpp>
 
-#include "doctest.h"
+#include <boost/test/unit_test.hpp>
 #include "test.hpp"
 
 using namespace boost;
 
-
-template<typename ... Ts>
-struct doctest::StringMaker<variant2::variant<Ts...>>
-{
-  static String convert(const variant2::variant<Ts...> & v)
-  {
-    String init = doctest::toString(v.index());
-    init += ":";
-    init += variant2::visit(
-        []<typename T>(const T& value)
-        {
-          return doctest::toString(value);
-        }, v);
-    return init;
-  }
-
-
-};
-
-
-TEST_SUITE_BEGIN("generator");
+BOOST_AUTO_TEST_SUITE(generator);
 
 cobalt::generator<int> gen()
 {
@@ -50,22 +30,22 @@ cobalt::generator<int> gen()
 
 
 
-CO_TEST_CASE("generator-int")
+CO_TEST_CASE(generator_int)
 {
   auto g = gen();
   int i = 0;
   {
     auto aw = g.operator co_await();
-    CHECK(aw.await_ready());
-    CHECK(i ++ == co_await std::move(aw));
+    BOOST_CHECK(aw.await_ready());
+    BOOST_CHECK(i ++ == co_await std::move(aw));
   }
 
   while (g)
-    CHECK(i ++ == co_await g);
+    BOOST_CHECK(i ++ == co_await g);
 
 
 
-  CHECK(i == 11);
+  BOOST_CHECK(i == 11);
 
   co_return ;
 }
@@ -77,7 +57,7 @@ cobalt::generator<int, int> gen_push()
   for (int i = 0; i < 10; i++)
   {
     auto v = co_yield val;
-    CHECK(v == val);
+    BOOST_CHECK(v == val);
     val += v;
   }
 
@@ -86,7 +66,7 @@ cobalt::generator<int, int> gen_push()
 }
 
 
-CO_TEST_CASE("generator-push")
+CO_TEST_CASE(generator_push)
 {
   auto g = gen_push();
 
@@ -95,11 +75,11 @@ CO_TEST_CASE("generator-push")
   while (g)
   {
     nw = co_await g(i);
-    CHECK(i == nw);
+    BOOST_CHECK(i == nw);
     i *= 2;
   }
 
-  CHECK(i == 2048);
+  BOOST_CHECK(i == 2048);
   co_return ;
 }
 
@@ -131,7 +111,7 @@ cobalt::generator<int> lazy_delay_gen(std::chrono::milliseconds tick)
 
 #if !defined(BOOST_COBALT_NO_SELF_DELETE)
 
-CO_TEST_CASE("generator-left_race")
+CO_TEST_CASE(generator_left_race)
 {
   asio::steady_timer tim{co_await cobalt::this_coro::executor, std::chrono::milliseconds(50)};
   auto g1 = delay_gen(std::chrono::milliseconds(200));
@@ -142,31 +122,31 @@ CO_TEST_CASE("generator-left_race")
   auto v1 = [](int value) -> v {return v{variant2::in_place_index<0u>, value};};
   auto v2 = [](int value) -> v {return v{variant2::in_place_index<1u>, value};};
 
-  CHECK(v1(0) == co_await left_race(g1, g2));
-  CHECK(v2(0) == co_await left_race(g1, g2));
-  CHECK(v2(1) == co_await left_race(g1, g2));
-  CHECK(v1(1) == co_await left_race(g1, g2));
-  CHECK(v2(2) == co_await left_race(g1, g2));
-  CHECK(v2(3) == co_await left_race(g1, g2));
-  CHECK(v1(2) == co_await left_race(g1, g2));
-  CHECK(v2(4) == co_await left_race(g1, g2));
-  CHECK(v2(5) == co_await left_race(g1, g2));
-  CHECK(v1(3) == co_await left_race(g1, g2));
-  CHECK(v2(6) == co_await left_race(g1, g2));
-  CHECK(v2(7) == co_await left_race(g1, g2));
-  CHECK(v1(4) == co_await left_race(g1, g2));
-  CHECK(v2(8) == co_await left_race(g1, g2));
-  CHECK(v2(9) == co_await left_race(g1, g2));
-  CHECK(v2(10) == co_await left_race(g1, g2));
+  BOOST_CHECK(v1(0) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(0) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(1) == co_await left_race(g1, g2));
+  BOOST_CHECK(v1(1) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(2) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(3) == co_await left_race(g1, g2));
+  BOOST_CHECK(v1(2) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(4) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(5) == co_await left_race(g1, g2));
+  BOOST_CHECK(v1(3) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(6) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(7) == co_await left_race(g1, g2));
+  BOOST_CHECK(v1(4) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(8) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(9) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(10) == co_await left_race(g1, g2));
 
 
-  CHECK(!g2);
+  BOOST_CHECK(!g2);
   g1.cancel();
-  CHECK_THROWS(co_await g1);
+  BOOST_CHECK_THROW(co_await g1, boost::system::system_error);
 }
 
 
-CO_TEST_CASE("lazy-generator-left_race")
+CO_TEST_CASE(lazy_generator_left_race)
 {
   asio::steady_timer tim{co_await cobalt::this_coro::executor, std::chrono::milliseconds(50)};
   auto g1 = lazy_delay_gen(std::chrono::milliseconds(200));
@@ -177,27 +157,27 @@ CO_TEST_CASE("lazy-generator-left_race")
   auto v1 = [](int value) -> v {return v{variant2::in_place_index<0u>, value};};
   auto v2 = [](int value) -> v {return v{variant2::in_place_index<1u>, value};};
 
-  CHECK(v1(0) == co_await left_race(g1, g2));
-  CHECK(v2(0) == co_await left_race(g1, g2));
-  CHECK(v2(1) == co_await left_race(g1, g2));
-  CHECK(v2(2) == co_await left_race(g1, g2));
-  CHECK(v1(1) == co_await left_race(g1, g2));
-  CHECK(v2(3) == co_await left_race(g1, g2));
-  CHECK(v2(4) == co_await left_race(g1, g2));
-  CHECK(v1(2) == co_await left_race(g1, g2));
-  CHECK(v2(5) == co_await left_race(g1, g2));
-  CHECK(v2(6) == co_await left_race(g1, g2));
-  CHECK(v1(3) == co_await left_race(g1, g2));
-  CHECK(v2(7) == co_await left_race(g1, g2));
-  CHECK(v2(8) == co_await left_race(g1, g2));
-  CHECK(v1(4) == co_await left_race(g1, g2));
-  CHECK(v2(9) == co_await left_race(g1, g2));
-  CHECK(v2(10) == co_await left_race(g1, g2));
+  BOOST_CHECK(v1(0) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(0) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(1) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(2) == co_await left_race(g1, g2));
+  BOOST_CHECK(v1(1) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(3) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(4) == co_await left_race(g1, g2));
+  BOOST_CHECK(v1(2) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(5) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(6) == co_await left_race(g1, g2));
+  BOOST_CHECK(v1(3) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(7) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(8) == co_await left_race(g1, g2));
+  BOOST_CHECK(v1(4) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(9) == co_await left_race(g1, g2));
+  BOOST_CHECK(v2(10) == co_await left_race(g1, g2));
 
 
-  CHECK(!g2);
+  BOOST_CHECK(!g2);
   g1.cancel();
-  CHECK_THROWS(co_await g1);
+  BOOST_CHECK_THROW(co_await g1, boost::system::system_error);
 }
 
 #endif
@@ -208,7 +188,7 @@ cobalt::generator<int> gshould_unwind(asio::io_context & ctx)
   co_return 0;
 }
 
-TEST_CASE("unwind")
+BOOST_AUTO_TEST_CASE(unwind)
 {
   asio::io_context ctx;
   boost::cobalt::this_thread::set_executor(ctx.get_executor());
@@ -229,15 +209,19 @@ cobalt::generator<int> gen_stop()
   co_return val;
 }
 
+#if !defined(BOOST_COBALT_USE_BOOST_CONTAINER_PMR)
+// clang-14 does not like this test.
 
-CO_TEST_CASE("stop")
+CO_TEST_CASE(stop)
 {
   auto g = gen_stop();
   while (g)
     co_await g;
 
-  auto gg =std::move(g);
+  auto gg = std::move(g);
 }
+
+#endif
 
 cobalt::generator<int, int> eager()
 {
@@ -248,19 +232,40 @@ cobalt::generator<int, int> eager()
 }
 
 
-CO_TEST_CASE("eager")
+CO_TEST_CASE(eager_2)
 {
   auto g = eager();
 
 
-  CHECK(2 == co_await g(2));
-  CHECK(6 == co_await g(4));
-  CHECK(9 == co_await g(3));
-  CHECK(15 == co_await g(6));
-  CHECK(!g);
+  BOOST_CHECK(2 == co_await g(2));
+  BOOST_CHECK(6 == co_await g(4));
+  BOOST_CHECK(9 == co_await g(3));
+  BOOST_CHECK(15 == co_await g(6));
+  BOOST_CHECK(!g);
 
   auto gg =std::move(g);
 }
 
+struct generator_move_only
+{
+  generator_move_only() = default;
+  generator_move_only(generator_move_only &&) = default;
+  generator_move_only & operator=(generator_move_only &&) = delete;
+};
 
-TEST_SUITE_END();
+cobalt::generator<generator_move_only, generator_move_only> gen_move_only_test()
+{
+  co_yield generator_move_only{};
+  co_return generator_move_only{};
+}
+
+CO_TEST_CASE(move_only)
+{
+  auto g = gen_move_only_test();
+
+  co_await g(generator_move_only{});
+  co_await g(generator_move_only{});
+}
+
+
+BOOST_AUTO_TEST_SUITE_END();

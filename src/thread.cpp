@@ -11,7 +11,10 @@
 #include <boost/asio/bind_executor.hpp>
 
 
-namespace boost::cobalt::detail
+namespace boost::cobalt
+{
+
+namespace detail
 {
 
 thread_promise::thread_promise()
@@ -78,7 +81,16 @@ boost::cobalt::thread detail::thread_promise::get_return_object()
     };
 
   return res;
- }
+}
 
 
+}
+
+void thread::join() {thread_.join();}
+bool thread::joinable() const {return thread_.joinable();}
+void thread::detach()
+{
+  thread_.detach();
+  state_ = nullptr;
+}
 }
