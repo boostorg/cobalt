@@ -94,8 +94,13 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 
   generator_receiver() = default;
   generator_receiver(generator_receiver && lhs)
-  : exception(std::move(lhs.exception)), done(lhs.done), awaited_from(std::move(lhs.awaited_from)),
-    reference(lhs.reference), cancel_signal(lhs.cancel_signal)
+  : generator_receiver_base<Yield, Push>{std::move(lhs.pushed_value)},
+    exception(std::move(lhs.exception)), done(lhs.done),
+    result(std::move(lhs.result)),
+    result_buffer(std::move(lhs.result_buffer)),
+    awaited_from(std::move(lhs.awaited_from)), yield_from{std::move(lhs.yield_from)},
+    lazy(lhs.lazy), reference(lhs.reference), cancel_signal(lhs.cancel_signal)
+
   {
     if (!lhs.done && !lhs.exception)
     {
@@ -122,7 +127,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 
   using yield_awaitable = generator_yield_awaitable<Yield, Push>;
 
-  yield_awaitable get_yield_awaitable() {return {this}; }
+  yield_awaitable get_yield_awaitable(generator_promise<Yield, Push> * pro) {return {pro}; }
   static yield_awaitable terminator()   {return {nullptr}; }
 
   template<typename T>
@@ -403,7 +408,7 @@ struct generator_promise
     if(receiver)
     {
       receiver->lazy = true;
-      return receiver->get_yield_awaitable();
+      return receiver->get_yield_awaitable(this);
     }
     else
       return generator_receiver<Yield, Push>::terminator();
@@ -416,7 +421,7 @@ struct generator_promise
     {
       // if this is lazy, there might still be a value in there.
       receiver->yield_value(std::forward<Yield_>(ret));
-      return receiver->get_yield_awaitable();
+      return receiver->get_yield_awaitable(this);
     }
     else
       return generator_receiver<Yield, Push>::terminator();
@@ -447,10 +452,10 @@ struct generator_promise
 template<typename Yield, typename Push>
 struct generator_yield_awaitable
 {
-  generator_receiver<Yield, Push> * self;
+  generator_promise<Yield, Push> *self;
   constexpr bool await_ready() const
   {
-    return self && self->pushed_value && !self->result;
+    return self && self->receiver && self->receiver->pushed_value && !self->receiver->result;
   }
 
   std::coroutine_handle<void> await_suspend(
@@ -475,28 +480,28 @@ struct generator_yield_awaitable
       return std::noop_coroutine();
     }
     std::coroutine_handle<void> res = std::noop_coroutine();
-    if (self->awaited_from.get() != nullptr)
-      res = self->awaited_from.release();
+    if (self->receiver->awaited_from.get() != nullptr)
+      res = self->receiver->awaited_from.release();
 #if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
-    self->yield_from.reset(&h.promise(), loc);
+    self->receiver->yield_from.reset(&h.promise(), loc);
 #else
-    self->yield_from.reset(&h.promise());
+    self->receiver->yield_from.reset(&h.promise());
 #endif
     return res;
   }
 
   Push await_resume()
   {
-    BOOST_ASSERT(self->pushed_value);
-    return *std::exchange(self->pushed_value, std::nullopt);
+    BOOST_ASSERT(self->receiver->pushed_value);
+    return *std::exchange(self->receiver->pushed_value, std::nullopt);
   }
 };
 
 template<typename Yield>
 struct generator_yield_awaitable<Yield, void>
 {
-  generator_receiver<Yield, void> * self;
-  constexpr bool await_ready() { return self && self->pushed_value; }
+  generator_promise<Yield, void> *self;
+  constexpr bool await_ready() { return self && self->receiver && self->receiver->pushed_value; }
 
   std::coroutine_handle<> await_suspend(
       std::coroutine_handle<generator_promise<Yield, void>> h
@@ -519,20 +524,21 @@ struct generator_yield_awaitable<Yield, void>
       return std::noop_coroutine();
     }
     std::coroutine_handle<void> res = std::noop_coroutine();
-    if (self->awaited_from.get() != nullptr)
-      res = self->awaited_from.release();
+    BOOST_ASSERT(self);
+    if (self->receiver->awaited_from.get() != nullptr)
+      res = self->receiver->awaited_from.release();
 #if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
-    self->yield_from.reset(&h.promise(), loc);
+    self->receiver->yield_from.reset(&h.promise(), loc);
 #else
-    self->yield_from.reset(&h.promise());
+    self->receiver->yield_from.reset(&h.promise());
 #endif
     return res;
   }
 
   void await_resume()
   {
-    BOOST_ASSERT(self->pushed_value);
-    self->pushed_value = false;
+    BOOST_ASSERT(self->receiver->pushed_value);
+    self->receiver->pushed_value = false;
   }
 
 };
