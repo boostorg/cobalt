@@ -6,7 +6,7 @@ yet still want to have linear & readable code (i..e. avoid callbacks).
 
 A minimum of Boost 1.82 is necessary as the ASIO in that version has needed support. C++ 20 is needed for C++ coroutines.
 
-Below is a showcase of features, if you're new to coroutines or asynchronous programming, please see the [primer](https://klemens.dev/cobalt/#coroutine_primer).
+Below is a showcase of features, if you're new to coroutines or asynchronous programming, please see the [primer](https://www.boost.org/doc/libs/master/libs/cobalt/doc/html/index.html#coroutine_primer).
 
 The assumptions are:
 
