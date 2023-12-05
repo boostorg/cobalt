@@ -283,4 +283,19 @@ CO_TEST_CASE(detached_)
   co_return;
 }
 
+cobalt::generator<int, int> detached_push()
+{
+  int i = co_yield 42;
+  while (true)
+    i = co_yield i;
+  co_return i;
+}
+
+CO_TEST_CASE(detached_push_)
+{
+  auto g = detached_push();
+
+  co_await g(1);
+}
+
 BOOST_AUTO_TEST_SUITE_END();

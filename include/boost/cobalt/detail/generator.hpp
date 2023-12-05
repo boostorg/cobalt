@@ -269,8 +269,16 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
       if (self->yield_from != nullptr && !self->lazy)
       {
         auto exec = self->yield_from->get_executor();
+        auto alloc = asio::get_associated_allocator(self->yield_from);
         asio::post(
-            std::move(exec), std::exchange(self->yield_from, nullptr));
+            std::move(exec),
+            asio::bind_allocator(
+                alloc,
+                [y = std::exchange(self->yield_from, nullptr)]() mutable
+                {
+                  if (y->receiver) // make sure we only resume eagerly when attached to a generator object
+                    std::move(y)();
+                }));
       }
 
       return {system::in_place_value, self->get_result()};
@@ -492,6 +500,7 @@ struct generator_yield_awaitable
 
   Push await_resume()
   {
+    BOOST_ASSERT(self->receiver);
     BOOST_ASSERT(self->receiver->pushed_value);
     return *std::exchange(self->receiver->pushed_value, std::nullopt);
   }
