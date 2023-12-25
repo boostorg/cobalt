@@ -7,7 +7,6 @@
 
 #include <boost/cobalt/detail/await_result_helper.hpp>
 #include <boost/leaf/config.hpp>
-#include <boost/leaf/capture.hpp>
 #include <boost/leaf/handle_errors.hpp>
 
 namespace boost::cobalt::detail
