@@ -98,9 +98,9 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
   generator_receiver() = default;
   generator_receiver(generator_receiver && lhs)
   : generator_receiver_base<Yield, Push>{std::move(lhs.pushed_value)},
-    exception(std::move(lhs.exception)), done(lhs.done),
+    exception(std::move(lhs.exception)),
     result(std::move(lhs.result)),
-    result_buffer(std::move(lhs.result_buffer)),
+    result_buffer(std::move(lhs.result_buffer)), done(lhs.done),
     awaited_from(std::move(lhs.awaited_from)), yield_from{std::move(lhs.yield_from)},
     lazy(lhs.lazy), reference(lhs.reference), cancel_signal(lhs.cancel_signal)
 
