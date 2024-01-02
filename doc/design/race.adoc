@@ -1,5 +1,5 @@
 [#design:race]
-== Select
+== Race
 
 The most important synchronization mechanism is the `race` function.
 
@@ -33,12 +33,12 @@ cobalt::promise<void> p()
 }
 ----
 
-The `race` must however internally wait  for all awaitable to complete
+The `race` must however internally wait for all awaitable to complete
 once it initiates to `co_await`.
-Therefor, once the first <<awaitable, awaitable>> completes,
+Therefore, once the first <<awaitable, awaitable>> completes,
 it tries to <<interrupt_await, interrupt>> the rest, and if that fails cancels them.
 
-`race` is the preferred way to trigger cancellations, e.g:
+`race` is the preferred way to trigger cancellations, e.g.:
 
 [source,cpp]
 ----
