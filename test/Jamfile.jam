@@ -32,3 +32,4 @@ for local src in [ glob *.cpp : main.cpp main_compile.cpp test_main.cpp concepts
    run $(src) test_impl ;
 }
 
+run experimental/context.cpp test_impl //boost/context ;
