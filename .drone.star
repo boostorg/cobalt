@@ -18,6 +18,7 @@ deps = [
     'libs/concept_check',
     'libs/config',
     'libs/container',
+    'libs/context',
     'libs/core',
     'libs/date_time',
     'libs/detail',
