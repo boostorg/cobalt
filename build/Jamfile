@@ -6,7 +6,7 @@
 
 import os ;
 import feature ;
-import ../../config/checks/config : requires ;
+import config : requires ;
 
 
 project : requirements
@@ -53,7 +53,7 @@ lib boost_cobalt
      [ requires 
         cxx20_hdr_concepts
      ]
-     <boost.cobalt.pmr>boost-container:<library>/boost//container
+     <boost.cobalt.pmr>boost-container:<library>/boost/container//boost_container
       [ check-target-builds
           $(config-binding:D)//cpp_lib_memory_resource
           cpp_lib_memory_resource
@@ -62,7 +62,7 @@ lib boost_cobalt
       ]
 
    : usage-requirements
-     <boost.cobalt.pmr>boost-container:<library>/boost//container
+     <boost.cobalt.pmr>boost-container:<library>/boost/container//boost_container
      <link>shared:<define>BOOST_COBALT_DYN_LINK=1
       [ check-target-builds
           $(config-binding:D)//cpp_lib_memory_resource
@@ -97,6 +97,3 @@ rule set-pmr-std ( props * )
         return <boost.cobalt.pmr>std ;
     }
 }
-
-boost-install boost_cobalt ;
-
