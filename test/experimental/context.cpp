@@ -12,11 +12,11 @@
 
 using namespace boost::cobalt;
 
-BOOST_AUTO_TEST_SUITE(fiber);
+BOOST_AUTO_TEST_SUITE(context_);
 
 BOOST_AUTO_TEST_CASE(basics)
 {
-  boost::cobalt::experimental::detail::fiber_frame<int> ff;
+  boost::cobalt::experimental::detail::context_frame<int> ff;
 
   auto hh = std::coroutine_handle<int>::from_address(&ff);
   BOOST_CHECK(!hh.done());

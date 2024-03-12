@@ -2,18 +2,18 @@
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef BOOST_COBALT_CONTEXT_HPP
-#define BOOST_COBALT_CONTEXT_HPP
+#ifndef BOOST_COBALT_EXPERIMENTAL_CONTEXT_HPP
+#define BOOST_COBALT_EXPERIMENTAL_CONTEXT_HPP
 
 #include <boost/callable_traits/args.hpp>
 #include <boost/context/fiber.hpp>
 #include <boost/context/fixedsize_stack.hpp>
 
 #include <boost/cobalt/concepts.hpp>
+#include <boost/cobalt/experimental/frame.hpp>
 #include <boost/cobalt/config.hpp>
 #include <coroutine>
 #include <new>
-// this is all UB according to the standard. BUT it shouldn't be!
 
 namespace boost::cobalt::experimental
 {
@@ -25,25 +25,20 @@ namespace detail
 {
 
 template<typename Promise>
-struct fiber_frame
+struct context_frame : frame<context_frame<Promise>,  Promise>
 {
-  void (*resume_) (fiber_frame *) = +[](fiber_frame * ff) { ff->resume();};
-  void (*destroy_)(fiber_frame *) = +[](fiber_frame * ff) { ff->destroy();};
-
-  Promise promise;
-
   boost::context::fiber caller, callee;
 
-  void (*after_resume)(fiber_frame *, void *) = nullptr;
+  void (*after_resume)(context_frame *, void *) = nullptr;
   void * after_resume_p;
 
   template<typename ... Args>
     requires std::constructible_from<Promise, Args...>
-  fiber_frame(Args && ... args) : promise(args...) {}
+  context_frame(Args && ... args) : frame<context_frame, Promise>(args...) {}
 
   template<typename ... Args>
     requires (!std::constructible_from<Promise, Args...> && std::is_default_constructible_v<Promise>)
-  fiber_frame(Args && ...) {}
+  context_frame(Args && ...) {}
 
   void resume()
   {
@@ -54,8 +49,43 @@ struct fiber_frame
   void destroy()
   {
     auto c = std::exchange(callee, {});
-    this->~fiber_frame();
+    this->~context_frame();
   }
+
+  template<typename Awaitable>
+  auto do_resume(void * )
+  {
+    return +[](context_frame * this_, void * p)
+    {
+      auto aw_ = static_cast<Awaitable*>(p);
+      auto h = std::coroutine_handle<Promise>::from_address(this_) ;
+      aw_->await_suspend(h);
+    };
+  }
+
+  template<typename Awaitable>
+  auto do_resume(bool * )
+  {
+    return +[](context_frame * this_, void * p)
+    {
+      auto aw_ = static_cast<Awaitable*>(p);
+      auto h = std::coroutine_handle<Promise>::from_address(this_) ;
+      if (!aw_->await_suspend(h))
+        h.resume();
+    };
+  }
+
+  template<typename Awaitable, typename Promise_>
+  auto do_resume(std::coroutine_handle<Promise_> * )
+  {
+    return +[](context_frame * this_, void * p)
+    {
+      auto aw_ = static_cast<Awaitable*>(p);
+      auto h = std::coroutine_handle<Promise>::from_address(this_) ;
+      aw_->await_suspend(h).resume();
+    };
+  }
+
 
   template<typename Awaitable>
   auto do_await(Awaitable aw)
@@ -63,23 +93,9 @@ struct fiber_frame
     if (!aw.await_ready())
     {
       after_resume_p = & aw;
-      after_resume =
-            +[](fiber_frame * this_, void * p)
-            {
-              auto aw_ = static_cast<Awaitable*>(p);
-              auto h = std::coroutine_handle<Promise>::from_address(this_) ;
-              if constexpr (requires {{aw_->await_suspend(h)} -> std::same_as<void>;})
-                aw_->await_suspend(h);
-              else if constexpr (requires {{aw_->await_suspend(h)} -> std::same_as<bool>;})
-              {
-                if (!aw_->await_suspend(h))
-                  h.resume();
-              }
-              else if constexpr (requires {{aw_->await_suspend(h)} -> std::convertible_to<std::coroutine_handle<void>>;})
-                aw_->await_suspend(h).resume();
-              else
-                static_assert(std::is_void_v<Awaitable>, "Invalid return from await_suspend()");
-            };
+      after_resume = do_resume<Awaitable>(
+          static_cast<decltype(aw.await_suspend(std::declval<std::coroutine_handle<Promise>>()))*>(nullptr)
+          );
       caller = std::move(caller).resume();
     }
     return aw.await_resume();
@@ -162,6 +178,20 @@ struct await_transform_impl : await_transform_base, T
 template<typename T>
 concept has_await_transform = ! requires (await_transform_impl<T> & p) {p.await_transform(await_transform_base::dummy{});};
 
+template<typename Promise, typename Context, typename Func, typename ... Args>
+void do_return(std::true_type /* is_void */, Promise& promise, Context ctx, Func && func, Args && ... args)
+{
+  std::forward<Func>(func)(ctx, std::forward<Args>(args)...);
+  promise.return_void();
+}
+
+template<typename Promise, typename Context, typename Func, typename ... Args>
+void do_return(std::false_type /* is_void */, Promise& promise, Context ctx, Func && func, Args && ... args)
+{
+  promise.return_value(std::forward<Func>(func)(ctx, std::forward<Args>(args)...));
+}
+
+
 }
 
 template<typename Return, typename ... Args>
@@ -242,14 +272,14 @@ struct context
 
  private:
 
-  context(detail::fiber_frame<promise_type> * frame) : frame_(frame) {}
+  context(detail::context_frame<promise_type> * frame) : frame_(frame) {}
   template<typename, typename ...>
   friend struct context;
 
   //template<typename >
-  friend struct detail::fiber_frame<promise_type>;
+  friend struct detail::context_frame<promise_type>;
 
-  detail::fiber_frame<promise_type> * frame_;
+  detail::context_frame<promise_type> * frame_;
 };
 
 template<typename Return, typename ... Args, std::invocable<context<Return, Args...>, Args...> Func, typename StackAlloc>
@@ -258,17 +288,17 @@ auto make_context(Func && func, std::allocator_arg_t, StackAlloc  && salloc, Arg
   auto sctx_ = salloc.allocate();
 
   using promise_type = typename std::coroutine_traits<Return, Args...>::promise_type;
-  void * p = static_cast<char*>(sctx_.sp) - sizeof(detail::fiber_frame<promise_type>);
-  auto sz = sctx_.size - sizeof(detail::fiber_frame<promise_type>);
+  void * p = static_cast<char*>(sctx_.sp) - sizeof(detail::context_frame<promise_type>);
+  auto sz = sctx_.size - sizeof(detail::context_frame<promise_type>);
 
-  if (auto diff = reinterpret_cast<std::uintptr_t>(p) % alignof(detail::fiber_frame<promise_type>); diff != 0u)
+  if (auto diff = reinterpret_cast<std::uintptr_t>(p) % alignof(detail::context_frame<promise_type>); diff != 0u)
   {
     p = static_cast<char*>(p) - diff;
     sz -= diff;
   }
 
   boost::context::preallocated psc{p, sz, sctx_};
-  auto f = new (p) detail::fiber_frame<promise_type>(args...);
+  auto f = new (p) detail::context_frame<promise_type>(args...);
 
   auto res = f->promise.get_return_object();
 
@@ -278,11 +308,11 @@ auto make_context(Func && func, std::allocator_arg_t, StackAlloc  && salloc, Arg
 
   struct invoker
   {
-    detail::fiber_frame<promise_type> * frame;
+    detail::context_frame<promise_type> * frame;
     mutable Func func;
     mutable std::tuple<Args...> args;
 
-    invoker(detail::fiber_frame<promise_type> * frame, Func && func, Args && ...  args)
+    invoker(detail::context_frame<promise_type> * frame, Func && func, Args && ...  args)
         : frame(frame), func(std::forward<Func>(func)), args(std::forward<Args>(args)...)
     {
     }
@@ -303,15 +333,8 @@ auto make_context(Func && func, std::allocator_arg_t, StackAlloc  && salloc, Arg
               auto ctx = frame->template get_context<Return, Args...>();
               using return_type = decltype(std::forward<Func>(func)(ctx, std::forward<Args>(args_)...));
 
-              if constexpr (std::is_void_v<return_type>)
-              {
-                std::forward<Func>(func)(ctx, std::forward<Args>(args_)...);
-                frame->promise.return_void();
-              }
-              else
-                frame->promise.return_value(std::forward<Func>(func)(ctx, std::forward<Args>(args_)...));
-
-
+              detail::do_return(std::is_void<return_type>{}, frame->promise, ctx,
+                                std::forward<Func>(func), std::forward<Args>(args_)...);
             },
             std::move(args));
       }
@@ -364,4 +387,4 @@ auto make_context(Func && func, Args && ... args)
 
 }
 
-#endif //BOOST_COBALT_CONTEXT_HPP
+#endif //BOOST_COBALT_EXPERIMENTAL_CONTEXT_HPP

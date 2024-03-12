@@ -47,6 +47,7 @@ if (NOT BOOST_COBALT_IS_ROOT)
     target_link_libraries(boost_cobalt
             PUBLIC
             Boost::asio
+            Boost::callable_traits
             Boost::circular_buffer
             Boost::config
             Boost::container
