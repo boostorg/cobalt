@@ -13,6 +13,7 @@ deps = [
     'libs/assert',
     'libs/beast',
     'libs/bind',
+    'libs/callable_traits',
     'libs/chrono',
     'libs/circular_buffer',
     'libs/concept_check',

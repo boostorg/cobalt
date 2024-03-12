@@ -70,7 +70,7 @@ struct detached_promise
   {
   }
 
-  std::suspend_never initial_suspend()        {return {};}
+  std::suspend_never initial_suspend() noexcept {return {};}
   std::suspend_never final_suspend() noexcept {return {};}
 
   void return_void() {}
