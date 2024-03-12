@@ -58,28 +58,49 @@ struct fiber_frame
   }
 
   template<typename Awaitable>
+  auto do_resume(void * )
+  {
+    return +[](fiber_frame * this_, void * p)
+    {
+      auto aw_ = static_cast<Awaitable*>(p);
+      auto h = std::coroutine_handle<Promise>::from_address(this_) ;
+      aw_->await_suspend(h);
+    };
+  }
+
+  template<typename Awaitable>
+  auto do_resume(bool * )
+  {
+    return +[](fiber_frame * this_, void * p)
+    {
+      auto aw_ = static_cast<Awaitable*>(p);
+      auto h = std::coroutine_handle<Promise>::from_address(this_) ;
+      if (!aw_->await_suspend(h))
+        h.resume();
+    };
+  }
+
+  template<typename Awaitable, typename Promise_>
+  auto do_resume(std::coroutine_handle<Promise_> * )
+  {
+    return +[](fiber_frame * this_, void * p)
+    {
+      auto aw_ = static_cast<Awaitable*>(p);
+      auto h = std::coroutine_handle<Promise>::from_address(this_) ;
+      aw_->await_suspend(h).resume();
+    };
+  }
+
+
+  template<typename Awaitable>
   auto do_await(Awaitable aw)
   {
     if (!aw.await_ready())
     {
       after_resume_p = & aw;
-      after_resume =
-            +[](fiber_frame * this_, void * p)
-            {
-              auto aw_ = static_cast<Awaitable*>(p);
-              auto h = std::coroutine_handle<Promise>::from_address(this_) ;
-              if constexpr (requires {{aw_->await_suspend(h)} -> std::same_as<void>;})
-                aw_->await_suspend(h);
-              else if constexpr (requires {{aw_->await_suspend(h)} -> std::same_as<bool>;})
-              {
-                if (!aw_->await_suspend(h))
-                  h.resume();
-              }
-              else if constexpr (requires {{aw_->await_suspend(h)} -> std::convertible_to<std::coroutine_handle<void>>;})
-                aw_->await_suspend(h).resume();
-              else
-                static_assert(std::is_void_v<Awaitable>, "Invalid return from await_suspend()");
-            };
+      after_resume = do_resume<Awaitable>(
+          static_cast<decltype(aw.await_suspend(std::declval<std::coroutine_handle<Promise>>()))*>(nullptr)
+          );
       caller = std::move(caller).resume();
     }
     return aw.await_resume();
@@ -161,6 +182,20 @@ struct await_transform_impl : await_transform_base, T
 
 template<typename T>
 concept has_await_transform = ! requires (await_transform_impl<T> & p) {p.await_transform(await_transform_base::dummy{});};
+
+template<typename Promise, typename Context, typename Func, typename ... Args>
+void do_return(std::true_type /* is_void */, Promise& promise, Context ctx, Func && func, Args && ... args)
+{
+  std::forward<Func>(func)(ctx, std::forward<Args>(args)...);
+  promise.return_void();
+}
+
+template<typename Promise, typename Context, typename Func, typename ... Args>
+void do_return(std::false_type /* is_void */, Promise& promise, Context ctx, Func && func, Args && ... args)
+{
+  promise.return_value(std::forward<Func>(func)(ctx, std::forward<Args>(args)...));
+}
+
 
 }
 
@@ -303,15 +338,8 @@ auto make_context(Func && func, std::allocator_arg_t, StackAlloc  && salloc, Arg
               auto ctx = frame->template get_context<Return, Args...>();
               using return_type = decltype(std::forward<Func>(func)(ctx, std::forward<Args>(args_)...));
 
-              if constexpr (std::is_void_v<return_type>)
-              {
-                std::forward<Func>(func)(ctx, std::forward<Args>(args_)...);
-                frame->promise.return_void();
-              }
-              else
-                frame->promise.return_value(std::forward<Func>(func)(ctx, std::forward<Args>(args_)...));
-
-
+              detail::do_return(std::is_void<return_type>{}, frame->promise, ctx,
+                                std::forward<Func>(func), std::forward<Args>(args_)...);
             },
             std::move(args));
       }
