@@ -108,9 +108,7 @@ struct fork
       return st.resource.allocate(size);
     }
 
-    template<typename ... Rest>
-    void operator delete(void * raw, const std::size_t size, Rest && ...) noexcept;
-    void operator delete(void *, const std::size_t) noexcept {}
+    void operator delete(void *) noexcept {}
 
     template<typename ... Rest>
     promise_type(shared_state & st, Rest & ...)
