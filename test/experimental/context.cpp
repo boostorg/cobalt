@@ -12,7 +12,7 @@
 
 using namespace boost::cobalt;
 
-BOOST_AUTO_TEST_SUITE(fiber);
+BOOST_AUTO_TEST_SUITE(context_);
 
 BOOST_AUTO_TEST_CASE(basics)
 {

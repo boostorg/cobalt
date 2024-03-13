@@ -22,7 +22,8 @@ add_test(NAME boost_cobalt_basic_tests COMMAND boost_cobalt_basic_tests)
 target_compile_features(boost_cobalt PUBLIC cxx_std_20)
 
 
-add_executable(boost_cobalt_experimental test_main.cpp experimental/context.cpp)
+add_executable(boost_cobalt_experimental test_main.cpp
+               experimental/context.cpp experimental/fiber.cpp experimental/continuation.cpp)
 target_link_libraries(boost_cobalt_experimental  Boost::cobalt Boost::unit_test_framework Boost::context)
 add_test(NAME boost_cobalt_experimental COMMAND boost_cobalt_experimental)
 

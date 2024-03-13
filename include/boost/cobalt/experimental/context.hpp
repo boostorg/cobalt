@@ -2,8 +2,8 @@
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef BOOST_COBALT_CONTEXT_HPP
-#define BOOST_COBALT_CONTEXT_HPP
+#ifndef BOOST_COBALT_EXPERIMENTAL_CONTEXT_HPP
+#define BOOST_COBALT_EXPERIMENTAL_CONTEXT_HPP
 
 #include <boost/callable_traits/args.hpp>
 #include <boost/context/fiber.hpp>
@@ -392,4 +392,4 @@ auto make_context(Func && func, Args && ... args)
 
 }
 
-#endif //BOOST_COBALT_CONTEXT_HPP
+#endif //BOOST_COBALT_EXPERIMENTAL_CONTEXT_HPP
