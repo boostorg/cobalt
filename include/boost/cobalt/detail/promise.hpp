@@ -351,7 +351,8 @@ struct cobalt_promise
       return promise->receiver && promise->receiver->awaited_from.get() == nullptr;
     }
 
-    std::coroutine_handle<void> await_suspend(std::coroutine_handle<cobalt_promise> h) noexcept
+    template<std::derived_from<cobalt_promise> Promise_>
+    std::coroutine_handle<void> await_suspend(std::coroutine_handle<Promise_> h) noexcept
     {
       std::coroutine_handle<void> res = std::noop_coroutine();
       if (promise->receiver && promise->receiver->awaited_from.get() != nullptr)
