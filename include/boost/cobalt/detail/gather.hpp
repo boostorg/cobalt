@@ -93,7 +93,7 @@ struct gather_variadic_impl
     // GCC doesn't like member funs
     template<std::size_t Idx>
     static detail::fork await_impl(awaitable & this_)
-    try
+    BOOST_TRY
     {
       auto & aw = std::get<Idx>(this_.aws);
       // check manually if we're ready
@@ -124,10 +124,11 @@ struct gather_variadic_impl
           std::get<Idx>(this_.result).template emplace<1u>(aw.await_resume());
       }
     }
-    catch(...)
+    BOOST_CATCH(...)
     {
       std::get<Idx>(this_.result).template emplace<2u>(std::current_exception());
     }
+    BOOST_CATCH_END
 
     std::array<detail::fork(*)(awaitable&), tuple_size> impls {
       []<std::size_t ... Idx>(std::index_sequence<Idx...>)
@@ -301,7 +302,7 @@ struct gather_ranged_impl
     }
 
     static detail::fork await_impl(awaitable & this_, std::size_t idx)
-    try
+    BOOST_TRY
     {
       auto & aw = *std::next(std::begin(this_.aws), idx);
       auto rd = aw.await_ready();
@@ -328,11 +329,12 @@ struct gather_ranged_impl
           this_.result[idx].template emplace<1u>(aw.await_resume());
       }
     }
-    catch(...)
+    BOOST_CATCH(...)
     {
       this_.result[idx].template emplace<2u>(std::current_exception());
 
     }
+    BOOST_CATCH_END
 
     detail::fork last_forked;
     std::size_t last_index = 0u;

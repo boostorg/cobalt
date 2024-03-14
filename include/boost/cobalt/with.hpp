@@ -39,7 +39,12 @@ template<typename Arg, typename Func, typename Teardown>
     })
 auto with(Arg arg, Func func, Teardown teardown) -> detail::with_impl<void>
 {
+
     std::exception_ptr e;
+#if defined(BOOST_NO_EXCEPTIONS)
+    co_await std::move(func)(arg);
+    co_await std::move(teardown)(arg, e);
+#else
     try
     {
         co_await std::move(func)(arg);
@@ -60,6 +65,7 @@ auto with(Arg arg, Func func, Teardown teardown) -> detail::with_impl<void>
     }
     if (e)
         std::rethrow_exception(e);
+#endif
 }
 
 
@@ -76,6 +82,10 @@ template<typename Arg, typename Func, typename Teardown>
 auto with(Arg arg, Func func, Teardown teardown) -> detail::with_impl<void>
 {
     std::exception_ptr e;
+#if defined(BOOST_NO_EXCEPTIONS)
+    std::move(func)(arg);
+    co_await std::move(teardown)(arg, e);
+#else
     try
     {
         std::move(func)(arg);
@@ -96,6 +106,7 @@ auto with(Arg arg, Func func, Teardown teardown) -> detail::with_impl<void>
     }
     if (e)
         std::rethrow_exception(e);
+#endif
 }
 
 
@@ -112,6 +123,10 @@ auto with(Arg arg, Func func, Teardown teardown)
     std::exception_ptr e;
     std::optional<detail::co_await_result_t<decltype(std::move(func)(arg))>> res;
 
+#if defined(BOOST_NO_EXCEPTIONS)
+    res = co_await std::move(func)(arg);
+    co_await std::move(teardown)(std::move(arg), e);
+#else
     try
     {
         res = co_await std::move(func)(arg);
@@ -132,6 +147,7 @@ auto with(Arg arg, Func func, Teardown teardown)
     }
     if (e)
         std::rethrow_exception(e);
+#endif
     co_return std::move(res);
 }
 
@@ -150,6 +166,11 @@ auto with(Arg arg, Func func, Teardown teardown) -> detail::with_impl<decltype(s
 {
     std::exception_ptr e;
     std::optional<decltype(std::move(func)(arg))> res;
+
+#if defined(BOOST_NO_EXCEPTIONS)
+    res = std::move(func)(arg);
+    co_await std::move(teardown)(arg, e);
+#else
     try
     {
       res = std::move(func)(arg);
@@ -170,7 +191,7 @@ auto with(Arg arg, Func func, Teardown teardown) -> detail::with_impl<decltype(s
     }
     if (e)
         std::rethrow_exception(e);
-
+#endif
     co_return std::move(res);
 }
 

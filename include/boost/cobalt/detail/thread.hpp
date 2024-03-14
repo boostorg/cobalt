@@ -80,7 +80,9 @@ struct thread_promise : signal_helper_2,
     return {};
   }
 
+#if !defined(BOOST_NO_EXCEPTIONS)
   void unhandled_exception() { throw; }
+#endif
   void return_void() { }
 
   using executor_type = typename cobalt::executor;
