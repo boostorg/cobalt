@@ -336,8 +336,9 @@ struct task_promise
       return promise->receiver && promise->receiver->awaited_from.get() == nullptr;
     }
 
+    template<std::derived_from<task_promise> Promise>
     BOOST_NOINLINE
-    auto await_suspend(std::coroutine_handle<task_promise> h) noexcept
+    auto await_suspend(std::coroutine_handle<Promise> h) noexcept
     {
       std::coroutine_handle<void> res = std::noop_coroutine();
       if (promise->receiver && promise->receiver->awaited_from.get() != nullptr)
