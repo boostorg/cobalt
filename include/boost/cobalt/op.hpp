@@ -11,6 +11,7 @@
 #include <boost/cobalt/detail/handler.hpp>
 #include <boost/cobalt/detail/sbo_resource.hpp>
 #include <boost/cobalt/result.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 
 namespace boost::cobalt
 {
@@ -54,7 +55,7 @@ struct op
 #endif
     ) noexcept
     {
-      try
+      BOOST_TRY
       {
         completed_immediately = detail::completed_immediately_t::initiating;
 
@@ -67,11 +68,12 @@ struct op
           completed_immediately = detail::completed_immediately_t::no;
         return completed_immediately != detail::completed_immediately_t::yes;
       }
-      catch(...)
+      BOOST_CATCH(...)
       {
         init_ep = std::current_exception();
         return false;
       }
+      BOOST_CATCH_END
     }
 
     auto await_resume(const boost::source_location & loc = BOOST_CURRENT_LOCATION)

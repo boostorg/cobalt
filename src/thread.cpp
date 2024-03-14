@@ -10,6 +10,7 @@
 #include <boost/asio/append.hpp>
 #include <boost/asio/bind_executor.hpp>
 
+#include <boost/core/no_exceptions_support.hpp>
 
 namespace boost::cobalt
 {
@@ -51,14 +52,15 @@ void run_thread(
 
     std::exception_ptr ep;
 
-    try
+    BOOST_TRY
     {
       st->ctx.run();
     }
-    catch(...)
+    BOOST_CATCH(...)
     {
       ep = std::current_exception();
     }
+    BOOST_CATCH_END
 
     st->done = true;
     st->signal.slot().clear();

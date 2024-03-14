@@ -21,6 +21,7 @@
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/cancellation_signal.hpp>
 #include <boost/asio/associated_cancellation_slot.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 
 
 #include <boost/intrusive_ptr.hpp>
@@ -149,14 +150,15 @@ struct race_variadic_impl
 
     template<typename T, typename Error>
     void assign_error(system::result<T, Error> & res)
-    try
+    BOOST_TRY
     {
       std::move(res).value(loc);
     }
-    catch(...)
+    BOOST_CATCH(...)
     {
       error = std::current_exception();
     }
+    BOOST_CATCH_END
 
     template<typename T>
     void assign_error(system::result<T, std::exception_ptr> & res)
@@ -166,7 +168,7 @@ struct race_variadic_impl
 
     template<std::size_t Idx>
     static detail::fork await_impl(awaitable & this_)
-    try
+    BOOST_TRY
     {
       using traits = race_traits<mp11::mp_at_c<mp11::mp_list<Args...>, Idx>>;
 
@@ -273,7 +275,7 @@ struct race_variadic_impl
       this_.cancel_all();
       this_.working[Idx] = nullptr;
     }
-    catch(...)
+    BOOST_CATCH(...)
     {
       if (!this_.has_result())
         this_.index = Idx;
@@ -281,6 +283,7 @@ struct race_variadic_impl
         this_.error = std::current_exception();
       this_.working[Idx] = nullptr;
     }
+    BOOST_CATCH_END
 
     std::array<detail::fork(*)(awaitable&), tuple_size> impls {
         []<std::size_t ... Idx>(std::index_sequence<Idx...>)
@@ -488,14 +491,15 @@ struct race_ranged_impl
 
     template<typename T, typename Error>
     void assign_error(system::result<T, Error> & res)
-    try
+    BOOST_TRY
     {
       std::move(res).value(loc);
     }
-    catch(...)
+    BOOST_CATCH(...)
     {
       error = std::current_exception();
     }
+    BOOST_CATCH_END
 
     template<typename T>
     void assign_error(system::result<T, std::exception_ptr> & res)
@@ -504,7 +508,7 @@ struct race_ranged_impl
     }
 
     static detail::fork await_impl(awaitable & this_, std::size_t idx)
-    try
+    BOOST_TRY
     {
       typename traits::actual_awaitable aw_{
           get_awaitable_type(
@@ -591,7 +595,7 @@ struct race_ranged_impl
       if constexpr (traits::interruptible)
         this_.working[idx] = nullptr;
     }
-    catch(...)
+    BOOST_CATCH(...)
     {
       if (!this_.has_result())
         this_.index = idx;
@@ -600,6 +604,7 @@ struct race_ranged_impl
       if constexpr (traits::interruptible)
         this_.working[idx] = nullptr;
     }
+    BOOST_CATCH_END
 
     detail::fork last_forked;
 

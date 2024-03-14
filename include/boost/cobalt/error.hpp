@@ -53,7 +53,7 @@ struct cobalt_category_t final : system::error_category
     }
   }
 
-  const char * name() const BOOST_NOEXCEPT override
+  const char * name() const noexcept override
   {
     return "boost.cobalt";
   }

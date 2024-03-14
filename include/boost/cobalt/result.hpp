@@ -7,6 +7,7 @@
 
 #include <boost/cobalt/concepts.hpp>
 
+#include <boost/core/no_exceptions_support.hpp>
 #include <boost/system/result.hpp>
 
 namespace boost::cobalt
@@ -101,27 +102,29 @@ struct as_result_t
       if constexpr (std::is_void_v<type>)
       {
         using res_t = system::result<type, std::exception_ptr>;
-        try
+        BOOST_TRY
         {
           aw_.await_resume();
           return res_t{system::in_place_value};
         }
-        catch (...)
+        BOOST_CATCH (...)
         {
           return res_t{system::in_place_error, std::current_exception()};
         }
+        BOOST_CATCH_END
       }
       else
       {
         using res_t = system::result<type, std::exception_ptr>;
-        try
+        BOOST_TRY
         {
           return res_t{system::in_place_value, aw_.await_resume()};
         }
-        catch (...)
+        BOOST_CATCH (...)
         {
           return res_t{system::in_place_error, std::current_exception()};
         }
+        BOOST_CATCH_END
       }
     }
   }
@@ -188,33 +191,46 @@ struct as_tuple_t
 
   auto await_resume()
   {
+    using type = decltype(aw_.await_resume());
     if constexpr (requires {aw_.await_resume(as_tuple_tag{});})
       return aw_.await_resume(as_tuple_tag{});
-    else
+    else if (noexcept(aw_.await_resume()))
     {
-      using type = decltype(aw_.await_resume());
       if constexpr (std::is_void_v<type>)
       {
-        try
+        aw_.await_resume();
+        return std::make_tuple();
+      }
+      else
+        return std::make_tuple(aw_.await_resume());
+
+    }
+    else
+    {
+      if constexpr (std::is_void_v<type>)
+      {
+        BOOST_TRY
         {
           aw_.await_resume();
           return std::make_tuple(std::exception_ptr());
         }
-        catch (...)
+        BOOST_CATCH (...)
         {
           return make_tuple_(std::current_exception());
         }
+        BOOST_CATCH_END
       }
       else
       {
-        try
+        BOOST_TRY
         {
           return make_tuple_(std::exception_ptr(), aw_.await_resume());
         }
-        catch (...)
+        BOOST_CATCH (...)
         {
           return make_tuple_(std::current_exception(), type());
         }
+        BOOST_CATCH_END
       }
     }
   }

@@ -74,10 +74,9 @@ struct detached_promise
   std::suspend_never final_suspend() noexcept {return {};}
 
   void return_void() {}
-  void unhandled_exception()
-  {
-    throw ;
-  }
+#if !defined(BOOST_NO_EXCEPTIONS)
+  void unhandled_exception() { throw ; }
+#endif
 };
 
 }
