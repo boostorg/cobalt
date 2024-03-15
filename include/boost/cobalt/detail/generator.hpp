@@ -104,26 +104,51 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
   {
     if (!lhs.done && !lhs.exception)
     {
-      reference = this;
+      *reference = this;
       lhs.exception = moved_from_exception();
     }
     lhs.done = true;
   }
 
+  generator_receiver& operator=(generator_receiver && lhs) noexcept
+  {
+    if (!done && *reference == this)
+      *reference = nullptr;
+
+    this->pushed_value = std::move(lhs.pushed_value);
+    exception  = std::move(std::move(lhs.exception));
+    done   = std::move(lhs.done);
+    result   = std::move(std::move(lhs.result));
+    result_buffer  = std::move(std::move(lhs.result_buffer));
+    awaited_from   = std::move(std::move(lhs.awaited_from));
+    yield_from   = std::move(std::move(lhs.yield_from));
+    lazy   = std::move(lhs.lazy);
+    reference = lhs.reference;
+    cancel_signal  = std::move(lhs.cancel_signal);
+
+    if (!lhs.done && !lhs.exception && *reference == &lhs)
+    {
+      *reference = this;
+      lhs.exception = moved_from_exception();
+    }
+    lhs.done = true;
+    return *this;
+  }
+
   ~generator_receiver()
   {
-    if (!done && reference == this)
-      reference = nullptr;
+    if (!done && *reference == this)
+      *reference = nullptr;
   }
 
   generator_receiver(generator_receiver * &reference, asio::cancellation_signal & cancel_signal)
-  : reference(reference), cancel_signal(cancel_signal)
+  : reference(&reference), cancel_signal(&cancel_signal)
   {
     reference = this;
   }
 
-  generator_receiver  * &reference;
-  asio::cancellation_signal & cancel_signal;
+  generator_receiver  **reference;
+  asio::cancellation_signal * cancel_signal;
 
   using yield_awaitable = generator_yield_awaitable<Yield, Push>;
 
@@ -185,7 +210,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 
       if constexpr (requires (Promise p) {p.get_cancellation_slot();})
         if ((cl = h.promise().get_cancellation_slot()).is_connected())
-          cl.emplace<forward_cancellation>(self->cancel_signal);
+          cl.emplace<forward_cancellation>(*self->cancel_signal);
 
       self->awaited_from.reset(h.address());
 

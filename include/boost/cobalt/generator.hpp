@@ -89,8 +89,8 @@ inline generator<Yield, Push>::operator bool() const
 template<typename Yield, typename Push >
 inline void generator<Yield, Push>::cancel(asio::cancellation_type ct)
 {
-  if (!receiver_.done && receiver_.reference == &receiver_)
-    receiver_.cancel_signal.emit(ct);
+  if (!receiver_.done && *receiver_.reference == &receiver_)
+    receiver_.cancel_signal->emit(ct);
 }
 
 template<typename Yield, typename Push >

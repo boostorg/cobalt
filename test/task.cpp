@@ -24,6 +24,7 @@
 #include <boost/core/ignore_unused.hpp>
 
 #include <new>
+#include <deque>
 
 using namespace boost;
 
@@ -45,8 +46,10 @@ cobalt::task<double> test2(int i)
 
 cobalt::task<int> test1()
 {
-    co_await test2(42);
-    co_await test2(42);
+    auto t = test2(42);
+    co_await t;
+    t = test2(42);
+    co_await t;
 
 
     co_await asio::post(co_await cobalt::this_coro::executor, cobalt::use_task);
@@ -312,5 +315,14 @@ CO_TEST_CASE(move_only)
   co_await task_move_only_test();
 }
 
+static_assert(std::is_move_assignable_v<cobalt::task<void>>);
+static_assert(std::is_move_assignable_v<cobalt::task<int>>);
+static_assert(std::is_move_constructible_v<cobalt::task<void>>);
+static_assert(std::is_move_constructible_v<cobalt::task<int>>);
+
+void foo(std::deque<boost::cobalt::task<void>> & session_promisses)
+{
+  session_promisses.erase(session_promisses.begin() + 1234);
+}
 
 BOOST_AUTO_TEST_SUITE_END();

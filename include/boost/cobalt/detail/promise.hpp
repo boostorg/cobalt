@@ -120,22 +120,43 @@ struct promise_receiver : promise_value_holder<T>
   {
     if (!done && !exception)
     {
-      reference = this;
+      *reference = this;
       lhs.exception = moved_from_exception();
     }
 
     lhs.done = true;
+  }
 
+  promise_receiver& operator=(promise_receiver && lhs) noexcept
+  {
+    if (!done && *reference == this)
+      *reference = nullptr;
+
+    promise_value_holder<T>::operator= (std::move(lhs));
+    exception = std::move(lhs.exception);
+    done = lhs.done;
+    awaited_from = std::move(lhs.awaited_from);
+    reference = lhs.reference;
+    cancel_signal = lhs.cancel_signal;
+
+    if (!done && !exception && *reference == &lhs)
+    {
+      *reference = this;
+      lhs.exception = moved_from_exception();
+    }
+
+    lhs.done = true;
+    return *this;
   }
 
   ~promise_receiver()
   {
-    if (!done && reference == this)
-      reference = nullptr;
+    if (!done && *reference == this)
+      *reference = nullptr;
   }
 
   promise_receiver(promise_receiver * &reference, asio::cancellation_signal & cancel_signal)
-      : reference(reference), cancel_signal(cancel_signal)
+      : reference(&reference), cancel_signal(&cancel_signal)
   {
     reference = this;
   }
@@ -176,7 +197,7 @@ struct promise_receiver : promise_value_holder<T>
 
       if constexpr (requires (Promise p) {p.get_cancellation_slot();})
         if ((cl = h.promise().get_cancellation_slot()).is_connected())
-          cl.emplace<forward_cancellation>(self->cancel_signal);
+          cl.emplace<forward_cancellation>(*self->cancel_signal);
 
       self->awaited_from.reset(h.address());
       return true;
@@ -232,8 +253,8 @@ struct promise_receiver : promise_value_holder<T>
     }
   };
 
-  promise_receiver  * &reference;
-  asio::cancellation_signal & cancel_signal;
+  promise_receiver  ** reference;
+  asio::cancellation_signal * cancel_signal;
 
   awaitable get_awaitable() {return awaitable{this};}
 

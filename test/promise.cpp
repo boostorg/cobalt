@@ -34,8 +34,10 @@ cobalt::promise<double> test2(int i)
 
 cobalt::promise<int> test1(asio::any_io_executor exec)
 {
-    co_await test2(42);
-    co_await test2(42);
+    auto t1 = test2(42);
+    co_await t1;
+    t1 = test2(42);
+    co_await t1;
 
     BOOST_CHECK(test2(42).get() == 42);
 
@@ -85,7 +87,7 @@ cobalt::promise<std::size_t> delay_r(asio::io_context &ctx, std::size_t ms,
 
 cobalt::promise<std::size_t> delay_r(asio::any_io_executor exec, std::size_t ms)
 {
-   auto tim = cobalt::use_op.as_default_on(asio::steady_timer(exec, std::chrono::milliseconds{ms}));
+  auto tim = cobalt::use_op.as_default_on(asio::steady_timer(exec, std::chrono::milliseconds{ms}));
   co_await tim.async_wait();
   co_return ms;
 }
@@ -158,5 +160,6 @@ CO_TEST_CASE(move_only)
 {
   co_await pro_move_only_test();
 }
+
 
 BOOST_AUTO_TEST_SUITE_END();

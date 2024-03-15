@@ -109,7 +109,7 @@ struct task_receiver : task_value_holder<T>
   }
 
   task_receiver() = default;
-  task_receiver(task_receiver && lhs)
+  task_receiver(task_receiver && lhs) noexcept
       : task_value_holder<T>(std::move(lhs)),
         exception(std::move(lhs.exception)), done(lhs.done), awaited_from(std::move(lhs.awaited_from)),
         promise(lhs.promise)
@@ -122,6 +122,34 @@ struct task_receiver : task_value_holder<T>
 
     lhs.done = true;
   }
+
+  task_receiver& operator=(task_receiver && lhs) noexcept
+  {
+    if (!done && promise && promise->receiver == this)
+    {
+      promise->receiver = nullptr;
+      if (!promise->started)
+        std::coroutine_handle<task_promise<T>>::from_promise(*promise).destroy();
+    }
+
+    task_value_holder<T>::operator=(std::move(lhs));
+
+    exception = std::move(lhs.exception);
+    done = lhs.done;
+    awaited_from = std::move(lhs.awaited_from);
+    promise = lhs.promise;
+
+
+    if (!done && !exception)
+    {
+      promise->receiver = this;
+      lhs.exception = moved_from_exception();
+    }
+
+    lhs.done = true;
+    return *this;
+  }
+
 
   ~task_receiver()
   {

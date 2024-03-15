@@ -43,9 +43,9 @@ CO_TEST_CASE(generator_int)
   while (g)
     BOOST_CHECK(i ++ == co_await g);
 
-
-
   BOOST_CHECK(i == 11);
+
+  g = gen();
 
   co_return ;
 }
