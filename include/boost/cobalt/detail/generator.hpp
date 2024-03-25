@@ -345,7 +345,7 @@ struct generator_promise
     this->reset_cancellation_source(signal.slot());
   }
 
-  std::suspend_never initial_suspend() {return {};}
+  std::suspend_never initial_suspend() noexcept {return {};}
 
   struct final_awaitable
   {

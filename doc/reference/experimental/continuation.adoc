@@ -1,0 +1,63 @@
+[#continuation]
+== cobalt/experimental/continuation.hpp
+
+WARNING: This is clearly undefined behaviour, since it does an explicit specialization of `std::coroutine_handle`. A paper to address this can be found here (https://isocpp.org/files/papers/P3203R0.html).
+
+This header provides low level support for creating a `std::coroutine_handle` from within a `boost::context::continuation`.
+
+
+[source,cpp]
+----
+template<cobalt::awaitable_type Aw>
+auto continuation_await(boost::context::continuation && f, Aw && aw)
+{
+    if (!aw.await_ready())
+    {
+        boost::cobalt::experimental::continuation_frame ff; // This must be on the continuation stack
+        f = std::move(f).resume_with(
+            [&](boost::context::continuation && f_) -> boost::context::continuation
+            {
+                ff.continuation() = std::move(f_);
+                std::coroutine_handle<boost::context::continuation> h(ff);
+
+                static_assert(std::is_void_v<decltype(aw.await_suspend(h)>,
+                              "This example only supports awaitables return `void` from await_suspend");
+                aw.await_suspend(h);
+                return {};
+            });
+    }
+
+    return aw.await_resume();
+}
+----
+
+=== Reference
+
+[source,cpp]
+----
+struct experimental::continuation_frame
+{
+        boost::context::continuation& continuation();
+  const boost::context::continuation& continuation() const;
+
+  continuation_frame(boost::context::continuation && continuation_ = {});
+};
+
+template<>
+struct std::coroutine_handle<boost::context::continuation>
+{
+  constexpr operator coroutine_handle<>() const noexcept;
+  constexpr explicit operator bool() const noexcept;
+
+  constexpr bool done() const noexcept:
+  void operator()() const noexcept;
+
+  void resume() const noexcept;
+  void destroy() const noexcept;
+
+  boost::context::continuation& promise() const noexcept;
+  constexpr void* address() const noexcept;
+  // construct if from a frame
+  coroutine_handle(boost::cobalt::experimental::continuation_frame & frame
+};
+----

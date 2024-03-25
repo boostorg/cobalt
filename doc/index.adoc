@@ -78,6 +78,12 @@ include::reference/error.adoc[]
 include::reference/config.adoc[]
 include::reference/leaf.adoc[]
 
+include::reference/experimental/context.adoc[]
+include::reference/experimental/fiber.adoc[]
+include::reference/experimental/continuation.adoc[]
+
+
+
 = In-Depth
 
 include::background/custom_executors.adoc[]

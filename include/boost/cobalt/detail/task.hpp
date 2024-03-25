@@ -322,7 +322,7 @@ struct task_promise
     }
   };
 
-  auto initial_suspend()
+  auto initial_suspend() noexcept
   {
 
     return initial_awaitable{this};

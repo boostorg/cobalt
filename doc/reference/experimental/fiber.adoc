@@ -1,0 +1,63 @@
+[#fiber]
+== cobalt/experimental/fiber.hpp
+
+WARNING: This is clearly undefined behaviour, since it does an explicit specialization of `std::coroutine_handle`. A paper to address this can be found here (https://isocpp.org/files/papers/P3203R0.html).
+
+This header provides low level support for creating a `std::coroutine_handle` from within a `boost::context::fiber`.
+
+
+[source,cpp]
+----
+template<cobalt::awaitable_type Aw>
+auto fiber_await(boost::context::fiber && f, Aw && aw)
+{
+    if (!aw.await_ready())
+    {
+        boost::cobalt::experimental::fiber_frame ff; // This must be on the fiber stack
+        f = std::move(f).resume_with(
+            [&](boost::context::fiber && f_) -> boost::context::fiber
+            {
+                ff.fiber() = std::move(f_);
+                std::coroutine_handle<boost::context::fiber> h(ff);
+
+                static_assert(std::is_void_v<decltype(aw.await_suspend(h)>,
+                              "This example only supports awaitables return `void` from await_suspend");
+                aw.await_suspend(h);
+                return {};
+            });
+    }
+
+    return aw.await_resume();
+}
+----
+
+=== Reference
+
+[source,cpp]
+----
+struct experimental::fiber_frame
+{
+        boost::context::fiber& fiber();
+  const boost::context::fiber& fiber() const;
+
+  fiber_frame(boost::context::fiber && fiber_ = {});
+};
+
+template<>
+struct std::coroutine_handle<boost::context::fiber>
+{
+  constexpr operator coroutine_handle<>() const noexcept;
+  constexpr explicit operator bool() const noexcept;
+
+  constexpr bool done() const noexcept:
+  void operator()() const noexcept;
+
+  void resume() const noexcept;
+  void destroy() const noexcept;
+
+  boost::context::fiber& promise() const noexcept;
+  constexpr void* address() const noexcept;
+  // construct if from a frame
+  coroutine_handle(boost::cobalt::experimental::fiber_frame & frame
+};
+----

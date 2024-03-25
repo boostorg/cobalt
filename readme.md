@@ -23,7 +23,7 @@ cobalt::main co_main(int argc, char ** argv)
 {
     // wrapper around asio::steady_timer
     asio::steady_timer tim{co_await cobalt::this_coro::executor};
-    dt.expires_after(std::chrono::milliseconds(100));
+    tim.expires_after(std::chrono::milliseconds(100));
 
     co_await tim.async_wait(cobalt::use_op);
     co_return 0;
@@ -40,7 +40,7 @@ Alternatively, [`run`](doc/reference/run.adoc) can be used manually.
 cobalt::task<int> main_func()
 {
     asio::steady_timer tim{co_await cobalt::this_coro::executor};
-    dt.expires_after(std::chrono::milliseconds(100));
+    tim.expires_after(std::chrono::milliseconds(100));
 
     co_await tim.async_wait(cobalt::use_op);
     co_return 0;
@@ -63,7 +63,7 @@ cobalt::promise<void> test()
 {
     printf("test-1\n");
     asio::steady_timer tim{co_await cobalt::this_coro::executor};
-    dt.expires_after(std::chrono::milliseconds(100));
+    tim.expires_after(std::chrono::milliseconds(100));
     co_await tim.async_wait(cobalt::use_op);
     printf("test-2\n");
 }
@@ -237,7 +237,7 @@ cobalt::main co_main(int argc, char ** argv)
 cobalt::promise<void> delay(int ms)
 {
     asio::steady_timer tim{co_await cobalt::this_coro::executor};
-    dt.expires_after(std::chrono::milliseconds(ms));
+    tim.expires_after(std::chrono::milliseconds(ms));
     co_await tim.async_wait(cobalt::use_op);
 }
 
