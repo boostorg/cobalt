@@ -312,5 +312,16 @@ CO_TEST_CASE(move_only)
   co_await task_move_only_test();
 }
 
+BOOST_AUTO_TEST_CASE(cancel_task_)
+{
+  asio::thread_pool ctx{1};
+  asio::cancellation_signal sig;
+  cobalt::spawn(ctx, test0(), asio::bind_cancellation_slot(sig.slot(), asio::detached));
+  sig.emit(asio::cancellation_type::all);
+  ctx.join();
+}
+
+
+
 
 BOOST_AUTO_TEST_SUITE_END();

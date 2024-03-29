@@ -108,6 +108,12 @@ struct task_receiver : task_value_holder<T>
     done = true;
   }
 
+  void cancel(asio::cancellation_type ct) const
+  {
+    if (!done)
+      promise->signal.emit(ct);
+  }
+
   task_receiver() = default;
   task_receiver(task_receiver && lhs)
       : task_value_holder<T>(std::move(lhs)),
