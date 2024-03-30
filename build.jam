@@ -7,19 +7,19 @@ import project ;
 
 project /boost/cobalt
     : common-requirements
-        <source>/boost/asio//boost_asio
-        <source>/boost/circular_buffer//boost_circular_buffer
-        <source>/boost/config//boost_config
-        <source>/boost/container//boost_container
-        <source>/boost/core//boost_core
-        <source>/boost/intrusive//boost_intrusive
-        <source>/boost/leaf//boost_leaf
-        <source>/boost/mp11//boost_mp11
-        <source>/boost/preprocessor//boost_preprocessor
-        <source>/boost/smart_ptr//boost_smart_ptr
-        <source>/boost/system//boost_system
-        <source>/boost/throw_exception//boost_throw_exception
-        <source>/boost/variant2//boost_variant2
+        <library>/boost/asio//boost_asio
+        <library>/boost/circular_buffer//boost_circular_buffer
+        <library>/boost/config//boost_config
+        <library>/boost/container//boost_container
+        <library>/boost/core//boost_core
+        <library>/boost/intrusive//boost_intrusive
+        <library>/boost/leaf//boost_leaf
+        <library>/boost/mp11//boost_mp11
+        <library>/boost/preprocessor//boost_preprocessor
+        <library>/boost/smart_ptr//boost_smart_ptr
+        <library>/boost/system//boost_system
+        <library>/boost/throw_exception//boost_throw_exception
+        <library>/boost/variant2//boost_variant2
         <include>include
     ;
 
