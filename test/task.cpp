@@ -312,6 +312,8 @@ CO_TEST_CASE(move_only)
   co_await task_move_only_test();
 }
 
+#if !defined(BOOST_COBALT_USE_IO_CONTEXT) && !defined(BOOST_COBALT_CUSTOM_EXECUTOR)
+
 BOOST_AUTO_TEST_CASE(cancel_task_)
 {
   asio::thread_pool ctx{1};
@@ -321,6 +323,7 @@ BOOST_AUTO_TEST_CASE(cancel_task_)
   ctx.join();
 }
 
+#endif
 
 
 
