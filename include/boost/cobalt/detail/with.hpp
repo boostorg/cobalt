@@ -79,7 +79,7 @@ struct with_impl<T>::promise_type
     e = std::current_exception();
   }
 
-  std::suspend_always initial_suspend() {return {};}
+  std::suspend_always initial_suspend() noexcept {return {};}
 
   struct final_awaitable
   {
