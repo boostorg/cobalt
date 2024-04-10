@@ -39,11 +39,15 @@ struct async_initiate_spawn
 #else
     auto alloc = asio::get_associated_allocator(h);
 #endif
-    auto recs = allocate_unique<detail::task_receiver<T>>(alloc, std::move(rec));
+    auto recs = std::allocate_shared<detail::task_receiver<T>>(alloc, std::move(rec));
 
     auto sl = asio::get_associated_cancellation_slot(h);
     if (sl.is_connected())
-      sl.template emplace<detail::forward_dispatch_cancellation>(recs->promise->signal, exec);
+      sl.assign(
+          [exec, recs](asio::cancellation_type ct)
+          {
+            asio::dispatch(exec, [recs, ct] {recs->cancel(ct);});
+          });
 
     auto p = recs.get();
 
@@ -97,7 +101,7 @@ struct async_initiate_spawn
 #else
     auto alloc = asio::get_associated_allocator(h);
 #endif
-    auto recs = allocate_unique<detail::task_receiver<void>>(alloc, std::move(a.receiver_));
+    auto recs = std::allocate_shared<detail::task_receiver<void>>(alloc, std::move(a.receiver_));
 
     if (recs->done)
       return asio::dispatch(asio::get_associated_immediate_executor(h, exec),
@@ -105,7 +109,11 @@ struct async_initiate_spawn
 
     auto sl = asio::get_associated_cancellation_slot(h);
     if (sl.is_connected())
-      sl.template emplace<detail::forward_dispatch_cancellation>(recs->promise->signal, exec);
+      sl.assign(
+          [exec, recs](asio::cancellation_type ct)
+          {
+            asio::dispatch(exec, [recs, ct] {recs->cancel(ct);});
+          });
 
     auto p = recs.get();
 

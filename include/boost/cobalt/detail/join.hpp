@@ -261,16 +261,17 @@ struct join_variadic_impl
       using rt = system::result<t, std::exception_ptr>;
       if (error)
         return rt(system::in_place_error, error);
+
       if constexpr(!all_void)
         return mp11::tuple_transform(
             []<typename T>(std::optional<T> & var)
-                -> T
+                -> rt
             {
               BOOST_ASSERT(var.has_value());
               return std::move(*var);
             }, result);
       else
-        return system::in_place_value;
+        return rt{system::in_place_value};
     }
   };
   awaitable operator co_await() &&
