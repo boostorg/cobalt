@@ -47,6 +47,11 @@ CO_TEST_CASE(generator_int)
 
   BOOST_CHECK(i == 11);
 
+  g = gen();
+  BOOST_CHECK(g);
+  while (g)
+    co_await g;
+
   co_return ;
 }
 
