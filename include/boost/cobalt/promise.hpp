@@ -87,10 +87,11 @@ template<typename T>
 inline
 promise<T>& promise<T>::operator=(promise && lhs) noexcept
 {
-    if (attached_)
+  if (attached_)
     cancel();
   receiver_ = std::move(lhs.receiver_);
   attached_ = std::exchange(lhs.attached_, false);
+  return *this;
 }
 
 template<typename T>
@@ -106,8 +107,8 @@ template<typename T>
 inline
 void promise<T>::cancel(asio::cancellation_type ct)
 {
-  if (!receiver_.done && receiver_.reference == &receiver_)
-    receiver_.cancel_signal.emit(ct);
+  if (!receiver_.done && *receiver_.reference == &receiver_)
+    receiver_.cancel_signal->emit(ct);
 }
 
 template<typename T>
