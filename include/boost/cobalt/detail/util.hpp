@@ -8,6 +8,7 @@
 #include <boost/cobalt/config.hpp>
 #include <boost/cobalt/this_thread.hpp>
 
+#include <boost/core/no_exceptions_support.hpp>
 #include <boost/system/result.hpp>
 #include <boost/variant2/variant.hpp>
 
@@ -104,7 +105,7 @@ template<typename Awaitable>
 auto get_resume_result(Awaitable & aw) -> system::result<decltype(aw.await_resume()), std::exception_ptr>
 {
   using type = decltype(aw.await_resume());
-  try
+  BOOST_TRY
   {
     if constexpr (std::is_void_v<type>)
     {
@@ -114,10 +115,11 @@ auto get_resume_result(Awaitable & aw) -> system::result<decltype(aw.await_resum
     else
       return aw.await_resume();
   }
-  catch(...)
+  BOOST_CATCH(...)
   {
     return std::current_exception();
   }
+  BOOST_CATCH_END
 }
 
 #if BOOST_COBALT_NO_SELF_DELETE

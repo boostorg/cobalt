@@ -61,12 +61,14 @@ struct main_promise : signal_helper,
         return my_resource->deallocate(raw, size);
     }
 #endif
-    std::suspend_always initial_suspend() {return {};}
+    std::suspend_always initial_suspend() noexcept {return {};}
 
     BOOST_COBALT_DECL
     auto final_suspend() noexcept -> std::suspend_never;
 
+#if !defined(BOOST_NO_EXCEPTIONS)
     void unhandled_exception() { throw ; }
+#endif
     void return_value(int res = 0)
     {
         if (result)

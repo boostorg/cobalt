@@ -97,8 +97,10 @@ jobs:
           cp -r $GITHUB_WORKSPACE/* libs/$LIBRARY
           git submodule update --init tools/boostdep
           python3 tools/boostdep/depinst/depinst.py --git_args "--jobs 3" $LIBRARY
+          
           git submodule update --init libs/test
-          # Temporary workaround
+          git submodule update --init libs/callable_traits
+          git submodule update --init libs/context
           git submodule update --init libs/chrono
           git submodule update --init libs/ratio
           
@@ -165,6 +167,8 @@ jobs:
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" %LIBRARY%
           git submodule update --init libs/test
           # temporary workaround, 
+          git submodule update --init libs/callable_traits
+          git submodule update --init libs/context
           git submodule update --init libs/chrono
           git submodule update --init libs/ratio
           cmd /c bootstrap
@@ -221,6 +225,8 @@ jobs:
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" $LIBRARY
           git submodule update --init libs/test
           # Temporary workaround
+          git submodule update --init libs/callable_traits
+          git submodule update --init libs/context
           git submodule update --init libs/chrono
           git submodule update --init libs/ratio
 
@@ -277,6 +283,8 @@ jobs:
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" $LIBRARY
           git submodule update --init libs/test
           # Temporary workaround
+          git submodule update --init libs/callable_traits
+          git submodule update --init libs/context
           git submodule update --init libs/chrono
           git submodule update --init libs/ratio
 
@@ -350,6 +358,8 @@ jobs:
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" $LIBRARY
           git submodule update --init libs/test
           # Temporary workaround
+          git submodule update --init libs/callable_traits
+          git submodule update --init libs/context
           git submodule update --init libs/chrono
           git submodule update --init libs/ratio
 
@@ -403,6 +413,8 @@ jobs:
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" %LIBRARY%
           git submodule update --init libs/test
           # Temporary workaround
+          git submodule update --init libs/callable_traits
+          git submodule update --init libs/context
           git submodule update --init libs/chrono
           git submodule update --init libs/ratio
 
@@ -458,6 +470,8 @@ jobs:
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" %LIBRARY%
           git submodule update --init libs/test
           # Temporary workaround
+          git submodule update --init libs/callable_traits
+          git submodule update --init libs/context
           git submodule update --init libs/chrono
           git submodule update --init libs/ratio
 
@@ -531,8 +545,10 @@ jobs:
           xcopy /s /e /q %GITHUB_WORKSPACE% libs\%LIBRARY%\
           git submodule update --init tools/boostdep
           python tools/boostdep/depinst/depinst.py --git_args "--jobs 3" %LIBRARY%
+          
           git submodule update --init libs/test
-          # Temporary workaround
+          git submodule update --init libs/callable_traits
+          git submodule update --init libs/context
           git submodule update --init libs/chrono
           git submodule update --init libs/ratio
 

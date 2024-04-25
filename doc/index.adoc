@@ -78,6 +78,9 @@ include::reference/error.adoc[]
 include::reference/config.adoc[]
 include::reference/leaf.adoc[]
 
+include::reference/experimental/context.adoc[]
+
+
 = In-Depth
 
 include::background/custom_executors.adoc[]
