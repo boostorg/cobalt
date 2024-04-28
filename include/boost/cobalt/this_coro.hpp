@@ -363,13 +363,14 @@ private:
 template<typename AllocatorType>
 void *allocate_coroutine(const std::size_t size, AllocatorType alloc_)
 {
-    using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<unsigned char>;
+    using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<std::max_align_t>;
     alloc_type alloc{alloc_};
 
     const std::size_t align_needed = size % alignof(alloc_type);
     const std::size_t align_offset = align_needed != 0 ? alignof(alloc_type) - align_needed : 0ull;
     const std::size_t alloc_size = size + sizeof(alloc_type) + align_offset;
-    const auto raw = std::allocator_traits<alloc_type>::allocate(alloc, alloc_size);
+    const std::size_t alloc_n = (alloc_size / alignof(std::max_align_t)) + ((alloc_size % alignof(std::max_align_t)) > 0 ? 1 : 0);
+    const auto raw = reinterpret_cast<char*>(std::allocator_traits<alloc_type>::allocate(alloc, alloc_n));
     new(raw + size + align_offset) alloc_type(std::move(alloc));
 
     return raw;
@@ -379,18 +380,19 @@ void *allocate_coroutine(const std::size_t size, AllocatorType alloc_)
 template<typename AllocatorType>
 void deallocate_coroutine(void *raw_, const std::size_t size)
 {
-    using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<unsigned char>;
+    using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<std::max_align_t>;
     const auto raw = static_cast<unsigned char *>(raw_);
 
     const std::size_t align_needed = size % alignof(alloc_type);
     const std::size_t align_offset = align_needed != 0 ? alignof(alloc_type) - align_needed : 0ull;
     const std::size_t alloc_size = size + sizeof(alloc_type) + align_offset;
+    const std::size_t alloc_n = (alloc_size / alignof(std::max_align_t)) + ((alloc_size % alignof(std::max_align_t)) > 0 ? 1 : 0);
     auto alloc_p = reinterpret_cast<alloc_type *>(raw + size + align_offset);
 
     auto alloc = std::move(*alloc_p);
     alloc_p->~alloc_type();
     using size_type = typename std::allocator_traits<alloc_type>::size_type;
-    std::allocator_traits<alloc_type>::deallocate(alloc, raw, static_cast<size_type>(alloc_size));
+    std::allocator_traits<alloc_type>::deallocate(alloc, static_cast<std::max_align_t*>(raw_), static_cast<size_type>(alloc_n));
 }
 
 
