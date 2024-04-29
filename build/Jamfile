@@ -50,7 +50,7 @@ lib boost_cobalt
    : cobalt_sources
    : requirements <define>BOOST_COBALT_SOURCE=1
      <link>shared:<define>BOOST_COBALT_DYN_LINK=1
-     [ requires 
+     [ requires
         cxx20_hdr_concepts
      ]
      <boost.cobalt.pmr>boost-container:<library>/boost/container//boost_container
@@ -64,6 +64,7 @@ lib boost_cobalt
    : usage-requirements
      <boost.cobalt.pmr>boost-container:<library>/boost/container//boost_container
      <link>shared:<define>BOOST_COBALT_DYN_LINK=1
+     <define>BOOST_COBALT_NO_LINK=1
       [ check-target-builds
           $(config-binding:D)//cpp_lib_memory_resource
           cpp_lib_memory_resource
