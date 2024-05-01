@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(unwind)
 
 cobalt::promise<int> return_(std::size_t ms)
 {
-  co_return 1234u;
+  return cobalt::noop(1234);
 }
 
 cobalt::promise<int> return_(std::size_t ms, asio::executor_arg_t,

@@ -34,11 +34,12 @@ namespace
 
 cobalt::task<void> test0()
 {
-    co_return;
+    return cobalt::noop<void>();
 }
 
 cobalt::task<double> test2(int i)
 {
+    co_await cobalt::noop();
     co_await test0();
     co_return i;
 }

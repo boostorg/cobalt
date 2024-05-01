@@ -47,6 +47,7 @@ struct [[nodiscard]] generator
   generator(const generator &) = delete;
   generator& operator=(const generator &) = delete;
 
+  constexpr generator(noop<Yield> n) : receiver_(std::move(n)){}
 
  private:
   template<typename, typename>
