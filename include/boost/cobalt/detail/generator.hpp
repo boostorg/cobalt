@@ -15,6 +15,7 @@
 #include <boost/cobalt/detail/this_thread.hpp>
 #include <boost/cobalt/unique_handle.hpp>
 #include <boost/cobalt/detail/wrapper.hpp>
+#include <boost/cobalt/noop.hpp>
 
 #include <boost/asio/bind_allocator.hpp>
 #include <boost/core/exchange.hpp>
@@ -91,6 +92,8 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
   bool lazy = false;
 
   bool ready() { return exception || result || done; }
+
+  generator_receiver(noop<Yield> n) : result(std::move(n.value)), done(true) {}
 
   generator_receiver() = default;
   generator_receiver(generator_receiver && lhs)

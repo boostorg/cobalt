@@ -12,6 +12,7 @@
 #include <boost/cobalt/detail/forward_cancellation.hpp>
 #include <boost/cobalt/detail/wrapper.hpp>
 #include <boost/cobalt/detail/this_thread.hpp>
+#include <boost/cobalt/noop.hpp>
 #include <boost/cobalt/unique_handle.hpp>
 
 #include <boost/asio/cancellation_signal.hpp>
@@ -65,6 +66,8 @@ struct promise_value_holder
     result.emplace(ret);
     static_cast<promise_receiver<T>*>(this)->set_done();
   }
+  constexpr promise_value_holder() = default;
+  constexpr promise_value_holder(noop<T> value) noexcept(std::is_nothrow_move_constructible_v<T>) : result(std::move(value.value)) {}
 
 };
 
@@ -79,6 +82,9 @@ struct promise_value_holder<void>
   }
 
   inline void return_void();
+
+  constexpr promise_value_holder() = default;
+  constexpr promise_value_holder(noop<void>) {}
 };
 
 
@@ -113,6 +119,7 @@ struct promise_receiver : promise_value_holder<T>
   }
 
   promise_receiver() = default;
+  promise_receiver(noop<T> value) : promise_value_holder<T>(std::move(value)), done(true) {}
   promise_receiver(promise_receiver && lhs) noexcept
       : promise_value_holder<T>(std::move(lhs)),
         exception(std::move(lhs.exception)), done(lhs.done), awaited_from(std::move(lhs.awaited_from)),
