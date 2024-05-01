@@ -34,6 +34,8 @@ struct [[nodiscard]] task
 
     using promise_type = detail::task_promise<Return>;
 
+    constexpr task(noop<Return> n) : receiver_(std::move(n)){}
+
  private:
     template<typename>
     friend struct detail::task_promise;
