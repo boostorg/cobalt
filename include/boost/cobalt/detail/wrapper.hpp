@@ -40,11 +40,18 @@ struct partial_promise_base
       // clang: 96 8 16
       return allocate_coroutine(size, asio::get_associated_allocator(token));
     }
-
+#if defined(__cpp_sized_deallocation)
     void operator delete(void * raw, const std::size_t size)
     {
       deallocate_coroutine<Allocator>(raw, size);
     }
+#else
+  void operator delete(void * raw)
+  {
+    deallocate_coroutine<Allocator>(raw);
+  }
+
+#endif
 
 };
 
