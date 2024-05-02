@@ -54,6 +54,7 @@ jobs:
             cxxstd: "20,2b"
             os: macos-13
             stdlib: libc++
+            cobalt_pmr: boost-container
 
     runs-on: ${{matrix.os}}
     container: ${{matrix.container}}
@@ -187,12 +188,16 @@ jobs:
         include:
           - os: ubuntu-22.04
             shared: OFF
+            boost-container: 0
           - os: ubuntu-22.04
             shared: ON
+            boost-container: 0
           - os: macos-13
             shared: OFF
+            boost-container: 1
           - os: macos-13
             shared: ON
+            boost-container: 1
 
     runs-on: ${{matrix.os}}
 
@@ -234,7 +239,7 @@ jobs:
         run: |
           cd ../boost-root/libs/$LIBRARY/test/cmake_subdir_test
           mkdir __build__ && cd __build__
-          cmake -DBUILD_SHARED_LIBS=${{matrix.shared}} ..
+          cmake -DBUILD_SHARED_LIBS=${{matrix.shared}} -DBOOST_COBALT_USE_BOOST_CONTAINER=${{matrix.boost-container}}  ..
           cmake --build .
           ctest --output-on-failure --no-tests=error
 
@@ -245,12 +250,16 @@ jobs:
         include:
           - os: ubuntu-22.04
             shared: OFF
+            boost-container: 0
           - os: ubuntu-22.04
             shared: ON
+            boost-container: 0
           - os: macos-13
             shared: OFF
+            boost-container: 1
           - os: macos-13
             shared: ON
+            boost-container: 1
 
     runs-on: ${{matrix.os}}
 
@@ -293,7 +302,7 @@ jobs:
         run: |
           cd ../boost-root
           mkdir __build__ && cd __build__
-          cmake -DBOOST_INCLUDE_LIBRARIES=$LIBRARY -DCMAKE_INSTALL_PREFIX=~/.local -DBUILD_SHARED_LIBS=${{matrix.shared}} ..
+          cmake -DBOOST_INCLUDE_LIBRARIES=$LIBRARY -DCMAKE_INSTALL_PREFIX=~/.local -DBUILD_SHARED_LIBS=${{matrix.shared}} -DBOOST_COBALT_USE_BOOST_CONTAINER=${{matrix.boost-container}}  ..
 
       - name: Build
         run: |
@@ -320,12 +329,16 @@ jobs:
         include:
           - os: ubuntu-22.04
             shared: OFF
+            boost-container: 0
           - os: ubuntu-22.04
             shared: ON
+            boost-container: 0
           - os: macos-13
             shared: OFF
+            boost-container: 1
           - os: macos-13
             shared: ON
+            boost-container: 1
 
     runs-on: ${{matrix.os}}
 
@@ -367,7 +380,7 @@ jobs:
         run: |
           cd ../boost-root
           mkdir __build__ && cd __build__
-          cmake -DBOOST_INCLUDE_LIBRARIES=$LIBRARY -DBUILD_TESTING=ON -DBUILD_SHARED_LIBS=${{matrix.shared}} ..
+          cmake -DBOOST_INCLUDE_LIBRARIES=$LIBRARY -DBUILD_TESTING=ON -DBOOST_COBALT_USE_BOOST_CONTAINER=${{matrix.boost-container}} -DBUILD_SHARED_LIBS=${{matrix.shared}} ..
 
       - name: Build tests
         run: |
