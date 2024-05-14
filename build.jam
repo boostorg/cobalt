@@ -10,9 +10,11 @@ import project ;
 project /boost/cobalt
     : common-requirements
         <library>/boost/asio//boost_asio
+        <library>/boost/callable_traits//boost_callable_traits
         <library>/boost/circular_buffer//boost_circular_buffer
         <library>/boost/config//boost_config
         <library>/boost/container//boost_container
+        <library>/boost/context//boost_context
         <library>/boost/core//boost_core
         <library>/boost/intrusive//boost_intrusive
         <library>/boost/leaf//boost_leaf
