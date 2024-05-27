@@ -16,6 +16,7 @@
 
 #include "test.hpp"
 #include <boost/test/unit_test.hpp>
+#include <any>
 
 namespace cobalt = boost::cobalt;
 
@@ -316,5 +317,13 @@ CO_TEST_CASE(unique)
   BOOST_CHECK(p == nullptr);
   BOOST_CHECK(p2.get() == pi);
 }
+
+CO_TEST_CASE(any)
+{
+  cobalt::channel<std::any> c{1u};
+  co_return ;
+}
+
+
 
 }
