@@ -22,7 +22,7 @@ inline channel<T>::channel(
     std::size_t limit,
     executor executor,
     pmr::memory_resource * resource)
-    : buffer_(limit, resource), executor_(executor) {}
+    : buffer_(limit, pmr::polymorphic_allocator<T>(resource)), executor_(executor) {}
 #else
 template<typename T>
 inline channel<T>::channel(
