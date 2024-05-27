@@ -287,7 +287,34 @@ CO_TEST_CASE(reader)
 
 }
 
-
 }
 
+
 BOOST_AUTO_TEST_SUITE_END();
+
+namespace boost::cobalt
+{
+
+struct move_only
+{
+  move_only() {}
+  move_only(move_only &&) {}
+  move_only& operator=(move_only &&) {return * this;}
+};
+
+template struct channel<move_only>;
+
+CO_TEST_CASE(unique)
+{
+  std::unique_ptr<int> p{new int(42)};
+  auto pi = p.get();
+  cobalt::channel<std::unique_ptr<int>> c{1u};
+
+  co_await c.write(std::move(p));
+  auto p2 = co_await c.read();
+
+  BOOST_CHECK(p == nullptr);
+  BOOST_CHECK(p2.get() == pi);
+}
+
+}
