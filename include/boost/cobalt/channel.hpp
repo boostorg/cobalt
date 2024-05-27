@@ -99,7 +99,11 @@ struct channel
   struct write_op : intrusive::list_base_hook<intrusive::link_mode<intrusive::auto_unlink> >
   {
     channel * chn;
-    variant2::variant<T*, const T*> ref;
+    using ref_t = std::conditional_t<
+        std::is_copy_constructible_v<T>,
+        variant2::variant<T*, const T*>,
+        T*>;
+    ref_t ref;
     boost::source_location loc;
     bool cancelled = false, direct = false;
     asio::cancellation_slot cancel_slot{};
@@ -131,10 +135,12 @@ struct channel
  public:
   read_op   read(const boost::source_location & loc = BOOST_CURRENT_LOCATION)  {return  read_op{{}, this, loc}; }
   write_op write(const T  && value, const boost::source_location & loc = BOOST_CURRENT_LOCATION)
+    requires std::is_copy_constructible_v<T>
   {
     return write_op{{}, this, &value, loc};
   }
   write_op write(const T  &  value, const boost::source_location & loc = BOOST_CURRENT_LOCATION)
+    requires std::is_copy_constructible_v<T>
   {
     return write_op{{}, this, &value, loc};
   }
