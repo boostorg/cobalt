@@ -134,20 +134,37 @@ struct channel
   boost::intrusive::list<write_op, intrusive::constant_time_size<false> > write_queue_;
  public:
   read_op   read(const boost::source_location & loc = BOOST_CURRENT_LOCATION)  {return  read_op{{}, this, loc}; }
+
+#if defined(BOOST_WINDOWS_API)
+  BOOST_NOINLINE
+#endif
   write_op write(const T  && value, const boost::source_location & loc = BOOST_CURRENT_LOCATION)
     requires std::is_copy_constructible_v<T>
   {
     return write_op{{}, this, &value, loc};
   }
+
+#if defined(BOOST_WINDOWS_API)
+  BOOST_NOINLINE
+#endif
   write_op write(const T  &  value, const boost::source_location & loc = BOOST_CURRENT_LOCATION)
     requires std::is_copy_constructible_v<T>
   {
     return write_op{{}, this, &value, loc};
   }
+
+
+#if defined(BOOST_WINDOWS_API)
+  BOOST_NOINLINE
+#endif
   write_op write(      T &&  value, const boost::source_location & loc = BOOST_CURRENT_LOCATION)
   {
     return write_op{{}, this, &value, loc};
   }
+
+#if defined(BOOST_WINDOWS_API)
+  BOOST_NOINLINE
+#endif
   write_op write(      T  &  value, const boost::source_location & loc = BOOST_CURRENT_LOCATION)
   {
     return write_op{{}, this, &value, loc};
