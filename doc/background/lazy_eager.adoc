@@ -37,8 +37,8 @@ Coro Done
 resumed twice
 ----
 
-
-[mermaid]
+ifdef::generate-diagram[]
+[mermaid, target=lazy_eager1]
 ----
 sequenceDiagram
     participant main;
@@ -54,6 +54,11 @@ sequenceDiagram
     lazy->>main: co_return
     Note left of main: "resumed twice"
 ----
+endif::[]
+
+ifndef::generate-diagram[]
+image::{docdir}/images/lazy_eager1.png[]
+endif::[]
 
 
 Whereas an eager coro would look like this:
@@ -90,8 +95,8 @@ Coro Done
 ----
 
 
-
-[mermaid]
+ifdef::generate-diagram[]
+[mermaid, target=lazy_eager2]
 ----
 sequenceDiagram
     participant main;
@@ -104,5 +109,9 @@ sequenceDiagram
     Note right of lazy: "Coro done"
     lazy->>main: co_return
     Note left of main: "resumed once"
-
 ----
+endif::[]
+
+ifndef::generate-diagram[]
+image::{docdir}/images/lazy_eager2.png[]
+endif::[]
