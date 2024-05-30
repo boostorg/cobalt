@@ -296,15 +296,6 @@ BOOST_AUTO_TEST_SUITE_END();
 namespace boost::cobalt
 {
 
-struct move_only
-{
-  move_only() {}
-  move_only(move_only &&) {}
-  move_only& operator=(move_only &&) {return * this;}
-};
-
-template struct channel<move_only>;
-
 CO_TEST_CASE(unique)
 {
   std::unique_ptr<int> p{new int(42)};
