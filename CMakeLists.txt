@@ -100,7 +100,7 @@ else()
 
     file(GLOB_RECURSE ADOC_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.adoc)
     add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/doc/index.html
-                       COMMAND asciidoctor ${CMAKE_CURRENT_SOURCE_DIR}/doc/index.adoc --require asciidoctor-diagram --require asciidoctor-multipage -b multipage_html5  -o ${CMAKE_CURRENT_BINARY_DIR}/doc/index.html
+                       COMMAND asciidoctor ${CMAKE_CURRENT_SOURCE_DIR}/doc/index.adoc --require asciidoctor-diagram --require asciidoctor-multipage -b multipage_html5 -a generate-diagram -o ${CMAKE_CURRENT_BINARY_DIR}/doc/index.html
                        DEPENDS ${ADOC_FILES})
 
     add_custom_target(boost_cobalt_doc DEPENDS  ${CMAKE_CURRENT_BINARY_DIR}/doc/index.html)
