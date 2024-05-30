@@ -30,7 +30,8 @@ main()
     bar()
 ----
 
-[mermaid]
+ifdef::generate-diagram[]
+[mermaid, target=stackless1]
 ----
 sequenceDiagram
     main->>+foo: call
@@ -38,6 +39,11 @@ sequenceDiagram
     bar->>-foo: return
     foo->>-main: return
 ----
+endif::[]
+
+ifndef::generate-diagram[]
+image::{docdir}/images/stackless1.png[]
+endif::[]
 
 Coroutines can be implemented a stackful, which means that it allocates a fixes chunk of memory and stacks function frames similar to a thread.
 C++20 coroutines are stackless, i.e. they only allocate their own frame and use the callers stack on resumption. Using our previous example:
@@ -75,7 +81,9 @@ main()
   f$example()
 ----
 
-[mermaid]
+
+ifdef::generate-diagram[]
+[mermaid, target=stackless2]
 ----
 sequenceDiagram
     participant main
@@ -89,5 +97,10 @@ sequenceDiagram
     main-->>example: resume
     example->>-main: co_return
 ----
+endif::[]
+
+ifndef::generate-diagram[]
+image::{docdir}/images/stackless2.png[]
+endif::[]
 
 The same applies if a coroutine gets moved accross threads.

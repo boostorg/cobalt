@@ -4,7 +4,7 @@
 
 import asciidoctor ;
 
-html index.html : index.adoc : <flags>"-r asciidoctor-diagram" ;
+html index.html : index.adoc  ;
 
 install html_ : index.html : <location>html ;
 
