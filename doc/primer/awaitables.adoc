@@ -19,8 +19,8 @@ NOTE: Type will be implicitly converted into an awaitable if there is an `operat
 This documentation will use `awaitable` to include these types,
 and "actual_awaitable" to refer to type conforming to the above prototype.
 
-
-[mermaid]
+ifdef::generate-diagram[]
+[mermaid, target=awaitables]
 ----
 flowchart TD
     aw{await_ready?}
@@ -28,6 +28,11 @@ flowchart TD
     aw -->|false| as[await_suspend]
     as -->|Resume| ar
 ----
+endif::[]
+
+ifndef::generate-diagram[]
+image::{docdir}/images/awaitables.png[]
+endif::[]
 
 In a `co_await` expression the waiting coroutine will first invoke
 `await_ready` to check if the coroutine needs to suspend.

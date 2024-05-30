@@ -16,6 +16,7 @@
 
 #include "test.hpp"
 #include <boost/test/unit_test.hpp>
+#include <any>
 
 namespace cobalt = boost::cobalt;
 
@@ -287,7 +288,33 @@ CO_TEST_CASE(reader)
 
 }
 
-
 }
 
+
 BOOST_AUTO_TEST_SUITE_END();
+
+namespace boost::cobalt
+{
+
+CO_TEST_CASE(unique)
+{
+  std::unique_ptr<int> p{new int(42)};
+  auto pi = p.get();
+  cobalt::channel<std::unique_ptr<int>> c{1u};
+
+  co_await c.write(std::move(p));
+  auto p2 = co_await c.read();
+
+  BOOST_CHECK(p == nullptr);
+  BOOST_CHECK(p2.get() == pi);
+}
+
+CO_TEST_CASE(any)
+{
+  cobalt::channel<std::any> c{1u};
+  co_return ;
+}
+
+
+
+}

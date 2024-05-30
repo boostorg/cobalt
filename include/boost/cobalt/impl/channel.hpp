@@ -22,7 +22,7 @@ inline channel<T>::channel(
     std::size_t limit,
     executor executor,
     pmr::memory_resource * resource)
-    : buffer_(limit, resource), executor_(executor) {}
+    : buffer_(limit, pmr::polymorphic_allocator<T>(resource)), executor_(executor) {}
 #else
 template<typename T>
 inline channel<T>::channel(
@@ -118,10 +118,15 @@ std::coroutine_handle<void> channel<T>::read_op::await_suspend(std::coroutine_ha
     auto & op = chn->write_queue_.front();
     op.transactional_unlink();
     op.direct = true;
-    if (op.ref.index() == 0)
-      direct = std::move(*variant2::get<0>(op.ref));
+    if constexpr (std::is_copy_constructible_v<T>)
+    {
+      if (op.ref.index() == 0)
+        direct = std::move(*variant2::get<0>(op.ref));
+      else
+        direct = *variant2::get<1>(op.ref);
+    }
     else
-      direct = *variant2::get<1>(op.ref);
+      direct = std::move(*op.ref);
     BOOST_ASSERT(op.awaited_from);
     asio::post(chn->executor_, std::move(awaited_from));
     return op.awaited_from.release();
@@ -171,7 +176,7 @@ system::result<T> channel<T>::read_op::await_resume(const struct as_result_tag &
       asio::post(chn->executor_, std::move(op.awaited_from));
     }
   }
-  return {system::in_place_value, value};
+  return {system::in_place_value, std::move(value)};
 }
 
 template<typename T>
@@ -213,10 +218,15 @@ std::coroutine_handle<void> channel<T>::write_op::await_suspend(std::coroutine_h
     cancel_slot.clear();
     auto & op = chn->read_queue_.front();
     op.transactional_unlink();
-    if (ref.index() == 0)
-      op.direct = std::move(*variant2::get<0>(ref));
+    if constexpr (std::is_copy_constructible_v<T>)
+    {
+      if (ref.index() == 0)
+        op.direct.emplace(std::move(*variant2::get<0>(ref)));
+      else
+        op.direct.emplace(*variant2::get<1>(ref));
+    }
     else
-      op.direct = *variant2::get<1>(ref);
+      op.direct.emplace(std::move(*ref));
 
     BOOST_ASSERT(op.awaited_from);
     direct = true;
@@ -250,10 +260,15 @@ system::result<void>  channel<T>::write_op::await_resume(const struct as_result_
   if (!direct)
   {
     BOOST_ASSERT(!chn->buffer_.full());
-    if (ref.index() == 0)
-      chn->buffer_.push_back(std::move(*variant2::get<0>(ref)));
+    if constexpr (std::is_copy_constructible_v<T>)
+    {
+      if (ref.index() == 0)
+        chn->buffer_.push_back(std::move(*variant2::get<0>(ref)));
+      else
+        chn->buffer_.push_back(*variant2::get<1>(ref));
+    }
     else
-      chn->buffer_.push_back(*variant2::get<1>(ref));
+      chn->buffer_.push_back(std::move(*ref));
   }
 
   if (!chn->read_queue_.empty())

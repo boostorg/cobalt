@@ -33,7 +33,9 @@ Which will generate the following output
  In coro 3
  In main 4
 
-[mermaid]
+
+ifdef::generate-diagram[]
+[mermaid, target=generators1]
 ----
 sequenceDiagram
     participant main;
@@ -47,6 +49,11 @@ sequenceDiagram
     example->>main: co_return 3
     Note left of main: "In main 4"
 ----
+endif::[]
+
+ifndef::generate-diagram[]
+image::{docdir}/images/generators1.png[]
+endif::[]
 
 Values can be pushed into the generator, when `Push` (the second template parameter) is set to non-void:
 
@@ -117,7 +124,8 @@ Which will generate the following output
  In coro 3
  In main 4
 
-[mermaid]
+ifdef::generate-diagram[]
+[mermaid, target=generators2]
 ----
 sequenceDiagram
     participant main;
@@ -131,6 +139,11 @@ sequenceDiagram
     example->>main: co_return 3
     Note left of main: "In main 4"
 ----
+endif::[]
+
+ifndef::generate-diagram[]
+image::{docdir}/images/generators2.png[]
+endif::[]
 
 [#generator-executor]
 === Executor
