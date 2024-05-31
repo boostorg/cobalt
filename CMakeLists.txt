@@ -50,7 +50,6 @@ if (NOT BOOST_COBALT_IS_ROOT)
             Boost::callable_traits
             Boost::circular_buffer
             Boost::config
-            Boost::container
             Boost::core
             Boost::intrusive
             Boost::leaf
@@ -138,7 +137,6 @@ else()
         if (BOOST_COBALT_USE_BOOST_CONTAINER)
             find_package(Boost REQUIRED container)
         endif()
-        include_directories(include)
     endif()
 
     add_library(boost_cobalt
