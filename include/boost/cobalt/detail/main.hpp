@@ -51,6 +51,8 @@ struct main_promise : signal_helper,
 
 #if !defined(BOOST_COBALT_NO_PMR)
     inline static pmr::memory_resource * my_resource = pmr::get_default_resource();
+
+#if defined(__cpp_sized_deallocation)
     void * operator new(const std::size_t size)
     {
         return my_resource->allocate(size);
@@ -60,13 +62,36 @@ struct main_promise : signal_helper,
     {
         return my_resource->deallocate(raw, size);
     }
+#else
+  void * operator new(const std::size_t size)
+  {
+      // embed the size at the end
+      constexpr auto sz = (std::max)(alignof(std::max_align_t), sizeof(std::size_t));
+      auto data = my_resource->allocate(size + sz);
+
+      return static_cast<char*>(data) + sz;
+  }
+
+  void operator delete(void * data)
+  {
+      constexpr auto sz = (std::max)(alignof(std::max_align_t), sizeof(std::size_t));
+      const auto size = *reinterpret_cast<std::size_t*>(static_cast<char*>(data) - sz);
+
+      return my_resource->deallocate(data, size);
+  }
 #endif
-    std::suspend_always initial_suspend() {return {};}
+
+
+
+#endif
+    std::suspend_always initial_suspend() noexcept {return {};}
 
     BOOST_COBALT_DECL
     auto final_suspend() noexcept -> std::suspend_never;
 
+#if !defined(BOOST_NO_EXCEPTIONS)
     void unhandled_exception() { throw ; }
+#endif
     void return_value(int res = 0)
     {
         if (result)

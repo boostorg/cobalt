@@ -12,6 +12,7 @@
 #include <boost/cobalt/detail/forward_cancellation.hpp>
 #include <boost/cobalt/detail/wrapper.hpp>
 #include <boost/cobalt/detail/this_thread.hpp>
+#include <boost/cobalt/noop.hpp>
 
 #include <boost/asio/bind_allocator.hpp>
 #include <boost/asio/cancellation_signal.hpp>
@@ -59,6 +60,9 @@ struct task_value_holder
     result.emplace(ret);
     static_cast<task_receiver<T>*>(this)->set_done();
   }
+
+  constexpr task_value_holder() noexcept = default;
+  constexpr task_value_holder(noop<T> n) noexcept(std::is_nothrow_move_constructible_v<T>) : result(std::move(n.value)) {}
 };
 
 template<>
@@ -72,6 +76,9 @@ struct task_value_holder<void>
   }
 
   inline void return_void();
+
+  constexpr task_value_holder() noexcept = default;
+  constexpr task_value_holder(noop<void> n) noexcept {}
 };
 
 
@@ -108,6 +115,13 @@ struct task_receiver : task_value_holder<T>
     done = true;
   }
 
+  void cancel(asio::cancellation_type ct) const
+  {
+    if (!done)
+      promise->signal.emit(ct);
+  }
+
+  task_receiver(noop<T> n) : task_value_holder<T>(std::move(n)), done(true) {}
   task_receiver() = default;
   task_receiver(task_receiver && lhs)
       : task_value_holder<T>(std::move(lhs)),
@@ -322,7 +336,7 @@ struct task_promise
     }
   };
 
-  auto initial_suspend()
+  auto initial_suspend() noexcept
   {
 
     return initial_awaitable{this};

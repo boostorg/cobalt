@@ -24,7 +24,7 @@ struct [[nodiscard]] generator
   // Movable
 
   generator(generator &&lhs) noexcept = default;
-  generator& operator=(generator &&) noexcept = default;
+  generator& operator=(generator &&) noexcept;
 
   // True until it co_returns & is co_awaited after <1>
   explicit operator bool() const;
@@ -47,6 +47,7 @@ struct [[nodiscard]] generator
   generator(const generator &) = delete;
   generator& operator=(const generator &) = delete;
 
+  constexpr generator(noop<Yield> n) : receiver_(std::move(n)){}
 
  private:
   template<typename, typename>
@@ -89,8 +90,8 @@ inline generator<Yield, Push>::operator bool() const
 template<typename Yield, typename Push >
 inline void generator<Yield, Push>::cancel(asio::cancellation_type ct)
 {
-  if (!receiver_.done && receiver_.reference == &receiver_)
-    receiver_.cancel_signal.emit(ct);
+  if (!receiver_.done && *receiver_.reference == &receiver_)
+    receiver_.cancel_signal->emit(ct);
 }
 
 template<typename Yield, typename Push >
@@ -107,6 +108,14 @@ inline Yield generator<Yield, Push>::get()
 template<typename Yield, typename Push >
 inline generator<Yield, Push>::~generator() { cancel(); }
 
+template<typename Yield, typename Push >
+inline
+generator<Yield, Push>& generator<Yield, Push>::operator=(generator && lhs) noexcept
+{
+  cancel();
+  receiver_ = std::move(lhs.receiver_);
+  return *this;
+}
 
 }
 

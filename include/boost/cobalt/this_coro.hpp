@@ -336,22 +336,58 @@ struct promise_memory_resource_base
   using allocator_type = pmr::polymorphic_allocator<void>;
   allocator_type get_allocator() const {return allocator_type{resource};}
 
+#if defined(__cpp_sized_deallocation)
   template<typename ... Args>
   static void * operator new(const std::size_t size, Args & ... args)
   {
     auto res = detail::get_memory_resource_from_args(args...);
-    const auto p = res->allocate(size + sizeof(pmr::memory_resource *), alignof(pmr::memory_resource *));
+    const auto p = res->allocate(size + sizeof(std::max_align_t));
     auto pp = static_cast<pmr::memory_resource**>(p);
     *pp = res;
-    return pp + 1;
+    return static_cast<std::max_align_t *>(p) + 1;
   }
 
   static void operator delete(void * raw, const std::size_t size) noexcept
   {
-    const auto p = static_cast<pmr::memory_resource**>(raw) - 1;
-    pmr::memory_resource * res = *p;
-    res->deallocate(p, size + sizeof(pmr::memory_resource *), alignof(pmr::memory_resource *));
+    const auto p = static_cast<std::max_align_t *>(raw) - 1;
+    pmr::memory_resource * res = *reinterpret_cast<pmr::memory_resource**>(p);
+    res->deallocate(p, size + sizeof(std::max_align_t));
   }
+#else
+  template<typename ... Args>
+  static void * operator new(const std::size_t size, Args & ... args)
+  {
+    using tt = std::pair<pmr::memory_resource *, std::size_t>;
+
+    // | memory_resource | size_t | <padding> | coroutine.
+    constexpr auto block_size =  sizeof(tt) / sizeof(std::max_align_t)
+                              + (sizeof(tt) % sizeof(std::max_align_t) ? 1 : 0);
+
+
+    auto res = detail::get_memory_resource_from_args(args...);
+    const auto p = res->allocate(size + (block_size * sizeof(std::max_align_t)));
+    new (p) tt(res, size);
+    return static_cast<std::max_align_t*>(p) + block_size;
+  }
+
+  static void operator delete(void * raw) noexcept
+  {
+    using tt = std::pair<pmr::memory_resource *, std::size_t>;
+
+    // | memory_resource | size_t | <padding> | coroutine.
+    constexpr auto block_size =  sizeof(tt) / sizeof(std::max_align_t)
+                              + (sizeof(tt) % sizeof(std::max_align_t) ? 1 : 0);
+
+    const auto p = static_cast<std::max_align_t*>(raw) - block_size;
+
+    const auto tp = *reinterpret_cast<tt*>(p);
+    const auto res = tp.first;
+    const auto size = tp.second;
+
+    res->deallocate(p, size +  (block_size * sizeof(std::max_align_t)));
+  }
+#endif
+
   promise_memory_resource_base(pmr::memory_resource * resource = this_thread::get_default_resource()) : resource(resource) {}
 
 private:
@@ -359,19 +395,22 @@ private:
 #endif
 };
 
+#if defined(__cpp_sized_deallocation)
 /// Allocate the memory and put the allocator behind the cobalt memory
 template<typename AllocatorType>
 void *allocate_coroutine(const std::size_t size, AllocatorType alloc_)
 {
-    using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<unsigned char>;
+    using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<std::max_align_t>;
     alloc_type alloc{alloc_};
 
-    const std::size_t align_needed = size % alignof(alloc_type);
-    const std::size_t align_offset = align_needed != 0 ? alignof(alloc_type) - align_needed : 0ull;
-    const std::size_t alloc_size = size + sizeof(alloc_type) + align_offset;
-    const auto raw = std::allocator_traits<alloc_type>::allocate(alloc, alloc_size);
-    new(raw + size + align_offset) alloc_type(std::move(alloc));
+    const std::size_t aligned_size =  size / sizeof(std::max_align_t)
+                                   + (size % sizeof(std::max_align_t) > 0 ? 1 : 0);
 
+    const std::size_t alloc_size   =  sizeof(AllocatorType) / sizeof(std::max_align_t)
+                                   + (sizeof(AllocatorType) % sizeof(std::max_align_t) > 0 ? 1 : 0);
+
+    const auto raw = std::allocator_traits<alloc_type>::allocate(alloc, alloc_size + aligned_size);
+    new(raw + aligned_size) alloc_type(std::move(alloc));
     return raw;
 }
 
@@ -379,20 +418,69 @@ void *allocate_coroutine(const std::size_t size, AllocatorType alloc_)
 template<typename AllocatorType>
 void deallocate_coroutine(void *raw_, const std::size_t size)
 {
-    using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<unsigned char>;
-    const auto raw = static_cast<unsigned char *>(raw_);
+    using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<std::max_align_t>;
+    const auto raw = static_cast<std::max_align_t*>(raw_);
 
-    const std::size_t align_needed = size % alignof(alloc_type);
-    const std::size_t align_offset = align_needed != 0 ? alignof(alloc_type) - align_needed : 0ull;
-    const std::size_t alloc_size = size + sizeof(alloc_type) + align_offset;
-    auto alloc_p = reinterpret_cast<alloc_type *>(raw + size + align_offset);
+    const std::size_t aligned_size =  size / sizeof(std::max_align_t)
+                                   + (size % sizeof(std::max_align_t) > 0 ? 1 : 0);
 
+    const std::size_t alloc_size   =  sizeof(AllocatorType) / sizeof(std::max_align_t)
+                                   + (sizeof(AllocatorType) % sizeof(std::max_align_t) > 0 ? 1 : 0);
+
+    auto alloc_p = reinterpret_cast<alloc_type *>(raw + aligned_size);
     auto alloc = std::move(*alloc_p);
     alloc_p->~alloc_type();
-    using size_type = typename std::allocator_traits<alloc_type>::size_type;
-    std::allocator_traits<alloc_type>::deallocate(alloc, raw, static_cast<size_type>(alloc_size));
+    std::allocator_traits<alloc_type>::deallocate(alloc, raw, aligned_size + alloc_size);
+}
+#else
+
+
+/// Allocate the memory and put the allocator behind the cobalt memory
+template<typename AllocatorType>
+void *allocate_coroutine(const std::size_t size, AllocatorType alloc_)
+{
+  using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<std::max_align_t>;
+  alloc_type alloc{alloc_};
+
+  const std::size_t aligned_size =  size / sizeof(std::max_align_t)
+                                 + (size % sizeof(std::max_align_t) > 0 ? 1 : 0);
+
+  const std::size_t  alloc_size  =  sizeof(AllocatorType) / sizeof(std::max_align_t)
+                                 + (sizeof(AllocatorType) % sizeof(std::max_align_t) > 0 ? 1 : 0);
+
+  const std::size_t   size_size  =  sizeof(std::size_t) / sizeof(std::max_align_t)
+                                 + (sizeof(std::size_t) % sizeof(std::max_align_t) > 0 ? 1 : 0);
+
+
+  static_assert(alignof(std::max_align_t) >= sizeof(std::size_t));
+  const auto raw = std::allocator_traits<alloc_type>::allocate(alloc, alloc_size + aligned_size + size_size);
+
+  new(raw) alloc_type(std::move(alloc));
+  new(raw + alloc_size) std::size_t(aligned_size);
+  return raw + alloc_size + size_size;
 }
 
+/// Deallocate the memory and destroy the allocator in the cobalt memory.
+template<typename AllocatorType>
+void deallocate_coroutine(void *raw_)
+{
+  using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<std::max_align_t>;
+  const auto raw = static_cast<std::max_align_t*>(raw_);
+
+  const std::size_t   size_size  =  sizeof(std::size_t) / sizeof(std::max_align_t)
+                                    + (sizeof(std::size_t) % sizeof(std::max_align_t) > 0 ? 1 : 0);
+  const std::size_t aligned_size = *reinterpret_cast<std::size_t *>(raw - size_size);
+  const std::size_t alloc_size   =  sizeof(AllocatorType) / sizeof(std::max_align_t)
+                                 + (sizeof(AllocatorType) % sizeof(std::max_align_t) > 0 ? 1 : 0);
+
+  auto alloc_p = reinterpret_cast<alloc_type *>(raw - alloc_size - size_size);
+  auto alloc = std::move(*alloc_p);
+  alloc_p->~alloc_type();
+  std::allocator_traits<alloc_type>::deallocate(alloc, raw - alloc_size - size_size, aligned_size + alloc_size + size_size);
+}
+
+
+#endif
 
 template<typename Promise>
 struct enable_await_allocator

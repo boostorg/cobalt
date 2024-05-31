@@ -10,6 +10,7 @@
 #include <boost/asio/append.hpp>
 #include <boost/asio/bind_executor.hpp>
 
+#include <boost/core/no_exceptions_support.hpp>
 
 namespace boost::cobalt
 {
@@ -25,7 +26,7 @@ thread_promise::thread_promise()
 }
 
 void run_thread(
-    std::shared_ptr<thread_state> st,
+    std::shared_ptr<thread_state> st_,
     unique_handle<thread_promise> h)
 {
 
@@ -35,36 +36,40 @@ void run_thread(
   h->resource = &resource;
 #endif
 
-  h->reset_cancellation_source(st->signal.slot());
-  h->set_executor(st->ctx.get_executor());
-  boost::cobalt::this_thread::set_executor(st->ctx.get_executor());
-
-  asio::post(
-      st->ctx.get_executor(),
-      [st, h = std::move(h)]() mutable
-      {
-        std::lock_guard<std::mutex> lock{h->mtx};
-        std::move(h).resume();
-      });
-
-  std::exception_ptr ep;
-
-  try
   {
-    st->ctx.run();
-  }
-  catch(...)
-  {
-    ep = std::current_exception();
-  }
+    auto st = std::move(st_);
+    h->reset_cancellation_source(st->signal.slot());
+    h->set_executor(st->ctx.get_executor());
+    boost::cobalt::this_thread::set_executor(st->ctx.get_executor());
 
-  st->done = true;
-  st->signal.slot().clear();
-  std::lock_guard<std::mutex> lock(st->mtx);
-  if (!st->waitor && ep) // nobodies waiting, so unhandled exception
-    std::rethrow_exception(ep);
-  else if (st->waitor)
-    asio::post(asio::append(*std::exchange(st->waitor, std::nullopt), ep));
+    asio::post(
+        st->ctx.get_executor(),
+        [st, h = std::move(h)]() mutable
+        {
+          std::lock_guard<std::mutex> lock{h->mtx};
+          std::move(h).resume();
+        });
+
+    std::exception_ptr ep;
+
+    BOOST_TRY
+    {
+      st->ctx.run();
+    }
+    BOOST_CATCH(...)
+    {
+      ep = std::current_exception();
+    }
+    BOOST_CATCH_END
+
+    st->done = true;
+    st->signal.slot().clear();
+    std::lock_guard<std::mutex> lock(st->mtx);
+    if (!st->waitor && ep) // nobodies waiting, so unhandled exception
+      std::rethrow_exception(ep);
+    else if (st->waitor)
+      asio::post(asio::append(*std::exchange(st->waitor, std::nullopt), ep));
+  }
 }
 
 

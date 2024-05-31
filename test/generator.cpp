@@ -47,6 +47,11 @@ CO_TEST_CASE(generator_int)
 
   BOOST_CHECK(i == 11);
 
+  g = gen();
+  BOOST_CHECK(g);
+  while (g)
+    co_await g;
+
   co_return ;
 }
 
@@ -240,10 +245,13 @@ CO_TEST_CASE(eager_2)
   BOOST_CHECK(2 == co_await g(2));
   BOOST_CHECK(6 == co_await g(4));
   BOOST_CHECK(9 == co_await g(3));
-  BOOST_CHECK(15 == co_await g(6));
-  BOOST_CHECK(!g);
 
-  auto gg =std::move(g);
+  auto gg = std::move(g);
+//  BOOST_CHECK(!g);
+  BOOST_CHECK(gg);
+  BOOST_CHECK(15 == co_await gg(6));
+  BOOST_CHECK(!gg);
+
 }
 
 struct generator_move_only
@@ -267,5 +275,35 @@ CO_TEST_CASE(move_only)
   co_await g(generator_move_only{});
 }
 
+cobalt::generator<int> detached()
+{
+  co_await asio::post(cobalt::use_op);
+  co_yield 42;
+  co_return 24;
+}
+
+CO_TEST_CASE(detached_)
+{
+  boost::ignore_unused(detached());
+  co_return;
+}
+
+cobalt::generator<int, int> detached_push()
+{
+  int i = co_yield 42;
+  while (true)
+    i = co_yield i;
+  co_return i;
+}
+
+cobalt::generator<int> np() {return cobalt::noop(42);}
+
+CO_TEST_CASE(detached_push_)
+{
+  auto g = detached_push();
+
+  co_await g(1);
+  co_await np();
+}
 
 BOOST_AUTO_TEST_SUITE_END();

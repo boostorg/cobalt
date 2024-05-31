@@ -297,7 +297,7 @@ cobalt::promise<int> test_promise()
   asio::steady_timer tim{co_await cobalt::this_coro::executor,
                          std::chrono::milliseconds(100)};
 
-  co_await tim.async_wait(async::use_op);
+  co_await tim.async_wait(cobalt::use_op);
   co_return 42;
 }
 

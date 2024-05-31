@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(unwind)
 
 cobalt::promise<int> return_(std::size_t ms)
 {
-  co_return 1234u;
+  return cobalt::noop(1234);
 }
 
 cobalt::promise<int> return_(std::size_t ms, asio::executor_arg_t,
@@ -146,7 +146,7 @@ struct promise_move_only
 {
   promise_move_only() = default;
   promise_move_only(promise_move_only &&) = default;
-  promise_move_only & operator=(promise_move_only &&) = delete;
+  promise_move_only & operator=(promise_move_only &&) = default;
 };
 
 cobalt::promise<promise_move_only> pro_move_only_test()
@@ -156,7 +156,10 @@ cobalt::promise<promise_move_only> pro_move_only_test()
 
 CO_TEST_CASE(move_only)
 {
-  co_await pro_move_only_test();
+  auto p = pro_move_only_test();
+  co_await p;
+  p = pro_move_only_test();
+  co_await p;
 }
 
 BOOST_AUTO_TEST_SUITE_END();

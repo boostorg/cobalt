@@ -41,6 +41,10 @@ struct [[nodiscard]] promise
     // end::outline[]
 
     /* tag::outline[]
+    // Create an already completed promimse
+
+    static promise
+
     // Get the return value. If !ready() this function has undefined behaviour.
     Return get();
     end::outline[] */
@@ -60,6 +64,8 @@ struct [[nodiscard]] promise
       if (attached_)
         cancel();
     }
+
+    constexpr promise(noop<Return> n) : receiver_(std::move(n)), attached_(false) {}
   private:
     template<typename>
     friend struct detail::cobalt_promise;
@@ -87,10 +93,11 @@ template<typename T>
 inline
 promise<T>& promise<T>::operator=(promise && lhs) noexcept
 {
-    if (attached_)
+  if (attached_)
     cancel();
   receiver_ = std::move(lhs.receiver_);
   attached_ = std::exchange(lhs.attached_, false);
+  return *this;
 }
 
 template<typename T>
@@ -106,8 +113,8 @@ template<typename T>
 inline
 void promise<T>::cancel(asio::cancellation_type ct)
 {
-  if (!receiver_.done && receiver_.reference == &receiver_)
-    receiver_.cancel_signal.emit(ct);
+  if (!receiver_.done && *receiver_.reference == &receiver_)
+    receiver_.cancel_signal->emit(ct);
 }
 
 template<typename T>

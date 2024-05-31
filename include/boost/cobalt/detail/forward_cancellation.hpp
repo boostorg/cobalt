@@ -39,18 +39,6 @@ struct forward_cancellation
   }
 };
 
-struct forward_dispatch_cancellation
-{
-  asio::cancellation_signal &cancel_signal;
-  executor exec;
-
-  forward_dispatch_cancellation(asio::cancellation_signal &cancel_signal,
-                            executor exec) : cancel_signal(cancel_signal), exec(exec) {}
-  void operator()(asio::cancellation_type ct) const
-  {
-    asio::dispatch(exec, [this, ct]{cancel_signal.emit(ct);});
-  }
-};
 
 }
 

@@ -113,11 +113,10 @@ struct join_variadic_impl
            });
     }
 
-
     // GCC doesn't like member funs
     template<std::size_t Idx>
     static detail::fork await_impl(awaitable & this_)
-    try
+    BOOST_TRY
     {
       auto & aw = std::get<Idx>(this_.aws);
       // check manually if we're ready
@@ -152,12 +151,13 @@ struct join_variadic_impl
       }
 
     }
-    catch(...)
+    BOOST_CATCH(...)
     {
       if (!this_.error)
            this_.error = std::current_exception();
       this_.cancel_all();
     }
+    BOOST_CATCH_END
 
     std::array<detail::fork(*)(awaitable&), tuple_size> impls {
         []<std::size_t ... Idx>(std::index_sequence<Idx...>)
@@ -261,16 +261,17 @@ struct join_variadic_impl
       using rt = system::result<t, std::exception_ptr>;
       if (error)
         return rt(system::in_place_error, error);
+
       if constexpr(!all_void)
         return mp11::tuple_transform(
             []<typename T>(std::optional<T> & var)
-                -> T
+                -> rt
             {
               BOOST_ASSERT(var.has_value());
               return std::move(*var);
             }, result);
       else
-        return system::in_place_value;
+        return rt{system::in_place_value};
     }
   };
   awaitable operator co_await() &&
@@ -392,7 +393,7 @@ struct join_ranged_impl
 
 
     static detail::fork await_impl(awaitable & this_, std::size_t idx)
-    try
+    BOOST_TRY
     {
       auto & aw = *std::next(std::begin(this_.aws), idx);
       auto rd = aw.await_ready();
@@ -414,12 +415,13 @@ struct join_ranged_impl
           this_.result[idx].emplace(aw.await_resume());
       }
     }
-    catch(...)
+    BOOST_CATCH(...)
     {
       if (!this_.error)
         this_.error = std::current_exception();
       this_.cancel_all();
     }
+    BOOST_CATCH_END
 
     detail::fork last_forked;
     std::size_t last_index = 0u;

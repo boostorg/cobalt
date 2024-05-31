@@ -34,11 +34,12 @@ namespace
 
 cobalt::task<void> test0()
 {
-    co_return;
+    return cobalt::noop<void>();
 }
 
 cobalt::task<double> test2(int i)
 {
+    co_await cobalt::noop();
     co_await test0();
     co_return i;
 }
@@ -311,6 +312,20 @@ CO_TEST_CASE(move_only)
 {
   co_await task_move_only_test();
 }
+
+#if !defined(BOOST_COBALT_USE_IO_CONTEXT) && !defined(BOOST_COBALT_CUSTOM_EXECUTOR)
+
+BOOST_AUTO_TEST_CASE(cancel_task_)
+{
+  asio::thread_pool ctx{1};
+  asio::cancellation_signal sig;
+  cobalt::spawn(ctx, test0(), asio::bind_cancellation_slot(sig.slot(), asio::detached));
+  sig.emit(asio::cancellation_type::all);
+  ctx.join();
+}
+
+#endif
+
 
 
 BOOST_AUTO_TEST_SUITE_END();

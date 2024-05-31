@@ -15,6 +15,7 @@
 #include <boost/cobalt/detail/this_thread.hpp>
 #include <boost/cobalt/unique_handle.hpp>
 #include <boost/cobalt/detail/wrapper.hpp>
+#include <boost/cobalt/noop.hpp>
 
 #include <boost/asio/bind_allocator.hpp>
 #include <boost/core/exchange.hpp>
@@ -92,14 +93,21 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 
   bool ready() { return exception || result || done; }
 
+  generator_receiver(noop<Yield> n) : result(std::move(n.value)), done(true) {}
+
   generator_receiver() = default;
   generator_receiver(generator_receiver && lhs)
-  : exception(std::move(lhs.exception)), done(lhs.done), awaited_from(std::move(lhs.awaited_from)),
-    reference(lhs.reference), cancel_signal(lhs.cancel_signal)
+  : generator_receiver_base<Yield, Push>{std::move(lhs.pushed_value)},
+    exception(std::move(lhs.exception)),
+    result(std::move(lhs.result)),
+    result_buffer(std::move(lhs.result_buffer)), done(lhs.done),
+    awaited_from(std::move(lhs.awaited_from)), yield_from{std::move(lhs.yield_from)},
+    lazy(lhs.lazy), reference(lhs.reference), cancel_signal(lhs.cancel_signal)
+
   {
     if (!lhs.done && !lhs.exception)
     {
-      reference = this;
+      *reference = this;
       lhs.exception = moved_from_exception();
     }
     lhs.done = true;
@@ -107,22 +115,51 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 
   ~generator_receiver()
   {
-    if (!done && reference == this)
-      reference = nullptr;
+    if (!done && *reference == this)
+      *reference = nullptr;
   }
 
   generator_receiver(generator_receiver * &reference, asio::cancellation_signal & cancel_signal)
-  : reference(reference), cancel_signal(cancel_signal)
+  : reference(&reference), cancel_signal(&cancel_signal)
   {
     reference = this;
   }
 
-  generator_receiver  * &reference;
-  asio::cancellation_signal & cancel_signal;
+
+  generator_receiver& operator=(generator_receiver && lhs) noexcept
+  {
+    if (*reference == this)
+    {
+      *reference = nullptr;
+    }
+
+    generator_receiver_base<Yield, Push>::operator=(std::move(lhs));
+    exception = std::move(lhs.exception);
+    done = lhs.done;
+    result = std::move(lhs.result);
+    result_buffer = std::move(lhs.result_buffer);
+    awaited_from = std::move(lhs.awaited_from);
+    yield_from = std::move(lhs.yield_from);
+    lazy = lhs.lazy;
+    reference = lhs.reference;
+    cancel_signal = lhs.cancel_signal;
+
+    if (!lhs.done && !lhs.exception)
+    {
+      *reference = this;
+      lhs.exception = moved_from_exception();
+    }
+    lhs.done = true;
+
+    return *this;
+  }
+
+  generator_receiver  **reference;
+  asio::cancellation_signal * cancel_signal;
 
   using yield_awaitable = generator_yield_awaitable<Yield, Push>;
 
-  yield_awaitable get_yield_awaitable() {return {this}; }
+  yield_awaitable get_yield_awaitable(generator_promise<Yield, Push> * pro) {return {pro}; }
   static yield_awaitable terminator()   {return {nullptr}; }
 
   template<typename T>
@@ -180,7 +217,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 
       if constexpr (requires (Promise p) {p.get_cancellation_slot();})
         if ((cl = h.promise().get_cancellation_slot()).is_connected())
-          cl.emplace<forward_cancellation>(self->cancel_signal);
+          cl.emplace<forward_cancellation>(*self->cancel_signal);
 
       self->awaited_from.reset(h.address());
 
@@ -264,8 +301,16 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
       if (self->yield_from != nullptr && !self->lazy)
       {
         auto exec = self->yield_from->get_executor();
+        auto alloc = asio::get_associated_allocator(self->yield_from);
         asio::post(
-            std::move(exec), std::exchange(self->yield_from, nullptr));
+            std::move(exec),
+            asio::bind_allocator(
+                alloc,
+                [y = std::exchange(self->yield_from, nullptr)]() mutable
+                {
+                  if (y->receiver) // make sure we only resume eagerly when attached to a generator object
+                    std::move(y)();
+                }));
       }
 
       return {system::in_place_value, self->get_result()};
@@ -332,7 +377,7 @@ struct generator_promise
     this->reset_cancellation_source(signal.slot());
   }
 
-  std::suspend_never initial_suspend() {return {};}
+  std::suspend_never initial_suspend() noexcept {return {};}
 
   struct final_awaitable
   {
@@ -403,7 +448,7 @@ struct generator_promise
     if(receiver)
     {
       receiver->lazy = true;
-      return receiver->get_yield_awaitable();
+      return receiver->get_yield_awaitable(this);
     }
     else
       return generator_receiver<Yield, Push>::terminator();
@@ -416,7 +461,7 @@ struct generator_promise
     {
       // if this is lazy, there might still be a value in there.
       receiver->yield_value(std::forward<Yield_>(ret));
-      return receiver->get_yield_awaitable();
+      return receiver->get_yield_awaitable(this);
     }
     else
       return generator_receiver<Yield, Push>::terminator();
@@ -447,10 +492,10 @@ struct generator_promise
 template<typename Yield, typename Push>
 struct generator_yield_awaitable
 {
-  generator_receiver<Yield, Push> * self;
+  generator_promise<Yield, Push> *self;
   constexpr bool await_ready() const
   {
-    return self && self->pushed_value && !self->result;
+    return self && self->receiver && self->receiver->pushed_value && !self->receiver->result;
   }
 
   std::coroutine_handle<void> await_suspend(
@@ -475,28 +520,29 @@ struct generator_yield_awaitable
       return std::noop_coroutine();
     }
     std::coroutine_handle<void> res = std::noop_coroutine();
-    if (self->awaited_from.get() != nullptr)
-      res = self->awaited_from.release();
+    if (self->receiver->awaited_from.get() != nullptr)
+      res = self->receiver->awaited_from.release();
 #if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
-    self->yield_from.reset(&h.promise(), loc);
+    self->receiver->yield_from.reset(&h.promise(), loc);
 #else
-    self->yield_from.reset(&h.promise());
+    self->receiver->yield_from.reset(&h.promise());
 #endif
     return res;
   }
 
   Push await_resume()
   {
-    BOOST_ASSERT(self->pushed_value);
-    return *std::exchange(self->pushed_value, std::nullopt);
+    BOOST_ASSERT(self->receiver);
+    BOOST_ASSERT(self->receiver->pushed_value);
+    return *std::exchange(self->receiver->pushed_value, std::nullopt);
   }
 };
 
 template<typename Yield>
 struct generator_yield_awaitable<Yield, void>
 {
-  generator_receiver<Yield, void> * self;
-  constexpr bool await_ready() { return self && self->pushed_value; }
+  generator_promise<Yield, void> *self;
+  constexpr bool await_ready() { return self && self->receiver && self->receiver->pushed_value; }
 
   std::coroutine_handle<> await_suspend(
       std::coroutine_handle<generator_promise<Yield, void>> h
@@ -519,20 +565,21 @@ struct generator_yield_awaitable<Yield, void>
       return std::noop_coroutine();
     }
     std::coroutine_handle<void> res = std::noop_coroutine();
-    if (self->awaited_from.get() != nullptr)
-      res = self->awaited_from.release();
+    BOOST_ASSERT(self);
+    if (self->receiver->awaited_from.get() != nullptr)
+      res = self->receiver->awaited_from.release();
 #if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
-    self->yield_from.reset(&h.promise(), loc);
+    self->receiver->yield_from.reset(&h.promise(), loc);
 #else
-    self->yield_from.reset(&h.promise());
+    self->receiver->yield_from.reset(&h.promise());
 #endif
     return res;
   }
 
   void await_resume()
   {
-    BOOST_ASSERT(self->pushed_value);
-    self->pushed_value = false;
+    BOOST_ASSERT(self->receiver->pushed_value);
+    self->receiver->pushed_value = false;
   }
 
 };
