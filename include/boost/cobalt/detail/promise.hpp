@@ -13,17 +13,16 @@
 #include <boost/cobalt/detail/wrapper.hpp>
 #include <boost/cobalt/detail/this_thread.hpp>
 #include <boost/cobalt/noop.hpp>
+#include <boost/cobalt/op.hpp>
 #include <boost/cobalt/unique_handle.hpp>
 
 #include <boost/asio/cancellation_signal.hpp>
-
+#include <boost/asio/bind_allocator.hpp>
 
 #include <boost/core/exchange.hpp>
-
 #include <coroutine>
 #include <optional>
 #include <utility>
-#include <boost/asio/bind_allocator.hpp>
 
 namespace boost::cobalt
 {
@@ -315,6 +314,7 @@ struct cobalt_promise
       enable_awaitables<cobalt_promise<Return>>,
       enable_await_allocator<cobalt_promise<Return>>,
       enable_await_executor<cobalt_promise<Return>>,
+      enable_await_deferred,
       cobalt_promise_result<Return>
 {
   using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
@@ -322,6 +322,7 @@ struct cobalt_promise
   using enable_awaitables<cobalt_promise<Return>>::await_transform;
   using enable_await_allocator<cobalt_promise<Return>>::await_transform;
   using enable_await_executor<cobalt_promise<Return>>::await_transform;
+  using enable_await_deferred::await_transform;
 
   [[nodiscard]] promise<Return> get_return_object()
   {

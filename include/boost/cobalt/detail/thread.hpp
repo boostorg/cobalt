@@ -12,6 +12,7 @@
 #include <boost/cobalt/detail/forward_cancellation.hpp>
 #include <boost/cobalt/detail/handler.hpp>
 #include <boost/cobalt/concepts.hpp>
+#include <boost/cobalt/op.hpp>
 #include <boost/cobalt/this_coro.hpp>
 
 #include <boost/asio/cancellation_signal.hpp>
@@ -55,7 +56,8 @@ struct thread_promise : signal_helper_2,
                         promise_throw_if_cancelled_base,
                         enable_awaitables<thread_promise>,
                         enable_await_allocator<thread_promise>,
-                        enable_await_executor<thread_promise>
+                        enable_await_executor<thread_promise>,
+                        enable_await_deferred
 {
   BOOST_COBALT_DECL thread_promise();
 
@@ -101,6 +103,7 @@ struct thread_promise : signal_helper_2,
   using enable_awaitables<thread_promise>::await_transform;
   using enable_await_allocator<thread_promise>::await_transform;
   using enable_await_executor<thread_promise>::await_transform;
+  using enable_await_deferred::await_transform;
 
   BOOST_COBALT_DECL
   boost::cobalt::thread get_return_object();

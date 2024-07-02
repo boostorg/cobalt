@@ -13,6 +13,7 @@
 #include <boost/cobalt/detail/wrapper.hpp>
 #include <boost/cobalt/detail/this_thread.hpp>
 #include <boost/cobalt/noop.hpp>
+#include <boost/cobalt/op.hpp>
 
 #include <boost/asio/bind_allocator.hpp>
 #include <boost/asio/cancellation_signal.hpp>
@@ -288,6 +289,7 @@ struct task_promise
       enable_awaitables<task_promise<Return>>,
       enable_await_allocator<task_promise<Return>>,
       enable_await_executor<task_promise<Return>>,
+      enable_await_deferred,
       task_promise_result<Return>
 {
   using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
@@ -295,6 +297,7 @@ struct task_promise
   using enable_awaitables<task_promise<Return>>::await_transform;
   using enable_await_allocator<task_promise<Return>>::await_transform;
   using enable_await_executor<task_promise<Return>>::await_transform;
+  using enable_await_deferred::await_transform;
 
   [[nodiscard]] task<Return> get_return_object()
   {
