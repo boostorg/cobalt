@@ -13,6 +13,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include "test.hpp"
+#include <boost/asio/cancel_after.hpp>
 #include <boost/asio/detached.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/asio/awaitable.hpp>
@@ -325,6 +326,34 @@ BOOST_AUTO_TEST_CASE(cancel_task_)
 }
 
 #endif
+
+
+CO_TEST_CASE(cancel_task_after)
+{
+  try
+  {
+    auto exec = co_await cobalt::this_coro::executor;
+    co_await cobalt::spawn(
+        exec,
+        []() -> cobalt::task<void>
+        {
+          asio::steady_timer t{co_await cobalt::this_coro::executor, std::chrono::steady_clock::time_point::max()};
+          co_await t.async_wait();
+        }(),
+        asio::cancel_after(std::chrono::milliseconds(1)));
+
+    BOOST_FAIL("Unreachable");
+  }
+  catch(system::system_error & se)
+  {
+    BOOST_CHECK(se.code() == asio::error::operation_aborted);
+  }
+  catch(...)
+  {
+    BOOST_FAIL("Unreachable");
+  }
+}
+
 
 
 

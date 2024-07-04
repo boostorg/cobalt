@@ -24,8 +24,15 @@ namespace boost::cobalt::detail
 
 struct async_initiate_spawn
 {
+
+  async_initiate_spawn(executor exec) : exec(exec) {}
+
+  using executor_type = executor;
+  const executor_type & get_executor() const {return exec;}
+  executor exec;
+
   template<typename Handler, typename T>
-  void operator()(Handler && h, task<T> a, executor exec)
+  void operator()(Handler && h, task<T> a)
   {
     auto & rec = a.receiver_;
     if (rec.done)
@@ -44,9 +51,9 @@ struct async_initiate_spawn
     auto sl = asio::get_associated_cancellation_slot(h);
     if (sl.is_connected())
       sl.assign(
-          [exec, recs](asio::cancellation_type ct)
+          [ex = exec, recs](asio::cancellation_type ct)
           {
-            asio::dispatch(exec, [recs, ct] {recs->cancel(ct);});
+            asio::dispatch(ex, [recs, ct] {recs->cancel(ct);});
           });
 
     auto p = recs.get();
@@ -88,7 +95,7 @@ struct async_initiate_spawn
   }
 
   template<typename Handler>
-  void operator()(Handler && h, task<void> a, executor exec)
+  void operator()(Handler && h, task<void> a)
   {
     if (a.receiver_.done)
       return asio::dispatch(
@@ -110,9 +117,9 @@ struct async_initiate_spawn
     auto sl = asio::get_associated_cancellation_slot(h);
     if (sl.is_connected())
       sl.assign(
-          [exec, recs](asio::cancellation_type ct)
+          [ex = exec, recs](asio::cancellation_type ct)
           {
-            asio::dispatch(exec, [recs, ct] {recs->cancel(ct);});
+            asio::dispatch(ex, [recs, ct] {recs->cancel(ct);});
           });
 
     auto p = recs.get();
