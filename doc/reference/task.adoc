@@ -62,6 +62,7 @@ The task promise has the following properties.
 - <<enable_awaitables>>
 - <<enable_await_allocator>>
 - <<enable_await_executor>>
+- <<enable_await_deferred>>
 
 [#use_task]
 === use_task

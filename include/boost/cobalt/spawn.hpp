@@ -19,7 +19,7 @@ auto spawn(Context & context,
            CompletionToken&& token)
 {
     return asio::async_initiate<CompletionToken, void(std::exception_ptr, T)>(
-            detail::async_initiate_spawn{}, token, std::move(t), context.get_executor());
+            detail::async_initiate_spawn{context.get_executor()}, token, std::move(t));
 }
 
 template<std::convertible_to<executor> Executor, typename T, typename CompletionToken>
@@ -27,7 +27,7 @@ auto spawn(Executor executor, task<T> && t,
            CompletionToken&& token BOOST_ASIO_DEFAULT_COMPLETION_TOKEN(Executor))
 {
     return asio::async_initiate<CompletionToken, void(std::exception_ptr, T)>(
-            detail::async_initiate_spawn{}, token, std::move(t), executor);
+            detail::async_initiate_spawn{executor}, token, std::move(t));
 }
 
 template<with_get_executor Context, typename CompletionToken>
@@ -36,7 +36,7 @@ auto spawn(Context & context,
            CompletionToken&& token)
 {
     return asio::async_initiate<CompletionToken, void(std::exception_ptr)>(
-            detail::async_initiate_spawn{}, token, std::move(t), context.get_executor());
+            detail::async_initiate_spawn{context.get_executor()}, token, std::move(t));
 }
 
 template<std::convertible_to<executor> Executor, typename CompletionToken>
@@ -44,7 +44,7 @@ auto spawn(Executor executor, task<void> && t,
            CompletionToken&& token BOOST_ASIO_DEFAULT_COMPLETION_TOKEN(Executor))
 {
     return asio::async_initiate<CompletionToken, void(std::exception_ptr)>(
-            detail::async_initiate_spawn{}, token, std::move(t), executor);
+            detail::async_initiate_spawn{executor}, token, std::move(t));
 
 }
 

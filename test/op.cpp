@@ -9,6 +9,7 @@
 #include <boost/cobalt/spawn.hpp>
 #include <boost/cobalt/promise.hpp>
 
+#include <boost/asio/as_tuple.hpp>
 #include <boost/asio/detached.hpp>
 #include <boost/asio/experimental/channel.hpp>
 #include <boost/asio/steady_timer.hpp>
@@ -200,7 +201,13 @@ CO_TEST_CASE(no_move_from)
   BOOST_CHECK(p);
 }
 
+CO_TEST_CASE(deferred)
+{
+  asio::steady_timer tim{co_await asio::this_coro::executor, std::chrono::milliseconds(10)};
 
+  co_await post_op(co_await asio::this_coro::executor);
+  std::tuple<system::error_code> r = co_await tim.async_wait(asio::as_tuple);
+}
 
 
 BOOST_AUTO_TEST_SUITE_END();

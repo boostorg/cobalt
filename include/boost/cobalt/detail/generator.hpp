@@ -15,6 +15,7 @@
 #include <boost/cobalt/detail/this_thread.hpp>
 #include <boost/cobalt/unique_handle.hpp>
 #include <boost/cobalt/detail/wrapper.hpp>
+#include <boost/cobalt/op.hpp>
 #include <boost/cobalt/noop.hpp>
 
 #include <boost/asio/bind_allocator.hpp>
@@ -347,13 +348,15 @@ struct generator_promise
       promise_throw_if_cancelled_base,
       enable_awaitables<generator_promise<Yield, Push>>,
       enable_await_allocator<generator_promise<Yield, Push>>,
-      enable_await_executor< generator_promise<Yield, Push>>
+      enable_await_executor< generator_promise<Yield, Push>>,
+      enable_await_deferred
 {
   using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
   using promise_throw_if_cancelled_base::await_transform;
   using enable_awaitables<generator_promise<Yield, Push>>::await_transform;
   using enable_await_allocator<generator_promise<Yield, Push>>::await_transform;
   using enable_await_executor<generator_promise<Yield, Push>>::await_transform;
+  using enable_await_deferred::await_transform;
 
   [[nodiscard]] generator<Yield, Push> get_return_object()
   {

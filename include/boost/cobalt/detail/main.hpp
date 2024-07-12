@@ -9,8 +9,8 @@
 #define BOOST_DETAIL_COBALT_MAIN_HPP
 
 #include <boost/cobalt/main.hpp>
+#include <boost/cobalt/op.hpp>
 #include <boost/cobalt/this_coro.hpp>
-
 
 #include <boost/config.hpp>
 
@@ -41,7 +41,8 @@ struct main_promise : signal_helper,
                       promise_throw_if_cancelled_base,
                       enable_awaitables<main_promise>,
                       enable_await_allocator<main_promise>,
-                      enable_await_executor<main_promise>
+                      enable_await_executor<main_promise>,
+                      enable_await_deferred
 {
     main_promise(int, char **) : promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>(
             signal_helper::signal.slot(), asio::enable_total_cancellation())
@@ -138,8 +139,9 @@ struct main_promise : signal_helper,
     using enable_awaitables<main_promise>::await_transform;
     using enable_await_allocator<main_promise>::await_transform;
     using enable_await_executor<main_promise>::await_transform;
+  using enable_await_deferred::await_transform;
 
-  private:
+ private:
     int * result;
     std::optional<asio::executor_work_guard<executor_type>> exec;
     std::optional<executor_type> exec_;

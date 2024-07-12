@@ -59,6 +59,22 @@ struct my_promise : cobalt::enable_await_executor<my_promise>
 
 NOTE: If available the executor gets used by <<use_op>>
 
+[#enable_await_deferred]
+=== Await deferred
+
+Your coroutine promises can inherit `enable_await_deferred` so that
+a single signature `asio::deferred` in a `co_await` expression.
+
+Since `asio::deferred` is now the default completion token,
+this allows below code without specifying any completion token or other specialization.
+
+[source,cpp]
+----
+asio::steady_timer t{co_await cobalt::this_coro::executor};
+co_await t.async_wait();
+----
+
+
 [#promise_memory_resource_base]
 === Memory resource base
 
