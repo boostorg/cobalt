@@ -55,8 +55,8 @@ cobalt::main co_main(int argc, char * argv[])
 {
     auto [res, other_res] =
             cobalt::join(
-                http_cobalt_get(("https://boost.org"),
-                http_cobalt_get(("https://cppalliance.org")
+                http_cobalt_get("https://boost.org"),
+                http_cobalt_get("https://cppalliance.org")
             );
 
     printf("%s", res.c_str());
