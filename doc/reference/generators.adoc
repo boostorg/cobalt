@@ -52,7 +52,7 @@ sequenceDiagram
 endif::[]
 
 ifndef::generate-diagram[]
-image::{docdir}/images/generators1.png[]
+image::generators1.png[]
 endif::[]
 
 Values can be pushed into the generator, when `Push` (the second template parameter) is set to non-void:
@@ -142,7 +142,7 @@ sequenceDiagram
 endif::[]
 
 ifndef::generate-diagram[]
-image::{docdir}/images/generators2.png[]
+image::generators2.png[]
 endif::[]
 
 [#generator-executor]

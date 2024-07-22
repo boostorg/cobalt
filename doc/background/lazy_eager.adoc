@@ -57,7 +57,7 @@ sequenceDiagram
 endif::[]
 
 ifndef::generate-diagram[]
-image::{docdir}/images/lazy_eager1.png[]
+image::lazy_eager1.png[]
 endif::[]
 
 
@@ -113,5 +113,5 @@ sequenceDiagram
 endif::[]
 
 ifndef::generate-diagram[]
-image::{docdir}/images/lazy_eager2.png[]
+image::lazy_eager2.png[]
 endif::[]
