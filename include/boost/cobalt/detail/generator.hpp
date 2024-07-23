@@ -390,7 +390,8 @@ struct generator_promise
       return generator->receiver && generator->receiver->awaited_from.get() == nullptr;
     }
 
-    auto await_suspend(std::coroutine_handle<generator_promise> h) noexcept
+    template<std::derived_from<generator_promise> Promise>
+    auto await_suspend(std::coroutine_handle<Promise> h) noexcept
     {
       std::coroutine_handle<void> res = std::noop_coroutine();
       if (generator->receiver && generator->receiver->awaited_from.get() != nullptr)
