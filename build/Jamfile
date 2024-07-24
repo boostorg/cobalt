@@ -18,6 +18,7 @@ project : requirements
   <target-os>windows:<define>WIN32_LEAN_AND_MEAN
   <target-os>linux:<linkflags>-lpthread
   : source-location ../src
+  : common-requirements <library>$(boost_dependencies)
 ;
 
 

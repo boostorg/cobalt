@@ -5,23 +5,25 @@
 
 require-b2 5.2 ;
 
+constant boost_dependencies :
+    /boost/asio//boost_asio
+    /boost/callable_traits//boost_callable_traits
+    /boost/circular_buffer//boost_circular_buffer
+    /boost/config//boost_config
+    /boost/container//boost_container
+    /boost/context//boost_context
+    /boost/core//boost_core
+    /boost/intrusive//boost_intrusive
+    /boost/leaf//boost_leaf
+    /boost/mp11//boost_mp11
+    /boost/preprocessor//boost_preprocessor
+    /boost/smart_ptr//boost_smart_ptr
+    /boost/system//boost_system
+    /boost/throw_exception//boost_throw_exception
+    /boost/variant2//boost_variant2 ;
+
 project /boost/cobalt
     : common-requirements
-        <library>/boost/asio//boost_asio
-        <library>/boost/callable_traits//boost_callable_traits
-        <library>/boost/circular_buffer//boost_circular_buffer
-        <library>/boost/config//boost_config
-        <library>/boost/container//boost_container
-        <library>/boost/context//boost_context
-        <library>/boost/core//boost_core
-        <library>/boost/intrusive//boost_intrusive
-        <library>/boost/leaf//boost_leaf
-        <library>/boost/mp11//boost_mp11
-        <library>/boost/preprocessor//boost_preprocessor
-        <library>/boost/smart_ptr//boost_smart_ptr
-        <library>/boost/system//boost_system
-        <library>/boost/throw_exception//boost_throw_exception
-        <library>/boost/variant2//boost_variant2
         <include>include
     ;
 
@@ -32,3 +34,4 @@ explicit
 
 call-if : boost-library cobalt
     ;
+
