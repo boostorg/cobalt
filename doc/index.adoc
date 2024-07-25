@@ -11,7 +11,7 @@ Version 0.1, 29.01.2023
 :source-language: c++
 :example-caption: Example
 
-:imagesdir: {docdir}/images
+:imagesdir: ./images
 
 :leveloffset: +1
 

@@ -18,12 +18,17 @@ namespace boost::cobalt::detail
 
 void self_destroy(std::coroutine_handle<void> h, const cobalt::executor & exec) noexcept
 {
+#if defined(BOOST_COBALT_NO_PMR)
+  asio::post(exec, [del=unique_handle<void>(h.address())]() mutable {});
+#else
   asio::post(exec,
               asio::bind_allocator(
                  this_thread::get_allocator(),
                  [del=unique_handle<void>(h.address())]() mutable
                  {
                  }));
+#endif
+
 }
 #endif
 

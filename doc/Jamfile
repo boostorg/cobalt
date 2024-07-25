@@ -14,6 +14,19 @@ explicit cobalt.pdf ;
 install pdf_ : cobalt.pdf : <location>pdf ;
 explicit pdf_ ;
 
+install images
+    :
+        images/awaitables.png
+        images/generators1.png
+        images/generators2.png
+        images/lazy_eager1.png
+        images/lazy_eager2.png
+        images/stackless1.png
+        images/stackless2.png
+    :
+        <location>html/images
+    ;
+
 alias boostdoc ;
 explicit boostdoc ;
 alias boostrelease : html_ ;

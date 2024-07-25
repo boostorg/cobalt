@@ -42,7 +42,7 @@ sequenceDiagram
 endif::[]
 
 ifndef::generate-diagram[]
-image::{docdir}/images/stackless1.png[]
+image::stackless1.png[]
 endif::[]
 
 Coroutines can be implemented a stackful, which means that it allocates a fixes chunk of memory and stacks function frames similar to a thread.
@@ -100,7 +100,7 @@ sequenceDiagram
 endif::[]
 
 ifndef::generate-diagram[]
-image::{docdir}/images/stackless2.png[]
+image::stackless2.png[]
 endif::[]
 
 The same applies if a coroutine gets moved accross threads.

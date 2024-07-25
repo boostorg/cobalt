@@ -31,7 +31,7 @@ flowchart TD
 endif::[]
 
 ifndef::generate-diagram[]
-image::{docdir}/images/awaitables.png[]
+image::awaitables.png[]
 endif::[]
 
 In a `co_await` expression the waiting coroutine will first invoke
