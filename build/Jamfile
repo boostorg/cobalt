@@ -6,7 +6,8 @@
 
 import os ;
 import feature ;
-import ../../config/checks/config : requires ;
+import-search /boost/config/checks ;
+import config : requires ;
 
 
 project : requirements
@@ -17,6 +18,7 @@ project : requirements
   <target-os>windows:<define>WIN32_LEAN_AND_MEAN
   <target-os>linux:<linkflags>-lpthread
   : source-location ../src
+  : common-requirements <library>$(boost_dependencies)
 ;
 
 
@@ -50,10 +52,10 @@ lib boost_cobalt
    : cobalt_sources
    : requirements <define>BOOST_COBALT_SOURCE=1
      <link>shared:<define>BOOST_COBALT_DYN_LINK=1
-     [ requires 
+     [ requires
         cxx20_hdr_concepts
      ]
-     <boost.cobalt.pmr>boost-container:<library>/boost//container
+     <boost.cobalt.pmr>boost-container:<library>/boost/container//boost_container
       [ check-target-builds
           $(config-binding:D)//cpp_lib_memory_resource
           cpp_lib_memory_resource
@@ -62,8 +64,9 @@ lib boost_cobalt
       ]
 
    : usage-requirements
-     <boost.cobalt.pmr>boost-container:<library>/boost//container
+     <boost.cobalt.pmr>boost-container:<library>/boost/container//boost_container
      <link>shared:<define>BOOST_COBALT_DYN_LINK=1
+     <define>BOOST_COBALT_NO_LINK=1
       [ check-target-builds
           $(config-binding:D)//cpp_lib_memory_resource
           cpp_lib_memory_resource
@@ -97,6 +100,3 @@ rule set-pmr-std ( props * )
         return <boost.cobalt.pmr>std ;
     }
 }
-
-boost-install boost_cobalt ;
-
