@@ -5,6 +5,8 @@
 
 
 import os ;
+import-search /boost/cobalt ;
+import boost-cobalt ;
 
 
 project : requirements
