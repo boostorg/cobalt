@@ -5,6 +5,8 @@
 
 
 import os ;
+import-search /boost/cobalt ;
+import boost-cobalt ;
 
 
 project : requirements
@@ -18,12 +20,11 @@ project : requirements
   <toolset>clang-14:<boost.cobalt.pmr>boost-container
 ;
 
-exe channel      : channel.cpp         /boost//cobalt ;
-exe delay        : delay.cpp         /boost//cobalt ;
-exe delay_op     : delay_op.cpp      /boost//cobalt ;
-exe echo_server  : echo_server.cpp   /boost//cobalt ;
-exe outcome      : outcome.cpp       /boost//cobalt ;
-exe thread       : thread.cpp        /boost//cobalt ;
-exe thread_pool  : thread_pool.cpp   /boost//cobalt ;
-# exe ticker     : ticker.cpp        /boost//json      /boost//cobalt ;
-
+exe channel      : channel.cpp       /boost/cobalt//boost_cobalt ;
+exe delay        : delay.cpp         /boost/cobalt//boost_cobalt ;
+exe delay_op     : delay_op.cpp      /boost/cobalt//boost_cobalt ;
+exe echo_server  : echo_server.cpp   /boost/cobalt//boost_cobalt ;
+exe outcome      : outcome.cpp       /boost/cobalt//boost_cobalt /boost/outcome//boost_outcome ;
+exe thread       : thread.cpp        /boost/cobalt//boost_cobalt ;
+exe thread_pool  : thread_pool.cpp   /boost/cobalt//boost_cobalt ;
+# exe ticker     : ticker.cpp        /boost/cobalt//boost_cobalt /boost/json//boost_json ;
