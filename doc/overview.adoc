@@ -68,7 +68,7 @@ Here's a list of relevant features in cobalt:
 |API reference
 |Look up details while coding
 
-|<<technical_background>>
+|<<in_depth>>
 |Some implementation details
 |Read if you're not confused enough
 

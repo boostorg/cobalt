@@ -18,7 +18,7 @@ cobalt::main co_main(int argc, char * argv[])
     // do something else here
     co_await do_the_other_thing();
     // wait for the promise to complete
-    auto res = co_wait p;
+    auto res = co_await p;
 
     co_return res;
 }
