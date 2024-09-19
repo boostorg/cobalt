@@ -209,5 +209,30 @@ CO_TEST_CASE(deferred)
   std::tuple<system::error_code> r = co_await tim.async_wait(asio::as_tuple);
 }
 
+template<typename Token>
+auto test_multi_values(int a, int b, Token && token)
+{
+  return asio::async_initiate<Token, void(std::exception_ptr, int, int)>(
+      [](auto h, int a, int b)
+      {
+        asio::dispatch(
+            asio::get_associated_immediate_executor(
+                h, asio::get_associated_executor(h)),
+            [h = std::move(h), a, b]() mutable {
+              std::move(h)({}, a, b);
+            }
+        );
+      },
+      std::forward<Token>(token),
+      a, b
+  );
+}
+
+CO_TEST_CASE(multi_values)
+{
+  auto [a, b] = co_await test_multi_values(12, 37, cobalt::use_op);
+  BOOST_CHECK_EQUAL(a, 12);
+  BOOST_CHECK_EQUAL(b, 37);
+}
 
 BOOST_AUTO_TEST_SUITE_END();

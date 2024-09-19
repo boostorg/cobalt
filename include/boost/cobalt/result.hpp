@@ -67,7 +67,7 @@ auto interpret_as_result(std::tuple<Error, Args...> && args) -> system::result<s
     return {system::in_place_error, std::move(std::get<0>(args))};
   return {
       system::in_place_value,
-      std::apply([](auto, auto && ... rest) {return std::make_tuple(std::move(rest)...);})
+      std::apply([](auto, auto && ... rest) {return std::make_tuple(std::move(rest)...);}, std::move(args))
   };
 }
 
