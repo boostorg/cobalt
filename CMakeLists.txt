@@ -147,6 +147,7 @@ else()
                 src/main.cpp
                 src/this_thread.cpp
                 src/thread.cpp
+                src/experimental/io/endpoint.cpp
                 src/experimental/io/signal_set.cpp
                 src/experimental/io/steady_timer.cpp
                 src/experimental/io/system_timer.cpp)
