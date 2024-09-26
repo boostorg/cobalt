@@ -26,6 +26,10 @@ template<typename Awaitable>
 concept wait_op = io_op<Awaitable, system::error_code>;
 
 template<typename Awaitable>
+concept close_op = io_op<Awaitable, system::error_code>;
+
+
+template<typename Awaitable>
 concept transfer_op = io_op<Awaitable, system::error_code, std::size_t>;
 
 }
