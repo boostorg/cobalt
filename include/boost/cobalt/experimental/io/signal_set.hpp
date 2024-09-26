@@ -21,8 +21,6 @@ namespace boost::cobalt::experimental::io
 
 struct signal_set
 {
-  using wait_result = system::result<int>;
-
   signal_set();
   signal_set(std::initializer_list<int> sigs);
 
