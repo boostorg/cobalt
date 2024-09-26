@@ -148,6 +148,7 @@ else()
                 src/this_thread.cpp
                 src/thread.cpp
                 src/experimental/io/endpoint.cpp
+                src/experimental/io/resolver.cpp
                 src/experimental/io/signal_set.cpp
                 src/experimental/io/steady_timer.cpp
                 src/experimental/io/system_timer.cpp)

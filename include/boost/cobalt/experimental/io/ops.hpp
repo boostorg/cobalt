@@ -10,24 +10,23 @@
 
 #include <boost/cobalt/concepts.hpp>
 #include <boost/cobalt/detail/await_result_helper.hpp>
+#include <boost/cobalt/result.hpp>
 
 namespace boost::cobalt::experimental::io
 {
 
-template<typename Awaitable>
-concept wait_op =
-    awaitable<Awaitable> &&
-    std::same_as<
-        detail::co_await_result_t<as_tuple_t<decltype(detail::get_awaitable_type(std::declval<Awaitable>()))>>,
-        std::tuple<system::error_code>>;
+template<typename Awaitable, typename ... Ts>
+concept io_op =
+  awaitable<Awaitable> &&
+  std::same_as<
+      detail::co_await_result_t<as_tuple_t<decltype(detail::get_awaitable_type(std::declval<Awaitable>()))>>,
+      std::tuple<Ts...>>;
 
+template<typename Awaitable>
+concept wait_op = io_op<Awaitable, system::error_code>;
 
 template<typename Awaitable>
-concept transfer_op =
-    awaitable<Awaitable> &&
-    std::same_as<
-        detail::co_await_result_t<as_tuple_t<decltype(detail::get_awaitable_type(std::declval<Awaitable>()))>>,
-        std::tuple<system::error_code, std::size_t>>;
+concept transfer_op = io_op<Awaitable, system::error_code, std::size_t>;
 
 }
 
