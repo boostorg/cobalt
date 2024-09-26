@@ -8,6 +8,7 @@
 #ifndef BOOST_COBALT_DETAIL_AWAIT_RESULT_HELPER_HPP
 #define BOOST_COBALT_DETAIL_AWAIT_RESULT_HELPER_HPP
 
+#include <boost/cobalt/config.hpp>
 #include <boost/cobalt/concepts.hpp>
 #include <utility>
 

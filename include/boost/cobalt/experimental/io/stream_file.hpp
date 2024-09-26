@@ -14,8 +14,9 @@
 #include <boost/cobalt/config.hpp>
 #include <boost/cobalt/experimental/io/buffer.hpp>
 #include <boost/cobalt/experimental/io/ops.hpp>
-#include <boost/cobalt/noop.hpp>
 #include <boost/cobalt/op.hpp>
+
+#include <boost/system/result.hpp>
 
 namespace boost::cobalt::experimental::io
 {
