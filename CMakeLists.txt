@@ -153,7 +153,8 @@ else()
                 src/experimental/io/steady_timer.cpp
                 src/experimental/io/system_timer.cpp
                 src/experimental/io/random_access_file.cpp
-                src/experimental/io/stream_file.cpp)
+                src/experimental/io/stream_file.cpp
+                src/experimental/io/pipe.cpp)
 
     target_include_directories(boost_cobalt PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
     target_link_libraries(boost_cobalt PUBLIC
