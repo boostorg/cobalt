@@ -24,7 +24,7 @@ add_executable(boost_cobalt_experimental EXCLUDE_FROM_ALL test_main.cpp experime
 target_link_libraries(boost_cobalt_experimental  Boost::cobalt Boost::unit_test_framework Boost::context)
 add_test(NAME boost_cobalt_experimental COMMAND boost_cobalt_experimental)
 
-add_executable(boost_cobalt_experimental_io EXCLUDE_FROM_ALL test_main.cpp experimental/io/sleep.cpp experimental/io/endpoint.cpp)
+add_executable(boost_cobalt_experimental_io EXCLUDE_FROM_ALL test_main.cpp experimental/io/sleep.cpp experimental/io/endpoint.cpp experimental/io/resolver.cpp)
 target_link_libraries(boost_cobalt_experimental_io  Boost::cobalt Boost::unit_test_framework Boost::context)
 add_test(NAME boost_cobalt_experimental_io COMMAND boost_cobalt_experimental_io)
 

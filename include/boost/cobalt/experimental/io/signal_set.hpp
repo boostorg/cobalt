@@ -19,13 +19,6 @@
 namespace boost::cobalt::experimental::io
 {
 
-template<typename Awaitable>
-concept signal_wait_op =
-    awaitable<Awaitable> &&
-    std::same_as<
-        detail::co_await_result_t<as_tuple_t<decltype(detail::get_awaitable_type(std::declval<Awaitable>()))>>,
-        std::tuple<system::error_code, int>>;
-
 struct signal_set
 {
   using wait_result = system::result<int>;
@@ -49,7 +42,7 @@ struct signal_set
     boost::asio::basic_signal_set<cobalt::executor> & signal_set_;
   };
  public:
-  [[nodiscard]] signal_wait_op auto wait() { return wait_op_{signal_set_}; }
+  [[nodiscard]] io_op<system::error_code, int> auto wait() { return wait_op_{signal_set_}; }
  private:
   boost::asio::basic_signal_set<cobalt::executor> signal_set_;
 };
