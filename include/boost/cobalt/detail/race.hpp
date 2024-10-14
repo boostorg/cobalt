@@ -101,9 +101,7 @@ struct race_variadic_impl
   struct awaitable : fork::static_shared_state<256 * tuple_size>
   {
 
-#if !defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
     boost::source_location loc;
-#endif
 
     template<std::size_t ... Idx>
     awaitable(std::tuple<Args...> & args, URBG & g, std::index_sequence<Idx...>) :
