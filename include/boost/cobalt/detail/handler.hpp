@@ -23,6 +23,9 @@ namespace boost::cobalt
 namespace detail
 {
 
+template<typename ...>
+struct composed_promise;
+
 enum class completed_immediately_t
 {
   no, maybe, yes, initiating
@@ -279,6 +282,9 @@ struct completion_handler : detail::completion_handler_base
         && std::uncaught_exceptions() > 0)
         self.release();
     }
+
+    template<typename ...>
+    friend struct detail::composed_promise;
  private:
     unique_handle<void> self;
     std::optional<std::tuple<Args...>> &result;

@@ -13,7 +13,9 @@
 #include <boost/cobalt/result.hpp>
 #include <boost/core/no_exceptions_support.hpp>
 
+#include <boost/asio/append.hpp>
 #include <boost/asio/deferred.hpp>
+#include <boost/asio/dispatch.hpp>
 
 
 namespace boost::cobalt
@@ -263,6 +265,99 @@ struct enable_await_deferred
   }
 };
 
+namespace detail
+{
+
+template<typename ... Args>
+struct composed_promise : promise_memory_resource_base,
+                          promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>,
+                          promise_throw_if_cancelled_base,
+                          enable_awaitables<composed_promise<Args...>>,
+                          enable_await_allocator<composed_promise<Args...>>,
+                          enable_await_executor<composed_promise<Args...>>,
+                          enable_await_deferred
+{
+  using promise_cancellation_base<asio::cancellation_slot, asio::enable_total_cancellation>::await_transform;
+  using promise_throw_if_cancelled_base::await_transform;
+  using enable_awaitables<composed_promise<Args...>>::await_transform;
+  using enable_await_allocator<composed_promise<Args...>>::await_transform;
+  using enable_await_executor<composed_promise<Args...>>::await_transform;
+  using enable_await_deferred::await_transform;
+
+  using allocator_type = pmr::polymorphic_allocator<void>;
+  allocator_type get_allocator() const {return handler.get_allocator();}
+
+  using executor_type = executor;
+  const executor_type & get_executor() const {return handler.get_executor();}
+
+
+  template<typename This>
+  void * operator new(const std::size_t size, This &&, completion_handler<Args...>  & handler)
+  {
+    return allocate_coroutine(size, handler.get_allocator());
+  }
+
+#if defined(__cpp_sized_deallocation)
+  void operator delete(void * raw, const std::size_t size)
+    {
+      deallocate_coroutine<typename completion_handler<Args...> ::allocator_type >(raw, size);
+    }
+#else
+  void operator delete(void * raw)
+  {
+    deallocate_coroutine<typename completion_handler<Args...> ::allocator_type >(raw);
+  }
+#endif
+
+  template<typename This>
+  composed_promise(This &&, completion_handler<Args...> &handler) :
+      promise_cancellation_base{handler.get_cancellation_slot()},
+      handler(handler) {}
+
+
+  constexpr static std::suspend_never initial_suspend() {return {}; }
+  void get_return_object() {}
+  void unhandled_exception() { throw; }
+
+  void return_value(std::tuple<Args...> res)
+  {
+    result = std::move(res);
+  }
+
+
+  struct final_awaitable
+  {
+    composed_promise * promise;
+    constexpr static bool await_ready() noexcept
+    {
+      return false;
+    }
+
+    std::coroutine_handle<void> await_suspend(std::coroutine_handle<composed_promise> h) noexcept
+    {
+      auto cc = std::move(h.promise().handler);
+      cc.result = std::move(*h.promise().result);
+
+      return cc.self.release();
+    }
+
+    void await_resume() noexcept
+    {
+    }
+  };
+
+  auto final_suspend() noexcept
+  {
+    return final_awaitable{this};
+  }
+
+  completion_handler<Args...> &handler;
+  std::optional<std::tuple<Args...>> result;
+
+};
+
+}
+
 }
 
 namespace boost::asio
@@ -291,4 +386,12 @@ struct async_result<boost::cobalt::use_op_t, void(Args...)>
 
 
 }
+
+template<typename This, typename ... Args>
+struct std::coroutine_traits<void, This, boost::cobalt::completion_handler<Args...>>
+{
+  using promise_type = boost::cobalt::detail::composed_promise<Args...>;
+};
+
+
 #endif //BOOST_COBALT_OP_HPP
