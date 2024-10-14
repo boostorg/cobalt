@@ -31,11 +31,13 @@ struct op
   {
     op<Args...> &op_;
     std::optional<std::tuple<Args...>> result;
+    detail::sbo_resource &resource;
 
-    awaitable(op<Args...> * op_) : op_(*op_) {}
+    awaitable(op<Args...> * op_, detail::sbo_resource &resource) : op_(*op_), resource(resource) {}
     awaitable(awaitable && lhs)
         : op_(lhs.op_)
         , result(std::move(lhs.result))
+        , resource(lhs.resource)
     {
     }
 
@@ -45,8 +47,6 @@ struct op
       return result.has_value();
     }
 
-    char buffer[BOOST_COBALT_SBO_BUFFER_SIZE];
-    detail::sbo_resource resource{buffer, sizeof(buffer)};
 
     detail::completed_immediately_t completed_immediately = detail::completed_immediately_t::no;
     std::exception_ptr init_ep;
@@ -103,8 +103,86 @@ struct op
 
   awaitable operator co_await() &&
   {
-    return awaitable{this};
+    return awaitable{this, resource_};
   }
+
+ protected:
+  char buffer_[BOOST_COBALT_SBO_BUFFER_SIZE];
+  detail::sbo_resource resource_{buffer_, sizeof(buffer_)};
+
+};
+
+// a simple op using a function pointer and
+template<typename ... Args>
+struct any_op final : op<Args...>
+{
+    void initiate(completion_handler<Args...> handler) final
+    {
+      initiate_(args_, std::move(handler));
+    }
+
+    template<std::invocable<completion_handler<Args...>> Op>
+    any_op(Op && op)
+    {
+      using op_t = std::decay_t<Op>;
+      initiate_ = +[](void * op_, completion_handler<Args...> handler) {(*static_cast<op_t*>(op_))(std::move(handler)); };
+      delete_ =   +[](void * op_, detail::sbo_resource & res)
+                  {
+                    auto * op = static_cast<op_t*>(op_);
+                    op->~op_t();
+                    res.deallocate(op_, sizeof(op_t), alignof(op_t));
+                  };
+
+      move_ = +[](void * op_, detail::sbo_resource & res) -> void*
+              {
+                auto * op = static_cast<op_t*>(op_);
+                auto p = res.allocate(sizeof(op_t), alignof(op_t));
+
+                BOOST_TRY
+                {
+                  return new (p) op_t(std::move(*op));
+                }
+                BOOST_CATCH(...)
+                {
+                  res.deallocate(p, sizeof(op_t), alignof(op_t));
+                  throw;
+                }
+                BOOST_CATCH_END
+
+              };
+
+
+      auto p = this->resource_.allocate(sizeof(op_t), alignof(op_t));
+
+      BOOST_TRY
+      {
+        args_ = new (p) op_t(std::forward<Op>(op));
+      }
+      BOOST_CATCH(...)
+      {
+        this->resource_.deallocate(p, sizeof(op_t), alignof(op_t));
+        throw;
+      }
+      BOOST_CATCH_END
+
+    }
+    any_op() = delete;
+    any_op(const any_op &) = delete;
+    ~any_op()
+    {
+      delete_(args_, this->resource_);
+    }
+
+    any_op(any_op && lhs)
+        : args_(lhs.move_(lhs.args_, this->resource_)),
+          initiate_(lhs.initiate_), delete_(lhs.delete_), move_(lhs.move_)
+    {
+    }
+ private:
+    void * args_;
+    void (*initiate_)(void*, completion_handler<Args...> handler);
+    void (*delete_)  (void*, detail::sbo_resource & res);
+    void* (*move_)   (void*, detail::sbo_resource & new_res);
 };
 
 struct use_op_t
@@ -193,39 +271,20 @@ namespace boost::asio
 template<typename ... Args>
 struct async_result<boost::cobalt::use_op_t, void(Args...)>
 {
-  using return_type = boost::cobalt::op<Args...>;
-
-  template <typename Initiation, typename... InitArgs>
-  struct op_impl final : boost::cobalt::op<Args...>
-  {
-    Initiation initiation;
-    std::tuple<InitArgs...> args;
-    template<typename Initiation_, typename ...InitArgs_>
-    op_impl(Initiation_ initiation,
-            InitArgs_   && ... args)
-            : initiation(std::forward<Initiation_>(initiation))
-            , args(std::forward<InitArgs_>(args)...) {}
-
-    void initiate(cobalt::completion_handler<Args...> complete) final override
-    {
-      std::apply(
-          [&](InitArgs && ... args)
-          {
-            std::move(initiation)(std::move(complete),
-                                  std::move(args)...);
-          }, std::move(args));
-    }
-  };
+  using return_type = boost::cobalt::any_op<Args...>;
 
   template <typename Initiation, typename... InitArgs>
   static auto initiate(Initiation && initiation,
                        boost::cobalt::use_op_t,
                        InitArgs &&... args)
-      -> op_impl<std::decay_t<Initiation>, std::decay_t<InitArgs>...>
+      -> boost::cobalt::any_op<Args...>
   {
-    return op_impl<std::decay_t<Initiation>, std::decay_t<InitArgs>...>(
-        std::forward<Initiation>(initiation),
-        std::forward<InitArgs>(args)...);
+    return [initiation = static_cast<Initiation&&>(initiation),
+            ...args    = static_cast<InitArgs&&>(args)](cobalt::completion_handler<Args...> handler) mutable
+           {
+             auto init = static_cast<Initiation&&>(initiation);
+             std::move(init)(std::move(handler), static_cast<InitArgs&&>(args)...);
+           };
   }
 };
 

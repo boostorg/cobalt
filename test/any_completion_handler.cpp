@@ -41,7 +41,7 @@ inline auto cobalt_sleep(
 )
 {
   return boost::asio::async_initiate<CompletionToken, void(boost::system::error_code)>(
-      cobalt_sleep_impl,
+      &cobalt_sleep_impl,
       token,
       std::move(ex),
       duration
