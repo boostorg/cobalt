@@ -35,14 +35,7 @@ boost::cobalt::thread thr_stop()
 {
   boost::asio::steady_timer tim{co_await boost::asio::this_coro::executor, std::chrono::milliseconds(100)};
 
-#if !defined(BOOST_COBALT_USE_IO_CONTEXT)
-  auto exec = co_await boost::asio::this_coro::executor;
-  auto execp = exec.target<boost::asio::io_context::executor_type>();
-  BOOST_ASSERT(execp != nullptr);
-  auto exc = *execp;
-#else
   auto exc = co_await boost::asio::this_coro::executor;
-#endif
 
   exc.context().stop();
   co_await tim.async_wait(boost::cobalt::use_op);

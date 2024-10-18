@@ -123,8 +123,8 @@ struct main_promise : signal_helper,
       return run_main(co_main(argc, argv));
     }
 
-    using executor_type = executor;
-    const executor_type & get_executor() const {return *exec_;}
+    using executor_type = asio::io_context::executor_type;
+    executor_type get_executor() const {return *exec_;}
 
 #if !defined(BOOST_COBALT_NO_PMR)
     using allocator_type = pmr::polymorphic_allocator<void>;

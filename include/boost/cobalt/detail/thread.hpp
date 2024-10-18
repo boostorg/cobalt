@@ -87,8 +87,8 @@ struct thread_promise : signal_helper_2,
 #endif
   void return_void() { }
 
-  using executor_type = typename cobalt::executor;
-  const executor_type & get_executor() const {return *exec_;}
+  using executor_type = typename asio::io_context::executor_type;
+  executor_type get_executor() const {return wexec_->get_executor();}
 
 #if !defined(BOOST_COBALT_NO_PMR)
   using allocator_type = pmr::polymorphic_allocator<void>;

@@ -304,8 +304,7 @@ struct race_variadic_impl
         const boost::source_location & loc = BOOST_CURRENT_LOCATION)
     {
       this->loc = loc;
-
-      this->exec = &cobalt::detail::get_executor(h);
+      this->exec = cobalt::detail::get_executor(h);
       last_forked.release().resume();
 
       if (!this->outstanding_work()) // already done, resume rightaway.
@@ -617,7 +616,7 @@ struct race_ranged_impl
                        const boost::source_location & loc = BOOST_CURRENT_LOCATION)
     {
       this->loc = loc;
-      this->exec = &detail::get_executor(h);
+      this->exec = detail::get_executor(h);
       last_forked.release().resume();
 
       if (!this->outstanding_work()) // already done, resume rightaway.

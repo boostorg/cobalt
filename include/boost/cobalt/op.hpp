@@ -135,7 +135,7 @@ struct use_op_t
                               !std::is_same<InnerExecutor1, executor_with_default>::value,
                                   std::is_convertible<InnerExecutor1, InnerExecutor>,
                           std::false_type
-          >::type::value>::type = 0) noexcept
+          >::type::value>::type * = 0) noexcept
       : InnerExecutor(ex)
     {
     }

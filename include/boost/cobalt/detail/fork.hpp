@@ -56,13 +56,13 @@ struct fork
 
     bool outstanding_work() {return use_count != 0u;}
 
-    const executor * exec = nullptr;
-    bool wired_up() {return exec != nullptr;}
+    std::optional<executor> exec;
+    bool wired_up() {return exec != std::nullopt;}
 
     using executor_type = executor;
-    const executor_type & get_executor() const
+    executor_type get_executor() const
     {
-      BOOST_ASSERT(exec != nullptr);
+      BOOST_ASSERT(exec != std::nullopt);
       return *exec;
     }
 
@@ -120,7 +120,7 @@ struct fork
     asio::cancellation_slot cancel;
 
     using executor_type = executor;
-    const executor_type & get_executor() const { return state->get_executor(); }
+    executor_type get_executor() const { return state->get_executor(); }
 
 #if defined(BOOST_COBALT_NO_PMR)
     using allocator_type = detail::monotonic_allocator<void>;

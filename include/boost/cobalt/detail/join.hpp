@@ -192,7 +192,7 @@ struct join_variadic_impl
 #if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
       this->loc = loc;
 #endif
-      this->exec = &detail::get_executor(h);
+      this->exec = detail::get_executor(h);
       last_forked.release().resume();
       while (last_index < tuple_size)
         impls[last_index++](*this).release();
@@ -450,7 +450,7 @@ struct join_ranged_impl
 #if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
       this->loc = loc;
 #endif
-      exec = &detail::get_executor(h);
+      exec = detail::get_executor(h);
 
       last_forked.release().resume();
       while (last_index < cancel.size())
