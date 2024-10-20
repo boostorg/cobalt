@@ -36,6 +36,7 @@ deps = [
     'libs/mp11',
     'libs/numeric',
     'libs/optional',
+    'libs/pool',
     'libs/predef',
     'libs/preprocessor',
     'libs/range',
