@@ -155,7 +155,8 @@ else()
                 src/experimental/io/random_access_file.cpp
                 src/experimental/io/stream_file.cpp
                 src/experimental/io/pipe.cpp
-                src/experimental/io/serial_port.cpp)
+                src/experimental/io/serial_port.cpp
+                src/experimental/io/file.cpp)
 
     target_include_directories(boost_cobalt PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
     target_link_libraries(boost_cobalt PUBLIC

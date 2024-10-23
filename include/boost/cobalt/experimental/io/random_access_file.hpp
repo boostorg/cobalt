@@ -13,6 +13,7 @@
 
 #include <boost/cobalt/config.hpp>
 #include <boost/cobalt/experimental/io/buffer.hpp>
+#include <boost/cobalt/experimental/io/file.hpp>
 #include <boost/cobalt/experimental/io/ops.hpp>
 #include <boost/cobalt/noop.hpp>
 #include <boost/cobalt/op.hpp>
@@ -21,7 +22,7 @@ namespace boost::cobalt::experimental::io
 {
 
 
-struct random_access_file : boost::asio::file_base
+struct random_access_file : file
 {
   using native_handle_type = asio::basic_random_access_file<executor>::native_handle_type;
 
@@ -34,12 +35,6 @@ struct random_access_file : boost::asio::file_base
                                        const cobalt::executor & executor = this_thread::get_executor());
   BOOST_COBALT_DECL random_access_file(random_access_file && sf) noexcept;
 
-  BOOST_COBALT_DECL system::result<void> assign(const native_handle_type & native_file);
-  BOOST_COBALT_DECL system::result<void> cancel();
-
-  BOOST_COBALT_DECL executor get_executor();
-  BOOST_COBALT_DECL bool is_open() const;
-
   write_at_op write_some_at(std::uint64_t offset, const_buffer_sequence buffer)
   {
     return { offset, buffer, this, initiate_write_some_at_};
@@ -50,29 +45,12 @@ struct random_access_file : boost::asio::file_base
     return { offset, buffer, this, initiate_read_some_at_};
   }
 
-  BOOST_COBALT_DECL system::result<void> close();
-
-  BOOST_COBALT_DECL native_handle_type native_handle();
-
-  BOOST_COBALT_DECL system::result<void> open(const char * path,        flags open_flags);
-  BOOST_COBALT_DECL system::result<void> open(const std::string & path, flags open_flags);
-
-  BOOST_COBALT_DECL system::result<native_handle_type> release();
-  BOOST_COBALT_DECL system::result<void> resize(std::uint64_t n);
-
-  BOOST_COBALT_DECL system::result<std::uint64_t> size() const;
-  BOOST_COBALT_DECL system::result<void> sync_all();
-  BOOST_COBALT_DECL system::result<void> sync_data();
-
 
  private:
   BOOST_COBALT_DECL static void initiate_read_some_at_(void *, std::uint64_t,  mutable_buffer_sequence, boost::cobalt::completion_handler<boost::system::error_code, std::size_t>);
   BOOST_COBALT_DECL static void initiate_write_some_at_(void *, std::uint64_t, const_buffer_sequence,   boost::cobalt::completion_handler<boost::system::error_code, std::size_t>);
 
-
-
   asio::basic_random_access_file<executor> implementation_;
-
 };
 
 
