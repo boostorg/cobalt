@@ -15,19 +15,19 @@ namespace boost::cobalt::experimental::io
 
 static_assert(read_stream<readable_pipe>);
 
-readable_pipe::readable_pipe()
-    : implementation_(this_thread::get_executor())
+readable_pipe::readable_pipe(const cobalt::executor & executor)
+    : implementation_(executor)
 {
 }
 
-readable_pipe::readable_pipe(const native_handle_type & native_file)
-    : implementation_(this_thread::get_executor(), native_file)
+readable_pipe::readable_pipe(native_handle_type native_file, const cobalt::executor & executor)
+    : implementation_(executor, native_file)
 {
 }
 
 readable_pipe::readable_pipe(readable_pipe && sf) noexcept = default;
 
-system::result<void> readable_pipe::assign(const native_handle_type & native_file)
+system::result<void> readable_pipe::assign(native_handle_type native_file)
 {
   system::error_code ec;
   implementation_.assign(native_file, ec);
@@ -69,19 +69,19 @@ void readable_pipe::initiate_read_some_(void * this_, mutable_buffer_sequence bu
 static_assert(write_stream<writable_pipe>);
 
 
-writable_pipe::writable_pipe()
-    : implementation_(this_thread::get_executor())
+writable_pipe::writable_pipe(const cobalt::executor & executor)
+    : implementation_(executor)
 {
 }
 
-writable_pipe::writable_pipe(const native_handle_type & native_file)
-    : implementation_(this_thread::get_executor(), native_file)
+writable_pipe::writable_pipe(native_handle_type native_file, const cobalt::executor & executor)
+    : implementation_(executor, native_file)
 {
 }
 
 writable_pipe::writable_pipe(writable_pipe && sf) noexcept = default;
 
-system::result<void> writable_pipe::assign(const native_handle_type & native_file)
+system::result<void> writable_pipe::assign(native_handle_type native_file)
 {
   system::error_code ec;
   implementation_.assign(native_file, ec);
@@ -120,10 +120,10 @@ void writable_pipe::initiate_write_some_(void * this_, const_buffer_sequence buf
 }
 
 
-system::result<std::pair<readable_pipe, writable_pipe>> pipe()
+system::result<std::pair<readable_pipe, writable_pipe>> pipe(const cobalt::executor & executor)
 {
-  readable_pipe r;
-  writable_pipe w;
+  readable_pipe r{executor};
+  writable_pipe w{executor};
   system::error_code ec;
   asio::connect_pipe(r.implementation_, w.implementation_);
   if (ec)

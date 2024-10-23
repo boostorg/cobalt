@@ -26,10 +26,13 @@ struct stream_file : boost::asio::file_base
 {
   using native_handle_type = asio::basic_stream_file<executor>::native_handle_type;
 
-  BOOST_COBALT_DECL stream_file();
-  BOOST_COBALT_DECL stream_file(const char * path, file_base::flags open_flags);
-  BOOST_COBALT_DECL stream_file(const std::string & path, file_base::flags open_flags);
-  BOOST_COBALT_DECL stream_file(const native_handle_type & native_file);
+  BOOST_COBALT_DECL stream_file(const cobalt::executor & executor = this_thread::get_executor());
+  BOOST_COBALT_DECL stream_file(const char * path, file_base::flags open_flags,
+                                const cobalt::executor & executor = this_thread::get_executor());
+  BOOST_COBALT_DECL stream_file(const std::string & path, file_base::flags open_flags,
+                                const cobalt::executor & executor = this_thread::get_executor());
+  BOOST_COBALT_DECL stream_file(const native_handle_type & native_file,
+                                const cobalt::executor & executor = this_thread::get_executor());
   BOOST_COBALT_DECL stream_file(stream_file && sf) noexcept;
 
   BOOST_COBALT_DECL system::result<void> assign(const native_handle_type & native_file);

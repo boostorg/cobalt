@@ -21,8 +21,8 @@ namespace boost::cobalt::experimental::io
 
 struct signal_set
 {
-  signal_set();
-  signal_set(std::initializer_list<int> sigs);
+  signal_set(const cobalt::executor & executor = this_thread::get_executor());
+  signal_set(std::initializer_list<int> sigs, const cobalt::executor & executor = this_thread::get_executor());
 
   [[nodiscard]] system::result<void> cancel();
   [[nodiscard]] system::result<void> clear();

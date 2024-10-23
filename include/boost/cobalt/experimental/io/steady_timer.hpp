@@ -30,9 +30,9 @@ struct steady_timer
   /// The time point type of the clock.
   typedef typename clock_type::time_point time_point;
 
-  steady_timer();
-  steady_timer(const time_point& expiry_time);
-  steady_timer(const duration& expiry_time);
+  steady_timer(const cobalt::executor & executor = this_thread::get_executor());
+  steady_timer(const time_point& expiry_time, const cobalt::executor & executor = this_thread::get_executor());
+  steady_timer(const duration& expiry_time,   const cobalt::executor & executor = this_thread::get_executor());
 
   void cancel();
 

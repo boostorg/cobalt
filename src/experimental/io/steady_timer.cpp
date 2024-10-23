@@ -12,9 +12,9 @@
 namespace boost::cobalt::experimental::io
 {
 
-steady_timer::steady_timer() : timer_(this_thread::get_executor()) {}
-steady_timer::steady_timer(const time_point &expiry_time) : timer_(this_thread::get_executor(), expiry_time) {}
-steady_timer::steady_timer(const duration &expiry_time) : timer_(this_thread::get_executor(), expiry_time) {}
+steady_timer::steady_timer(const cobalt::executor & executor) : timer_(executor) {}
+steady_timer::steady_timer(const time_point &expiry_time, const cobalt::executor & executor) : timer_(executor, expiry_time) {}
+steady_timer::steady_timer(const duration &expiry_time, const cobalt::executor & executor) : timer_(executor, expiry_time) {}
 
 void steady_timer::cancel()
 {

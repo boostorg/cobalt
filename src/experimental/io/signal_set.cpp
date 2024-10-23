@@ -10,9 +10,9 @@
 namespace boost::cobalt::experimental::io
 {
 
-signal_set::signal_set() : signal_set_(this_thread::get_executor()) {}
-signal_set::signal_set(std::initializer_list<int> sigs)
-  : signal_set_(this_thread::get_executor())
+signal_set::signal_set(const cobalt::executor & executor) : signal_set_(executor) {}
+signal_set::signal_set(std::initializer_list<int> sigs, const cobalt::executor & executor)
+  : signal_set_(executor)
 {
     for (auto i : sigs)
       add(i).value();

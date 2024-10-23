@@ -14,22 +14,25 @@ namespace boost::cobalt::experimental::io
 {
 
 
-random_access_file::random_access_file()
-    : implementation_(this_thread::get_executor())
+random_access_file::random_access_file(const cobalt::executor & executor)
+    : implementation_(executor)
 {
 }
 
-random_access_file::random_access_file(const char * path, file_base::flags open_flags)
-    : implementation_(this_thread::get_executor(), path, open_flags)
+random_access_file::random_access_file(const char * path, file_base::flags open_flags,
+                                       const cobalt::executor & executor)
+    : implementation_(executor, path, open_flags)
 {
 }
 
-random_access_file::random_access_file(const std::string & path, file_base::flags open_flags)
-    : implementation_(this_thread::get_executor(), path, open_flags)
+random_access_file::random_access_file(const std::string & path, file_base::flags open_flags,
+                                       const cobalt::executor & executor)
+    : implementation_(executor, path, open_flags)
 {
 }
-random_access_file::random_access_file(const native_handle_type & native_file)
-    : implementation_(this_thread::get_executor(), native_file)
+random_access_file::random_access_file(const native_handle_type & native_file,
+                                       const cobalt::executor & executor)
+    : implementation_(executor, native_file)
 {
 }
 

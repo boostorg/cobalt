@@ -22,18 +22,20 @@ namespace boost::cobalt::experimental::io
 {
 
 BOOST_COBALT_DECL
-system::result<std::pair<struct readable_pipe, struct  writable_pipe>> pipe();
+system::result<std::pair<struct readable_pipe, struct  writable_pipe>> pipe(
+    const cobalt::executor & executor
+    );
 
 
 struct readable_pipe 
 {
   using native_handle_type = asio::basic_readable_pipe<executor>::native_handle_type;
 
-  BOOST_COBALT_DECL readable_pipe();
-  BOOST_COBALT_DECL readable_pipe(const native_handle_type & native_file);
+  BOOST_COBALT_DECL readable_pipe(const cobalt::executor & executor = this_thread::get_executor());
+  BOOST_COBALT_DECL readable_pipe(native_handle_type native_file, const cobalt::executor & executor = this_thread::get_executor());
   BOOST_COBALT_DECL readable_pipe(readable_pipe && sf) noexcept;
 
-  BOOST_COBALT_DECL system::result<void> assign(const native_handle_type & native_file);
+  BOOST_COBALT_DECL system::result<void> assign(native_handle_type native_file);
   BOOST_COBALT_DECL system::result<void> cancel();
 
   BOOST_COBALT_DECL executor get_executor();
@@ -53,7 +55,7 @@ struct readable_pipe
 
   BOOST_COBALT_DECL static void initiate_read_some_(void *, mutable_buffer_sequence, boost::cobalt::completion_handler<boost::system::error_code, std::size_t>);
 
-  friend system::result<std::pair<struct readable_pipe, struct writable_pipe>> pipe();
+  friend system::result<std::pair<struct readable_pipe, struct writable_pipe>> pipe(const cobalt::executor & executor);
   asio::basic_readable_pipe<executor> implementation_;
 };
 
@@ -62,11 +64,11 @@ struct writable_pipe
 {
   using native_handle_type = asio::basic_writable_pipe<executor>::native_handle_type;
 
-  BOOST_COBALT_DECL writable_pipe();
-  BOOST_COBALT_DECL writable_pipe(const native_handle_type & native_file);
+  BOOST_COBALT_DECL writable_pipe(const cobalt::executor & executor = this_thread::get_executor());
+  BOOST_COBALT_DECL writable_pipe(native_handle_type native_file, const cobalt::executor & executor = this_thread::get_executor());
   BOOST_COBALT_DECL writable_pipe(writable_pipe && sf) noexcept;
 
-  BOOST_COBALT_DECL system::result<void> assign(const native_handle_type & native_file);
+  BOOST_COBALT_DECL system::result<void> assign(native_handle_type native_file);
   BOOST_COBALT_DECL system::result<void> cancel();
 
   BOOST_COBALT_DECL executor get_executor();
@@ -86,7 +88,7 @@ struct writable_pipe
  private:
   BOOST_COBALT_DECL static void initiate_write_some_(void *, const_buffer_sequence, boost::cobalt::completion_handler<boost::system::error_code, std::size_t>);
 
-  friend system::result<std::pair<struct readable_pipe, struct  writable_pipe>> pipe();
+  friend system::result<std::pair<struct readable_pipe, struct  writable_pipe>> pipe(const cobalt::executor & executor);
   asio::basic_writable_pipe<executor> implementation_;
 };
 

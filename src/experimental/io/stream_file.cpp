@@ -17,22 +17,25 @@ namespace boost::cobalt::experimental::io
 static_assert(stream<stream_file>);
 
 
-stream_file::stream_file()
-      : implementation_(this_thread::get_executor())
+stream_file::stream_file(const cobalt::executor & executor)
+      : implementation_(executor)
 {
 }
 
-stream_file::stream_file(const char * path, file_base::flags open_flags)
-      : implementation_(this_thread::get_executor(), path, open_flags)
+stream_file::stream_file(const char * path, file_base::flags open_flags,
+                         const cobalt::executor & executor)
+      : implementation_(executor, path, open_flags)
 {
 }
 
-stream_file::stream_file(const std::string & path, file_base::flags open_flags)
-      : implementation_(this_thread::get_executor(), path, open_flags)
+stream_file::stream_file(const std::string & path, file_base::flags open_flags,
+                         const cobalt::executor & executor)
+      : implementation_(executor, path, open_flags)
 {
 }
-stream_file::stream_file(const native_handle_type & native_file)
-      : implementation_(this_thread::get_executor(), native_file)
+stream_file::stream_file(const native_handle_type & native_file,
+                         const cobalt::executor & executor)
+      : implementation_(executor, native_file)
 {
 }
 

@@ -46,10 +46,10 @@ struct [[nodiscard]] serial_port final
   using native_handle_type = typename asio::basic_serial_port<executor>::native_handle_type;
   native_handle_type native_handle() {return serial_port_.native_handle();}
 
-  BOOST_COBALT_DECL serial_port();
+  BOOST_COBALT_DECL serial_port(const cobalt::executor & executor = this_thread::get_executor());
   BOOST_COBALT_DECL serial_port(serial_port && lhs) = default;
-  BOOST_COBALT_DECL serial_port(core::string_view device);
-  BOOST_COBALT_DECL serial_port(native_handle_type native_handle);
+  BOOST_COBALT_DECL serial_port(core::string_view device,         const cobalt::executor & executor = this_thread::get_executor());
+  BOOST_COBALT_DECL serial_port(native_handle_type native_handle, const cobalt::executor & executor = this_thread::get_executor());
 
   [[nodiscard]] BOOST_COBALT_DECL system::result<void> assign(native_handle_type native_handle);
   [[nodiscard]] BOOST_COBALT_DECL system::result<native_handle_type> release();

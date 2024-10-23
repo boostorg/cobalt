@@ -13,7 +13,7 @@ namespace boost::cobalt::experimental::io
 {
 
 
-resolver::resolver() : resolver_(this_thread::get_executor()) {}
+resolver::resolver(const cobalt::executor & executor) : resolver_(executor) {}
 void resolver::cancel() { resolver_.cancel(); }
 
 void resolver::resolve_op_::initiate(completion_handler<system::error_code, pmr::vector<endpoint>> h)

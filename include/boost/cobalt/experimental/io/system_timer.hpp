@@ -30,9 +30,11 @@ struct system_timer final
   /// The time point type of the clock.
   typedef typename clock_type::time_point time_point;
 
-  system_timer();
-  system_timer(const time_point& expiry_time);
-  system_timer(const duration& expiry_time);
+  system_timer(const cobalt::executor & executor = this_thread::get_executor());
+  system_timer(const time_point& expiry_time,
+               const cobalt::executor & executor = this_thread::get_executor());
+  system_timer(const duration& expiry_time,
+               const cobalt::executor & executor = this_thread::get_executor());
 
   void cancel();
 

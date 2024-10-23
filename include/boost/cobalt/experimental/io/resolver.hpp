@@ -23,7 +23,7 @@ namespace boost::cobalt::experimental::io
 
 struct resolver
 {
-  resolver();
+  resolver(const cobalt::executor & executor = this_thread::get_executor());
   resolver(resolver && ) = delete;
 
   void cancel();

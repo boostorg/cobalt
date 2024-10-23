@@ -15,7 +15,7 @@ namespace boost::cobalt::experimental::io
 {
 
 template<typename Stream>
-void initiate_async_read_some(Stream & str, mutable_buffer_sequence & seq,
+void initiate_async_read_some(Stream & str, mutable_buffer_sequence seq,
                               completion_handler<boost::system::error_code, std::size_t> handler)
 {
   if (seq.buffer_count() > 0u)
@@ -27,7 +27,7 @@ void initiate_async_read_some(Stream & str, mutable_buffer_sequence & seq,
 }
 
 template<typename Stream>
-void initiate_async_write_some(Stream & str, const_buffer_sequence & seq,
+void initiate_async_write_some(Stream & str, const_buffer_sequence seq,
                                completion_handler<boost::system::error_code, std::size_t> handler)
 {
   if (seq.buffer_count() > 0u)
@@ -39,7 +39,7 @@ void initiate_async_write_some(Stream & str, const_buffer_sequence & seq,
 }
 
 template<typename Stream>
-void initiate_async_read_some_at(Stream & str, std::uint64_t offset, mutable_buffer_sequence & seq,
+void initiate_async_read_some_at(Stream & str, std::uint64_t offset, mutable_buffer_sequence seq,
                               completion_handler<boost::system::error_code, std::size_t> handler)
 {
   if (seq.buffer_count() > 0u)
@@ -51,7 +51,7 @@ void initiate_async_read_some_at(Stream & str, std::uint64_t offset, mutable_buf
 }
 
 template<typename Stream>
-void initiate_async_write_some_at(Stream & str, std::uint64_t offset, const_buffer_sequence & seq,
+void initiate_async_write_some_at(Stream & str, std::uint64_t offset, const_buffer_sequence seq,
                                completion_handler<boost::system::error_code, std::size_t> handler)
 {
   if (seq.buffer_count() > 0u)
@@ -60,6 +60,30 @@ void initiate_async_write_some_at(Stream & str, std::uint64_t offset, const_buff
     str.async_write_some_at(offset, seq.registered, std::move(handler));
   else
     str.async_write_some_at(offset, seq.head, std::move(handler));
+}
+
+template<typename Stream>
+void initiate_async_send(Stream & str, const_buffer_sequence seq,
+                         completion_handler<boost::system::error_code, std::size_t> handler)
+{
+  if (seq.buffer_count() > 0u)
+    str.async_send(seq, std::move(handler));
+  else if (seq.is_registered())
+    str.async_send(seq.registered, std::move(handler));
+  else
+    str.async_send(seq.head, std::move(handler));
+}
+
+template<typename Stream>
+void initiate_async_receive(Stream & str, mutable_buffer_sequence seq,
+                            completion_handler<boost::system::error_code, std::size_t> handler)
+{
+  if (seq.buffer_count() > 0u)
+    str.async_receive(seq, std::move(handler));
+  else if (seq.is_registered())
+    str.async_receive(seq.registered, std::move(handler));
+  else
+    str.async_receive(seq.head, std::move(handler));
 }
 
 }

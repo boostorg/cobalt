@@ -97,12 +97,12 @@ auto serial_port::get_parity() -> system::result<parity>
   return ec ? ec : system::result<parity>(br.value());
 }
 
-serial_port::serial_port()
-    : serial_port_(this_thread::get_executor()) {}
-serial_port::serial_port(core::string_view device)
-    : serial_port_(this_thread::get_executor(), std::string(device)) {}
-serial_port::serial_port(native_handle_type native_handle)
-    : serial_port_(this_thread::get_executor(), native_handle) {}
+serial_port::serial_port(const cobalt::executor & executor)
+    : serial_port_(executor) {}
+serial_port::serial_port(core::string_view device, const cobalt::executor & executor)
+    : serial_port_(executor, std::string(device)) {}
+serial_port::serial_port(native_handle_type native_handle, const cobalt::executor & executor)
+    : serial_port_(executor, native_handle) {}
 
 system::result<void> serial_port::assign(native_handle_type native_handle)
 {
