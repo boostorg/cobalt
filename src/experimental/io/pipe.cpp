@@ -5,6 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
+#include <boost/cobalt/experimental/io/initiate_templates.hpp>
 #include <boost/cobalt/experimental/io/pipe.hpp>
 #include <boost/cobalt/experimental/io/stream.hpp>
 #include <boost/asio/connect_pipe.hpp>
@@ -52,33 +53,17 @@ auto readable_pipe::release() -> system::result<native_handle_type>
 }
 
 
-system::result<void>           readable_pipe::close_op_::await_resume(as_result_tag)
+system::result<void>           readable_pipe::close()
 {
   system::error_code ec;
-  f_.close(ec);
+  implementation_.close(ec);
   return ec ? ec : system::result<void>{};
 }
-std::tuple<system::error_code> readable_pipe::close_op_::await_resume(as_tuple_tag)
-{
-  system::error_code ec;
-  f_.close(ec);
-  return std::make_tuple(ec);
-}
 
-void                           readable_pipe::close_op_::await_resume()
+void readable_pipe::initiate_read_some_(void * this_, mutable_buffer_sequence buffer, boost::cobalt::completion_handler<boost::system::error_code, std::size_t> handler)
 {
-  f_.close();
+  initiate_async_read_some(static_cast<readable_pipe*>(this_)->implementation_, buffer, std::move(handler));
 }
-
-void readable_pipe::read_some_op_::initiate(cobalt::completion_handler<system::error_code, std::size_t> complete)
-{
-  variant2::visit(
-      [&](auto buf)
-      {
-        implementation.async_read_some(std::move(buf), std::move(complete));
-      }, buffer);
-}
-
 
 
 static_assert(write_stream<writable_pipe>);
@@ -121,33 +106,17 @@ auto writable_pipe::release() -> system::result<native_handle_type>
   return ec ? ec : system::result<native_handle_type>{r};
 }
 
-
-
-system::result<void>           writable_pipe::close_op_::await_resume(as_result_tag)
+system::result<void> writable_pipe::close()
 {
   system::error_code ec;
-  f_.close(ec);
+  implementation_.close(ec);
   return ec ? ec : system::result<void>{};
 }
-std::tuple<system::error_code> writable_pipe::close_op_::await_resume(as_tuple_tag)
-{
-  system::error_code ec;
-  f_.close(ec);
-  return std::make_tuple(ec);
-}
 
-void                           writable_pipe::close_op_::await_resume()
-{
-  f_.close();
-}
 
-void writable_pipe::write_some_op_::initiate(cobalt::completion_handler<system::error_code, std::size_t> complete)
+void writable_pipe::initiate_write_some_(void * this_, const_buffer_sequence buffer, boost::cobalt::completion_handler<boost::system::error_code, std::size_t> handler)
 {
-  variant2::visit(
-      [&](auto buf)
-      {
-        implementation.async_write_some(std::move(buf), std::move(complete));
-      }, buffer);
+  initiate_async_write_some(static_cast<writable_pipe*>(this_)->implementation_, buffer, std::move(handler));
 }
 
 

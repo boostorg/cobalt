@@ -28,7 +28,6 @@ struct steady_sleep
   std::optional<decltype(tim.wait())> op_;
 };
 
-
 struct system_sleep
 {
   system_sleep(const std::chrono::system_clock::time_point & tp) : tim{tp} {}
@@ -40,8 +39,6 @@ struct system_sleep
   std::optional<decltype(tim.wait())> op_;
 };
 
-static_assert(cobalt::experimental::io::wait_op<system_sleep>);
-
 }
 
 namespace boost::cobalt::experimental::io
@@ -50,26 +47,24 @@ namespace boost::cobalt::experimental::io
 
 
 // NOTE: these don't need to be coros, we can optimize that out. Not sure that's worth it though
-wait_op auto sleep(const std::chrono::steady_clock::duration & d)    { return detail::experimental::io::steady_sleep{d};}
-wait_op auto sleep(const std::chrono::steady_clock::time_point & tp) { return detail::experimental::io::steady_sleep{tp};}
-wait_op auto sleep(const std::chrono::system_clock::time_point & tp) { return detail::experimental::io::system_sleep{tp};}
+auto sleep(const std::chrono::steady_clock::duration & d)    { return detail::experimental::io::steady_sleep{d};}
+auto sleep(const std::chrono::steady_clock::time_point & tp) { return detail::experimental::io::steady_sleep{tp};}
+auto sleep(const std::chrono::system_clock::time_point & tp) { return detail::experimental::io::system_sleep{tp};}
 
 template<typename Duration>
-wait_op auto sleep(const std::chrono::time_point<std::chrono::steady_clock, Duration> & tp)
+auto sleep(const std::chrono::time_point<std::chrono::steady_clock, Duration> & tp)
 {
   return sleep(std::chrono::time_point_cast<std::chrono::steady_clock::duration >(tp));
 }
 
-
 template<typename Duration>
-wait_op auto  sleep(const std::chrono::time_point<std::chrono::system_clock, Duration> & tp)
+auto  sleep(const std::chrono::time_point<std::chrono::system_clock, Duration> & tp)
 {
   return sleep(std::chrono::time_point_cast<std::chrono::system_clock::duration >(tp));
 }
 
-
 template<typename Rep, typename Period>
-wait_op auto sleep(const std::chrono::duration<Rep, Period> & dur)
+auto sleep(const std::chrono::duration<Rep, Period> & dur)
 {
   return sleep(std::chrono::duration_cast<std::chrono::steady_clock::duration >(dur));
 }

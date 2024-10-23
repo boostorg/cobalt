@@ -9,6 +9,7 @@
 #define BOOST_COBALT_EXPERIMENTAL_IO_IO_SYSTEM_TIMER_HPP
 
 #include <boost/cobalt/op.hpp>
+#include <boost/cobalt/experimental/io/ops.hpp>
 #include <boost/asio/basic_waitable_timer.hpp>
 
 #include <boost/system/result.hpp>
@@ -40,24 +41,9 @@ struct system_timer final
   void reset(const duration& expiry_time);
   bool expired() const;
 
-  struct wait_op_ final : cobalt::op<system::error_code>
-  {
-    void ready(handler<system::error_code> h) override
-    {
-      if (timer_->expired())
-        h({});
-    }
-    BOOST_COBALT_DECL
-    void initiate(completion_handler<system::error_code> h) override;
-
-    wait_op_(system_timer * timer) : timer_(timer) {}
-   private:
-    system_timer * timer_;
-  };
-
- public:
-  [[nodiscard]] wait_op_ wait() { return wait_op_{this}; }
+  [[nodiscard]] wait_op wait() { return {this, initiate_wait_}; }
  private:
+  BOOST_COBALT_DECL static void initiate_wait_(void *, boost::cobalt::completion_handler<boost::system::error_code>);
   boost::asio::basic_waitable_timer<std::chrono::system_clock,
                                     asio::wait_traits<std::chrono::system_clock>,
                                     executor> timer_;

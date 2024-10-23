@@ -21,8 +21,6 @@
 namespace boost::cobalt::experimental::io
 {
 
-
-
 struct resolver
 {
   resolver();

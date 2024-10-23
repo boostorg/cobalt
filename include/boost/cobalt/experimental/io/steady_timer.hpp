@@ -41,27 +41,11 @@ struct steady_timer
   void reset(const duration& expiry_time);
   bool expired() const;
 
+  [[nodiscard]] wait_op wait() { return {this, initiate_wait_}; }
  private:
-  struct wait_op_ final : cobalt::op<system::error_code>
-  {
-    void ready(handler<system::error_code> h) override
-    {
-      if (timer_->expired())
-        h({});
-    }
 
-    BOOST_COBALT_DECL
-    void initiate(completion_handler<system::error_code> h) override;
+  BOOST_COBALT_DECL static void initiate_wait_(void *, boost::cobalt::completion_handler<boost::system::error_code>);
 
-    wait_op_(steady_timer * timer) : timer_(timer) {}
-   private:
-    steady_timer * timer_;
-  };
-
-
- public:
-  [[nodiscard]] wait_op auto wait() { return wait_op_{this}; }
- private:
   boost::asio::basic_waitable_timer<std::chrono::steady_clock,
                                     asio::wait_traits<std::chrono::steady_clock>,
                                     executor> timer_;

@@ -37,16 +37,17 @@ struct random_access_file : boost::asio::file_base
   BOOST_COBALT_DECL executor get_executor();
   BOOST_COBALT_DECL bool is_open() const;
 
-  transfer_op auto write_some_at(std::uint64_t offset, const_buffer_sequence buffer)
+  write_at_op write_some_at(std::uint64_t offset, const_buffer_sequence buffer)
   {
-    return write_some_at_op_{implementation_, offset, std::move(buffer)};
-  }
-  transfer_op auto read_some_at(std::uint64_t offset, mutable_buffer_sequence buffer)
-  {
-    return read_some_at_op_{implementation_, offset, std::move(buffer)};
+    return { offset, buffer, this, initiate_write_some_at_};
   }
 
-  close_op auto close() {return close_op_{implementation_};}
+  read_at_op read_some_at(std::uint64_t offset, mutable_buffer_sequence buffer)
+  {
+    return { offset, buffer, this, initiate_read_some_at_};
+  }
+
+  BOOST_COBALT_DECL system::result<void> close();
 
   BOOST_COBALT_DECL native_handle_type native_handle();
 
@@ -62,44 +63,9 @@ struct random_access_file : boost::asio::file_base
 
 
  private:
-  struct close_op_
-  {
-    asio::basic_random_access_file<executor> & f_;
-    constexpr bool await_ready() {return true;}
-    constexpr void await_suspend(std::coroutine_handle<>) {}
-    BOOST_COBALT_DECL           system::result<void> await_resume(as_result_tag);
-    BOOST_COBALT_DECL std::tuple<system::error_code> await_resume(as_tuple_tag);
-    BOOST_COBALT_DECL void                           await_resume();
-  };
+  BOOST_COBALT_DECL static void initiate_read_some_at_(void *, std::uint64_t,  mutable_buffer_sequence, boost::cobalt::completion_handler<boost::system::error_code, std::size_t>);
+  BOOST_COBALT_DECL static void initiate_write_some_at_(void *, std::uint64_t, const_buffer_sequence,   boost::cobalt::completion_handler<boost::system::error_code, std::size_t>);
 
-  struct read_some_at_op_ final : cobalt::op<system::error_code, std::size_t>
-  {
-    asio::basic_random_access_file<executor> &implementation;
-    std::uint64_t offset;
-    mutable_buffer_sequence buffer;
-
-    read_some_at_op_(asio::basic_random_access_file<executor> & implementation,
-                     std::uint64_t offset, mutable_buffer_sequence buffer)
-        : implementation(implementation), offset(offset), buffer(std::move(buffer)) {}
-
-    BOOST_COBALT_DECL
-    void initiate(cobalt::completion_handler<system::error_code, std::size_t> complete);
-  };
-
-  struct write_some_at_op_ final : cobalt::op<system::error_code, std::size_t>
-  {
-    asio::basic_random_access_file<executor> &implementation;
-    std::uint64_t offset;
-    const_buffer_sequence buffer;
-
-    write_some_at_op_(asio::basic_random_access_file<executor> & implementation,
-                      std::uint64_t offset, const_buffer_sequence buffer)
-      : implementation(implementation), offset(offset), buffer(std::move(buffer)) {}
-
-
-    BOOST_COBALT_DECL
-    void initiate(cobalt::completion_handler<system::error_code, std::size_t> complete);
-  };
 
 
   asio::basic_random_access_file<executor> implementation_;

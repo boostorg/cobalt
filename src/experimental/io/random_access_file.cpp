@@ -5,6 +5,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
+#include <boost/cobalt/experimental/io/initiate_templates.hpp>
 #include <boost/cobalt/experimental/io/random_access_file.hpp>
 
 #if defined(BOOST_ASIO_HAS_FILE)
@@ -102,40 +103,20 @@ system::result<void> random_access_file::sync_data()
   return ec ? ec : system::result<void>{};
 }
 
-system::result<void>           random_access_file::close_op_::await_resume(as_result_tag)
+system::result<void> random_access_file::close()
 {
   system::error_code ec;
-  f_.close(ec);
+  implementation_.close(ec);
   return ec ? ec : system::result<void>{};
 }
-std::tuple<system::error_code> random_access_file::close_op_::await_resume(as_tuple_tag)
-{
-  system::error_code ec;
-  f_.close(ec);
-  return std::make_tuple(ec);
-}
 
-void                           random_access_file::close_op_::await_resume()
+void random_access_file::initiate_read_some_at_(void *this_, std::uint64_t offset,  mutable_buffer_sequence buffer, boost::cobalt::completion_handler<boost::system::error_code, std::size_t> handler)
 {
-  f_.close();
+  return initiate_async_read_some_at(static_cast<random_access_file*>(this_)->implementation_, offset, buffer, std::move(handler));
 }
-
-void random_access_file::read_some_at_op_::initiate(cobalt::completion_handler<system::error_code, std::size_t> complete)
+void random_access_file::initiate_write_some_at_(void *this_, std::uint64_t offset, const_buffer_sequence buffer, boost::cobalt::completion_handler<boost::system::error_code, std::size_t> handler)
 {
-  variant2::visit(
-      [&](auto buf)
-      {
-        implementation.async_read_some_at(offset, std::move(buf), std::move(complete));
-      }, buffer);
-}
-void random_access_file::write_some_at_op_::initiate(cobalt::completion_handler<system::error_code, std::size_t> complete)
-{
-  variant2::visit(
-      [&](auto buf)
-      {
-        implementation.async_write_some_at(offset, std::move(buf), std::move(complete));
-      }, buffer);
-
+  return initiate_async_write_some_at(static_cast<random_access_file*>(this_)->implementation_, offset, buffer, std::move(handler));
 }
 
 

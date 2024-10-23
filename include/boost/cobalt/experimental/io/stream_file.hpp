@@ -38,16 +38,17 @@ struct stream_file : boost::asio::file_base
   BOOST_COBALT_DECL executor get_executor();
   BOOST_COBALT_DECL bool is_open() const;
 
-  transfer_op auto write_some(const_buffer_sequence buffer)
+  write_op write_some(const_buffer_sequence buffer)
   {
-    return write_some_op_{implementation_, std::move(buffer)};
+    return {buffer, this, initiate_write_some_};
   }
-  transfer_op auto read_some(mutable_buffer_sequence buffer)
+  read_op read_some(mutable_buffer_sequence buffer)
   {
-    return read_some_op_{implementation_, std::move(buffer)};
+    return {buffer, this, initiate_read_some_};
   }
 
-  close_op auto close() {return close_op_{implementation_};}
+  BOOST_COBALT_DECL system::result<void> close();
+
 
   BOOST_COBALT_DECL native_handle_type native_handle();
 
@@ -67,40 +68,8 @@ struct stream_file : boost::asio::file_base
 
 
  private:
-  struct close_op_
-  {
-    asio::basic_stream_file<executor> & f_;
-    constexpr bool await_ready() {return true;}
-    constexpr void await_suspend(std::coroutine_handle<>) {}
-    BOOST_COBALT_DECL           system::result<void> await_resume(as_result_tag);
-    BOOST_COBALT_DECL std::tuple<system::error_code> await_resume(as_tuple_tag);
-    BOOST_COBALT_DECL void                           await_resume();
-  };
-
-  struct read_some_op_ final : cobalt::op<system::error_code, std::size_t>
-  {
-    asio::basic_stream_file<executor> &implementation;
-    mutable_buffer_sequence buffer;
-
-    read_some_op_(asio::basic_stream_file<executor> & implementation, mutable_buffer_sequence buffer)
-        : implementation(implementation), buffer(std::move(buffer)) {}
-
-    BOOST_COBALT_DECL
-    void initiate(cobalt::completion_handler<system::error_code, std::size_t> complete);
-  };
-
-  struct write_some_op_ final : cobalt::op<system::error_code, std::size_t>
-  {
-    asio::basic_stream_file<executor> &implementation;
-    const_buffer_sequence buffer;
-
-    write_some_op_(asio::basic_stream_file<executor> & implementation, const_buffer_sequence buffer)
-      : implementation(implementation), buffer(std::move(buffer)) {}
-
-
-    BOOST_COBALT_DECL
-    void initiate(cobalt::completion_handler<system::error_code, std::size_t> complete);
-  };
+  BOOST_COBALT_DECL static void initiate_read_some_(void *, mutable_buffer_sequence, boost::cobalt::completion_handler<boost::system::error_code, std::size_t>);
+  BOOST_COBALT_DECL static void initiate_write_some_(void *, const_buffer_sequence, boost::cobalt::completion_handler<boost::system::error_code, std::size_t>);
 
 
   asio::basic_stream_file<executor> implementation_;
