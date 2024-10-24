@@ -164,6 +164,13 @@ struct mutable_buffer_sequence
       return std::make_tuple(lhs.head_.data(), lhs.head_.size(), lhs.tail_.data(), lhs.tail_.size(), lhs.offset_)
              <=> std::make_tuple(rhs.head_.data(), rhs.head_.size(), rhs.tail_.data(), rhs.tail_.size(), rhs.offset_);
     };
+
+    friend bool operator==(const const_iterator & lhs, const const_iterator & rhs)
+    {
+      return std::make_tuple(lhs.head_.data(), lhs.head_.size(), lhs.tail_.data(), lhs.tail_.size(), lhs.offset_)
+          != std::make_tuple(rhs.head_.data(), rhs.head_.size(), rhs.tail_.data(), rhs.tail_.size(), rhs.offset_);
+    }
+
     friend bool operator!=(const const_iterator & lhs, const const_iterator & rhs)
     {
       return std::make_tuple(lhs.head_.data(), lhs.head_.size(), lhs.tail_.data(), lhs.tail_.size(), lhs.offset_)
@@ -353,6 +360,11 @@ struct const_buffer_sequence
       return std::make_tuple(lhs.head_.data(), lhs.head_.size(), lhs.tail_.data(), lhs.tail_.size(), lhs.offset_)
              <=> std::make_tuple(rhs.head_.data(), rhs.head_.size(), rhs.tail_.data(), rhs.tail_.size(), rhs.offset_);
     };
+    friend bool operator==(const const_iterator & lhs, const const_iterator & rhs)
+    {
+      return std::make_tuple(lhs.head_.data(), lhs.head_.size(), lhs.tail_.data(), lhs.tail_.size(), lhs.offset_)
+          != std::make_tuple(rhs.head_.data(), rhs.head_.size(), rhs.tail_.data(), rhs.tail_.size(), rhs.offset_);
+    }
     friend bool operator!=(const const_iterator & lhs, const const_iterator & rhs)
     {
       return std::make_tuple(lhs.head_.data(), lhs.head_.size(), lhs.tail_.data(), lhs.tail_.size(), lhs.offset_)

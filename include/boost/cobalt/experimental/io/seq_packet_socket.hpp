@@ -62,8 +62,6 @@ struct [[nodiscard]] seq_packet_socket final : socket
     }
   };
 
-
-
   receive_op receive(message_flags in_flags, message_flags& out_flags, mutable_buffer_sequence buffer)
   {
     return {in_flags, &out_flags, buffer, this, initiate_receive_};

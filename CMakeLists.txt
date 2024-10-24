@@ -160,7 +160,8 @@ else()
                 src/experimental/io/socket.cpp
                 src/experimental/io/datagram_socket.cpp
                 src/experimental/io/seq_packet_socket.cpp
-                src/experimental/io/stream_socket.cpp)
+                src/experimental/io/stream_socket.cpp
+                src/experimental/io/ssl.cpp)
 
     target_include_directories(boost_cobalt PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
     target_link_libraries(boost_cobalt PUBLIC
