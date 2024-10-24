@@ -20,7 +20,7 @@ target_link_libraries(boost_cobalt_basic_tests  Boost::cobalt Boost::unit_test_f
 add_test(NAME boost_cobalt_main COMMAND boost_cobalt_main)
 add_test(NAME boost_cobalt_basic_tests COMMAND boost_cobalt_basic_tests)
 
-add_executable(boost_cobalt_experimental EXCLUDE_FROM_ALL test_main.cpp experimental/context.cpp experimental/yield_context.cpp)
+add_executable(boost_cobalt_experimental EXCLUDE_FROM_ALL test_main.cpp experimental/context.cpp experimental/yield_context.cpp experimental/composition.cpp)
 target_link_libraries(boost_cobalt_experimental  Boost::cobalt Boost::unit_test_framework Boost::context)
 add_test(NAME boost_cobalt_experimental COMMAND boost_cobalt_experimental)
 

@@ -27,17 +27,23 @@ struct op
   virtual void initiate(cobalt::completion_handler<Args...> complete) = 0 ;
   virtual ~op() = default;
 
-  struct awaitable
+  struct awaitable_base
   {
     op<Args...> &op_;
     std::optional<std::tuple<Args...>> result;
 
-    awaitable(op<Args...> * op_) : op_(*op_) {}
-    awaitable(awaitable && lhs)
-        : op_(lhs.op_)
-        , result(std::move(lhs.result))
-    {
-    }
+#if !defined(BOOST_COBALT_NO_PMR)
+    using resource_type = pmr::memory_resource;
+#else
+    using resource_type = detail::sbo_resource;
+#endif
+
+    awaitable_base(op<Args...> * op_, resource_type *resource) : op_(*op_), resource(resource) {}
+    awaitable_base(awaitable_base && lhs) noexcept = default;
+
+#if defined(_MSC_VER)
+    BOOST_NOINLINE ~awaitable_base() {}
+#endif
 
     bool await_ready()
     {
@@ -45,11 +51,10 @@ struct op
       return result.has_value();
     }
 
-    char buffer[BOOST_COBALT_SBO_BUFFER_SIZE];
-    detail::sbo_resource resource{buffer, sizeof(buffer)};
-
     detail::completed_immediately_t completed_immediately = detail::completed_immediately_t::no;
     std::exception_ptr init_ep;
+
+    resource_type *resource;
 
     template<typename Promise>
     bool await_suspend(std::coroutine_handle<Promise> h
@@ -63,9 +68,9 @@ struct op
         completed_immediately = detail::completed_immediately_t::initiating;
 
 #if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
-        op_.initiate(completion_handler<Args...>{h, result, &resource, &completed_immediately, loc});
+        op_.initiate(completion_handler<Args...>{h, result, resource, &completed_immediately, loc});
 #else
-        op_.initiate(completion_handler<Args...>{h, result, &resource, &completed_immediately});
+        op_.initiate(completion_handler<Args...>{h, result, resource, &completed_immediately});
 #endif
         if (completed_immediately == detail::completed_immediately_t::initiating)
           completed_immediately = detail::completed_immediately_t::no;
@@ -86,6 +91,9 @@ struct op
       return await_resume(as_result_tag{}).value(loc);
     }
 
+#if defined(_MSC_VER)
+    BOOST_NOINLINE
+#endif
     auto await_resume(const struct as_tuple_tag &)
     {
       if (init_ep)
@@ -93,11 +101,33 @@ struct op
       return *std::move(result);
     }
 
+#if defined(_MSC_VER)
+    BOOST_NOINLINE
+#endif
     auto await_resume(const struct as_result_tag &)
     {
       if (init_ep)
         std::rethrow_exception(init_ep);
       return interpret_as_result(*std::move(result));
+    }
+  };
+
+  struct awaitable : awaitable_base
+  {
+    char buffer[BOOST_COBALT_SBO_BUFFER_SIZE];
+    detail::sbo_resource resource{buffer, sizeof(buffer)};
+
+    awaitable(op<Args...> * op_) : awaitable_base(op_, &resource) {}
+    awaitable(awaitable && rhs) : awaitable_base(std::move(rhs))
+    {
+      this->awaitable_base::resource = &resource;
+    }
+
+    awaitable_base replace_resource(typename awaitable_base::resource_type * resource) &&
+    {
+      awaitable_base nw = std::move(*this);
+      nw.resource = resource;
+      return nw;
     }
   };
 

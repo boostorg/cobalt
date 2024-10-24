@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(await)
   boost::asio::io_context ioc;
 
   boost::asio::spawn(ioc,
-                     [&](boost::asio::yield_context ctx)
+                     [&](boost::asio::basic_yield_context<boost::cobalt::executor> ctx)
                      {
                        experimental::await(dummy_aw(), ctx);
                        experimental::await(t(), ctx);

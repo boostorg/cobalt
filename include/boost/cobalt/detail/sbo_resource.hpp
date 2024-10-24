@@ -136,9 +136,24 @@ struct sbo_resource
       operator delete(p, std::align_val_t(align));
   #endif
 #endif
+
     }
   }
 
+#if defined(BOOST_COBALT_NO_PMR)
+  [[nodiscard]]
+    void*
+    allocate(size_t bytes, size_t alignment = alignof(std::max_align_t))
+    {
+      return ::operator new(bytes, do_allocate(bytes, alignment));
+    }
+
+    void
+    deallocate(void* p, size_t bytes, size_t alignment = alignof(std::max_align_t))
+    {
+      return do_deallocate(p, bytes, alignment);
+    }
+#endif
 
 #if !defined(BOOST_COBALT_NO_PMR)
   constexpr bool do_is_equal(memory_resource const& other) const noexcept override
@@ -179,6 +194,8 @@ struct sbo_allocator
     resource_->do_deallocate(p, sizeof(T) * n, alignof(T));
   }
   sbo_allocator(sbo_resource * resource) : resource_(resource) {}
+
+  sbo_resource * resource() const {return resource_;}
  private:
   template<typename>
   friend struct sbo_allocator;
