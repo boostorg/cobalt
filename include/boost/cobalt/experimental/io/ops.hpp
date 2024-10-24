@@ -46,7 +46,7 @@ struct op_awaitable_base
 
   template<typename ... Args_>
   op_awaitable_base(resource_type *resource, Op * op_, Args_ && ... args) : op_(*op_), args(std::forward<Args_>(args)...), resource(resource) {}
-  op_awaitable_base(op_awaitable_base && lhs) : op_(lhs.op_), args(std::move(lhs.args_)), result(std::move(lhs.result))
+  op_awaitable_base(op_awaitable_base && lhs) : op_(lhs.op_), args(std::move(lhs.args)), result(std::move(lhs.result))
   {
   }
 

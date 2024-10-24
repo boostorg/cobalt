@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_COBALT_EXPERIMENTAL_IO_WRITE_HPP
-#define BOOST_COBALT_EXPERIMENTAL_IO_WRITE_HPP
+#ifndef BOOST_COBALT_EXPERIMENTAL_IO_READ_HPP
+#define BOOST_COBALT_EXPERIMENTAL_IO_READ_HPP
 
 #include <boost/cobalt/experimental/io/buffer.hpp>
 #include <boost/cobalt/experimental/io/ops.hpp>
@@ -16,10 +16,10 @@
 namespace boost::cobalt::experimental::io
 {
 
-struct write_all  final : op<system::error_code, std::size_t>
+struct read_all  final : op<system::error_code, std::size_t>
 {
-  write_op step;
-  write_all(write_op op) : step(op) {}
+  read_op step;
+  read_all(read_op op) : step(op) {}
 
   BOOST_COBALT_DECL void initiate(completion_handler<boost::system::error_code, std::size_t>) final;
 };
@@ -27,13 +27,13 @@ struct write_all  final : op<system::error_code, std::size_t>
 template<typename Stream>
   requires requires (Stream & str, const_buffer_sequence buffer)
   {
-    {str.write_some(buffer)} -> std::same_as<write_op>;
+    {str.read_some(buffer)} -> std::same_as<read_op>;
   }
-  write_all write(Stream & str, const_buffer_sequence buffer)
+  read_all read(Stream & str, const_buffer_sequence buffer)
 {
-  return write_all{str.write_some(buffer)};
+  return read_all{str.read_some(buffer)};
 }
 
 }
 
-#endif //BOOST_COBALT_EXPERIMENTAL_IO_WRITE_HPP
+#endif //BOOST_COBALT_EXPERIMENTAL_IO_READ_HPP
