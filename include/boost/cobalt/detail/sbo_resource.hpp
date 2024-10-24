@@ -179,6 +179,8 @@ struct sbo_allocator
     resource_->do_deallocate(p, sizeof(T) * n, alignof(T));
   }
   sbo_allocator(sbo_resource * resource) : resource_(resource) {}
+
+  sbo_resource * resource() const {return resource_;}
  private:
   template<typename>
   friend struct sbo_allocator;

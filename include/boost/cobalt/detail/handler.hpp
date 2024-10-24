@@ -23,6 +23,8 @@ namespace boost::cobalt
 namespace detail
 {
 
+template<typename ... Args>
+struct composition_promise;
 enum class completed_immediately_t
 {
   no, maybe, yes, initiating
@@ -285,6 +287,9 @@ struct completion_handler : detail::completion_handler_base
 #if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
     boost::source_location loc_;
 #endif
+
+    template<typename ... Args_>
+    friend struct detail::composition_promise;
 };
 
 };
