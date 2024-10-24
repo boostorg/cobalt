@@ -29,26 +29,33 @@ concept io_op =
 template<typename Awaitable>
 concept transfer_op = io_op<Awaitable, system::error_code, std::size_t>;
 
+
+
 template<typename Op, typename Args, typename ... Ts>
-struct basic_awaitable
+struct op_awaitable_base
 {
   Op & op_;
   Args args;
   std::optional<std::tuple<Ts...>> result;
 
+#if !defined(BOOST_COBALT_NO_PMR)
+  using resource_type = pmr::memory_resource;
+#else
+  using resource_type = detail::sbo_resource;
+#endif
+
   template<typename ... Args_>
-  basic_awaitable(Op * op_, Args_ && ... args) : op_(*op_), args(std::forward<Args_>(args)...) {}
-  basic_awaitable(basic_awaitable && lhs) : op_(lhs.op_), args(std::move(lhs.args_)), result(std::move(lhs.result))
+  op_awaitable_base(resource_type *resource, Op * op_, Args_ && ... args) : op_(*op_), args(std::forward<Args_>(args)...), resource(resource) {}
+  op_awaitable_base(op_awaitable_base && lhs) : op_(lhs.op_), args(std::move(lhs.args_)), result(std::move(lhs.result))
   {
   }
 
   bool await_ready() { return false; }
 
-  char buffer[BOOST_COBALT_SBO_BUFFER_SIZE];
-  detail::sbo_resource resource{buffer, sizeof(buffer)};
-
   detail::completed_immediately_t completed_immediately = detail::completed_immediately_t::no;
   std::exception_ptr init_ep;
+
+  resource_type *resource;
 
   template<typename Promise>
   bool await_suspend(std::coroutine_handle<Promise> h
@@ -62,9 +69,9 @@ struct basic_awaitable
         completed_immediately = detail::completed_immediately_t::initiating;
 
 #if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
-        completion_handler<Ts...> ch{h, result, &resource, &completed_immediately, loc};
+        completion_handler<Ts...> ch{h, result, resource, &completed_immediately, loc};
 #else
-        completion_handler<Ts...> ch{h, result, &resource, &completed_immediately};
+        completion_handler<Ts...> ch{h, result, resource, &completed_immediately};
 #endif
         std::apply([&]<typename ... Args_>(Args_ && ... args_)
                    {
@@ -106,6 +113,27 @@ struct basic_awaitable
 
 };
 
+template<typename Op, typename Args, typename ... Ts>
+struct op_awaitable : op_awaitable_base<Op, Args, Ts...>
+{
+  char buffer[BOOST_COBALT_SBO_BUFFER_SIZE];
+  detail::sbo_resource resource{buffer, sizeof(buffer)};
+
+  template<typename ... Args_>
+  op_awaitable(Op * op_, Args_ && ... args) : op_awaitable_base<Op, Args, Ts...>(&resource, op_, std::forward<Args_>(args)...) {}
+  op_awaitable(op_awaitable && lhs) : op_awaitable_base<Op, Args, Ts...>(std::move(lhs))
+  {
+    this->op_awaitable_base<Op, Args, Ts...>::resource = &resource;
+  }
+
+  op_awaitable_base<Op, Args, Ts...> replace_resource(typename op_awaitable_base<Op, Args, Ts...>::resource_type * resource) &&
+  {
+    op_awaitable_base<Op, Args, Ts...> nw = std::move(*this);
+    nw.resource = resource;
+    return nw;
+  }
+};
+
 struct write_op
 {
   const_buffer_sequence buffer;
@@ -114,7 +142,7 @@ struct write_op
   void (*implementation)(void * this_, const_buffer_sequence,
                          boost::cobalt::completion_handler<boost::system::error_code, std::size_t>);
 
-  basic_awaitable<write_op, std::tuple<const_buffer_sequence>, boost::system::error_code, std::size_t>
+  op_awaitable<write_op, std::tuple<const_buffer_sequence>, boost::system::error_code, std::size_t>
   operator co_await()
   {
     return {this, buffer};
@@ -129,7 +157,7 @@ struct read_op
   void (*implementation)(void * this_, mutable_buffer_sequence,
                          boost::cobalt::completion_handler<boost::system::error_code, std::size_t>);
 
-  basic_awaitable<read_op, std::tuple<mutable_buffer_sequence>, boost::system::error_code, std::size_t>
+  op_awaitable<read_op, std::tuple<mutable_buffer_sequence>, boost::system::error_code, std::size_t>
       operator co_await()
   {
     return {this, buffer};
@@ -145,7 +173,7 @@ struct write_at_op
   void (*implementation)(void * this_, std::uint64_t, const_buffer_sequence,
                          boost::cobalt::completion_handler<boost::system::error_code, std::size_t>);
 
-  basic_awaitable<write_at_op, std::tuple<std::uint64_t , const_buffer_sequence>, boost::system::error_code, std::size_t>
+  op_awaitable<write_at_op, std::tuple<std::uint64_t , const_buffer_sequence>, boost::system::error_code, std::size_t>
       operator co_await()
   {
     return {this, offset, buffer};
@@ -161,7 +189,7 @@ struct read_at_op
   void (*implementation)(void * this_, std::uint64_t, mutable_buffer_sequence,
                          boost::cobalt::completion_handler<boost::system::error_code, std::size_t>);
 
-  basic_awaitable<read_at_op, std::tuple<std::uint64_t , mutable_buffer_sequence>, boost::system::error_code, std::size_t>
+  op_awaitable<read_at_op, std::tuple<std::uint64_t , mutable_buffer_sequence>, boost::system::error_code, std::size_t>
       operator co_await()
   {
     return {this, offset, buffer};
@@ -174,7 +202,7 @@ struct wait_op
   void (*implementation)(void * this_,
                          boost::cobalt::completion_handler<boost::system::error_code>);
 
-  basic_awaitable<wait_op, std::tuple<>, boost::system::error_code>
+  op_awaitable<wait_op, std::tuple<>, boost::system::error_code>
       operator co_await()
   {
     return {this};

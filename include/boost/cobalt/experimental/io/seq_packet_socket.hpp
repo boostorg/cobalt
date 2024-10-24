@@ -39,7 +39,7 @@ struct [[nodiscard]] seq_packet_socket final : socket
     void (*implementation)(void * this_, message_flags, const_buffer_sequence,
                            boost::cobalt::completion_handler<boost::system::error_code, std::size_t>);
 
-    basic_awaitable<send_op, std::tuple<message_flags, const_buffer_sequence>, boost::system::error_code, std::size_t>
+    op_awaitable<send_op, std::tuple<message_flags, const_buffer_sequence>, boost::system::error_code, std::size_t>
         operator co_await()
     {
       return {this, in_flags, buffer};
@@ -55,7 +55,7 @@ struct [[nodiscard]] seq_packet_socket final : socket
     void (*implementation)(void * this_, message_flags, message_flags*, mutable_buffer_sequence,
                            boost::cobalt::completion_handler<boost::system::error_code, std::size_t>);
 
-    basic_awaitable<receive_op, std::tuple<message_flags, message_flags*, mutable_buffer_sequence>, boost::system::error_code, std::size_t>
+    op_awaitable<receive_op, std::tuple<message_flags, message_flags*, mutable_buffer_sequence>, boost::system::error_code, std::size_t>
         operator co_await()
     {
       return {this, in_flags, out_flags, buffer};

@@ -89,7 +89,7 @@ struct socket
     void (*implementation)(void * this_, wait_type wt,
                            boost::cobalt::completion_handler<boost::system::error_code>);
 
-    basic_awaitable<wait_op, std::tuple<wait_type>, boost::system::error_code>
+    op_awaitable<wait_op, std::tuple<wait_type>, boost::system::error_code>
         operator co_await()
     {
       return {this, wt};
@@ -102,13 +102,13 @@ struct socket
 
   struct connect_op
   {
-    endpoint endpoint;
+    struct endpoint endpoint;
 
     void *this_;
     void (*implementation)(void * this_, wait_type wt,
                            boost::cobalt::completion_handler<boost::system::error_code>);
 
-    basic_awaitable<connect_op, std::tuple<struct endpoint>, boost::system::error_code>
+    op_awaitable<connect_op, std::tuple<struct endpoint>, boost::system::error_code>
         operator co_await()
     {
       return {this, endpoint};

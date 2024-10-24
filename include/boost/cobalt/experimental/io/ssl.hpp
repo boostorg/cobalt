@@ -57,7 +57,7 @@ struct ssl_stream_base
      void (*implementation)(void * this_, handshake_type,
                             boost::cobalt::completion_handler<boost::system::error_code>);
 
-     basic_awaitable<handshake_op, std::tuple<handshake_type>, boost::system::error_code>
+     op_awaitable<handshake_op, std::tuple<handshake_type>, boost::system::error_code>
          operator co_await()
      {
        return {this, ht};
@@ -73,7 +73,7 @@ struct ssl_stream_base
      void (*implementation)(void * this_, handshake_type, const_buffer_sequence,
                             boost::cobalt::completion_handler<boost::system::error_code, std::size_t>);
 
-     basic_awaitable<buffered_handshake_op, std::tuple<handshake_type, const_buffer_sequence>, boost::system::error_code, std::size_t>
+     op_awaitable<buffered_handshake_op, std::tuple<handshake_type, const_buffer_sequence>, boost::system::error_code, std::size_t>
          operator co_await()
      {
        return {this, ht, buffer};

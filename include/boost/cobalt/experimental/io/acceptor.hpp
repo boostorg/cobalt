@@ -33,7 +33,7 @@ struct acceptor : asio::socket_base
     void (*implementation)(void * this_, socket *,
                            boost::cobalt::completion_handler<boost::system::error_code>);
 
-    basic_awaitable<accept_op, std::tuple<socket *>, boost::system::error_code>
+    op_awaitable<accept_op, std::tuple<socket *>, boost::system::error_code>
         operator co_await()
     {
       return {this, sock};
@@ -53,7 +53,7 @@ struct acceptor : asio::socket_base
     void (*implementation)(void * this_, wait_type wt,
                            boost::cobalt::completion_handler<boost::system::error_code>);
 
-    basic_awaitable<wait_op, std::tuple<wait_type>, boost::system::error_code>
+    op_awaitable<wait_op, std::tuple<wait_type>, boost::system::error_code>
         operator co_await()
     {
       return {this, wt};
