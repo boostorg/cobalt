@@ -56,7 +56,7 @@ struct fork
 
     bool outstanding_work() {return use_count != 0u;}
 
-    const executor * exec = nullptr;
+    std::optional<executor> exec = nullptr;
     bool wired_up() {return exec != nullptr;}
 
     using executor_type = executor;

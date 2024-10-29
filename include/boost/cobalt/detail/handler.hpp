@@ -73,6 +73,24 @@ struct completion_handler_noop_executor
 
 };
 
+template<typename Promise>
+executor
+get_executor(std::coroutine_handle<Promise> h)
+{
+  if constexpr (requires {h.promise().get_executor();})
+  {
+    return h.promise().get_executor();
+  }
+  else
+    return this_thread::get_executor();
+}
+
+inline executor
+get_executor(std::coroutine_handle<>)
+{
+  return this_thread::get_executor();
+}
+
 
 struct completion_handler_base
 {
@@ -84,7 +102,7 @@ struct completion_handler_base
   }
 
   using executor_type = executor;
-  const executor_type & executor_ ;
+  executor_type executor_ ;
   const executor_type & get_executor() const noexcept
   {
     return executor_ ;
@@ -113,11 +131,10 @@ struct completion_handler_base
   }
 
   template<typename Promise>
-    requires (requires (Promise p) {{p.get_executor()} -> std::same_as<const executor&>;})
   completion_handler_base(std::coroutine_handle<Promise> h,
                           completed_immediately_t * completed_immediately = nullptr)
           : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
-            executor_(h.promise().get_executor()),
+            executor_(cobalt::detail::get_executor(h)),
 #if !defined(BOOST_COBALT_NO_PMR)
             allocator(asio::get_associated_allocator(h.promise(), this_thread::get_allocator())),
 #else
@@ -128,24 +145,22 @@ struct completion_handler_base
   }
 #if !defined(BOOST_COBALT_NO_PMR)
   template<typename Promise>
-    requires (requires (Promise p) {{p.get_executor()} -> std::same_as<const executor&>;})
   completion_handler_base(std::coroutine_handle<Promise> h,
                           pmr::memory_resource * resource,
                           completed_immediately_t * completed_immediately = nullptr)
           : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
-            executor_(h.promise().get_executor()),
+            executor_(cobalt::detail::get_executor(h)),
             allocator(resource),
             completed_immediately(completed_immediately)
   {
   }
 #else
   template<typename Promise>
-  requires (requires (Promise p) {{p.get_executor()} -> std::same_as<const executor&>;})
   completion_handler_base(std::coroutine_handle<Promise> h,
                           detail::sbo_resource * resource,
                           completed_immediately_t * completed_immediately = nullptr)
       : cancellation_slot(asio::get_associated_cancellation_slot(h.promise())),
-        executor_(h.promise().get_executor()),
+        executor_(cobalt::detail::get_executor(h)),
         allocator(resource),
         completed_immediately(completed_immediately)
   {
@@ -164,27 +179,6 @@ void assign_cancellation(std::coroutine_handle<Promise> h, Handler && func)
   if constexpr (requires {h.promise().get_cancellation_slot();})
     if (h.promise().get_cancellation_slot().is_connected())
       h.promise().get_cancellation_slot().assign(std::forward<Handler>(func));
-}
-
-template<typename Promise>
-const executor &
-get_executor(std::coroutine_handle<Promise> h)
-{
-  if constexpr (requires {h.promise().get_executor();})
-  {
-    static_assert(std::same_as<decltype(h.promise().get_executor()),
-                               const executor &>,
-                  "for performance reasons, the get_executor function on a promise must return a const reference");
-    return h.promise().get_executor();
-  }
-  else
-    return this_thread::get_executor();
-}
-
-inline const executor &
-get_executor(std::coroutine_handle<>)
-{
-  return this_thread::get_executor();
 }
 
 }
