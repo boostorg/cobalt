@@ -18,6 +18,7 @@
 #include <boost/intrusive_ptr.hpp>
 
 #include <coroutine>
+#include <optional>
 
 namespace boost::cobalt::detail
 {
