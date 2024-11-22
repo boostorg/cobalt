@@ -101,6 +101,65 @@ CO_TEST_CASE(list)
   } catch(...) {}
 }
 
+
+CO_TEST_CASE(list_result)
+{
+  auto exec = co_await asio::this_coro::executor;
+  std::vector<cobalt::promise<std::chrono::milliseconds::rep>> vec;
+  vec.push_back(wdummy(exec, std::chrono::milliseconds(100)));
+  vec.push_back(wdummy(exec, std::chrono::milliseconds( 50)));
+  vec.push_back(wdummy(exec, std::chrono::milliseconds(150)));
+  vec.push_back(wdummy(exec, std::chrono::milliseconds::max()));
+
+  auto res = (co_await cobalt::as_result(gather(vec))).value();
+  BOOST_REQUIRE(res.size() == 4);
+  BOOST_CHECK( res[0].has_value());
+  BOOST_CHECK(!res[0].has_error());
+  BOOST_CHECK( res[0].value() == 100);
+  BOOST_CHECK( res[1].has_value());
+  BOOST_CHECK(!res[1].has_error());
+  BOOST_CHECK( res[1].value() == 50);
+  BOOST_CHECK( res[2].has_value());
+  BOOST_CHECK(!res[2].has_error());
+  BOOST_CHECK( res[2].value() == 150);
+  BOOST_CHECK(!res[3].has_value());
+  BOOST_CHECK( res[3].has_error());
+  try {
+    BOOST_CHECK_THROW(res[3].value(), boost::system::system_error);
+  } catch(...) {}
+}
+
+
+CO_TEST_CASE(list_tuple)
+{
+  auto exec = co_await asio::this_coro::executor;
+  std::vector<cobalt::promise<std::chrono::milliseconds::rep>> vec;
+  vec.push_back(wdummy(exec, std::chrono::milliseconds(100)));
+  vec.push_back(wdummy(exec, std::chrono::milliseconds( 50)));
+  vec.push_back(wdummy(exec, std::chrono::milliseconds(150)));
+  vec.push_back(wdummy(exec, std::chrono::milliseconds::max()));
+
+  auto [ep, res] = co_await cobalt::as_tuple(gather(vec));
+  BOOST_CHECK(!ep);
+
+  BOOST_REQUIRE(res.size() == 4);
+  BOOST_CHECK( res[0].has_value());
+  BOOST_CHECK(!res[0].has_error());
+  BOOST_CHECK( res[0].value() == 100);
+  BOOST_CHECK( res[1].has_value());
+  BOOST_CHECK(!res[1].has_error());
+  BOOST_CHECK( res[1].value() == 50);
+  BOOST_CHECK( res[2].has_value());
+  BOOST_CHECK(!res[2].has_error());
+  BOOST_CHECK( res[2].value() == 150);
+  BOOST_CHECK(!res[3].has_value());
+  BOOST_CHECK( res[3].has_error());
+  try {
+    BOOST_CHECK_THROW(res[3].value(), boost::system::system_error);
+  } catch(...) {}
+}
+
+
 CO_TEST_CASE(compliance)
 {
   auto exec = co_await asio::this_coro::executor;

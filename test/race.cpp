@@ -84,7 +84,7 @@ cobalt::promise<void> list_step(std::default_random_engine::result_type seed)
   vec.push_back(dummy(exec, std::chrono::milliseconds( 50)));
   vec.push_back(dummy(exec, std::chrono::milliseconds(100000)));
 
-  auto c = co_await race(src, vec);
+  auto c = (  co_await cobalt::as_result(race(src, vec))).value();
   BOOST_CHECK(c.first == 1u);
   BOOST_CHECK(c.second == 50);
   BOOST_CHECK(!vec[0].ready());
@@ -119,6 +119,16 @@ CO_TEST_CASE(empty_list)
   }
   catch(...) {}
 }
+
+CO_TEST_CASE(dummy_result)
+{
+  auto exec = co_await asio::this_coro::executor;
+  std::vector<cobalt::promise<std::size_t>> vec;
+  vec.push_back([]() -> cobalt::promise<std::size_t> { co_return 42u;}());
+
+  BOOST_CHECK((co_await cobalt::as_result(race(vec))).value() == std::pair(0u, 42u));
+}
+
 
 
 CO_TEST_CASE(stop_)

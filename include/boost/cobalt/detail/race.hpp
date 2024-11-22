@@ -411,7 +411,6 @@ struct race_ranged_impl
     std::exception_ptr error;
 
 #if !defined(BOOST_COBALT_NO_PMR)
-    pmr::monotonic_buffer_resource res;
     pmr::polymorphic_allocator<void> alloc{&resource};
 
     Range &aws;
@@ -459,6 +458,14 @@ struct race_ranged_impl
 
     bool has_result() const {return index != std::numeric_limits<std::size_t>::max(); }
 
+#if !defined(BOOST_COBALT_NO_PMR)
+    awaitable(awaitable && rhs) : fork::shared_state((256 + sizeof(co_awaitable_type<type>) + sizeof(std::size_t)) * std::size(rhs.aws)), aws(rhs.aws)
+    {
+      reorder.assign(rhs.reorder.begin(), rhs.reorder.end());
+      if constexpr (traits::interruptible)
+        std::fill(working.begin(), working.end(), nullptr);
+    }
+#endif
 
     awaitable(Range & aws, URBG & g)
         : fork::shared_state((256 + sizeof(co_awaitable_type<type>) + sizeof(std::size_t)) * std::size(aws))
@@ -672,7 +679,7 @@ struct race_ranged_impl
     }
 
     auto await_resume(const as_result_tag & )
-    -> system::result<result_type, std::exception_ptr>
+    -> system::result<std::conditional_t<std::is_void_v<result_type>, std::size_t, std::pair<std::size_t, result_type>>, std::exception_ptr>
     {
       if (error)
         return {system::in_place_error, error};
