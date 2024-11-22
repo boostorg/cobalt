@@ -111,6 +111,38 @@ CO_TEST_CASE(list_exception)
   } catch(...) {}
 }
 
+CO_TEST_CASE(list_result)
+{
+  auto exec = co_await asio::this_coro::executor;
+  std::vector<cobalt::promise<std::chrono::milliseconds::rep>> vec;
+  vec.push_back(wdummy(exec, std::chrono::milliseconds(100)));
+  vec.push_back(wdummy(exec, std::chrono::milliseconds( 50)));
+  vec.push_back(wdummy(exec, std::chrono::milliseconds(150)));
+
+  auto res = (co_await cobalt::as_result(join(std::move(vec)))).value();
+  BOOST_REQUIRE(res.size() == 3);
+  BOOST_CHECK(res[0] == 100);
+  BOOST_CHECK(res[1] == 50);
+  BOOST_CHECK(res[2] == 150);
+}
+
+
+CO_TEST_CASE(list_tuple)
+{
+  auto exec = co_await asio::this_coro::executor;
+  std::vector<cobalt::promise<std::chrono::milliseconds::rep>> vec;
+  vec.push_back(wdummy(exec, std::chrono::milliseconds(100)));
+  vec.push_back(wdummy(exec, std::chrono::milliseconds( 50)));
+  vec.push_back(wdummy(exec, std::chrono::milliseconds(150)));
+
+  auto [ep, res] = co_await cobalt::as_tuple(join(std::move(vec)));
+  BOOST_CHECK(!ep);
+  BOOST_REQUIRE(res.size() == 3);
+  BOOST_CHECK(res[0] == 100);
+  BOOST_CHECK(res[1] == 50);
+  BOOST_CHECK(res[2] == 150);
+}
+
 CO_TEST_CASE(exception_after_post)
 try
 {

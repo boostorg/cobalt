@@ -194,7 +194,7 @@ struct as_tuple_t
     using type = decltype(aw_.await_resume());
     if constexpr (requires {aw_.await_resume(as_tuple_tag{});})
       return aw_.await_resume(as_tuple_tag{});
-    else if (noexcept(aw_.await_resume()))
+    else if constexpr (noexcept(aw_.await_resume()))
     {
       if constexpr (std::is_void_v<type>)
       {
@@ -216,7 +216,7 @@ struct as_tuple_t
         }
         BOOST_CATCH (...)
         {
-          return make_tuple_(std::current_exception());
+          return std::make_tuple(std::current_exception());
         }
         BOOST_CATCH_END
       }
