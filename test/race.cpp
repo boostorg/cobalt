@@ -126,7 +126,8 @@ CO_TEST_CASE(dummy_result)
   std::vector<cobalt::promise<std::size_t>> vec;
   vec.push_back([]() -> cobalt::promise<std::size_t> { co_return 42u;}());
 
-  BOOST_CHECK((co_await cobalt::as_result(race(vec))).value() == std::pair(0u, 42u));
+  const std::pair<std::size_t, std::size_t> cmp(0u, 42u);
+  BOOST_CHECK((co_await cobalt::as_result(race(vec))).value() == cmp);
 }
 
 
