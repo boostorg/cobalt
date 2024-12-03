@@ -5,6 +5,9 @@
 
 require-b2 5.2 ;
 
+
+import boost-cobalt ;
+
 constant boost_dependencies :
     /boost/asio//boost_asio
     /boost/callable_traits//boost_callable_traits
@@ -33,5 +36,6 @@ explicit
     ;
 
 call-if : boost-library cobalt
+        : install boost_cobalt
     ;
 
