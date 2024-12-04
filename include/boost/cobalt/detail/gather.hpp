@@ -256,15 +256,7 @@ struct gather_ranged_impl
     std::vector<result_storage_type> result{cancel.size(), alloc};
 #endif
 
-  #if !defined(BOOST_COBALT_NO_PMR)
-      awaitable(awaitable && rhs)
-        : fork::shared_state((512 + sizeof(co_awaitable_type<type>)) * std::size(rhs.aws))
-        , aws{std::move(rhs.aws), alloc}
-        , ready{rhs.ready.size(), alloc}
-        , cancel{rhs.cancel.size(), alloc}
-      {
-      }
-  #endif
+
 
     awaitable(Range & aws_, std::false_type /* needs operator co_await */)
       : fork::shared_state((512 + sizeof(co_awaitable_type<type>)) * std::size(aws_))

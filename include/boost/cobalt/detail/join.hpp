@@ -336,18 +336,6 @@ struct join_ranged_impl
 #endif
     std::exception_ptr error;
 
-#if !defined(BOOST_COBALT_NO_PMR)
-    awaitable(awaitable && rhs)
-      :  fork::shared_state((512 + sizeof(co_awaitable_type<type>) + result_size) * std::size(rhs.aws))
-      , aws{std::move(rhs.aws), alloc}
-      , ready{rhs.ready.size(), alloc}
-      , cancel_{rhs.cancel_.size(), alloc}
-      , cancel{rhs.cancel.size(), alloc}
-    {
-    }
-#endif
-
-
     awaitable(Range & aws_, std::false_type /* needs  operator co_await */)
       :  fork::shared_state((512 + sizeof(co_awaitable_type<type>) + result_size) * std::size(aws_))
       , aws{alloc}

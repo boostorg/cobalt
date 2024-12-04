@@ -458,14 +458,6 @@ struct race_ranged_impl
 
     bool has_result() const {return index != std::numeric_limits<std::size_t>::max(); }
 
-#if !defined(BOOST_COBALT_NO_PMR)
-    awaitable(awaitable && rhs) : fork::shared_state((256 + sizeof(co_awaitable_type<type>) + sizeof(std::size_t)) * std::size(rhs.aws)), aws(rhs.aws)
-    {
-      reorder.assign(rhs.reorder.begin(), rhs.reorder.end());
-      if constexpr (traits::interruptible)
-        std::fill(working.begin(), working.end(), nullptr);
-    }
-#endif
 
     awaitable(Range & aws, URBG & g)
         : fork::shared_state((256 + sizeof(co_awaitable_type<type>) + sizeof(std::size_t)) * std::size(aws))
