@@ -32,6 +32,6 @@ int main(int argc, char *argv[])
 ----
 
 WARNING: The caller needs to make sure that the executor is not running on multiple threads
-concurrently, e,g, by using a single-threaded `asio::io_context` or a `strand`.
+concurrently, e,g, by using a single-threaded `asio::io_context`.
 
 
