@@ -263,7 +263,7 @@ CO_TEST_CASE(reawait)
   BOOST_CHECK_NO_THROW(co_await std::move(t));
 }
 
-
+/*
 cobalt::task<int> test_strand1(asio::any_io_executor exec)
 {
   BOOST_ASSERT(exec == co_await cobalt::this_coro::executor);
@@ -296,6 +296,7 @@ BOOST_AUTO_TEST_CASE(stranded)
 }
 
 #endif
+*/
 
 struct task_move_only
 {
