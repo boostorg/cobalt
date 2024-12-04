@@ -144,9 +144,12 @@ struct async_initiate_spawn
       executor_type exec_;
       decltype(recs) r;
       Handler handler;
+      asio::cancellation_slot sl;
 
       void operator()()
       {
+        if (sl.is_connected())
+          sl.clear();
         auto ex = r->exception;
         r.reset();
         std::move(handler)(ex);
@@ -154,7 +157,7 @@ struct async_initiate_spawn
     };
 
     p->awaited_from.reset(detail::post_coroutine(completion_handler{
-        alloc, asio::get_associated_executor(h, exec), std::move(recs), std::forward<Handler>(h)
+        alloc, asio::get_associated_executor(h, exec), std::move(recs), std::forward<Handler>(h), sl
       }).address());
 
     asio::dispatch(exec, std::coroutine_handle<detail::task_promise<void>>::from_promise(*p->promise));
