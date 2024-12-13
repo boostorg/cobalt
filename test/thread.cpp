@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(run)
   auto t = thr();
 
   t.join();
-  BOOST_CHECK_THROW(t.get_executor(), boost::asio::execution::bad_executor);
+  try {t.get_executor();} catch(std::exception & e) {BOOST_CHECK_EQUAL(e.what(), std::string_view("bad executor")); }
 }
 
 
@@ -44,7 +44,7 @@ boost::cobalt::thread thr_stop()
   auto exc = co_await boost::asio::this_coro::executor;
 #endif
 
-  exc.context().stop();
+  boost::asio::query(exc, boost::asio::execution::context).stop();
   co_await tim.async_wait(boost::cobalt::use_op);
 }
 

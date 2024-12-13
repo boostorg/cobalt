@@ -9,6 +9,7 @@
 #define BOOST_COBALT_THREAD_HPP
 
 #include <boost/cobalt/detail/thread.hpp>
+#include <boost/cobalt/detail/exception.hpp>
 #include <boost/cobalt/detail/await_result_helper.hpp>
 
 
@@ -56,7 +57,7 @@ struct thread
   {
     auto st = state_;
     if (!st || st->done)
-      boost::throw_exception(asio::execution::bad_executor(), loc);
+      cobalt::detail::throw_bad_executor(loc);
 
     return st ->ctx.get_executor();
   }

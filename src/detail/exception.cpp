@@ -8,6 +8,8 @@
 #include <boost/cobalt/detail/exception.hpp>
 #include <boost/cobalt/error.hpp>
 
+#include <boost/asio/executor.hpp>
+
 namespace boost::cobalt::detail
 {
 
@@ -60,6 +62,15 @@ std::exception_ptr allocation_failed()
       error::already_awaited
   ));
   return ep;
+}
+
+void throw_bad_executor(const boost::source_location & loc)
+{
+#if defined(BOOST_ASIO_NO_TS_EXECUTORS)
+  boost::throw_exception(boost::asio::execution::bad_executor(), loc);
+#else
+  boost::throw_exception(boost::asio::bad_executor(), loc);
+#endif
 }
 
 
