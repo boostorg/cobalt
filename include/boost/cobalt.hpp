@@ -17,7 +17,6 @@
 #include <boost/cobalt/gather.hpp>
 #include <boost/cobalt/generator.hpp>
 #include <boost/cobalt/join.hpp>
-#include <boost/cobalt/leaf.hpp>
 #include <boost/cobalt/main.hpp>
 #include <boost/cobalt/op.hpp>
 #include <boost/cobalt/promise.hpp>

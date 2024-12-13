@@ -17,7 +17,6 @@ constant boost_dependencies :
     /boost/context//boost_context
     /boost/core//boost_core
     /boost/intrusive//boost_intrusive
-    /boost/leaf//boost_leaf
     /boost/mp11//boost_mp11
     /boost/preprocessor//boost_preprocessor
     /boost/smart_ptr//boost_smart_ptr

@@ -52,7 +52,6 @@ if (NOT BOOST_COBALT_IS_ROOT)
             Boost::config
             Boost::core
             Boost::intrusive
-            Boost::leaf
             Boost::mp11
             Boost::preprocessor
             Boost::smart_ptr

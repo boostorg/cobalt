@@ -77,7 +77,6 @@ include::reference/result.adoc[]
 include::reference/async_for.adoc[]
 include::reference/error.adoc[]
 include::reference/config.adoc[]
-include::reference/leaf.adoc[]
 
 include::reference/experimental/context.adoc[]
 

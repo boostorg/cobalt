@@ -30,7 +30,6 @@ deps = [
     'libs/intrusive',
     'libs/io',
     'libs/iterator',
-    'libs/leaf',
     'libs/mpl',
     'libs/move',
     'libs/mp11',

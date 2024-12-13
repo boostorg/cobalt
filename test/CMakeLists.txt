@@ -9,7 +9,7 @@ target_link_libraries(boost_cobalt_static_tests Boost::cobalt)
 add_executable(boost_cobalt_main         EXCLUDE_FROM_ALL main.cpp)
 add_executable(boost_cobalt_main_compile EXCLUDE_FROM_ALL main_compile.cpp)
 add_executable(boost_cobalt_basic_tests  EXCLUDE_FROM_ALL
-      async_for.cpp test_main.cpp promise.cpp with.cpp op.cpp handler.cpp join.cpp race.cpp this_coro.cpp leaf.cpp
+      async_for.cpp test_main.cpp promise.cpp with.cpp op.cpp handler.cpp join.cpp race.cpp this_coro.cpp
       channel.cpp generator.cpp run.cpp task.cpp gather.cpp wait_group.cpp wrappers.cpp left_race.cpp
       strand.cpp fork.cpp thread.cpp any_completion_handler.cpp detached.cpp monotonic_resource.cpp sbo_resource.cpp)
 
