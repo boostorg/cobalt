@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(bad_executor_)
     auto t = test0();
     BOOST_FAIL("Should throw");
   }
-  catch(asio::bad_executor &) {}
+  catch(std::exception & e) {BOOST_CHECK_EQUAL(e.what(), std::string_view("bad executor"));}
 
 }
 

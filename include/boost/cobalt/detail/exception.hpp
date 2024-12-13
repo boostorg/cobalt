@@ -23,6 +23,8 @@ BOOST_COBALT_DECL std::exception_ptr wait_not_ready();
 BOOST_COBALT_DECL std::exception_ptr already_awaited();
 BOOST_COBALT_DECL std::exception_ptr allocation_failed();
 
+BOOST_COBALT_DECL BOOST_NORETURN void throw_bad_executor(const boost::source_location & loc = BOOST_CURRENT_LOCATION);
+
 template<typename >
 std::exception_ptr wait_not_ready() { return boost::cobalt::detail::wait_not_ready();}
 

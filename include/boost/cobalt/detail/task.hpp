@@ -312,7 +312,7 @@ struct task_promise
   const executor_type & get_executor() const
   {
       if (!exec)
-          throw_exception(asio::bad_executor());
+          detail::throw_bad_executor();
       BOOST_ASSERT(exec_);
       return *exec_;
   }

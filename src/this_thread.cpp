@@ -6,6 +6,7 @@
 //
 
 #include <boost/cobalt/this_thread.hpp>
+#include <boost/cobalt/detail/exception.hpp>
 #include <boost/asio/any_io_executor.hpp>
 
 #include <boost/asio/executor.hpp>
@@ -53,7 +54,8 @@ bool has_executor()
 executor & get_executor(const boost::source_location & loc)
 {
   if (!detail::executor)
-    throw_exception(asio::bad_executor(), loc);
+    cobalt::detail::throw_bad_executor(loc);
+
   return *detail::executor;
 }
 
@@ -67,7 +69,8 @@ struct this_thread_service : asio::detail::execution_context_service_base<this_t
 
   void shutdown() override
   {
-    if (detail::executor && (&detail::executor->context() == &this->context()))
+
+    if (detail::executor && (&asio::query(*detail::executor, asio::execution::context) == &this->context()))
       detail::executor.reset();
   }
 };
@@ -75,7 +78,7 @@ struct this_thread_service : asio::detail::execution_context_service_base<this_t
 void set_executor(executor exec) noexcept
 {
   detail::executor = std::move(exec);
-  asio::use_service<this_thread_service>(detail::executor->context());
+  asio::use_service<this_thread_service>(asio::query(*detail::executor, asio::execution::context));
 }
 }
 
@@ -88,8 +91,7 @@ extract_executor(asio::any_io_executor exec)
 {
   auto t = exec.target<executor>();
   if (t == nullptr)
-    throw_exception(asio::bad_executor());
-
+    cobalt::detail::throw_bad_executor(loc);
   return *t;
 }
 #endif
