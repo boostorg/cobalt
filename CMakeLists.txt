@@ -62,6 +62,13 @@ if (NOT BOOST_COBALT_IS_ROOT)
             Boost::variant2
     )
 
+    if(MINGW)
+        target_link_libraries(boost_cobalt
+            PRIVATE
+            ws2_32
+        )
+    endif()
+
     target_compile_definitions(boost_cobalt
             PUBLIC BOOST_COBALT_NO_LIB=1
             PRIVATE BOOST_COBALT_SOURCE=1
