@@ -91,7 +91,7 @@ extract_executor(asio::any_io_executor exec)
 {
   auto t = exec.target<executor>();
   if (t == nullptr)
-    cobalt::detail::throw_bad_executor(loc);
+    cobalt::detail::throw_bad_executor();
   return *t;
 }
 #endif
