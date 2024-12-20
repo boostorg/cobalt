@@ -45,7 +45,7 @@ ifndef::generate-diagram[]
 image::stackless1.png[]
 endif::[]
 
-Coroutines can be implemented a stackful, which means that it allocates a fixes chunk of memory and stacks function frames similar to a thread.
+Coroutines can be implemented as stackful, which means that it allocates a fixes chunk of memory and stacks function frames similar to a thread.
 C++20 coroutines are stackless, i.e. they only allocate their own frame and use the callers stack on resumption. Using our previous example:
 
 [source,cpp]
