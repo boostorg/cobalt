@@ -65,6 +65,17 @@ lib boost_cobalt
       ]
   ;
 
+alias cobalt_io_sources
+   : io/acceptor.cpp
+   ;
+
+
+lib boost_cobalt_io
+    : cobalt_io_sources boost_cobalt
+    : requirements <define>BOOST_COBALT_IO_SOURCE=1
+      <link>shared:<define>BOOST_COBALT_DYN_LINK=1
+    ;
+
 rule set-pmr-boost ( props * )
 {
     if ! <boost.cobalt.pmr> in $(props:G)

@@ -80,6 +80,7 @@ include::reference/config.adoc[]
 
 include::reference/experimental/context.adoc[]
 
+include::reference/io/buffer.adoc[]
 
 = In-Depth
 
