@@ -35,3 +35,5 @@ for local src in [ glob *.cpp : main.cpp main_compile.cpp test_main.cpp concepts
 }
 
 run experimental/context.cpp experimental/composition.cpp test_impl //boost/context ;
+
+run [ glob io/*.cpp ] test_impl ;

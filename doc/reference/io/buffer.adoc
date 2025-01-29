@@ -1,0 +1,71 @@
+== cobalt/io/buffer.hpp
+
+The buffer headers provide a generic buffer sequence representation for use with io functions.
+It is implemented as a single buffer folled by a span of buffers. This allows dropping bytes from the front
+and also using a single buffer or a registered_ buffer.
+
+[source,cpp]
+----
+namespace io
+{
+
+using asio::buffer;
+using asio::mutable_buffer;
+
+
+struct mutable_buffer_sequence
+{
+  std::size_t buffer_count() const;
+  mutable_buffer_sequence(asio::mutable_registered_buffer buffer = {});
+  mutable_buffer_sequence(asio::mutable_buffer head);
+  template<typename T>
+    requires (std::constructible_from<std::span<const asio::mutable_buffer>, T&&>)
+  mutable_buffer_sequence(T && value);
+
+  mutable_buffer_sequence(std::span<const asio::mutable_buffer> spn);
+
+  mutable_buffer_sequence & operator+=(std::size_t n);
+  struct const_iterator;
+
+  const_iterator begin() const;
+  const_iterator   end() const;
+
+  bool is_registered() const;
+};
+
+
+using asio::const_buffer;
+
+struct const_buffer_sequence
+{
+  std::size_t buffer_count();
+  const_buffer_sequence(asio::const_registered_buffer buffer);
+  const_buffer_sequence(asio::mutable_registered_buffer buffer);
+
+  const_buffer_sequence(asio::const_buffer head)  { this->head_ = head; }
+  const_buffer_sequence(asio::mutable_buffer head)  { this->head_ = head; }
+
+  template<typename T>
+  requires (std::constructible_from<std::span<const asio::const_buffer>, T&&>)
+  const_buffer_sequence(T && value);
+  const_buffer_sequence(std::span<const asio::const_buffer> spn);
+
+  // drop bytes from the front, i.e. advance the buffer
+  const_buffer_sequence & operator+=(std::size_t n);
+
+  // a random access iterator
+  struct const_iterator;
+
+  // Access the sequence as a range.
+  const_iterator begin() const;
+  const_iterator   end() const;
+
+  bool is_registered() const;
+};
+
+// Aliases for the asio functions.
+using asio::buffer_copy;
+using asio::buffer_size;
+
+}
+----
