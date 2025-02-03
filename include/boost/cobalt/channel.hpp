@@ -87,9 +87,12 @@ struct channel
 
     void interrupt_await()
     {
-      this->cancelled = true;
-      if (awaited_from)
-        awaited_from.release().resume();
+      if (!direct)
+      {
+        this->cancelled = true;
+        if (this->awaited_from)
+          this->awaited_from.release().resume();
+      }
     }
 
     struct cancel_impl;
@@ -127,9 +130,12 @@ struct channel
 
     void interrupt_await()
     {
-      this->cancelled = true;
-      if (awaited_from)
-        awaited_from.release().resume();
+      if (!direct)
+      {
+        this->cancelled = true;
+        if (this->awaited_from)
+          this->awaited_from.release().resume();
+      }
     }
 
     struct cancel_impl;
@@ -250,9 +256,12 @@ struct channel<void>
 
     void interrupt_await()
     {
-      this->cancelled = true;
-      if (awaited_from)
-        awaited_from.release().resume();
+      if (!direct)
+      {
+        this->cancelled = true;
+        if (this->awaited_from)
+          this->awaited_from.release().resume();
+      }
     }
 
     struct cancel_impl;
@@ -284,9 +293,12 @@ struct channel<void>
 
     void interrupt_await()
     {
-      this->cancelled = true;
-      if (awaited_from)
-        awaited_from.release().resume();
+      if (!direct)
+      {
+        cancelled = true;
+        if (this->awaited_from)
+          this->awaited_from.release().resume();
+      }
     }
 
     struct cancel_impl;

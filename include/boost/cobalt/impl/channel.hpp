@@ -116,7 +116,7 @@ std::coroutine_handle<void> channel<T>::read_op::await_suspend(std::coroutine_ha
   {
     cancel_slot.clear();
     auto & op = chn->write_queue_.front();
-    op.transactional_unlink();
+    // transactional_unlink can interrupt or cancel `op` through `race`, so we need to check.
     op.direct = true;
     if constexpr (std::is_copy_constructible_v<T>)
     {
@@ -127,7 +127,11 @@ std::coroutine_handle<void> channel<T>::read_op::await_suspend(std::coroutine_ha
     }
     else
       direct = std::move(*op.ref);
+
+    op.transactional_unlink();
     BOOST_ASSERT(op.awaited_from);
+    BOOST_ASSERT(awaited_from);
+
     asio::post(chn->executor_, std::move(awaited_from));
     return op.awaited_from.release();
   }
@@ -207,7 +211,6 @@ std::coroutine_handle<void> channel<T>::write_op::await_suspend(std::coroutine_h
   if constexpr (requires (Promise p) {p.begin_transaction();})
     begin_transaction = +[](void * p){std::coroutine_handle<Promise>::from_address(p).promise().begin_transaction();};
 
-  // currently nothing to read
   if (chn->read_queue_.empty())
   {
     chn->write_queue_.push_back(*this);
@@ -217,7 +220,6 @@ std::coroutine_handle<void> channel<T>::write_op::await_suspend(std::coroutine_h
   {
     cancel_slot.clear();
     auto & op = chn->read_queue_.front();
-    op.transactional_unlink();
     if constexpr (std::is_copy_constructible_v<T>)
     {
       if (ref.index() == 0)
@@ -228,8 +230,11 @@ std::coroutine_handle<void> channel<T>::write_op::await_suspend(std::coroutine_h
     else
       op.direct.emplace(std::move(*ref));
 
-    BOOST_ASSERT(op.awaited_from);
     direct = true;
+    op.transactional_unlink();
+
+    BOOST_ASSERT(op.awaited_from);
+    BOOST_ASSERT(awaited_from);
     asio::post(chn->executor_, std::move(awaited_from));
 
     return op.awaited_from.release();
@@ -255,7 +260,6 @@ system::result<void>  channel<T>::write_op::await_resume(const struct as_result_
     cancel_slot.clear();
   if (cancelled)
     boost::throw_exception(system::system_error(asio::error::operation_aborted), loc);
-
 
   if (!direct)
   {
@@ -333,10 +337,12 @@ std::coroutine_handle<void> channel<void>::read_op::await_suspend(std::coroutine
   {
     cancel_slot.clear();
     auto & op = chn->write_queue_.front();
-    op.unlink();
     op.direct = true;
-    BOOST_ASSERT(op.awaited_from);
     direct = true;
+    op.transactional_unlink();
+
+    BOOST_ASSERT(op.awaited_from);
+    BOOST_ASSERT(awaited_from);
     asio::post(chn->executor_, std::move(awaited_from));
     return op.awaited_from.release();
   }
@@ -364,10 +370,13 @@ std::coroutine_handle<void> channel<void>::write_op::await_suspend(std::coroutin
   {
     cancel_slot.clear();
     auto & op = chn->read_queue_.front();
-    op.unlink();
-    op.direct = true;
-    BOOST_ASSERT(op.awaited_from);
+    op.direct = true; // let interrupt_await know that we'll be resuming it!
     direct = true;
+    op.transactional_unlink();
+
+    BOOST_ASSERT(op.awaited_from);
+    BOOST_ASSERT(awaited_from);
+
     asio::post(chn->executor_, std::move(awaited_from));
     return op.awaited_from.release();
   }

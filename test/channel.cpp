@@ -316,5 +316,51 @@ CO_TEST_CASE(any)
 }
 
 
+CO_TEST_CASE(interrupt_)
+{
+  cobalt::channel<int> c;
+  auto lr = co_await cobalt::left_race(c.write(42), c.read());
+  BOOST_CHECK(lr.index() == 0);
+  auto rl =  co_await cobalt::left_race(c.read(), c.write(42));
+  BOOST_CHECK(rl.index() == 0);
+}
+
+CO_TEST_CASE(interrupt_void)
+{
+  cobalt::channel<void> c;
+  auto lr = co_await cobalt::left_race(c.write(), c.read());
+  BOOST_CHECK(lr == 0);
+  auto rl =  co_await cobalt::left_race(c.read(), c.write());
+  BOOST_CHECK(rl == 0);
+}
+
+CO_TEST_CASE(data_loss)
+{
+  cobalt::channel<int> c1 {10};
+  cobalt::channel<int> c2 {10};
+  cobalt::channel<int> c3 {10};
+  for (int i = 0; i < 10; i++)
+  {
+    co_await c1.write(i);
+    co_await c2.write(1000 + i);
+  }
+  int i1 = 0;
+  int i2 = 1000;
+  std::default_random_engine g(0xDEADBBEF);
+
+  while (i1 < 10)
+  {
+    auto res = co_await cobalt::race(g, c1.read(), c2.read(), c3.read());
+    switch (res.index())
+    {
+      case 0:
+        BOOST_REQUIRE_EQUAL(boost::variant2::get<0>(res), i1++);
+        break;
+      case 1:
+        BOOST_REQUIRE_EQUAL(boost::variant2::get<1>(res), i2++);
+        break;
+    }
+  }
+}
 
 }
