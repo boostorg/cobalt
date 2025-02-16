@@ -1,6 +1,6 @@
 == Tasks
 
-<<task, Tasks>> are lazy, which means they won't do anything before awaited or spwaned.
+<<task, Tasks>> are lazy, which means they won't do anything before awaited or spawned.
 
 [source,cpp]
 ----
