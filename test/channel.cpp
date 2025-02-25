@@ -363,4 +363,32 @@ CO_TEST_CASE(data_loss)
   }
 }
 
+
+
+CO_TEST_CASE(interrupt_1)
+{
+  cobalt::channel<int> c{1u};
+
+  auto lr = co_await cobalt::left_race(c.write(42), c.read());
+  BOOST_CHECK(lr.index() == 0);
+  BOOST_CHECK(c.read().await_ready());
+  BOOST_CHECK(!c.write(12).await_ready());
+  lr = co_await cobalt::left_race(c.write(43), c.read());
+  BOOST_CHECK(lr.index() == 1);
+  BOOST_CHECK(get<1u>(lr) == 42);
+  auto rl =  co_await cobalt::left_race(c.read(), c.write(42));
+  BOOST_CHECK(rl.index() == 1);
+}
+
+CO_TEST_CASE(interrupt_void_1)
+{
+  cobalt::channel<void> c{1};
+  auto lr = co_await cobalt::left_race(c.write(), c.read());
+  BOOST_CHECK(lr == 0);
+  lr = co_await cobalt::left_race(c.write(), c.read());
+  BOOST_CHECK(lr == 1);
+  auto rl =  co_await cobalt::left_race(c.read(), c.write());
+  BOOST_CHECK(rl == 1);
+}
+
 }

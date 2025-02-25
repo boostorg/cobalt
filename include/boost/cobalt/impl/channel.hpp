@@ -165,9 +165,13 @@ system::result<T> channel<T>::read_op::await_resume(const struct as_result_tag &
   if (cancelled)
    return {system::in_place_error, asio::error::operation_aborted};
 
-  T value = direct ? std::move(*direct) : std::move(chn->buffer_.front());
-  if (!direct)
+  T value = chn->buffer_.empty() ? std::move(*direct) : std::move(chn->buffer_.front());
+  if (!chn->buffer_.empty())
+  {
     chn->buffer_.pop_front();
+    if (direct)
+      chn->buffer_.push_back(std::move(*direct));
+  }
 
   if (!chn->write_queue_.empty())
   {
@@ -175,7 +179,7 @@ system::result<T> channel<T>::read_op::await_resume(const struct as_result_tag &
     BOOST_ASSERT(chn->read_queue_.empty());
     if (op.await_ready())
     {
-      op.transactional_unlink();
+      op.unlink();
       BOOST_ASSERT(op.awaited_from);
       asio::post(chn->executor_, std::move(op.awaited_from));
     }
@@ -211,6 +215,7 @@ std::coroutine_handle<void> channel<T>::write_op::await_suspend(std::coroutine_h
   if constexpr (requires (Promise p) {p.begin_transaction();})
     begin_transaction = +[](void * p){std::coroutine_handle<Promise>::from_address(p).promise().begin_transaction();};
 
+  BOOST_ASSERT(this->chn->buffer_.full());
   if (chn->read_queue_.empty())
   {
     chn->write_queue_.push_back(*this);
@@ -259,7 +264,7 @@ system::result<void>  channel<T>::write_op::await_resume(const struct as_result_
   if (cancel_slot.is_connected())
     cancel_slot.clear();
   if (cancelled)
-    boost::throw_exception(system::system_error(asio::error::operation_aborted), loc);
+    return {system::in_place_error, asio::error::operation_aborted};
 
   if (!direct)
   {
@@ -281,7 +286,8 @@ system::result<void>  channel<T>::write_op::await_resume(const struct as_result_
     BOOST_ASSERT(chn->write_queue_.empty());
     if (op.await_ready())
     {
-      op.transactional_unlink();
+      // unlink?
+      op.unlink();
       BOOST_ASSERT(op.awaited_from);
       asio::post(chn->executor_, std::move(op.awaited_from));
     }
@@ -297,7 +303,8 @@ struct channel<void>::read_op::cancel_impl
   {
     op->cancelled = true;
     op->unlink();
-    asio::post(op->chn->executor_, std::move(op->awaited_from));
+    if (op->awaited_from)
+      asio::post(op->chn->executor_, std::move(op->awaited_from));
     op->cancel_slot.clear();
   }
 };
@@ -310,7 +317,8 @@ struct channel<void>::write_op::cancel_impl
   {
     op->cancelled = true;
     op->unlink();
-    asio::post(op->chn->executor_, std::move(op->awaited_from));
+    if (op->awaited_from)
+      asio::post(op->chn->executor_, std::move(op->awaited_from));
     op->cancel_slot.clear();
   }
 };
@@ -322,6 +330,8 @@ std::coroutine_handle<void> channel<void>::read_op::await_suspend(std::coroutine
     if ((cancel_slot = h.promise().get_cancellation_slot()).is_connected())
       cancel_slot.emplace<cancel_impl>(this);
 
+  if (awaited_from)
+    boost::throw_exception(std::runtime_error("already-awaited"), loc);
   awaited_from.reset(h.address());
 
   if constexpr (requires (Promise p) {p.begin_transaction();})

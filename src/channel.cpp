@@ -62,8 +62,7 @@ system::result<void>  channel<void>::read_op::await_resume(const struct as_resul
     {
       op.unlink();
       BOOST_ASSERT(op.awaited_from);
-      asio::post(
-          chn->executor_, std::move(op.awaited_from));
+      asio::post(chn->executor_, std::move(op.awaited_from));
     }
   }
   return {system::in_place_value};
@@ -97,8 +96,7 @@ system::result<void> channel<void>::write_op::await_resume(const struct as_resul
     {
       op.unlink();
       BOOST_ASSERT(op.awaited_from);
-      asio::post(
-          chn->executor_, std::move(op.awaited_from));
+      asio::post(chn->executor_, std::move(op.awaited_from));
     }
   }
   return {system::in_place_value};
