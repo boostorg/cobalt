@@ -1,0 +1,117 @@
+== cobalt/io/ops.hpp
+
+Most functionality in this wrapper is implemented with operations.
+
+They are type-erase, but not by using `virtual`.
+This makes devirtualization easier.
+The `implementation` function must be provided, where as `try_implementation_t` is optional and will be used in the `ready` function.
+Both will be called with `void *this` as the first parameter.
+
+
+[source,cpp]
+----
+struct [[nodiscard]] write_op final : op<system::error_code, std::size_t>
+{
+  const_buffer_sequence buffer;
+
+  using     implementation_t = void(void*, const_buffer_sequence, completion_handler<system::error_code, std::size_t>);
+  using try_implementation_t = void(void*, const_buffer_sequence,            handler<system::error_code, std::size_t>);
+
+  write_op(const_buffer_sequence buffer,
+           void * this_,
+           implementation_t *implementation,
+           try_implementation_t * try_implementation = nullptr);
+
+
+  void initiate(completion_handler<system::error_code, std::size_t> handler) final;
+  void ready(handler<system::error_code, std::size_t> handler) final;
+};
+
+
+
+struct [[nodiscard]] read_op final : op<system::error_code, std::size_t>
+{
+  mutable_buffer_sequence buffer;
+
+  using     implementation_t = void(void*, mutable_buffer_sequence, completion_handler<system::error_code, std::size_t>);
+  using try_implementation_t = void(void*, mutable_buffer_sequence,            handler<system::error_code, std::size_t>);
+
+  read_op(mutable_buffer_sequence buffer,
+           void * this_,
+           implementation_t *implementation,
+           try_implementation_t * try_implementation = nullptr);
+
+  void initiate(completion_handler<system::error_code, std::size_t> handler) final;
+  void ready(handler<system::error_code, std::size_t> handler) final;
+};
+
+
+struct [[nodiscard]] write_at_op final : op<system::error_code, std::size_t>
+{
+  std::uint64_t offset;
+  const_buffer_sequence buffer;
+
+  using     implementation_t = void(void*, std::uint64_t, const_buffer_sequence, completion_handler<system::error_code, std::size_t>);
+  using try_implementation_t = void(void*, std::uint64_t, const_buffer_sequence,            handler<system::error_code, std::size_t>);
+
+  write_at_op(std::uint64_t offset,
+           const_buffer_sequence buffer,
+           void * this_,
+           implementation_t *implementation,
+           try_implementation_t * try_implementation = nullptr);
+
+  void initiate(completion_handler<system::error_code, std::size_t> handler) final;
+  void ready(handler<system::error_code, std::size_t> handler) final;
+};
+
+
+struct [[nodiscard]] read_at_op final : op<system::error_code, std::size_t>
+{
+  std::uint64_t offset;
+  mutable_buffer_sequence buffer;
+
+  using     implementation_t = void(void*, std::uint64_t, mutable_buffer_sequence, completion_handler<system::error_code, std::size_t>);
+  using try_implementation_t = void(void*, std::uint64_t, mutable_buffer_sequence,            handler<system::error_code, std::size_t>);
+
+  read_at_op(std::uint64_t offset,
+          mutable_buffer_sequence buffer,
+          void * this_,
+          implementation_t *implementation,
+          try_implementation_t * try_implementation = nullptr);
+
+
+  void initiate(completion_handler<system::error_code, std::size_t> handler) final;
+  void ready(handler<system::error_code, std::size_t> handler) final;
+};
+
+
+struct [[nodiscard]] wait_op final : op<system::error_code>
+{
+  using     implementation_t = void(void*, completion_handler<system::error_code>);
+  using try_implementation_t = void(void*,            handler<system::error_code>);
+
+  wait_op(void * this_,
+          implementation_t *implementation,
+          try_implementation_t * try_implementation = nullptr);
+
+  void initiate(completion_handler<system::error_code> handler) final;
+  void ready(handler<system::error_code> handler) final;
+};
+
+----
+
+
+
+The ops can be reused and public members (such as buffer)
+can be modified when the op is not awaited. E.g. like this:
+
+[source,cpp]
+----
+write_op wo = do_w;
+auto sz = co_await wo;
+while (sz > 0)
+{
+    wo.buffer += sz;
+    sz = co_await wo;
+}
+----

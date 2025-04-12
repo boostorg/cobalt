@@ -81,6 +81,7 @@ include::reference/config.adoc[]
 include::reference/experimental/context.adoc[]
 
 include::reference/io/buffer.adoc[]
+include::reference/io/ops.adoc[]
 include::reference/io/steady_timer.adoc[]
 include::reference/io/system_timer.adoc[]
 include::reference/io/sleep.adoc[]
