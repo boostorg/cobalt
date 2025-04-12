@@ -1,0 +1,10 @@
+== cobalt/io/random_access_device.hpp
+
+A random_access_device is an io object that allows reads and writes at a random position.
+E.g. a file.
+
+[source,cpp]
+----
+include::../../../include/boost/cobalt/io/random_access_device.hpp[tag=outline]
+----
+
