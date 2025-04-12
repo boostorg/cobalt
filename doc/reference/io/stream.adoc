@@ -1,0 +1,9 @@
+== cobalt/io/stream.hpp
+
+A stream is an io object that allows reads and writes, such as a tcp socket.
+
+[source,cpp]
+----
+include::../../../include/boost/cobalt/io/stream.hpp[tag=outline]
+----
+
