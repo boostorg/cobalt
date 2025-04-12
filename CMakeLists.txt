@@ -171,6 +171,7 @@ else()
     add_library(boost_cobalt_io
                 src/io/steady_timer.cpp
                 src/io/system_timer.cpp
+                src/io/signal_set.cpp
                 src/io/sleep.cpp
                 )
 

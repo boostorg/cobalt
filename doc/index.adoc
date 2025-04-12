@@ -84,6 +84,7 @@ include::reference/io/buffer.adoc[]
 include::reference/io/steady_timer.adoc[]
 include::reference/io/system_timer.adoc[]
 include::reference/io/sleep.adoc[]
+include::reference/io/signal_set.adoc[]
 
 = In-Depth
 
