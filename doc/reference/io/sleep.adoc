@@ -1,0 +1,22 @@
+== cobalt/io/sleep.hpp
+
+The sleep operations are convenience wrappers for timers.
+Every sleep operation creates a timer,
+so it is generally more efficient to reuse a timer.
+
+[source,cpp]
+----
+
+// Waits using a steady_timer.
+template<typename Duration>
+inline auto sleep(const std::chrono::time_point<std::chrono::steady_clock, Duration> & tp);
+
+// Waits using a system_timer.
+template<typename Duration>
+inline auto  sleep(const std::chrono::time_point<std::chrono::system_clock, Duration> & tp);
+
+// Waits using a steady_timer.
+template<typename Rep, typename Period>
+inline auto sleep(const std::chrono::duration<Rep, Period> & dur);
+----
+

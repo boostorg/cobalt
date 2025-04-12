@@ -10,5 +10,8 @@
 
 #include <boost/cobalt/io/buffer.hpp>
 #include <boost/cobalt/io/ops.hpp>
+#include <boost/cobalt/io/sleep.hpp>
+#include <boost/cobalt/io/steady_timer.hpp>
+#include <boost/cobalt/io/system_timer.hpp>
 
 #endif //BOOST_COBALT_IO_HPP

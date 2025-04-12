@@ -1,0 +1,41 @@
+== cobalt/io/steady_timer.hpp
+
+The steady_timer is a simple wrapper around an `asio::steady_timer`.
+
+NOTE: If the timer is already expired, the `co_await t.wait()` does not suspend.
+
+[source,cpp]
+----
+struct steady_timer
+{
+  /// The clock type.
+  typedef std::chrono::steady_clock clock_type;
+
+  /// The duration type of the clock.
+  typedef typename clock_type::duration duration;
+
+  /// The time point type of the clock.
+  typedef typename clock_type::time_point time_point;
+
+  steady_timer(const cobalt::executor & executor = this_thread::get_executor());
+  steady_timer(const time_point& expiry_time, const cobalt::executor & executor = this_thread::get_executor());
+  steady_timer(const duration& expiry_time,   const cobalt::executor & executor = this_thread::get_executor());
+
+  // cancel the timer. This is safe to call from another thread
+  void cancel();
+
+  // The current expiration time.
+  time_point expiry() const;
+  // Rest the expiry time, either with an absolute time or a duration.
+  void reset(const time_point& expiry_time);
+  void reset(const duration& expiry_time);
+
+  // Check if the timer is already expired.
+  bool expired() const;
+  // Get the wait operation.
+  [[nodiscard]] wait_op wait();
+
+
+};
+----
+

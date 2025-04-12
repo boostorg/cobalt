@@ -66,7 +66,9 @@ lib boost_cobalt
   ;
 
 alias cobalt_io_sources
-   : io/acceptor.cpp
+   : io/steady_timer.cpp
+     io/system_timer.cpp
+     io/sleep.cpp
    ;
 
 

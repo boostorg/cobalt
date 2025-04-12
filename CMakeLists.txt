@@ -169,11 +169,14 @@ else()
     endif()
 
     add_library(boost_cobalt_io
-                src/io/acceptor.cpp)
+                src/io/steady_timer.cpp
+                src/io/system_timer.cpp
+                src/io/sleep.cpp
+                )
 
     target_link_libraries(boost_cobalt_io PUBLIC boost_cobalt)
-     target_compile_definitions(boost_cobalt PRIVATE BOOST_COBALT_IO_SOURCE=1 )
-    add_library(Boost::cobalt::io ALIAS boost_cobalt)
+    target_compile_definitions(boost_cobalt_io PRIVATE BOOST_COBALT_IO_SOURCE=1)
+    add_library(Boost::cobalt::io ALIAS boost_cobalt_io)
 
     if(BOOST_COBALT_INSTALL AND NOT BOOST_SUPERPROJECT_VERSION)
         install(TARGETS boost_cobalt
