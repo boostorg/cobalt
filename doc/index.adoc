@@ -86,6 +86,7 @@ include::reference/io/steady_timer.adoc[]
 include::reference/io/system_timer.adoc[]
 include::reference/io/sleep.adoc[]
 include::reference/io/signal_set.adoc[]
+include::reference/io/stream.adoc[]
 include::reference/io/serial_port.adoc[]
 
 = In-Depth

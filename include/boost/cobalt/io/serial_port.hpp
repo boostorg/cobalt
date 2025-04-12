@@ -11,6 +11,7 @@
 #include <boost/cobalt/op.hpp>
 #include <boost/cobalt/io/ops.hpp>
 #include <boost/cobalt/io/buffer.hpp>
+#include <boost/cobalt/io/stream.hpp>
 
 #include <boost/asio/basic_serial_port.hpp>
 #include <boost/core/detail/string_view.hpp>
@@ -20,7 +21,7 @@ namespace boost::cobalt::io
 {
 
 
-struct [[nodiscard]] serial_port
+struct [[nodiscard]] serial_port final : stream
 {
   BOOST_COBALT_IO_DECL system::result<void> close();
   BOOST_COBALT_IO_DECL system::result<void> cancel();
