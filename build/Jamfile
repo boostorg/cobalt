@@ -70,6 +70,7 @@ alias cobalt_io_sources
      io/system_timer.cpp
      io/sleep.cpp
      io/signal_set.cpp
+     io/serial_port.cpp
    ;
 
 

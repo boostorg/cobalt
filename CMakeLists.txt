@@ -173,6 +173,7 @@ else()
                 src/io/system_timer.cpp
                 src/io/signal_set.cpp
                 src/io/sleep.cpp
+                src/io/serial_port.cpp
                 )
 
     target_link_libraries(boost_cobalt_io PUBLIC boost_cobalt)
