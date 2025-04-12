@@ -69,6 +69,7 @@ alias cobalt_io_sources
    : io/steady_timer.cpp
      io/system_timer.cpp
      io/sleep.cpp
+     io/signal_set.cpp
    ;
 
 

@@ -1,0 +1,35 @@
+== cobalt/io/signal_set.hpp
+
+The signal_set is a wrapper around https://www.boost.org/doc/libs/master/doc/html/boost_asio/reference/signal_set.html[signal_set].
+
+=== Outline
+
+[source,cpp]
+----
+struct signal_set
+{
+  signal_set(const cobalt::executor & executor = this_thread::get_executor());
+  signal_set(std::initializer_list<int> sigs, const cobalt::executor & executor = this_thread::get_executor());
+
+  // Cancel all operations associated with the signal set.
+  [[nodiscard]] system::result<void> cancel();
+  // Remove all signals from a signal_set.
+  [[nodiscard]] system::result<void> clear();
+  // Add a signal to a signal_set.
+  [[nodiscard]] system::result<void> add(int signal_number);
+  // Remove a signal from a signal_set.
+  [[nodiscard]] system::result<void> remove(int signal_number);
+};
+----
+
+=== Example
+
+[source,cpp]
+----
+io::signal_set s = {SIGINT, SIGTERM};
+int sig = co_await s.wait();
+if (s == SIGINT)
+  interrupt();
+else if (s == SIGTERM)
+  terminate();
+----
