@@ -21,7 +21,7 @@ namespace boost::cobalt
 
 
 template<typename ... Args>
-struct op
+struct [[nodiscard]] op
 {
   virtual void ready(cobalt::handler<Args...>) {};
   virtual void initiate(cobalt::completion_handler<Args...> complete) = 0 ;

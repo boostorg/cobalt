@@ -172,6 +172,7 @@ else()
                 src/io/acceptor.cpp)
 
     target_link_libraries(boost_cobalt_io PUBLIC boost_cobalt)
+     target_compile_definitions(boost_cobalt PRIVATE BOOST_COBALT_IO_SOURCE=1 )
     add_library(Boost::cobalt::io ALIAS boost_cobalt)
 
     if(BOOST_COBALT_INSTALL AND NOT BOOST_SUPERPROJECT_VERSION)
