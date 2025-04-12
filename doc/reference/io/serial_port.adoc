@@ -1,0 +1,56 @@
+== cobalt/io/serial_port.hpp
+
+The serial_port is a simple wrapper around an https://www.boost.org/doc/libs/master/doc/html/boost_asio/reference/serial_port.html[`asio::serial_port`].
+
+
+[source,cpp]
+----
+struct serial_port
+{
+  // The underlying handle
+  using native_handle_type = typename asio::basic_serial_port<executor>::native_handle_type;
+  native_handle_type native_handle();
+
+
+  serial_port(const cobalt::executor & executor = this_thread::get_executor());
+  serial_port(serial_port && lhs) = default;
+  serial_port(std::string_view device,         const cobalt::executor & executor = this_thread::get_executor());
+  serial_port(native_handle_type native_handle, const cobalt::executor & executor = this_thread::get_executor());
+
+
+  system::result<void> close();
+  system::result<void> cancel();
+  bool is_open() const;
+
+  // Send a break sequence to the serial port.
+  system::result<void> send_break();
+
+  [[nodiscard]] system::result<void>     set_baud_rate(unsigned rate);
+  [[nodiscard]] system::result<unsigned> get_baud_rate();
+
+  [[nodiscard]] system::result<void>     set_character_size(unsigned rate);
+  [[nodiscard]] system::result<unsigned> get_character_size();
+
+  // An enumerator {none, software, hardware}
+  using flow_control = asio::serial_port_base::flow_control::type;
+
+  [[nodiscard]] system::result<void>         set_flow_control(flow_control rate);
+  [[nodiscard]] system::result<flow_control> get_flow_control();
+
+  // An enumerator {none, odd, even}
+  using parity = asio::serial_port_base::parity::type;
+
+  [[nodiscard]] system::result<void>   set_parity(parity rate);
+  [[nodiscard]] system::result<parity> get_parity();
+
+  [[nodiscard]] BOOST_COBALT_IO_DECL system::result<void> assign(native_handle_type native_handle);
+
+  [[nodiscard]] system::result<void> open(std::string_view device);
+
+  // read & write some data. Yields the number of bytes transferred.
+  [[nodiscard]] write_op write_some(const_buffer_sequence buffer);
+  [[nodiscard]]  read_op read_some (mutable_buffer_sequence buffer);
+
+};
+----
+
