@@ -1,6 +1,6 @@
 == Custom Executors
 
-One of the reasons cobalt defaults to https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio/reference/any_io_executor.html::[`asio::any_io_executor`]
+One of the reasons cobalt defaults to https://www.boost.org/doc/libs/master/doc/html/boost_asio/reference/any_io_executor.html::[`asio::any_io_executor`]
 is that it is a type-erased executor, i.e. you can provide your own event-loop without needing to recompile `cobalt`.
 
 However, during the development of the Executor TS, the executor concepts got a bit unintuitive, to put it mildly.

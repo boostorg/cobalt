@@ -1,8 +1,28 @@
 == cobalt/io/buffer.hpp
 
 The buffer headers provide a generic buffer sequence representation for use with io functions.
-It is implemented as a single buffer folled by a span of buffers. This allows dropping bytes from the front
-and also using a single buffer or a registered_ buffer.
+It is implemented as a single buffer followed by a span of buffers. This allows dropping bytes from the front
+and also using a single https://www.boost.org/doc/libs/master/doc/html/boost_asio/reference/buffer.html[`buffer`],
+a https://www.boost.org/doc/libs/master/doc/html/boost_asio/reference/register_buffers.html[`registered_buffer`].
+
+A `const_buffer_sequence` implements a https://www.boost.org/doc/libs/master/doc/html/boost_asio/reference/ConstBufferSequence.html[`ConstBufferSequence`]
+and the `mutable_buffer_sequence` implements a https://www.boost.org/doc/libs/master/doc/html/boost_asio/reference/MutableBufferSequence.html[`MutableBufferSequence`].
+
+[source,cpp]
+----
+namespace io
+{
+
+// Aliases for the asio functions.
+using asio::buffer;
+using asio::buffer_copy;
+using asio::buffer_size;
+
+}
+----
+
+
+=== mutable_buffer_sequence
 
 [source,cpp]
 ----
@@ -21,19 +41,29 @@ struct mutable_buffer_sequence
   template<typename T>
     requires (std::constructible_from<std::span<const asio::mutable_buffer>, T&&>)
   mutable_buffer_sequence(T && value);
-
   mutable_buffer_sequence(std::span<const asio::mutable_buffer> spn);
 
+  // drop n bytes from the buffer sequence
   mutable_buffer_sequence & operator+=(std::size_t n);
+  // a random access iterator over the buffers
   struct const_iterator;
 
   const_iterator begin() const;
   const_iterator   end() const;
 
+  // is this a registered buffer
   bool is_registered() const;
 };
 
+// Invokes Func either with the mutable_buffer_sequence, an `asio::mutable_registered_buffer` or a `asio::mutable_buffer`.
+template<typename Func>
+auto visit(const mutable_buffer_sequence & seq, Func && func);
+----
 
+=== const_buffer_sequence
+
+[source,cpp]
+----
 using asio::const_buffer;
 
 struct const_buffer_sequence
@@ -46,26 +76,27 @@ struct const_buffer_sequence
   const_buffer_sequence(asio::mutable_buffer head)  { this->head_ = head; }
 
   template<typename T>
-  requires (std::constructible_from<std::span<const asio::const_buffer>, T&&>)
+    requires (std::constructible_from<std::span<const asio::const_buffer>, T&&>)
   const_buffer_sequence(T && value);
   const_buffer_sequence(std::span<const asio::const_buffer> spn);
 
   // drop bytes from the front, i.e. advance the buffer
   const_buffer_sequence & operator+=(std::size_t n);
 
-  // a random access iterator
+  // a random access iterator over the buffers
   struct const_iterator;
 
   // Access the sequence as a range.
   const_iterator begin() const;
   const_iterator   end() const;
 
+  // is this a registered buffer
   bool is_registered() const;
 };
 
-// Aliases for the asio functions.
-using asio::buffer_copy;
-using asio::buffer_size;
+// Invokes Func either with the const_buffer_sequence, an `asio::const_registered_buffer` or a `asio::const_buffer.
+template<typename Func>
+auto visit(const const_buffer_sequence & seq, Func && func);
 
 }
 ----

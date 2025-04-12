@@ -42,7 +42,7 @@ int main(int argc, char * argv[])
 
 This works, but our program will spend most of the time waiting for input.
 Operating systems provide APIs that allow IO to be performed asynchronously,
-and libraries such as https://www.boost.org/doc/libs/1_83_0/doc/html/boost_asio.html[boost.asio]
+and libraries such as https://www.boost.org/doc/libs/master/doc/html/boost_asio.html[boost.asio]
 provide portable ways to manage asynchronous operations.
 Asio itself does not dictate a way to handle the completions.
 This library (boost.cobalt) provides a way to manage this all through coroutines/awaitables.
