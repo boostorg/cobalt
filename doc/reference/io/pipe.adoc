@@ -1,0 +1,61 @@
+== cobalt/io/pipe.hpp
+
+The pipe headers provide simple wrappers around asio's pipe facilities.
+
+
+[source,cpp]
+----
+// Create a pair of pipes.
+system::result<std::pair<struct readable_pipe, struct writable_pipe>> pipe(
+    const cobalt::executor & executor
+    );
+
+
+struct readable_pipe final : read_stream
+{
+  using native_handle_type = asio::basic_readable_pipe<executor>::native_handle_type;
+
+  readable_pipe(const cobalt::executor & executor = this_thread::get_executor());
+  readable_pipe(native_handle_type native_file, const cobalt::executor & executor = this_thread::get_executor());
+  readable_pipe(readable_pipe && sf) noexcept;
+
+  system::result<void> assign(native_handle_type native_file);
+  system::result<void> cancel();
+
+  executor get_executor();
+  bool is_open() const;
+
+  system::result<void> close();
+
+  native_handle_type native_handle();
+  system::result<native_handle_type> release();
+
+  read_op read_some(mutable_buffer_sequence buffer);
+};
+
+
+struct writable_pipe final : write_stream
+{
+  using native_handle_type = asio::basic_writable_pipe<executor>::native_handle_type;
+
+  writable_pipe(const cobalt::executor & executor = this_thread::get_executor());
+  writable_pipe(native_handle_type native_file, const cobalt::executor & executor = this_thread::get_executor());
+  writable_pipe(writable_pipe && sf) noexcept;
+
+  system::result<void> assign(native_handle_type native_file);
+  system::result<void> cancel();
+
+  executor get_executor();
+  bool is_open() const;
+
+  write_op write_some(const_buffer_sequence buffer);
+
+  system::result<void> close();
+
+  native_handle_type native_handle();
+
+  system::result<native_handle_type> release();
+};
+
+----
+
