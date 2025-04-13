@@ -74,6 +74,9 @@ alias cobalt_io_sources
      io/write.cpp
      io/read.cpp
      io/pipe.cpp
+     io/file.cpp
+     io/random_access_file.cpp
+     io/stream_file.cpp
    ;
 
 

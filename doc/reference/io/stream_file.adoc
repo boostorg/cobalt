@@ -1,0 +1,29 @@
+== cobalt/io/stream_file.hpp
+
+The `stream_file` provides stream access to file.
+If asio does not support asynchronous file IO the cobalt will fall back on synchronous operations.
+
+[source,cpp]
+----
+struct stream_file : file, stream
+{
+  stream_file(const executor & executor = this_thread::get_executor());
+  stream_file(const char * path, file::flags open_flags,
+              const executor & executor = this_thread::get_executor());
+  stream_file(const std::string & path, file::flags open_flags,
+              const executor & executor = this_thread::get_executor());
+  stream_file(const native_handle_type & native_file,
+              const executor & executor = this_thread::get_executor());
+  stream_file(stream_file && sf) noexcept;
+
+  write_op write_some(const_buffer_sequence buffer);
+  read_op read_some(mutable_buffer_sequence buffer);
+
+  // advance the position in the file
+  system::result<std::uint64_t> seek(
+      std::int64_t offset,
+      seek_basis whence);
+
+};
+----
+

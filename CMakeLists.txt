@@ -177,6 +177,9 @@ else()
                 src/io/write.cpp
                 src/io/serial_port.cpp
                 src/io/pipe.cpp
+                src/io/file.cpp
+                src/io/random_access_file.cpp
+                src/io/stream_file.cpp
                 )
 
     target_link_libraries(boost_cobalt_io PUBLIC boost_cobalt)

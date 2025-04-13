@@ -80,4 +80,4 @@ inline auto sleep(const std::chrono::duration<Rep, Period> & dur)
 
 }
 
-#endif //BOOST_COBALT_EXPERIMENTAL_IO_IO_SLEEP_HPP
+#endif //BOOST_COBALT_IO_IO_SLEEP_HPP

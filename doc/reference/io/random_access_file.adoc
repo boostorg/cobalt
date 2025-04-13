@@ -1,0 +1,27 @@
+== cobalt/io/random_access_file.hpp
+
+The `stream_file` provides random access to file.
+If asio does not support asynchronous file IO the cobalt will fall back on synchronous operations.
+
+
+[source,cpp]
+----
+
+struct random_access_file : file, random_access_device
+{
+  using native_handle_type = file::native_handle_type;
+
+  random_access_file(const executor & executor = this_thread::get_executor());
+  random_access_file(const char * path, file::flags open_flags,
+                     const executor & executor = this_thread::get_executor());
+  random_access_file(const std::string & path, file::flags open_flags,
+                     const executor & executor = this_thread::get_executor());
+  random_access_file(const native_handle_type & native_file,
+                     const executor & executor = this_thread::get_executor());
+  random_access_file(random_access_file && sf) noexcept;
+
+  write_at_op write_some_at(std::uint64_t offset, const_buffer_sequence buffer);
+  read_at_op read_some_at(std::uint64_t offset, mutable_buffer_sequence buffer);
+};
+----
+
