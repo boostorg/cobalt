@@ -1,0 +1,22 @@
+== cobalt/io/read.hpp
+
+The `write` and `write_at` write the full buffer to a stream.
+
+[source,cpp]
+----
+
+struct write_all final : op<system::error_code, std::size_t>
+{
+  read_op step;
+  write_all(read_op op);
+};
+write_all write(stream & str, const_buffer_sequence buffer);
+
+
+struct write_all_at final : op<system::error_code, std::size_t>
+{
+  write_at_op step;
+  write_all_at(write op);
+};
+write_all_at write_at(stream & str, std::uint64_t offset, const_buffer_sequence buffer);
+----

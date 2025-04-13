@@ -1,0 +1,22 @@
+== cobalt/io/read.hpp
+
+The `read` and `read_at` functions read until a buffer is full.
+
+[source,cpp]
+----
+
+struct read_all final : op<system::error_code, std::size_t>
+{
+  read_op step;
+  read_all(read_op op);
+};
+read_all read(stream & str, mutable_buffer_sequence buffer);
+
+
+struct read_all_at final : op<system::error_code, std::size_t>
+{
+  read_at_op step;
+  read_all_at(read_at_op op);
+};
+read_all_at read_at(stream & str, std::uint64_t offset, mutable_buffer_sequence buffer);
+----
