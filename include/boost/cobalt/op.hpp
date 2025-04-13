@@ -131,7 +131,7 @@ struct [[nodiscard]] op
     }
   };
 
-  awaitable operator co_await() &&
+  awaitable operator co_await()
   {
     return awaitable{this};
   }

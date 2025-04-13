@@ -173,6 +173,8 @@ else()
                 src/io/system_timer.cpp
                 src/io/signal_set.cpp
                 src/io/sleep.cpp
+                src/io/read.cpp
+                src/io/write.cpp
                 src/io/serial_port.cpp
                 )
 

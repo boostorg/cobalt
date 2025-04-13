@@ -88,6 +88,8 @@ include::reference/io/sleep.adoc[]
 include::reference/io/signal_set.adoc[]
 include::reference/io/stream.adoc[]
 include::reference/io/random_access_device.adoc[]
+include::reference/io/read.adoc[]
+include::reference/io/write.adoc[]
 include::reference/io/serial_port.adoc[]
 
 = In-Depth
