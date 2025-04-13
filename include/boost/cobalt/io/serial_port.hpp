@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_COBALT_EXPERIMENTAL_IO_SERIAL_PORT_HPP
-#define BOOST_COBALT_EXPERIMENTAL_IO_SERIAL_PORT_HPP
+#ifndef BOOST_COBALT_IO_SERIAL_PORT_HPP
+#define BOOST_COBALT_IO_SERIAL_PORT_HPP
 
 #include <boost/cobalt/op.hpp>
 #include <boost/cobalt/io/ops.hpp>
@@ -75,4 +75,4 @@ struct [[nodiscard]] serial_port final : stream
 
 }
 
-#endif //BOOST_COBALT_EXPERIMENTAL_IO_SERIAL_PORT_HPP
+#endif //BOOST_COBALT_IO_SERIAL_PORT_HPP

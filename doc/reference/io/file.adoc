@@ -1,0 +1,68 @@
+== cobalt/io/file.hpp
+
+The file object provides file IO, that may be asynchronous depending on how asio is configured.
+If asio does not support asynchronous file IO the cobalt will fall back on synchronous operations.
+
+[source,cpp]
+----
+
+struct file
+{
+
+  enum flags
+  {
+    read_only = O_RDONLY,
+    write_only = O_WRONLY,
+    read_write = O_RDWR,
+    append = O_APPEND,
+    create = O_CREAT,
+    exclusive = O_EXCL,
+    truncate = O_TRUNC,
+    sync_all_on_write = O_SYNC
+  };
+
+  // Implement bitmask operations as shown in C++ Std [lib.bitmask.types].
+  friend flags operator&(flags x, flags y);
+  friend flags operator|(flags x, flags y);
+  friend flags operator^(flags x, flags y);
+
+  friend flags operator~(flags x);
+  friend flags& operator&=(flags& x, flags y);
+  friend flags& operator|=(flags& x, flags y);
+  friend flags& operator^=(flags& x, flags y);
+
+  /// Basis for seeking in a file.
+  enum seek_basis
+  {
+    seek_set = SEEK_SET,
+    seek_cur = SEEK_CUR,
+    seek_end = SEEK_END
+  };
+
+
+  using native_handle_type = __unspecified__;
+
+  system::result<void> assign(const native_handle_type & native_file);
+  system::result<void> cancel();
+
+  executor get_executor();
+  bool is_open() const;
+
+  system::result<void> close();
+  native_handle_type native_handle();
+
+  system::result<void> open(const char * path,        flags open_flags);
+  system::result<void> open(const std::string & path, flags open_flags);
+
+  system::result<native_handle_type> release();
+  system::result<void> resize(std::uint64_t n);
+
+  system::result<std::uint64_t> size() const;
+  system::result<void> sync_all();
+  system::result<void> sync_data();
+
+  explicit file(executor exec);
+  file(executor exec, native_handle_type fd);
+
+};
+----
