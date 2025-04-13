@@ -73,6 +73,7 @@ alias cobalt_io_sources
      io/serial_port.cpp
      io/write.cpp
      io/read.cpp
+     io/pipe.cpp
    ;
 
 

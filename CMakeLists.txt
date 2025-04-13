@@ -176,6 +176,7 @@ else()
                 src/io/read.cpp
                 src/io/write.cpp
                 src/io/serial_port.cpp
+                src/io/pipe.cpp
                 )
 
     target_link_libraries(boost_cobalt_io PUBLIC boost_cobalt)
