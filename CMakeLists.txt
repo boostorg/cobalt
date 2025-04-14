@@ -181,6 +181,7 @@ else()
                 src/io/random_access_file.cpp
                 src/io/stream_file.cpp
                 src/io/endpoint.cpp
+                src/io/socket.cpp
                 )
 
     target_link_libraries(boost_cobalt_io PUBLIC boost_cobalt)
