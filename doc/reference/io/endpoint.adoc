@@ -1,0 +1,255 @@
+== cobalt/io/endpoint.hpp
+
+The endpoint header provides a generic asio compatible endpoint type & protocols.
+
+=== protocol_type
+
+[source,cpp]
+----
+
+struct protocol_type
+{
+  using family_t   = __unspecified__;
+  using type_t     = __unspecified__;
+  using protocol_t = __unspecified__;
+
+  constexpr family_t     family() const noexcept;
+  constexpr type_t         type() const noexcept;
+  constexpr protocol_t protocol() const noexcept;
+
+  // explicitly construct protocol type.
+  constexpr explicit
+  protocol_type(family_t family     = static_cast<family_t>(0),
+                type_t type         = static_cast<type_t>(0),
+                protocol_t protocol = static_cast<protocol_t>(0)) noexcept;
+
+  // allows construction from other procols, e.g. asio
+  template<typename OtherProtocol>
+    requires requires (const OtherProtocol & op)
+      {
+        {static_cast<family_t>(op.family())};
+        {static_cast<type_t>(op.type())};
+        {static_cast<protocol_t>(op.protocol())};
+      }
+  constexpr protocol_type(const OtherProtocol & op) noexcept
+
+  // make the orderable
+  friend
+  constexpr auto operator<=>(const protocol_type & , const protocol_type &) noexcept = default;
+
+};
+----
+
+.Example
+[source,cpp]
+----
+protocol_type tcp_v4{AF_INET, SOCK_STREAM, IPPROTO_TCP};
+
+// from asio
+protocol_type tcp_v6 = boost::asio::ip::tcp::v6();
+----
+
+=== static_protocol
+
+The static protocol provides protocol definitions for compile-time usage.
+
+[source,cpp]
+----
+template<protocol_type::family_t   Family   = static_cast<protocol_type::family_t>(0),
+         protocol_type::type_t     Type     = static_cast<protocol_type::type_t>(0),
+         protocol_type::protocol_t Protocol = static_cast<protocol_type::protocol_t>(0)>
+struct static_protocol
+{
+  using family_t   = protocol_type::family_t  ;
+  using type_t     = protocol_type::type_t    ;
+  using protocol_t = protocol_type::protocol_t;
+
+  constexpr family_t   family()   const noexcept {return Family;};
+  constexpr type_t     type()     const noexcept {return Type;};
+  constexpr protocol_t protocol() const noexcept {return Protocol;};
+
+  using endpoint = io::endpoint;
+};
+
+
+constexpr static_protocol<...> ip;
+constexpr static_protocol<...> ip_v4;
+constexpr static_protocol<...> ip_v6;
+constexpr static_protocol<...> tcp;
+constexpr static_protocol<...> tcp_v4;
+constexpr static_protocol<...> tcp_v6;
+constexpr static_protocol<...> udp;
+constexpr static_protocol<...> udp_v4;
+constexpr static_protocol<...> udp_v6;
+constexpr static_protocol<...> icmp;
+constexpr static_protocol<...> local_stream;
+constexpr static_protocol<...> local_datagram;
+constexpr static_protocol<...> local_seqpacket;
+constexpr static_protocol<...> local_protocol;
+----
+
+=== ip_address
+
+[source,cpp]
+----
+struct ip_address
+{
+  bool is_ipv6() const;
+  bool is_ipv4() const;
+
+  std::uint16_t port() const;
+
+  std::array<std::uint8_t, 16u> addr() const;
+  boost::static_string<45> addr_str() const;
+};
+
+struct ip_address_v4
+{
+    std::uint16_t port() const;
+    std::uint32_t addr() const;
+    boost::static_string<15> addr_str() const;
+};
+
+struct ip_address_v6
+{
+  std::uint16_t port() const;
+  std::array<std::uint8_t, 16u> addr() const;
+  boost::static_string<45> addr_str() const;
+};
+----
+
+=== make_endpoint / get_endpoint
+
+The `make_endpoint_tag` is used with a `tag_invoke` for the `make_endpoint` function.
+A user can define another `tag_invoke` functions to support custom endpoints.
+
+[source,cpp]
+----
+template<protocol_type::family_t Family>
+struct make_endpoint_tag {};
+
+template<protocol_type::family_t Family>
+struct get_endpoint_tag {};
+----
+
+The following functions are provided:
+
+[source,cpp]
+----
+std::size_t tag_invoke(make_endpoint_tag<AF_UNIX>,
+                       asio::detail::socket_addr_type* base,
+                       std::string_view sv);
+
+const local_endpoint* tag_invoke(get_endpoint_tag<AF_UNIX>,
+                                 protocol_type actual,
+                                 const endpoint::addr_type * addr);
+
+std::size_t tag_invoke(make_endpoint_tag<AF_INET>,
+                       asio::detail::socket_addr_type* base,
+                       std::uint32_t address,
+                       std::uint16_t port);
+
+std::size_t tag_invoke(make_endpoint_tag<AF_INET>,
+                       asio::detail::socket_addr_type* base,
+                       std::string_view address,
+                       std::uint16_t port);
+
+const ip_address_v4* tag_invoke(get_endpoint_tag<AF_INET>,
+                                 protocol_type actual,
+                                 const endpoint::addr_type * addr);
+
+std::size_t tag_invoke(make_endpoint_tag<AF_INET6>,
+                       asio::detail::socket_addr_type* base,
+                       std::span<std::uint8_t, 16> address,
+                       std::uint16_t port);
+
+std::size_t tag_invoke(make_endpoint_tag<AF_INET6>,
+                       asio::detail::socket_addr_type* base,
+                       std::string_view address,
+                       std::uint16_t port);
+
+const ip_address_v6* tag_invoke(get_endpoint_tag<AF_INET6>,
+                                protocol_type actual,
+                                const endpoint::addr_type * addr);
+
+std::size_t tag_invoke(make_endpoint_tag<AF_UNSPEC>,
+                       asio::detail::socket_addr_type* base,
+                       std::string_view address,
+                       std::uint16_t port);
+
+const ip_address* tag_invoke(get_endpoint_tag<AF_UNSPEC>,
+                                protocol_type actual,
+                                const endpoint::addr_type * addr);
+----
+
+=== endpoint
+
+The endpoint function holds and
+
+[source,cpp]
+----
+struct endpoint
+{
+  using storage_type = asio::detail::sockaddr_storage_type;
+  using addr_type = asio::detail::socket_addr_type;
+  void resize(std::size_t size);
+
+        void * data()       {return &storage_; }
+  const void * data() const {return &storage_; }
+  std::size_t size() const {return size_;}
+  std::size_t capacity() const {return sizeof(storage_);}
+
+  void set_type    (protocol_type::type_t type)         { type_ = type;}
+  void set_protocol(protocol_type::protocol_t protocol) { protocol_ = protocol;}
+
+  protocol_type protocol() const;
+
+  endpoint() = default;
+  endpoint(const endpoint & ep);
+
+  // Construct a endpoint using make_endpoint_tag
+  template<protocol_type::family_t   Family,
+           protocol_type::type_t     Type,
+           protocol_type::protocol_t Protocol,
+           typename ... Args>
+      requires requires (make_endpoint_tag<Family> proto,
+                         addr_type* addr, Args && ... args)
+      {
+        {tag_invoke(proto, addr, std::forward<Args>(args)...)} -> std::convertible_to<std::size_t>;
+      }
+  endpoint(static_protocol<Family, Type, Protocol> proto, Args && ... args);
+
+  // allows constructing an endpoint from an asio type
+  template<typename OtherEndpoint>
+  requires requires (OtherEndpoint oe)
+      {
+        {oe.protocol()} -> std::convertible_to<protocol_type>;
+        {oe.data()} -> std::convertible_to<void*>;
+        {oe.size()} -> std::convertible_to<std::size_t>;
+      }
+  endpoint(OtherEndpoint && oe);
+};
+
+
+class bad_endpoint_access : public std::exception
+{
+ public:
+  bad_endpoint_access() noexcept = default;
+  char const * what() const noexcept;
+};
+
+// Uses `get_endpoint_tag<Protocol> to return a `pointer` to the result.
+// Throws `bad_endpoint_access` if it's the wrong type
+auto get(const endpoint & ep);
+
+// Uses `get_endpoint_tag<Protocol> to return a `pointer` to the result.
+template<static_protocol Protocol>
+friend auto get_if(const endpoint * ep);
+----
+
+.Example
+[source,cpp]
+----
+cobalt::io::endpoint ep{cobalt::io::tcp_v4, "127.0.0.1", 8080};
+----
+

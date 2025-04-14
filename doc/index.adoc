@@ -94,6 +94,7 @@ include::reference/io/file.adoc[]
 include::reference/io/stream_file.adoc[]
 include::reference/io/random_access_file.adoc[]
 include::reference/io/serial_port.adoc[]
+include::reference/io/endpoint.adoc[]
 
 = In-Depth
 
