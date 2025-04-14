@@ -78,6 +78,7 @@ alias cobalt_io_sources
      io/random_access_file.cpp
      io/stream_file.cpp
      io/endpoint.cpp
+     io/socket.cpp
    ;
 
 
