@@ -31,6 +31,7 @@ add_executable(boost_cobalt_io_test EXCLUDE_FROM_ALL
                io/ops.cpp
                io/sleep.cpp
                io/pipe.cpp
+               io/endpoint.cpp
                )
 target_link_libraries(boost_cobalt_io_test  Boost::cobalt::io Boost::unit_test_framework)
 add_dependencies(tests boost_cobalt_main boost_cobalt_basic_tests boost_cobalt_static_tests boost_cobalt_experimental boost_cobalt_io_test)
