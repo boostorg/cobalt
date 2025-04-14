@@ -1,0 +1,25 @@
+== cobalt/io/socket.hpp
+
+The socket class for a seq packet socket, e.g. TCP.
+
+[source,cpp]
+----
+
+struct [[nodiscard]] stream_socket final : socket, stream
+{
+
+  stream_socket(const cobalt::executor & executor = this_thread::get_executor());
+  stream_socket(stream_socket && lhs);
+  stream_socket(native_handle_type h, protocol_type protocol = protocol_type(),
+                const cobalt::executor & executor = this_thread::get_executor());
+  stream_socket(endpoint ep,
+                const cobalt::executor & executor = this_thread::get_executor());
+
+  write_op write_some(const_buffer_sequence buffer);
+  read_op read_some(mutable_buffer_sequence buffer);};
+
+// Connect to sockets using the given protocol
+inline system::result<std::pair<stream_socket, stream_socket>> make_pair(decltype(local_stream) protocol);
+
+----
+

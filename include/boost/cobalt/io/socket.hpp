@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_COBALT_EXPERIMENTAL_IO_SOCKET_HPP
-#define BOOST_COBALT_EXPERIMENTAL_IO_SOCKET_HPP
+#ifndef BOOST_COBALT_IOSOCKET_HPP
+#define BOOST_COBALT_IOSOCKET_HPP
 
 #include <boost/cobalt/io/endpoint.hpp>
 #include <boost/cobalt/io/ops.hpp>
@@ -155,4 +155,4 @@ BOOST_COBALT_IO_DECL system::result<void> connect_pair(protocol_type protocol, s
 
 }
 
-#endif //BOOST_COBALT_EXPERIMENTAL_IO_SOCKET_HPP
+#endif //BOOST_COBALT_IOSOCKET_HPP

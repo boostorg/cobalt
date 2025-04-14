@@ -182,6 +182,9 @@ else()
                 src/io/stream_file.cpp
                 src/io/endpoint.cpp
                 src/io/socket.cpp
+                src/io/datagram_socket.cpp
+                src/io/seq_packet_socket.cpp
+                src/io/stream_socket.cpp
                 )
 
     target_link_libraries(boost_cobalt_io PUBLIC boost_cobalt)

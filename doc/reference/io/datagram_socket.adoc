@@ -1,0 +1,25 @@
+== cobalt/io/socket.hpp
+
+This socket class implements a datagram socket, such as UDP.
+
+[source,cpp]
+----
+
+struct [[nodiscard]] datagram_socket final : socket
+{
+  datagram_socket(const cobalt::executor & executor = this_thread::get_executor());
+  datagram_socket(datagram_socket && lhs);
+  datagram_socket(native_handle_type h, protocol_type protocol = protocol_type(),
+                  const cobalt::executor & executor = this_thread::get_executor());
+  datagram_socket(endpoint ep,
+                  const cobalt::executor & executor = this_thread::get_executor());
+
+  write_op send(const_buffer_sequence buffer);
+  read_op receive(mutable_buffer_sequence buffer);
+};
+
+
+// Create a pair of connected sockets.
+inline system::result<std::pair<datagram_socket, datagram_socket>> make_pair(decltype(local_datagram) protocol);
+----
+
