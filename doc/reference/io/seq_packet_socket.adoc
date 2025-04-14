@@ -1,0 +1,22 @@
+== cobalt/io/socket.hpp
+
+The socket class for a seq packet socket, e.g. SCTP.
+
+[source,cpp]
+----
+struct seq_packet_socket : socket
+{
+  seq_packet_socket(const cobalt::executor & executor = this_thread::get_executor());
+  seq_packet_socket(seq_packet_socket && lhs);
+  seq_packet_socket(native_handle_type h, protocol_type protocol = protocol_type(),
+                    const executor & executor = this_thread::get_executor());
+  seq_packet_socket(endpoint ep, const executor & executor = this_thread::get_executor());
+
+  receive_op receive(message_flags in_flags, message_flags& out_flags, mutable_buffer_sequence buffer);
+  send_op send(message_flags in_flags, const_buffer_sequence buffer);
+  receive_op receive(message_flags in_flags, mutable_buffer_sequence buffer);
+};
+
+// Connect to sockets using the given protocol
+system::result<void> make_pair(decltype(local_seqpacket) protocol);
+----

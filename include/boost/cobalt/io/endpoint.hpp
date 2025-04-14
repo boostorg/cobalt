@@ -123,6 +123,12 @@ constexpr static_protocol<AF_UNIX,                      BOOST_ASIO_OS_DEF(SOCK_D
 constexpr static_protocol<AF_UNIX,                      BOOST_ASIO_OS_DEF(SOCK_SEQPACKET)> local_seqpacket{};
 constexpr static_protocol<AF_UNIX>                                                         local_protocol {};
 
+#if defined(IPPROTO_SCTP)
+constexpr static_protocol<BOOST_ASIO_OS_DEF(AF_UNSPEC), BOOST_ASIO_OS_DEF(SOCK_SEQPACKET), IPPROTO_SCTP>  sctp   {};
+constexpr static_protocol<BOOST_ASIO_OS_DEF(AF_INET),   BOOST_ASIO_OS_DEF(SOCK_SEQPACKET), IPPROTO_SCTP>  sctp_v4{};
+constexpr static_protocol<BOOST_ASIO_OS_DEF(AF_INET6),  BOOST_ASIO_OS_DEF(SOCK_SEQPACKET), IPPROTO_SCTP>  sctp_v6{};
+#endif
+
 template<protocol_type::family_t Family>
 struct make_endpoint_tag {};
 

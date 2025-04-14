@@ -96,6 +96,9 @@ include::reference/io/random_access_file.adoc[]
 include::reference/io/serial_port.adoc[]
 include::reference/io/endpoint.adoc[]
 include::reference/io/socket.adoc[]
+include::reference/io/stream_socket.adoc[]
+include::reference/io/datagram_socket.adoc[]
+include::reference/io/seq_packet_socket.adoc[]
 
 = In-Depth
 

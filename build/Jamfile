@@ -79,6 +79,9 @@ alias cobalt_io_sources
      io/stream_file.cpp
      io/endpoint.cpp
      io/socket.cpp
+     io/datagram_socket.cpp
+     io/seq_packet_socket.cpp
+     io/stream_socket.cpp
    ;
 
 
