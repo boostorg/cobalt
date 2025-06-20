@@ -52,6 +52,7 @@ include::design/promise.adoc[]
 include::design/race.adoc[]
 include::design/associators.adoc[]
 include::design/thread.adoc[]
+include::design/io.adoc[]
 
 = Reference
 
