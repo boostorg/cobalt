@@ -94,6 +94,7 @@ struct channel<T>::read_op::cancel_impl
 
 template<typename T>
 template<typename Promise>
+BOOST_NOINLINE
 std::coroutine_handle<void> channel<T>::read_op::await_suspend(std::coroutine_handle<Promise> h)
 {
   if constexpr (requires (Promise p) {p.get_cancellation_slot();})
@@ -205,6 +206,7 @@ struct channel<T>::write_op::cancel_impl
 
 template<typename T>
 template<typename Promise>
+BOOST_NOINLINE
 std::coroutine_handle<void> channel<T>::write_op::await_suspend(std::coroutine_handle<Promise> h)
 {
   if constexpr (requires (Promise p) {p.get_cancellation_slot();})
@@ -324,6 +326,7 @@ struct channel<void>::write_op::cancel_impl
 };
 
 template<typename Promise>
+BOOST_NOINLINE
 std::coroutine_handle<void> channel<void>::read_op::await_suspend(std::coroutine_handle<Promise> h)
 {
   if constexpr (requires (Promise p) {p.get_cancellation_slot();})
@@ -360,6 +363,7 @@ std::coroutine_handle<void> channel<void>::read_op::await_suspend(std::coroutine
 
 
 template<typename Promise>
+BOOST_NOINLINE
 std::coroutine_handle<void> channel<void>::write_op::await_suspend(std::coroutine_handle<Promise> h)
 {
   if constexpr (requires (Promise p) {p.get_cancellation_slot();})
