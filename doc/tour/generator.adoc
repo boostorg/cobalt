@@ -27,13 +27,18 @@ cobalt::main co_main(int argc, char * argv[])
 
 Values can be pushed into the generator, that will be returned from the `co_yield`.
 
+An eager generator will produce the first result before being awaited.
+That is, when we call `co_await g(4)` the result from the initial co_yield is ready.
+The generator then receives the value `4` that got passed in as a return from the co_yield,
+and processes it.
+
 [source,cpp]
 ----
-cobalt::generator<double, int> my_eager_push_generator(int value)
+cobalt::generator<std::string, int> my_eager_push_generator(int value)
 {
    while (value != 0)
-       value = co_yield value * 0.1;
-   co_return std::numeric_limits<double>::quiet_NaN();
+       value = co_yield std::to_string(value);
+   co_return "";
 }
 
 cobalt::main co_main(int argc, char * argv[])
@@ -41,11 +46,11 @@ cobalt::main co_main(int argc, char * argv[])
     // create the generator
     auto g = my_generator(5);
 
-    assert(0.5 == co_await g(4)); // result of 5
-    assert(0.4 == co_await g(3)); // result of 4
-    assert(0.3 == co_await g(2)); // result of 3
-    assert(0.2 == co_await g(1)); // result of 2
-    assert(0.1 == co_await g(0)); // result of 1
+    assert("5" == co_await g(4)); // result of 5
+    assert("4" == co_await g(3)); // result of 4
+    assert("3" == co_await g(2)); // result of 3
+    assert("2" == co_await g(1)); // result of 2
+    assert("1" == co_await g(0)); // result of 1
 
     // we let the coroutine go out of scope while suspended
     // no need for another co_await of `g`
@@ -56,25 +61,29 @@ cobalt::main co_main(int argc, char * argv[])
 
 A coroutine can also be made lazy using <<initial, `this_coro::initial`>>.
 
+A lazy generator does wait for the first `co_await` to start work,
+i.e. it suspends when `initial` gets awaited.
+The data processing is not a step ahead, but happens when `co_await`-ed.
+
 [source,cpp]
 ----
-cobalt::generator<double, int> my_eager_push_generator()
+cobalt::generator<std::string, int> my_eager_push_generator()
 {
     auto value = co_await this_coro::initial;
     while (value != 0)
-        value = co_yield value * 0.1;
-    co_return std::numeric_limits<double>::quiet_NaN();
+       value = co_yield std::to_string(value);
+    co_return "";
 }
 
 cobalt::main co_main(int argc, char * argv[])
 {
     // create the generator
     auto g = my_generator(); // lazy, so the generator waits for the first pushed value
-    assert(0.5 == co_await g(5)); // result of 5
-    assert(0.4 == co_await g(4)); // result of 4
-    assert(0.3 == co_await g(3)); // result of 3
-    assert(0.2 == co_await g(2)); // result of 2
-    assert(0.1 == co_await g(1)); // result of 1
+    assert("5" == co_await g(5)); // result of 5
+    assert("4" == co_await g(4)); // result of 4
+    assert("3" == co_await g(3)); // result of 3
+    assert("2" == co_await g(2)); // result of 2
+    assert("1" == co_await g(1)); // result of 1
 
     // we let the coroutine go out of scope while suspended
     // no need for another co_await of `g`
