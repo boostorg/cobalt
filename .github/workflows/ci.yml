@@ -24,11 +24,6 @@ jobs:
             cxxstd: "20,2b"
             os: ubuntu-22.04
             install: g++-12
-          - toolset: gcc-13
-            cxxstd: "20,2b"
-            os: ubuntu-latest
-            container: ubuntu:23.04
-            install: g++-13
           - toolset: clang
             compiler: clang++-14
             cxxstd: "20,2b"
