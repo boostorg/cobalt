@@ -100,7 +100,8 @@ if (NOT BOOST_COBALT_IS_ROOT)
             src/io/stream_socket.cpp
             src/io/ssl.cpp
             src/io/resolver.cpp
-    )
+            src/io/acceptor.cpp
+       )
 
     target_link_libraries(boost_cobalt_io PUBLIC boost_cobalt)
     target_compile_definitions(boost_cobalt_io PRIVATE BOOST_COBALT_IO_SOURCE=1)
@@ -212,6 +213,7 @@ else()
                 src/io/stream_socket.cpp
                 src/io/ssl.cpp
                 src/io/resolver.cpp
+                src/io/acceptor.cpp
                 )
 
     target_link_libraries(boost_cobalt_io PUBLIC boost_cobalt)
