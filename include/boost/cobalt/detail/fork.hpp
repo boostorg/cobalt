@@ -106,7 +106,9 @@ struct fork
     template<typename State, typename ... Rest>
     void * operator new(const std::size_t size, State & st, Rest &&...)
     {
-      return st.resource.allocate(size);
+      auto p =  st.resource.allocate(size);
+      fprintf(stderr, "Promise Alloc %p\n", p);
+      return p;
     }
 
     void operator delete(void *) noexcept {}
