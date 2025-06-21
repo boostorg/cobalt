@@ -98,6 +98,9 @@ jobs:
           git submodule update --init libs/callable_traits
           git submodule update --init libs/context
           git submodule update --init libs/chrono
+          git submodule update --init libs/endian
+          git submodule update --init libs/url
+          git submodule update --init libs/static_string
           git submodule update --init libs/ratio
           
           ./bootstrap.sh
@@ -166,6 +169,9 @@ jobs:
           git submodule update --init libs/callable_traits
           git submodule update --init libs/context
           git submodule update --init libs/chrono
+          git submodule update --init libs/endian
+          git submodule update --init libs/url
+          git submodule update --init libs/static_string
           git submodule update --init libs/ratio
           cmd /c bootstrap
           b2 -d0 headers
@@ -228,6 +234,9 @@ jobs:
           git submodule update --init libs/callable_traits
           git submodule update --init libs/context
           git submodule update --init libs/chrono
+          git submodule update --init libs/endian
+          git submodule update --init libs/url
+          git submodule update --init libs/static_string
           git submodule update --init libs/ratio
 
       - name: Use library with add_subdirectory
@@ -290,6 +299,9 @@ jobs:
           git submodule update --init libs/callable_traits
           git submodule update --init libs/context
           git submodule update --init libs/chrono
+          git submodule update --init libs/endian
+          git submodule update --init libs/url
+          git submodule update --init libs/static_string
           git submodule update --init libs/ratio
 
 
@@ -369,6 +381,9 @@ jobs:
           git submodule update --init libs/callable_traits
           git submodule update --init libs/context
           git submodule update --init libs/chrono
+          git submodule update --init libs/endian
+          git submodule update --init libs/url
+          git submodule update --init libs/static_string
           git submodule update --init libs/ratio
 
       - name: Configure
@@ -424,6 +439,9 @@ jobs:
           git submodule update --init libs/callable_traits
           git submodule update --init libs/context
           git submodule update --init libs/chrono
+          git submodule update --init libs/endian
+          git submodule update --init libs/url
+          git submodule update --init libs/static_string
           git submodule update --init libs/ratio
 
       - name: Use library with add_subdirectory (Debug)
@@ -481,6 +499,9 @@ jobs:
           git submodule update --init libs/callable_traits
           git submodule update --init libs/context
           git submodule update --init libs/chrono
+          git submodule update --init libs/endian
+          git submodule update --init libs/url
+          git submodule update --init libs/static_string
           git submodule update --init libs/ratio
 
       - name: Configure
@@ -558,6 +579,9 @@ jobs:
           git submodule update --init libs/callable_traits
           git submodule update --init libs/context
           git submodule update --init libs/chrono
+          git submodule update --init libs/endian
+          git submodule update --init libs/url
+          git submodule update --init libs/static_string
           git submodule update --init libs/ratio
 
       - name: Configure
