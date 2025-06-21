@@ -40,6 +40,7 @@ struct gather_variadic_impl
 {
   using tuple_type = std::tuple<decltype(get_awaitable_type(std::declval<Args&&>()))...>;
 
+  BOOST_NOINLINE
   gather_variadic_impl(Args && ... args)
       : args{std::forward<Args>(args)...}
   {

@@ -88,6 +88,7 @@ struct race_variadic_impl
 {
 
   template<typename URBG_>
+  BOOST_NOINLINE
   race_variadic_impl(URBG_ && g, Args && ... args)
       : args{std::forward<Args>(args)...}, g(std::forward<URBG_>(g))
   {
@@ -383,6 +384,7 @@ struct race_ranged_impl
 
   using result_type = co_await_result_t<std::decay_t<decltype(*std::begin(std::declval<Range>()))>>;
   template<typename URBG_>
+  BOOST_NOINLINE
   race_ranged_impl(URBG_ && g, Range && rng)
       : range{std::forward<Range>(rng)}, g(std::forward<URBG_>(g))
   {
@@ -607,6 +609,7 @@ struct race_ranged_impl
 
     bool await_ready()
     {
+
       last_forked = await_impl(*this, reorder.front());
       return last_forked.done();
     }
