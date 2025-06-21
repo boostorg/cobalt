@@ -63,12 +63,12 @@ BOOST_AUTO_TEST_CASE(unwind)
   +should_unwind(ctx);
 }
 
-cobalt::promise<int> return_(std::size_t ms)
+cobalt::promise<int> return_(std::size_t)
 {
   return cobalt::noop(1234);
 }
 
-cobalt::promise<int> return_(std::size_t ms, asio::executor_arg_t,
+cobalt::promise<int> return_(std::size_t, asio::executor_arg_t,
                             boost::cobalt::executor )
 {
   co_return 1234u;

@@ -139,7 +139,8 @@ CO_TEST_CASE(list_tuple)
   vec.push_back(wdummy(exec, std::chrono::milliseconds(150)));
   vec.push_back(wdummy(exec, std::chrono::milliseconds::max()));
 
-  auto [ep, res] = co_await cobalt::as_tuple(gather(vec));
+  auto g = co_await cobalt::as_tuple(gather(vec));
+  auto [ep, res] =  std::move(g);
   BOOST_CHECK(!ep);
 
   BOOST_REQUIRE(res.size() == 4);

@@ -216,7 +216,8 @@ CO_TEST_CASE(raceable)
 {
     cobalt::channel<int>  ci{0u};
     cobalt::channel<void> cv{0u};
-    auto [r1, r2] = co_await cobalt::gather(cobalt::race(ci.read(), cv.read()), cv.write());
+    auto r = co_await cobalt::gather(cobalt::race(ci.read(), cv.read()), cv.write());
+    auto [r1, r2] = std::move(r);
     r1.value();
     BOOST_REQUIRE(r1.has_value());
     BOOST_CHECK(r1->index() == 1u);
@@ -227,9 +228,10 @@ CO_TEST_CASE(raceable_1)
 {
   cobalt::channel<int>  ci{1u};
   cobalt::channel<void> cv{1u};
-  auto [r1, r2] = co_await cobalt::gather(
+  auto r = co_await cobalt::gather(
       cobalt::race(ci.read(), cv.read()),
       cv.write());
+  auto [r1, r2] = std::move(r);
   BOOST_CHECK(r1->index() == 1u);
   BOOST_CHECK(!r2.has_error());
 }

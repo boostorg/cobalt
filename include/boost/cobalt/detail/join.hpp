@@ -335,7 +335,7 @@ struct join_ranged_impl
           cancel.size(),
           alloc};
 #endif
-    std::exception_ptr error;
+    std::exception_ptr error{};
 
     awaitable(Range & aws_, std::false_type /* needs  operator co_await */)
       :  fork::shared_state((512 + sizeof(co_awaitable_type<type>) + result_size) * std::size(aws_))

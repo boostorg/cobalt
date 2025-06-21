@@ -79,7 +79,7 @@ struct task_value_holder<void>
   inline void return_void();
 
   constexpr task_value_holder() noexcept = default;
-  constexpr task_value_holder(noop<void> n) noexcept {}
+  constexpr task_value_holder(noop<void>) noexcept {}
 };
 
 
