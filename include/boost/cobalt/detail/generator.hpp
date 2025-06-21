@@ -446,7 +446,7 @@ struct generator_promise
 
   generator_receiver<Yield, Push>* receiver{nullptr};
 
-  auto await_transform(this_coro::initial_t val)
+  auto await_transform(this_coro::initial_t)
   {
     if(receiver)
     {

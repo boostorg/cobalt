@@ -25,7 +25,10 @@ inline void test_run(boost::cobalt::task<void> (*func) ())
     spawn(ctx, func(),
           +[](std::exception_ptr e)
           {
-            BOOST_CHECK(e == nullptr);
+            if (e)
+              try { std::rethrow_exception(e); }
+              catch(std::exception & ex) { BOOST_CHECK_MESSAGE(e == nullptr, ex.what());}
+
           });
     std::size_t n;
     n = ctx.run();

@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(Function)                                                  
 {                                                                                                                      \
     Function##_impl(nullptr);                                                                                          \
 }                                                                                                                      \
-static void Function##_impl(coro_feature_tester * this_)
+static void Function##_impl([[maybe_unused]] coro_feature_tester * this_)
 
 BOOST_AUTO_TEST_SUITE(this_coro);
 

@@ -207,6 +207,7 @@ CO_TEST_CASE(deferred)
 
   co_await post_op(co_await asio::this_coro::executor);
   std::tuple<system::error_code> r = co_await tim.async_wait(asio::as_tuple);
+  boost::ignore_unused(r);
 }
 
 template<typename Token>

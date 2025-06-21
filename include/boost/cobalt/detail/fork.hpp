@@ -29,7 +29,7 @@ struct fork
   struct shared_state
   {
 #if !defined(BOOST_COBALT_NO_PMR)
-    pmr::monotonic_buffer_resource resource;
+    pmr::monotonic_buffer_resource resource{};
         template<typename ... Args>
     shared_state(Args && ... args)
       : resource(std::forward<Args>(args)...,
@@ -45,7 +45,7 @@ struct fork
     }
 #endif
     // the coro awaiting the fork statement, e.g. awaiting race
-    unique_handle<void> coro;
+    unique_handle<void> coro{};
     std::size_t use_count = 0u;
 
     friend void intrusive_ptr_add_ref(shared_state * st) {st->use_count++;}
@@ -57,7 +57,7 @@ struct fork
 
     bool outstanding_work() {return use_count != 0u;}
 
-    std::optional<executor> exec;
+    std::optional<executor> exec{};
     bool wired_up() {return exec.has_value();}
 
     using executor_type = executor;

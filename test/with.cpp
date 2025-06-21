@@ -53,7 +53,7 @@ struct value_finalizer_test
   }
 
   bool exit_called = false;
-  std::exception_ptr e;
+  std::exception_ptr e{};
 
   auto exit(std::exception_ptr ee)
   {
@@ -91,7 +91,7 @@ CO_TEST_CASE(async)
     BOOST_CHECK_THROW(
             co_await boost::cobalt::with (
                     &ft,
-                    [](finalizer_test * ft) -> boost::cobalt::promise<void>
+                    [](finalizer_test * ) -> boost::cobalt::promise<void>
                     {
                       throw std::runtime_error("42");
                       co_return;
@@ -112,7 +112,7 @@ CO_TEST_CASE(sync_int)
   BOOST_CHECK(23 ==
       co_await boost::cobalt::with (
           &ft,
-          [](value_finalizer_test * ft)
+          [](value_finalizer_test *)
           {
               return 23;
           },
@@ -133,7 +133,7 @@ CO_TEST_CASE(async_int)
       42 ==
       co_await boost::cobalt::with (
           &ft,
-          [](value_finalizer_test * ft) -> boost::cobalt::promise<int>
+          [](value_finalizer_test * ) -> boost::cobalt::promise<int>
           {
             co_return 42;
           },
