@@ -84,6 +84,7 @@ alias cobalt_io_sources
      io/stream_socket.cpp
      io/ssl.cpp
      io/resolver.cpp
+     io/acceptor.cpp
    ;
 
 

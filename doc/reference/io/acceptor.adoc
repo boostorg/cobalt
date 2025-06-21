@@ -1,0 +1,36 @@
+== cobalt/io/acceptor.hpp
+
+The acceptor can be used to accept a connection.
+
+[source,cpp]
+----
+
+struct acceptor
+{
+  using wait_type          = asio::socket_base::wait_type;
+  constexpr static std::size_t max_listen_connections = asio::socket_base::max_listen_connections;
+
+  acceptor(const cobalt::executor & executor = this_thread::get_executor());
+  acceptor(endpoint ep, const cobalt::executor & executor = this_thread::get_executor());
+  system::result<void> bind(endpoint ep);
+  system::result<void> listen(int backlog = max_listen_connections); // int backlog = net::max_backlog()
+  endpoint local_endpoint();
+
+  // accept any connection and assign it to `sock`
+  accept_op accept(socket & sock);
+
+  // Accept a connection of a stream_socket
+  template<protocol_type::family_t F = tcp.family(), protocol_type::protocol_t P = tcp.protocol()>
+  accept_op accept(static_protocol<F, tcp.type(), P> stream_proto = tcp);
+
+  // Accept a connection of a seq_packet
+  template<protocol_type::family_t F, protocol_type::protocol_t P>
+  accept_op accept(static_protocol<F, local_seqpacket.type(), P> stream_proto = tcp);
+
+  // For a connection to be ready
+  wait_op     wait(wait_type wt = wait_type::wait_read);
+};
+----
+
+
+
