@@ -7,7 +7,7 @@
 import os ;
 import-search /boost/cobalt ;
 import boost-cobalt ;
-
+import ac ;
 
 project : requirements
   <define>BOOST_ASIO_NO_DEPRECATED
@@ -36,4 +36,10 @@ for local src in [ glob *.cpp : main.cpp main_compile.cpp test_main.cpp concepts
 
 run experimental/context.cpp experimental/composition.cpp test_impl //boost/context ;
 
-run [ glob io/*.cpp ] test_impl /boost/cobalt//boost_cobalt_io /boost/cobalt//boost_cobalt ;
+using openssl ;
+
+run [ glob io/*.cpp ] test_impl /boost/cobalt//boost_cobalt_io /boost/cobalt//boost_cobalt
+    : : :
+    [ ac.check-library /openssl//ssl    : <library>/openssl//ssl/<link>shared : <build>no ]
+    [ ac.check-library /openssl//crypto : <library>/openssl//crypto/<link>shared : <build>no ]
+ ;

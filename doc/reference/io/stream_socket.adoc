@@ -1,6 +1,6 @@
 == cobalt/io/socket.hpp
 
-The socket class for a seq packet socket, e.g. TCP.
+The socket class for a stream socket, e.g. TCP.
 
 [source,cpp]
 ----

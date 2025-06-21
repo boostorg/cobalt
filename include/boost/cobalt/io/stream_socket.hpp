@@ -44,6 +44,7 @@ struct BOOST_SYMBOL_VISIBLE stream_socket final : socket, stream
   BOOST_COBALT_IO_DECL static void initiate_write_some_(void *,   const_buffer_sequence, boost::cobalt::completion_handler<system::error_code, std::size_t>);
 
   asio::basic_stream_socket<protocol_type, executor> stream_socket_;
+  friend struct ssl_stream;
 };
 
 

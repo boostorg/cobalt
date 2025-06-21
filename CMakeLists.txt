@@ -98,6 +98,7 @@ if (NOT BOOST_COBALT_IS_ROOT)
             src/io/datagram_socket.cpp
             src/io/seq_packet_socket.cpp
             src/io/stream_socket.cpp
+            src/io/ssl.cpp
     )
 
     target_link_libraries(boost_cobalt_io PUBLIC boost_cobalt)
@@ -208,6 +209,7 @@ else()
                 src/io/datagram_socket.cpp
                 src/io/seq_packet_socket.cpp
                 src/io/stream_socket.cpp
+                src/io/ssl.cpp
                 )
 
     target_link_libraries(boost_cobalt_io PUBLIC boost_cobalt)
