@@ -1,0 +1,25 @@
+== cobalt/io/resolver.hpp
+
+The resolver allows looking up the endpoints for a given address and service.
+
+[source,cpp]
+----
+struct resolver
+{
+  resolver(const executor & exec = this_thread::get_executor());
+  resolver(resolver && ) = delete;
+
+  void cancel();
+
+  // Produces a endpoint_sequence
+  [[nodiscard]] auto resolve(std::string_view host, std::string_view service);
+};
+
+
+// Short hand for performing a single lookup.
+auto lookup(std::string_view host, std::string_view service,
+         const executor & exec = this_thread::get_executor());
+
+----
+
+
