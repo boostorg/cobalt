@@ -178,6 +178,8 @@ include::../../include/boost/cobalt/generator.hpp[tag=outline]
 <2> Supports <<interrupt_await>>
 <3> A cancelled generator maybe be resumable
 
+NOTE: The destruction of an eager generator will be deferred, a lazy will be destroyed immediately.
+
 [#generator-promise]
 === Promise
 
