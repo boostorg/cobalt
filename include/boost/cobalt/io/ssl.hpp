@@ -17,21 +17,28 @@
 #include <boost/asio/ssl/stream.hpp>
 
 
-namespace boost::cobalt::io
+namespace boost::cobalt::io::ssl
 {
 
-
-using ssl_context = asio::ssl::context;
-using ssl_verify_mode = asio::ssl::verify_mode;
-
-struct BOOST_SYMBOL_VISIBLE ssl_stream final : socket, stream, asio::ssl::stream_base
+enum class verify
 {
-  BOOST_COBALT_IO_DECL ssl_stream(ssl_context & ctx, const cobalt::executor & executor = this_thread::get_executor());
-  BOOST_COBALT_IO_DECL ssl_stream(ssl_context & ctx, stream_socket && sock);
-  BOOST_COBALT_IO_DECL ssl_stream(ssl_context & ctx, native_handle_type h, protocol_type protocol = protocol_type(),
-                                  const cobalt::executor & executor = this_thread::get_executor());
-  BOOST_COBALT_IO_DECL ssl_stream(ssl_context & ctx, endpoint ep,
-                                  const cobalt::executor & executor = this_thread::get_executor());
+  none = asio::ssl::verify_none,
+  peer = asio::ssl::verify_peer,
+  fail_if_no_peer_cert = asio::ssl::verify_fail_if_no_peer_cert,
+  client_once = asio::ssl::verify_client_once
+};
+
+using context = asio::ssl::context;
+using verify_mode = asio::ssl::verify_mode;
+
+struct BOOST_SYMBOL_VISIBLE stream final : socket, cobalt::io::stream, asio::ssl::stream_base
+{
+  BOOST_COBALT_SSL_DECL stream(context & ctx, const cobalt::executor & executor = this_thread::get_executor());
+  BOOST_COBALT_SSL_DECL stream(context & ctx, stream_socket && sock);
+  BOOST_COBALT_SSL_DECL stream(context & ctx, native_handle_type h, protocol_type protocol = protocol_type(),
+                                     const cobalt::executor & executor = this_thread::get_executor());
+  BOOST_COBALT_SSL_DECL stream(context & ctx, endpoint ep,
+                                     const cobalt::executor & executor = this_thread::get_executor());
 
   write_op write_some(const_buffer_sequence buffer) override
   {
@@ -45,7 +52,7 @@ struct BOOST_SYMBOL_VISIBLE ssl_stream final : socket, stream, asio::ssl::stream
   [[nodiscard]] bool secure() const {return upgraded_;}
 
   template<typename VerifyCallback>
-    requires requires (const VerifyCallback & cb, ssl_context & ctx) {{cb(true, ctx)} -> std::same_as<bool>;}
+    requires requires (const VerifyCallback & cb, context & ctx) {{cb(true, ctx)} -> std::same_as<bool>;}
   system::result<void> set_verify_callback(VerifyCallback vc)
   {
     system::error_code ec;
@@ -53,29 +60,20 @@ struct BOOST_SYMBOL_VISIBLE ssl_stream final : socket, stream, asio::ssl::stream
     return ec ? ec : system::result<void>();
   }
 
-  BOOST_COBALT_IO_DECL
+  BOOST_COBALT_SSL_DECL
   system::result<void> set_verify_depth(int depth);
 
 
-  enum class verify
-  {
-    none = asio::ssl::verify_none,
-    peer = asio::ssl::verify_peer,
-    fail_if_no_peer_cert = asio::ssl::verify_fail_if_no_peer_cert,
-    client_once = asio::ssl::verify_client_once
-  };
-
-
-  BOOST_COBALT_IO_DECL
+  BOOST_COBALT_SSL_DECL
   system::result<void> set_verify_mode(verify depth);
 
  private:
 
   struct [[nodiscard]] handshake_op_ final : cobalt::op<system::error_code>
   {
-    BOOST_COBALT_IO_DECL
+    BOOST_COBALT_SSL_DECL
     void ready(handler<system::error_code> h) final;
-    BOOST_COBALT_IO_DECL
+    BOOST_COBALT_SSL_DECL
     void initiate(completion_handler<system::error_code> h) final;
     handshake_op_(handshake_type type, bool upgraded, asio::ssl::stream<asio::basic_stream_socket<protocol_type, executor>>  & stream_socket)
         : type_(type), upgraded_(upgraded), stream_socket_(stream_socket) {}
@@ -88,10 +86,9 @@ struct BOOST_SYMBOL_VISIBLE ssl_stream final : socket, stream, asio::ssl::stream
 
   struct [[nodiscard]] handshake_buffer_op_ final : cobalt::op<system::error_code, std::size_t>
   {
-
-    BOOST_COBALT_IO_DECL
+    BOOST_COBALT_SSL_DECL
     void ready(handler<system::error_code, std::size_t> h) final;
-    BOOST_COBALT_IO_DECL
+    BOOST_COBALT_SSL_DECL
     void initiate(completion_handler<system::error_code, std::size_t> h) final;
     handshake_buffer_op_(handshake_type type, bool upgraded, const_buffer_sequence buffer_,
                          asio::ssl::stream<asio::basic_stream_socket<protocol_type, executor>>  & stream_socket)
@@ -106,9 +103,9 @@ struct BOOST_SYMBOL_VISIBLE ssl_stream final : socket, stream, asio::ssl::stream
 
   struct [[nodiscard]] shutdown_op_ final : cobalt::op<system::error_code>
   {
-    BOOST_COBALT_IO_DECL
+    BOOST_COBALT_SSL_DECL
     void ready(handler<system::error_code> h) final;
-    BOOST_COBALT_IO_DECL
+    BOOST_COBALT_SSL_DECL
     void initiate(completion_handler<system::error_code> h) final;
     shutdown_op_(bool upgraded, asio::ssl::stream<asio::basic_stream_socket<protocol_type, executor>>  & stream_socket)
         : upgraded_(upgraded), stream_socket_(stream_socket) {}
@@ -127,10 +124,10 @@ struct BOOST_SYMBOL_VISIBLE ssl_stream final : socket, stream, asio::ssl::stream
 
  private:
 
-  BOOST_COBALT_IO_DECL void adopt_endpoint_(endpoint & ep) override;
+  BOOST_COBALT_SSL_DECL void adopt_endpoint_(endpoint & ep) override;
 
-  BOOST_COBALT_IO_DECL static void initiate_read_some_ (void *, mutable_buffer_sequence, cobalt::completion_handler<system::error_code, std::size_t>);
-  BOOST_COBALT_IO_DECL static void initiate_write_some_(void *,   const_buffer_sequence, cobalt::completion_handler<system::error_code, std::size_t>);
+  BOOST_COBALT_SSL_DECL static void initiate_read_some_ (void *, mutable_buffer_sequence, cobalt::completion_handler<system::error_code, std::size_t>);
+  BOOST_COBALT_SSL_DECL static void initiate_write_some_(void *,   const_buffer_sequence, cobalt::completion_handler<system::error_code, std::size_t>);
 
 
   bool upgraded_ = false;

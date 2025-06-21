@@ -8,6 +8,7 @@
 #ifndef BOOST_COBALT_IO_HPP
 #define BOOST_COBALT_IO_HPP
 
+#include <boost/cobalt/io/acceptor.hpp>
 #include <boost/cobalt/io/buffer.hpp>
 #include <boost/cobalt/io/datagram_socket.hpp>
 #include <boost/cobalt/io/endpoint.hpp>
@@ -17,6 +18,7 @@
 #include <boost/cobalt/io/random_access_device.hpp>
 #include <boost/cobalt/io/random_access_file.hpp>
 #include <boost/cobalt/io/read.hpp>
+#include <boost/cobalt/io/resolver.hpp>
 #include <boost/cobalt/io/seq_packet_socket.hpp>
 #include <boost/cobalt/io/serial_port.hpp>
 #include <boost/cobalt/io/signal_set.hpp>

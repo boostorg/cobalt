@@ -4,15 +4,27 @@ An ssl stream is a stream_socket that can be upgraded to ssl.
 
 [source,cpp]
 ----
-using ssl_context = asio::ssl::context;
-using ssl_verify_mode = asio::ssl::verify_mode;
-
-struct ssl_stream final : socket, stream, asio::ssl::stream_base
+namespace ssl
 {
-  ssl_stream(ssl_context & ctx, const cobalt::executor & executor = this_thread::get_executor());
-  ssl_stream(ssl_context & ctx, native_handle_type h, protocol_type protocol = protocol_type(),
+
+enum class verify
+{
+  none = asio::ssl::verify_none,
+  peer = asio::ssl::verify_peer,
+  fail_if_no_peer_cert = asio::ssl::verify_fail_if_no_peer_cert,
+  client_once = asio::ssl::verify_client_once
+};
+
+
+using context = asio::ssl::context;
+using verify_mode = asio::ssl::verify_mode;
+
+struct stream final : socket, cobalt::io::stream, asio::ssl::stream_base
+{
+  stream(context & ctx, const cobalt::executor & executor = this_thread::get_executor());
+  stream(context & ctx, native_handle_type h, protocol_type protocol = protocol_type(),
              const cobalt::executor & executor = this_thread::get_executor());
-  ssl_stream(ssl_context & ctx, endpoint ep,
+  stream(context & ctx, endpoint ep,
              const cobalt::executor & executor = this_thread::get_executor());
 
   write_op write_some(const_buffer_sequence buffer) override;
@@ -22,28 +34,19 @@ struct ssl_stream final : socket, stream, asio::ssl::stream_base
   [[nodiscard]] bool secure() const {return upgraded_;}
 
   template<typename VerifyCallback>
-    requires requires (const VerifyCallback & cb, ssl_context & ctx) {{cb(true, ctx)} -> std::same_as<bool>;}
-
   system::result<void> set_verify_callback(VerifyCallback vc);
 
   system::result<void> set_verify_depth(int depth);
 
+  system::result<void> set_verify_mode(verify depth);
 
-  enum class verify
-  {
-    none = asio::ssl::verify_none,
-    peer = asio::ssl::verify_peer,
-    fail_if_no_peer_cert = asio::ssl::verify_fail_if_no_peer_cert,
-    client_once = asio::ssl::verify_client_once
-  };
-
- system::result<void> set_verify_mode(verify depth);
-
- public:
   [[nodiscard]] auto handshake(handshake_type type);
   [[nodiscard]] auto handshake(handshake_type type, const_buffer_sequence buffer);
   [[nodiscard]] auto shutdown();
-
 };
+
+}
 ----
+
+NOTE: The build scripts cerate a separate library (boost_cobalt_io_ssl) for this class, so that boost_cobalt_io can be used without OpenSSL.
 

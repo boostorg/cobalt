@@ -8,31 +8,31 @@
 #include <boost/cobalt/io/ssl.hpp>
 #include <boost/cobalt/io/stream_socket.hpp>
 
-namespace boost::cobalt::io
+namespace boost::cobalt::io::ssl
 {
 
-ssl_stream::ssl_stream(ssl_context & ctx, const cobalt::executor & exec)
+stream::stream(context & ctx, const cobalt::executor & exec)
     : socket(stream_socket_.lowest_layer()), stream_socket_(exec, ctx)
 {
 }
 
-ssl_stream::ssl_stream(ssl_context & ctx, native_handle_type h,
+stream::stream(context & ctx, native_handle_type h,
                        protocol_type protocol, const cobalt::executor & exec)
     : socket(stream_socket_.lowest_layer()),
       stream_socket_(asio::basic_stream_socket<protocol_type, executor>(exec, protocol, h), ctx)
 {
 }
 
-ssl_stream::ssl_stream(ssl_context & ctx, endpoint ep, const cobalt::executor & exec)
+stream::stream(context & ctx, endpoint ep, const cobalt::executor & exec)
     : socket(stream_socket_.lowest_layer()),
       stream_socket_(asio::basic_stream_socket<protocol_type, executor>(exec, ep), ctx) {}
 
-ssl_stream::ssl_stream(ssl_context & ctx, stream_socket && sock)
+stream::stream(context & ctx, stream_socket && sock)
     : socket(stream_socket_.lowest_layer()),
       stream_socket_(std::move(sock.stream_socket_), ctx) {}
 
 
-void ssl_stream::adopt_endpoint_(endpoint & ep)
+void stream::adopt_endpoint_(endpoint & ep)
 {
   switch (ep.protocol().family())
   {
@@ -49,12 +49,12 @@ void ssl_stream::adopt_endpoint_(endpoint & ep)
 }
 
 
-void ssl_stream::initiate_read_some_(void *this_ , mutable_buffer_sequence buffer,
+void stream::initiate_read_some_(void *this_ , mutable_buffer_sequence buffer,
                                      boost::cobalt::completion_handler<system::error_code, std::size_t> handler)
 {
   visit(buffer, [&](auto buf)
   {
-    auto t = static_cast<ssl_stream*>(this_);
+    auto t = static_cast<stream*>(this_);
     if (t->upgraded_)
       t->stream_socket_.async_read_some(buf, std::move(handler))  ;
     else
@@ -62,12 +62,12 @@ void ssl_stream::initiate_read_some_(void *this_ , mutable_buffer_sequence buffe
   });
 
 }
-void ssl_stream::initiate_write_some_(void * this_, const_buffer_sequence buffer,
+void stream::initiate_write_some_(void * this_, const_buffer_sequence buffer,
                                       boost::cobalt::completion_handler<system::error_code, std::size_t> handler)
 {
   visit(buffer, [&](auto buf)
   {
-    auto t = static_cast<ssl_stream*>(this_);
+    auto t = static_cast<stream*>(this_);
     if (t->upgraded_)
       t->stream_socket_.async_write_some(buf, std::move(handler))  ;
     else
@@ -75,7 +75,7 @@ void ssl_stream::initiate_write_some_(void * this_, const_buffer_sequence buffer
   });
 }
 
-void ssl_stream::handshake_op_::ready(handler<system::error_code> handler)
+void stream::handshake_op_::ready(handler<system::error_code> handler)
 {
   if (upgraded_)
   {
@@ -84,12 +84,12 @@ void ssl_stream::handshake_op_::ready(handler<system::error_code> handler)
   }
 }
 
-void ssl_stream::handshake_op_::initiate(completion_handler<system::error_code> handler)
+void stream::handshake_op_::initiate(completion_handler<system::error_code> handler)
 {
   stream_socket_.async_handshake(type_, std::move(handler));
 }
 
-void ssl_stream::handshake_buffer_op_::ready(handler<system::error_code, std::size_t> handler)
+void stream::handshake_buffer_op_::ready(handler<system::error_code, std::size_t> handler)
 {
   if (upgraded_)
   {
@@ -98,12 +98,12 @@ void ssl_stream::handshake_buffer_op_::ready(handler<system::error_code, std::si
   }
 }
 
-void ssl_stream::handshake_buffer_op_::initiate(completion_handler<system::error_code, std::size_t> handler)
+void stream::handshake_buffer_op_::initiate(completion_handler<system::error_code, std::size_t> handler)
 {
   stream_socket_.async_handshake(type_, buffer_, std::move(handler));
 }
 
-void ssl_stream::shutdown_op_::ready(handler<system::error_code> handler)
+void stream::shutdown_op_::ready(handler<system::error_code> handler)
 {
   if (!upgraded_)
   {
@@ -112,13 +112,13 @@ void ssl_stream::shutdown_op_::ready(handler<system::error_code> handler)
   }
 }
 
-void ssl_stream::shutdown_op_::initiate(completion_handler<system::error_code> handler)
+void stream::shutdown_op_::initiate(completion_handler<system::error_code> handler)
 {
   stream_socket_.async_shutdown(std::move(handler));
 }
 
 
-system::result<void> ssl_stream::set_verify_depth(int depth)
+system::result<void> stream::set_verify_depth(int depth)
 {
   system::error_code ec;
   stream_socket_.set_verify_depth(depth, ec);
@@ -126,7 +126,7 @@ system::result<void> ssl_stream::set_verify_depth(int depth)
 }
 
 
-system::result<void> ssl_stream::set_verify_mode(verify mode)
+system::result<void> stream::set_verify_mode(verify mode)
 {
   system::error_code ec;
   stream_socket_.set_verify_mode(static_cast<asio::ssl::verify_mode>(mode), ec);
