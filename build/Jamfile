@@ -9,7 +9,9 @@ import-search /boost/config/checks ;
 import config : requires ;
 import-search /boost/cobalt ;
 import boost-cobalt ;
+import ac ;
 
+using openssl ;
 
 project : requirements
   <define>BOOST_ASIO_NO_DEPRECATED
@@ -82,7 +84,6 @@ alias cobalt_io_sources
      io/datagram_socket.cpp
      io/seq_packet_socket.cpp
      io/stream_socket.cpp
-     io/ssl.cpp
      io/resolver.cpp
      io/acceptor.cpp
    ;
@@ -93,6 +94,18 @@ lib boost_cobalt_io
     : requirements <define>BOOST_COBALT_IO_SOURCE=1
       <link>shared:<define>BOOST_COBALT_DYN_LINK=1
     ;
+
+lib boost_cobalt_io_ssl
+    : io/ssl.cpp boost_cobalt_io
+    : requirements <define>BOOST_COBALT_SSL_SOURCE=1
+                   <link>shared:<define>BOOST_COBALT_DYN_LINK=1
+                   [ ac.check-library /openssl//ssl : <library>/openssl//ssl/<link>shared : <build>no ]
+                   [ ac.check-library /openssl//crypto : <library>/openssl//crypto/<link>shared : <build>no ]
+    : usage-requirements
+                   [ ac.check-library /openssl//ssl : <library>/openssl//ssl/<link>shared : <build>no ]
+                   [ ac.check-library /openssl//crypto : <library>/openssl//crypto/<link>shared : <build>no ]
+    ;
+
 
 rule set-pmr-boost ( props * )
 {

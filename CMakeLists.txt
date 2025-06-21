@@ -98,7 +98,6 @@ if (NOT BOOST_COBALT_IS_ROOT)
             src/io/datagram_socket.cpp
             src/io/seq_packet_socket.cpp
             src/io/stream_socket.cpp
-            src/io/ssl.cpp
             src/io/resolver.cpp
             src/io/acceptor.cpp
        )
@@ -106,6 +105,18 @@ if (NOT BOOST_COBALT_IS_ROOT)
     target_link_libraries(boost_cobalt_io PUBLIC boost_cobalt)
     target_compile_definitions(boost_cobalt_io PRIVATE BOOST_COBALT_IO_SOURCE=1)
     add_library(Boost::cobalt::io ALIAS boost_cobalt_io)
+
+    find_package(OpenSSL)
+
+    if (OPENSSL_FOUND)
+        add_library(boost_cobalt_io_ssl
+                   src/io/ssl.cpp
+        )
+
+        target_link_libraries(boost_cobalt_io_ssl PUBLIC boost_cobalt_io OpenSSL::SSL OpenSSL::Crypto)
+        target_compile_definitions(boost_cobalt_io_ssl PRIVATE BOOST_COBALT_SSL_SOURCE=1)
+        add_library(Boost::cobalt::io::ssl ALIAS boost_cobalt_io_ssl)
+    endif()
 
     if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/CMakeLists.txt")
         add_subdirectory(test)
@@ -211,7 +222,6 @@ else()
                 src/io/datagram_socket.cpp
                 src/io/seq_packet_socket.cpp
                 src/io/stream_socket.cpp
-                src/io/ssl.cpp
                 src/io/resolver.cpp
                 src/io/acceptor.cpp
                 )
@@ -219,6 +229,16 @@ else()
     target_link_libraries(boost_cobalt_io PUBLIC boost_cobalt)
     target_compile_definitions(boost_cobalt_io PRIVATE BOOST_COBALT_IO_SOURCE=1)
     add_library(Boost::cobalt::io ALIAS boost_cobalt_io)
+
+    find_package(OpenSSL)
+
+    if (OPENSSL_FOUND)
+        add_library(boost_cobalt_io_ssl src/io/ssl.cpp)
+
+        target_link_libraries(boost_cobalt_io_ssl PUBLIC boost_cobalt_io OpenSSL::SSL OpenSSL::Crypto)
+        target_compile_definitions(boost_cobalt_io_ssl PRIVATE BOOST_COBALT_SSL_SOURCE=1)
+        add_library(Boost::cobalt::io::ssl ALIAS boost_cobalt_io_ssl)
+    endif()
 
     if(BOOST_COBALT_INSTALL AND NOT BOOST_SUPERPROJECT_VERSION)
         install(TARGETS boost_cobalt boost_cobalt_io
