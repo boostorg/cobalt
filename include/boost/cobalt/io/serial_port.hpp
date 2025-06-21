@@ -21,7 +21,7 @@ namespace boost::cobalt::io
 {
 
 
-struct [[nodiscard]] serial_port final : stream
+struct BOOST_SYMBOL_VISIBLE serial_port final : stream
 {
   BOOST_COBALT_IO_DECL system::result<void> close();
   BOOST_COBALT_IO_DECL system::result<void> cancel();
@@ -55,7 +55,7 @@ struct [[nodiscard]] serial_port final : stream
 
   [[nodiscard]] BOOST_COBALT_IO_DECL system::result<void> assign(native_handle_type native_handle);
 
-  BOOST_COBALT_IO_DECL [[nodiscard]] system::result<void> open(std::string_view device);
+  [[nodiscard]] BOOST_COBALT_IO_DECL system::result<void> open(std::string_view device);
 
   [[nodiscard]] write_op write_some(const_buffer_sequence buffer)
   {

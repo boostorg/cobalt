@@ -342,7 +342,7 @@ const ip_address_v6* tag_invoke(get_endpoint_tag<AF_INET6>,
                                 const endpoint::addr_type * addr);
 
 
-struct ip_address
+struct BOOST_SYMBOL_VISIBLE ip_address
 {
 
   bool is_ipv6() const { return addr_.ss_family == BOOST_ASIO_OS_DEF(AF_INET6); }

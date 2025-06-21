@@ -15,13 +15,13 @@ namespace boost::cobalt::io
 {
 
 // tag::outline[]
-struct write_stream
+struct BOOST_SYMBOL_VISIBLE write_stream
 {
   virtual ~write_stream() = default;
   [[nodiscard]] virtual write_op write_some(const_buffer_sequence buffer) = 0;
 };
 
-struct read_stream
+struct BOOST_SYMBOL_VISIBLE read_stream
 {
   virtual ~read_stream() = default;
   [[nodiscard]] virtual read_op read_some(mutable_buffer_sequence buffer) = 0;

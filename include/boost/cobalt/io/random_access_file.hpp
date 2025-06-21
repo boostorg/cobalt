@@ -22,7 +22,7 @@ namespace boost::cobalt::io
 {
 
 
-struct random_access_file : file, random_access_device
+struct BOOST_SYMBOL_VISIBLE random_access_file : file, random_access_device
 {
   using native_handle_type = file::native_handle_type;
 

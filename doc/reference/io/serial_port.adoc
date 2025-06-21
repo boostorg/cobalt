@@ -43,7 +43,7 @@ struct serial_port
   [[nodiscard]] system::result<void>   set_parity(parity rate);
   [[nodiscard]] system::result<parity> get_parity();
 
-  [[nodiscard]] BOOST_COBALT_IO_DECL system::result<void> assign(native_handle_type native_handle);
+  [[nodiscard]] system::result<void> assign(native_handle_type native_handle);
 
   [[nodiscard]] system::result<void> open(std::string_view device);
 

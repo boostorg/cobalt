@@ -18,7 +18,7 @@
 namespace boost::cobalt::io
 {
 
-struct signal_set
+struct BOOST_SYMBOL_VISIBLE signal_set
 {
   BOOST_COBALT_IO_DECL signal_set(const cobalt::executor & executor = this_thread::get_executor());
   BOOST_COBALT_IO_DECL signal_set(std::initializer_list<int> sigs, const cobalt::executor & executor = this_thread::get_executor());

@@ -16,7 +16,7 @@
 namespace boost::cobalt::io
 {
 
-struct BOOST_COBALT_IO_DECL write_all  final : op<system::error_code, std::size_t>
+struct BOOST_SYMBOL_VISIBLE write_all  final : op<system::error_code, std::size_t>
 {
   write_op step;
   write_all(write_op op) : step(op) {}
@@ -35,7 +35,7 @@ write_all write(Stream & str, const_buffer_sequence buffer)
 }
 
 
-struct BOOST_COBALT_IO_DECL write_all_at  final : op<system::error_code, std::size_t>
+struct BOOST_SYMBOL_VISIBLE write_all_at  final : op<system::error_code, std::size_t>
 {
   write_at_op step;
   write_all_at(write_at_op op) : step(op) {}

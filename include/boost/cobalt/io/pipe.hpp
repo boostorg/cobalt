@@ -29,7 +29,7 @@ system::result<std::pair<struct readable_pipe, struct writable_pipe>> pipe(
     );
 
 
-struct readable_pipe final : read_stream
+struct BOOST_SYMBOL_VISIBLE readable_pipe final : read_stream
 {
   using native_handle_type = asio::basic_readable_pipe<executor>::native_handle_type;
 
@@ -64,7 +64,7 @@ struct readable_pipe final : read_stream
 };
 
 
-struct writable_pipe final : write_stream
+struct BOOST_SYMBOL_VISIBLE writable_pipe final : write_stream
 {
   using native_handle_type = asio::basic_writable_pipe<executor>::native_handle_type;
 

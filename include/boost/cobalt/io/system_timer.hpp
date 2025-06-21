@@ -17,7 +17,7 @@
 namespace boost::cobalt::io
 {
 
-struct system_timer final
+struct BOOST_SYMBOL_VISIBLE system_timer final
 {
   /// The clock type.
   typedef std::chrono::system_clock clock_type;

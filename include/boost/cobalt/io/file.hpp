@@ -23,7 +23,7 @@
 namespace boost::cobalt::io
 {
 
-struct file
+struct BOOST_SYMBOL_VISIBLE file
 #if defined(BOOST_ASIO_HAS_FILE)
     : asio::file_base
 #endif

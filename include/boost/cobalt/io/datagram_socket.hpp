@@ -17,7 +17,7 @@
 namespace boost::cobalt::io
 {
 
-struct [[nodiscard]] datagram_socket final : socket
+struct BOOST_SYMBOL_VISIBLE datagram_socket final : socket
 {
   BOOST_COBALT_IO_DECL datagram_socket(const cobalt::executor & executor = this_thread::get_executor());
   BOOST_COBALT_IO_DECL datagram_socket(datagram_socket && lhs);

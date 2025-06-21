@@ -23,7 +23,7 @@ namespace boost::cobalt::io
 {
 
 
-struct stream_file : file, stream
+struct BOOST_SYMBOL_VISIBLE stream_file : file, stream
 {
   BOOST_COBALT_IO_DECL stream_file(const cobalt::executor & executor = this_thread::get_executor());
   BOOST_COBALT_IO_DECL stream_file(const char * path, file::flags open_flags,

@@ -17,7 +17,7 @@
 namespace boost::cobalt::io
 {
 
-struct socket
+struct BOOST_SYMBOL_VISIBLE socket
 {
   [[nodiscard]] system::result<void> open(protocol_type prot = protocol_type {});
   [[nodiscard]] system::result<void> close();
