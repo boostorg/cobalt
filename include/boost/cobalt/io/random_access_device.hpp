@@ -15,13 +15,13 @@ namespace boost::cobalt::io
 {
 
 // tag::outline[]
-struct random_access_write_device
+struct BOOST_SYMBOL_VISIBLE random_access_write_device
 {
   virtual ~random_access_write_device() = default;
   [[nodiscard]] virtual write_at_op write_some_at(std::uint64_t offset, const_buffer_sequence buffer) = 0;
 };
 
-struct random_access_read_device
+struct BOOST_SYMBOL_VISIBLE random_access_read_device
 {
   virtual ~random_access_read_device() = default;
   [[nodiscard]] virtual read_at_op read_some_at(std::uint64_t offset, mutable_buffer_sequence buffer) = 0;

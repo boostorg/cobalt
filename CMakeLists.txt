@@ -76,10 +76,33 @@ if (NOT BOOST_COBALT_IS_ROOT)
     endif()
 
     if(BUILD_SHARED_LIBS)
-        target_compile_definitions(boost_cobalt PUBLIC BOOST_COBALT_DYN_LINK)
+        target_compile_definitions(boost_cobalt PUBLIC BOOST_COBALT_DYN_LINK=1)
     else()
-        target_compile_definitions(boost_cobalt PUBLIC BOOST_COBALT_STATIC_LINK)
+        target_compile_definitions(boost_cobalt PUBLIC BOOST_COBALT_STATIC_LINK=1)
     endif()
+
+    add_library(boost_cobalt_io
+            src/io/steady_timer.cpp
+            src/io/system_timer.cpp
+            src/io/signal_set.cpp
+            src/io/sleep.cpp
+            src/io/read.cpp
+            src/io/write.cpp
+            src/io/serial_port.cpp
+            src/io/pipe.cpp
+            src/io/file.cpp
+            src/io/random_access_file.cpp
+            src/io/stream_file.cpp
+            src/io/endpoint.cpp
+            src/io/socket.cpp
+            src/io/datagram_socket.cpp
+            src/io/seq_packet_socket.cpp
+            src/io/stream_socket.cpp
+    )
+
+    target_link_libraries(boost_cobalt_io PUBLIC boost_cobalt)
+    target_compile_definitions(boost_cobalt_io PRIVATE BOOST_COBALT_IO_SOURCE=1)
+    add_library(Boost::cobalt::io ALIAS boost_cobalt_io)
 
     if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/CMakeLists.txt")
         add_subdirectory(test)
@@ -192,7 +215,7 @@ else()
     add_library(Boost::cobalt::io ALIAS boost_cobalt_io)
 
     if(BOOST_COBALT_INSTALL AND NOT BOOST_SUPERPROJECT_VERSION)
-        install(TARGETS boost_cobalt
+        install(TARGETS boost_cobalt boost_cobalt_io
                 RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
                 LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
                 ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"

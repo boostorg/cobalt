@@ -18,7 +18,7 @@
 namespace boost::cobalt::io
 {
 
-struct [[nodiscard]] stream_socket final : socket, stream
+struct BOOST_SYMBOL_VISIBLE stream_socket final : socket, stream
 {
 
   BOOST_COBALT_IO_DECL stream_socket(const cobalt::executor & executor = this_thread::get_executor());

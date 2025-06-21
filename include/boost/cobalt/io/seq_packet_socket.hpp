@@ -17,7 +17,7 @@
 namespace boost::cobalt::io
 {
 
-struct [[nodiscard]] seq_packet_socket final : socket
+struct BOOST_SYMBOL_VISIBLE seq_packet_socket final : socket
 {
   BOOST_COBALT_IO_DECL seq_packet_socket(const cobalt::executor & executor = this_thread::get_executor());
   BOOST_COBALT_IO_DECL seq_packet_socket(seq_packet_socket && lhs);

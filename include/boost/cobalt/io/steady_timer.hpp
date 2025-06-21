@@ -17,7 +17,7 @@
 namespace boost::cobalt::io
 {
 
-struct steady_timer
+struct BOOST_SYMBOL_VISIBLE steady_timer
 {
   /// The clock type.
   typedef std::chrono::steady_clock clock_type;

@@ -15,7 +15,7 @@
 namespace boost::cobalt::detail::io
 {
 
-struct [[nodiscard]] BOOST_COBALT_IO_DECL steady_sleep final : op<system::error_code>
+struct BOOST_SYMBOL_VISIBLE steady_sleep final : op<system::error_code>
 {
   BOOST_COBALT_IO_DECL steady_sleep(const std::chrono::steady_clock::time_point & tp);
   BOOST_COBALT_IO_DECL steady_sleep(const std::chrono::steady_clock::duration & du);
@@ -32,7 +32,7 @@ struct [[nodiscard]] BOOST_COBALT_IO_DECL steady_sleep final : op<system::error_
   std::optional< asio::basic_waitable_timer<std::chrono::steady_clock, asio::wait_traits<std::chrono::steady_clock>, executor> > timer_;
 };
 
-struct [[nodiscard]] BOOST_COBALT_IO_DECL system_sleep final : op<system::error_code>
+struct BOOST_SYMBOL_VISIBLE system_sleep final : op<system::error_code>
 {
   BOOST_COBALT_IO_DECL system_sleep(const std::chrono::system_clock::time_point & tp);
   BOOST_COBALT_IO_DECL system_sleep(const std::chrono::system_clock::duration & du);
@@ -56,24 +56,24 @@ struct [[nodiscard]] BOOST_COBALT_IO_DECL system_sleep final : op<system::error_
 namespace boost::cobalt::io
 {
 
-inline auto sleep(const std::chrono::steady_clock::duration & d)    { return ::boost::cobalt::detail::io::steady_sleep{d};}
-inline auto sleep(const std::chrono::steady_clock::time_point & tp) { return ::boost::cobalt::detail::io::steady_sleep{tp};}
-inline auto sleep(const std::chrono::system_clock::time_point & tp) { return ::boost::cobalt::detail::io::system_sleep{tp};}
+[[nodiscard]] inline auto sleep(const std::chrono::steady_clock::duration & d)    { return ::boost::cobalt::detail::io::steady_sleep{d};}
+[[nodiscard]] inline auto sleep(const std::chrono::steady_clock::time_point & tp) { return ::boost::cobalt::detail::io::steady_sleep{tp};}
+[[nodiscard]] inline auto sleep(const std::chrono::system_clock::time_point & tp) { return ::boost::cobalt::detail::io::system_sleep{tp};}
 
 template<typename Duration>
-inline auto sleep(const std::chrono::time_point<std::chrono::steady_clock, Duration> & tp)
+[[nodiscard]] inline auto sleep(const std::chrono::time_point<std::chrono::steady_clock, Duration> & tp)
 {
   return sleep(std::chrono::time_point_cast<std::chrono::steady_clock::duration >(tp));
 }
 
 template<typename Duration>
-inline auto  sleep(const std::chrono::time_point<std::chrono::system_clock, Duration> & tp)
+[[nodiscard]] inline auto sleep(const std::chrono::time_point<std::chrono::system_clock, Duration> & tp)
 {
   return sleep(std::chrono::time_point_cast<std::chrono::system_clock::duration >(tp));
 }
 
 template<typename Rep, typename Period>
-inline auto sleep(const std::chrono::duration<Rep, Period> & dur)
+[[nodiscard]] inline auto sleep(const std::chrono::duration<Rep, Period> & dur)
 {
   return sleep(std::chrono::duration_cast<std::chrono::steady_clock::duration >(dur));
 }

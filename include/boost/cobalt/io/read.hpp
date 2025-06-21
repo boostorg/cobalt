@@ -16,7 +16,7 @@
 namespace boost::cobalt::io
 {
 
-struct BOOST_COBALT_IO_DECL read_all final : op<system::error_code, std::size_t>
+struct BOOST_SYMBOL_VISIBLE read_all final : op<system::error_code, std::size_t>
 {
   read_op step;
   read_all(read_op op) : step(op) {}
@@ -35,7 +35,7 @@ template<typename Stream>
 }
 
 
-struct BOOST_COBALT_IO_DECL read_all_at  final : op<system::error_code, std::size_t>
+struct BOOST_SYMBOL_VISIBLE read_all_at  final : op<system::error_code, std::size_t>
 {
   read_at_op step;
   read_all_at(read_at_op op) : step(op) {}
