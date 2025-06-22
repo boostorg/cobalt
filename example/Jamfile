@@ -23,7 +23,7 @@ project : requirements
 exe channel      : channel.cpp       /boost/cobalt//boost_cobalt ;
 exe delay        : delay.cpp         /boost/cobalt//boost_cobalt ;
 exe delay_op     : delay_op.cpp      /boost/cobalt//boost_cobalt ;
-exe echo_server  : echo_server.cpp   /boost/cobalt//boost_cobalt ;
+exe echo_server  : echo_server.cpp   /boost/cobalt//boost_cobalt /boost/cobalt//boost_cobalt_io ;
 exe outcome      : outcome.cpp       /boost/cobalt//boost_cobalt /boost/outcome//boost_outcome ;
 exe thread       : thread.cpp        /boost/cobalt//boost_cobalt ;
 exe thread_pool  : thread_pool.cpp   /boost/cobalt//boost_cobalt ;

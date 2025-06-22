@@ -8,9 +8,6 @@
 #include <boost/cobalt/io/endpoint.hpp>
 #include <boost/asio/ip/address.hpp>
 
-#include <boost/url/parse.hpp>
-#include <boost/url/url_view.hpp>
-
 namespace boost::cobalt::detail
 {
 

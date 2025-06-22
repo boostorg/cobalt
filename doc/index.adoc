@@ -77,9 +77,8 @@ include::reference/thread.adoc[]
 include::reference/result.adoc[]
 include::reference/async_for.adoc[]
 include::reference/error.adoc[]
+include::reference/composition.adoc[]
 include::reference/config.adoc[]
-
-include::reference/experimental/context.adoc[]
 
 include::reference/io/buffer.adoc[]
 include::reference/io/ops.adoc[]
@@ -103,6 +102,9 @@ include::reference/io/seq_packet_socket.adoc[]
 include::reference/io/resolver.adoc[]
 include::reference/io/acceptor.adoc[]
 include::reference/io/ssl.adoc[]
+
+include::reference/experimental/context.adoc[]
+
 
 = In-Depth
 

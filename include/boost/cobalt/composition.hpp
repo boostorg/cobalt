@@ -153,6 +153,15 @@ struct composition_promise
       auto exec = handler.get_executor();
       auto ho = handler.self.release();
       detail::self_destroy(h, exec);
+
+      if (handler.completed_immediately != nullptr
+       && *handler.completed_immediately == completed_immediately_t::initiating)
+        //not maybe here, because we don't go through the immediate executor
+      {
+        *handler.completed_immediately = completed_immediately_t::yes;
+        return std::noop_coroutine();
+      }
+
       return ho;
     }
 

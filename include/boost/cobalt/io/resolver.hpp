@@ -15,16 +15,15 @@
 #include <boost/cobalt/promise.hpp>
 
 #include <boost/asio/ip/tcp.hpp>
-
-
 #include <boost/system/result.hpp>
-#include <boost/url/url_view.hpp>
 
 namespace boost::cobalt::io
 {
 
-struct resolver
+struct BOOST_SYMBOL_VISIBLE resolver
 {
+  using flags = asio::ip::resolver_base::flags;
+
   resolver(const executor & exec = this_thread::get_executor());
   resolver(resolver && ) = delete;
 
@@ -37,37 +36,39 @@ struct resolver
     void initiate(completion_handler<system::error_code, endpoint_sequence> h) override;
 
     resolve_op_(asio::ip::basic_resolver<protocol_type, executor> & resolver,
-                std::string_view host, std::string_view service)
-        : resolver_(resolver), host_(host), service_(service) {}
+                std::string_view host, std::string_view service, flags flags_ = {})
+        : resolver_(resolver), host_(host), service_(service), flags_(flags_) {}
    private:
     asio::ip::basic_resolver<protocol_type, executor> & resolver_;
     std::string_view host_;
     std::string_view service_;
-
+    flags flags_;
   };
 
  public:
-  [[nodiscard]] auto resolve(std::string_view host, std::string_view service)
+  [[nodiscard]] auto resolve(std::string_view host, std::string_view service,
+                             flags flags_ = {})
   {
-    return resolve_op_{resolver_, host, service};
+    return resolve_op_{resolver_, host, service, flags_};
   }
-
 
  private:
   asio::ip::basic_resolver<protocol_type, executor> resolver_;
 };
 
-struct lookup : op<system::error_code, endpoint_sequence>
+struct BOOST_SYMBOL_VISIBLE lookup : op<system::error_code, endpoint_sequence>
 {
   lookup(std::string_view host, std::string_view service,
-         const executor & exec = this_thread::get_executor())
-      : host_(host), service_(service), resolver_{exec} {}
+         const executor & exec = this_thread::get_executor(),
+         resolver::flags flags_ = {})
+      : host_(host), service_(service), resolver_{exec}, flags_{flags_} {}
   BOOST_COBALT_IO_DECL void initiate(completion_handler<system::error_code, endpoint_sequence> h) final override;
 
  private:
   std::string_view host_;
   std::string_view service_;
   asio::ip::basic_resolver<protocol_type, executor> resolver_;
+  resolver::flags flags_;
 };
 
 }

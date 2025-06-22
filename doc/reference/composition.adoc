@@ -1,0 +1,41 @@
+[#detached]
+== cobalt/composition.hpp
+
+Including the `cobalt/composition.hpp` provides definitions to turn any function that
+takes a `cobalt::completion_handler` as it's last argument. This allows simple creation of composed operations.
+
+Results of `co_await` statements automatically get turned into tuples (akin to used `as_tuple`) to avoid exceptions.
+
+The results need to be `co_return`-ed. The Handler passed into the coroutine must not be touched.
+
+[source,cpp]
+----
+
+struct echo_op final : op<system::error_code>
+{
+  echo_op(cobalt::io::stream & str) : stream(str) {}
+  void initiate(completion_handler<system::error_code>) final;
+  cobalt::io::stream & str;
+};
+
+void echo_op::initiate(completion_handler<system::error_code, std::size_t>)
+{
+  char buf[4096];
+  auto [ec, n] = co_await str.read_some(buf);
+
+  auto buf = asio::buffer(buf, n);
+
+  while (!ec && !buf.empty() && !!co_await this_coro::cancelled)
+  {
+    std::tie(ec, n) = co_await str.write_some(buf);
+    buf += n;
+  }
+
+  if (!!co_await this_coro::cancelled)
+    co_return {asio::error::operation_aborted, m};
+  else
+    co_return {system::error_code{}, m};
+}
+----
+
+

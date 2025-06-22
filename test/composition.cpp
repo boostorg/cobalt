@@ -5,9 +5,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/cobalt/experimental/composition.hpp>
+#include <boost/cobalt/composition.hpp>
 
-#include "../test.hpp"
+#include "test.hpp"
 
 using namespace boost::cobalt;
 

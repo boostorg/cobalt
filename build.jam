@@ -24,7 +24,6 @@ constant boost_dependencies :
     /boost/static_string//boost_static_string
     /boost/system//boost_system
     /boost/throw_exception//boost_throw_exception
-    /boost/url//boost_url
     /boost/variant2//boost_variant2 ;
 
 project /boost/cobalt

@@ -29,7 +29,6 @@ struct transformer
     r.assign(rr.begin(), rr.end());
 
     return asio::deferred.values(ec, std::move(r));
-
   }
 };
 
@@ -37,14 +36,14 @@ struct transformer
 void resolver::resolve_op_::initiate(completion_handler<system::error_code, endpoint_sequence> h)
 {
   resolver_.async_resolve(
-      cobalt::io::ip, host_, service_,
+      cobalt::io::ip, host_, service_, flags_,
       asio::deferred(transformer{}))(std::move(h));
 }
 
 void lookup::initiate(completion_handler<system::error_code, endpoint_sequence> h)
 {
   resolver_.async_resolve(
-      cobalt::io::ip, host_, service_,
+      cobalt::io::ip, host_, service_, flags_,
       asio::deferred(transformer{}))(std::move(h));
 }
 
