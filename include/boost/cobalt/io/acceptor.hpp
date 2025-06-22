@@ -17,7 +17,7 @@
 namespace boost::cobalt::io
 {
 
-struct acceptor
+struct BOOST_SYMBOL_VISIBLE acceptor
 {
   using wait_type          = asio::socket_base::wait_type;
   constexpr static std::size_t max_listen_connections = asio::socket_base::max_listen_connections;

@@ -6,7 +6,7 @@
 //
 
 #include <boost/cobalt/io/write.hpp>
-#include <boost/cobalt/experimental/composition.hpp>
+#include <boost/cobalt/composition.hpp>
 
 namespace boost::cobalt::io
 {

@@ -11,7 +11,8 @@ add_executable(boost_cobalt_main_compile EXCLUDE_FROM_ALL main_compile.cpp)
 add_executable(boost_cobalt_basic_tests  EXCLUDE_FROM_ALL
       async_for.cpp test_main.cpp promise.cpp with.cpp op.cpp handler.cpp join.cpp race.cpp this_coro.cpp
       channel.cpp generator.cpp run.cpp task.cpp gather.cpp wait_group.cpp wrappers.cpp left_race.cpp
-      strand.cpp fork.cpp thread.cpp any_completion_handler.cpp detached.cpp monotonic_resource.cpp sbo_resource.cpp)
+      strand.cpp fork.cpp thread.cpp any_completion_handler.cpp detached.cpp monotonic_resource.cpp sbo_resource.cpp
+      composition.cpp)
 
 target_link_libraries(boost_cobalt_main         Boost::cobalt)
 target_link_libraries(boost_cobalt_main_compile Boost::cobalt)
@@ -20,7 +21,7 @@ target_link_libraries(boost_cobalt_basic_tests  Boost::cobalt Boost::unit_test_f
 add_test(NAME boost_cobalt_main COMMAND boost_cobalt_main)
 add_test(NAME boost_cobalt_basic_tests COMMAND boost_cobalt_basic_tests)
 
-add_executable(boost_cobalt_experimental EXCLUDE_FROM_ALL test_main.cpp experimental/context.cpp experimental/yield_context.cpp experimental/composition.cpp)
+add_executable(boost_cobalt_experimental EXCLUDE_FROM_ALL test_main.cpp experimental/context.cpp experimental/yield_context.cpp)
 target_link_libraries(boost_cobalt_experimental  Boost::cobalt Boost::unit_test_framework Boost::context)
 add_test(NAME boost_cobalt_experimental COMMAND boost_cobalt_experimental)
 
@@ -33,6 +34,7 @@ add_executable(boost_cobalt_io_test EXCLUDE_FROM_ALL
                io/sleep.cpp
                io/pipe.cpp
                io/endpoint.cpp
+               io/lookup.cpp
                )
-target_link_libraries(boost_cobalt_io_test  Boost::cobalt::io Boost::unit_test_framework OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries(boost_cobalt_io_test  Boost::cobalt::io Boost::unit_test_framework OpenSSL::SSL OpenSSL::Crypto Boost::url)
 add_dependencies(tests boost_cobalt_main boost_cobalt_basic_tests boost_cobalt_static_tests boost_cobalt_experimental boost_cobalt_io_test)

@@ -15,7 +15,6 @@
 #include <boost/endian/conversion.hpp>
 #include <boost/static_string.hpp>
 #include <boost/system/result.hpp>
-#include <boost/url/static_url.hpp>
 
 #include <array>
 #include <algorithm>

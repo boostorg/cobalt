@@ -6,7 +6,7 @@
 //
 
 #include <boost/cobalt/io/read.hpp>
-#include <boost/cobalt/experimental/composition.hpp>
+#include <boost/cobalt/composition.hpp>
 
 #include <boost/asio/read_at.hpp>
 
