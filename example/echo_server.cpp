@@ -7,33 +7,27 @@
 
 #include <boost/cobalt.hpp>
 #include <boost/cobalt/main.hpp>
+#include <boost/cobalt/io/stream_socket.hpp>
 
-#include <boost/asio/detached.hpp>
-#include <boost/asio/io_context.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/signal_set.hpp>
-#include <boost/asio/write.hpp>
+#include <boost/cobalt/io/acceptor.hpp>
+#include <boost/cobalt/io/write.hpp>
 #include <list>
 
 // tag::decls[]
 namespace cobalt = boost::cobalt;
-using boost::asio::ip::tcp;
-using boost::asio::detached;
-using tcp_acceptor = cobalt::use_op_t::as_default_on_t<tcp::acceptor>;
-using tcp_socket   = cobalt::use_op_t::as_default_on_t<tcp::socket>;
 namespace this_coro = boost::cobalt::this_coro;
 //end::decls[]
 
 // tag::echo[]
-cobalt::promise<void> echo(tcp_socket socket)
+cobalt::promise<void> echo(cobalt::io::stream_socket socket)
 {
   try // <1>
   {
     char data[4096];
     while (socket.is_open()) // <2>
     {
-      std::size_t n = co_await socket.async_read_some(boost::asio::buffer(data)); // <3>
-      co_await async_write(socket, boost::asio::buffer(data, n)); // <4>
+      std::size_t n = co_await socket.read_some(boost::asio::buffer(data)); // <3>
+      co_await cobalt::io::write(socket, boost::asio::buffer(data, n)); // <4>
     }
   }
   catch (std::exception& e)
@@ -45,15 +39,15 @@ cobalt::promise<void> echo(tcp_socket socket)
 
 
 // tag::listen[]
-cobalt::generator<tcp_socket> listen()
+cobalt::generator<cobalt::io::stream_socket> listen()
 {
-  tcp_acceptor acceptor({co_await cobalt::this_coro::executor}, {tcp::v4(), 55555});
+  cobalt::io::acceptor acceptor(cobalt::io::endpoint{cobalt::io::tcp_v4, "0.0.0.0", 55555});
   for (;;) // <1>
   {
-    tcp_socket sock = co_await acceptor.async_accept(); // <2>
+    cobalt::io::stream_socket sock = co_await acceptor.accept(); // <2>
     co_yield std::move(sock); // <3>
   }
-  co_return tcp_socket{acceptor.get_executor()}; // <4>
+  co_return cobalt::io::stream_socket{}; // <4>
 }
 // end::listen[]
 
