@@ -27,6 +27,7 @@ struct [[nodiscard]] write_op final : op<system::error_code, std::size_t>
   using     implementation_t = void(void*, const_buffer_sequence, completion_handler<system::error_code, std::size_t>);
   using try_implementation_t = void(void*, const_buffer_sequence,            handler<system::error_code, std::size_t>);
 
+  BOOST_COBALT_MSVC_NOINLINE
   write_op(const_buffer_sequence buffer,
            void * this_,
            implementation_t *implementation,
@@ -62,6 +63,7 @@ struct [[nodiscard]] read_op final : op<system::error_code, std::size_t>
   using     implementation_t = void(void*, mutable_buffer_sequence, completion_handler<system::error_code, std::size_t>);
   using try_implementation_t = void(void*, mutable_buffer_sequence,            handler<system::error_code, std::size_t>);
 
+  BOOST_COBALT_MSVC_NOINLINE
   read_op(mutable_buffer_sequence buffer,
            void * this_,
            implementation_t *implementation,
@@ -98,6 +100,7 @@ struct [[nodiscard]] write_at_op final : op<system::error_code, std::size_t>
   using     implementation_t = void(void*, std::uint64_t, const_buffer_sequence, completion_handler<system::error_code, std::size_t>);
   using try_implementation_t = void(void*, std::uint64_t, const_buffer_sequence,            handler<system::error_code, std::size_t>);
 
+  BOOST_COBALT_MSVC_NOINLINE
   write_at_op(std::uint64_t offset,
            const_buffer_sequence buffer,
            void * this_,
@@ -135,6 +138,7 @@ struct [[nodiscard]] read_at_op final : op<system::error_code, std::size_t>
   using     implementation_t = void(void*, std::uint64_t, mutable_buffer_sequence, completion_handler<system::error_code, std::size_t>);
   using try_implementation_t = void(void*, std::uint64_t, mutable_buffer_sequence,            handler<system::error_code, std::size_t>);
 
+  BOOST_COBALT_MSVC_NOINLINE
   read_at_op(std::uint64_t offset,
           mutable_buffer_sequence buffer,
           void * this_,
@@ -169,6 +173,7 @@ struct [[nodiscard]] wait_op final : op<system::error_code>
   using     implementation_t = void(void*, completion_handler<system::error_code>);
   using try_implementation_t = void(void*,            handler<system::error_code>);
 
+  BOOST_COBALT_MSVC_NOINLINE
   wait_op(void * this_,
           implementation_t *implementation,
           try_implementation_t * try_implementation = nullptr)

@@ -83,7 +83,7 @@ struct [[nodiscard]] op
       }
       BOOST_CATCH_END
     }
-
+    BOOST_COBALT_MSVC_NOINLINE
     auto await_resume(const boost::source_location & loc = BOOST_CURRENT_LOCATION)
     {
       if (init_ep)

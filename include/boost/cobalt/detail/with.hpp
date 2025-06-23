@@ -21,7 +21,8 @@ struct [[nodiscard]] with_impl
     bool await_ready() { return false;}
 
     template<typename Promise>
-    BOOST_NOINLINE auto await_suspend(std::coroutine_handle<Promise> h) -> std::coroutine_handle<promise_type>;
+    BOOST_COBALT_MSVC_NOINLINE
+    auto await_suspend(std::coroutine_handle<Promise> h) -> std::coroutine_handle<promise_type>;
     inline T await_resume();
 
   private:
@@ -89,7 +90,7 @@ struct with_impl<T>::promise_type
     {
       return false;
     }
-    BOOST_NOINLINE
+    BOOST_COBALT_MSVC_NOINLINE
     auto await_suspend(std::coroutine_handle<promise_type> h) noexcept -> std::coroutine_handle<void>
     {
       return std::coroutine_handle<void>::from_address(h.promise().awaited_from.address());
