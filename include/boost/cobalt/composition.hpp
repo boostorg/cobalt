@@ -39,7 +39,7 @@ struct composition_promise
 #endif
 
   template<typename ... Args_, typename Initiation, typename ... InitArgs>
-  BOOST_NOINLINE
+  BOOST_COBALT_MSVC_NOINLINE
   auto await_transform(asio::deferred_async_operation<void(Args_...), Initiation, InitArgs...> op_)
   {
     struct deferred_op : op<Args_...>
@@ -70,7 +70,7 @@ struct composition_promise
     {
       {static_cast<Op>(op).operator co_await().replace_resource(res)} -> awaitable_type<composition_promise>;
     }
-  BOOST_NOINLINE
+  BOOST_COBALT_MSVC_NOINLINE
   auto await_transform(Op && op_)
   {
     struct replacing_op
@@ -147,7 +147,7 @@ struct composition_promise
     constexpr bool await_ready() noexcept  {return false;}
     completion_handler<Args...> handler;
 
-    BOOST_NOINLINE
+    BOOST_COBALT_MSVC_NOINLINE
     std::coroutine_handle<void> await_suspend(std::coroutine_handle<composition_promise> h) noexcept
     {
       auto exec = handler.get_executor();
@@ -168,7 +168,7 @@ struct composition_promise
     constexpr void await_resume() noexcept {}
   };
 
-  BOOST_NOINLINE
+  BOOST_COBALT_MSVC_NOINLINE
   auto final_suspend() noexcept
   {
     return final_awaitable{std::move(handler)};

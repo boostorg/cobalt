@@ -39,7 +39,7 @@ struct join_variadic_impl
 {
   using tuple_type = std::tuple<decltype(get_awaitable_type(std::declval<Args&&>()))...>;
 
-  BOOST_NOINLINE
+  BOOST_COBALT_MSVC_NOINLINE
   join_variadic_impl(Args && ... args)
       : args{std::forward<Args>(args)...}
   {
@@ -218,9 +218,7 @@ struct join_variadic_impl
       return true;
     }
 
-#if _MSC_VER
-    BOOST_NOINLINE
-#endif
+    BOOST_COBALT_MSVC_NOINLINE
     auto await_resume()
     {
       if (error)
@@ -518,9 +516,7 @@ struct join_ranged_impl
       }
     }
 
-#if _MSC_VER
-    BOOST_NOINLINE
-#endif
+    BOOST_COBALT_MSVC_NOINLINE
     auto await_resume()
     {
       if (error)

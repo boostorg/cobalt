@@ -32,6 +32,12 @@
 #define BOOST_COBALT_IO_DECL
 #endif
 
+#if _MSC_VER
+#define BOOST_COBALT_MSVC_NOINLINE BOOST_NOINLINE
+#else
+#define BOOST_COBALT_MSVC_NOINLINE
+#endif
+
 #if defined(BOOST_COBALT_USE_IO_CONTEXT)
 # include <boost/asio/io_context.hpp>
 #elif !defined(BOOST_COBALT_CUSTOM_EXECUTOR)
