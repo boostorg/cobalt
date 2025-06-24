@@ -126,7 +126,7 @@ jobs:
 #          - toolset: msvc-14.2
 #            cxxstd: "20,latest"
 #            addrmd: 32,64
-#            os: windows-2019
+#            os: windows-2022
           - toolset: msvc-14.3
             cxxstd: "20,latest"
             addrmd: 32,64
@@ -138,7 +138,7 @@ jobs:
           - toolset: gcc
             cxxstd: "2a"
             addrmd: 64
-            os: windows-2019
+            os: windows-2022
 
     runs-on: ${{matrix.os}}
 
