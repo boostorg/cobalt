@@ -35,6 +35,7 @@ CO_TEST_CASE(rw_some)
   cobalt::io::const_buffer_sequence cbs(outbuf); 
   BOOST_CHECK(!cbs.is_registered());
   auto itr = cbs.begin();
+  BOOST_CHECK(itr == cbs.begin());
   BOOST_CHECK(itr->data() == &output[0]);
   BOOST_CHECK_EQUAL(itr->size(), 7u);
   itr++;
