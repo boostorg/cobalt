@@ -1,11 +1,11 @@
 [#context]
 == cobalt/experimental/context.hpp
 
-WARNING: This is (most likely) undefined behaviour, since the violates a precondition in the standard. A paper to address this can be found here (https://isocpp.org/files/papers/P3203R0.html).
+WARNING: This is undefined behaviour, since the violates a precondition in the standard.
 
 This header provides `experimental` support for using `boost.fiber` based stackful coroutines
 as if they were C++20 coroutines. That is, they can use `awaitables` by being able to be put into a `coroutine_handle`.
-Likewise the implementation uses a C++20 coroutine promise and runs is as if it was a C++20 coroutine.
+Like-wise the implementation uses a C++20 coroutine promise and runs is as if it was a C++20 coroutine.
 
 [source,cpp]
 ----
