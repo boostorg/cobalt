@@ -19,7 +19,7 @@ This library is supported since Clang 14, Gcc 10 & MSVC 19.30 (Visual Studio 202
 IMPORTANT: Gcc versions 12.1 and 12.2 appear to have a bug for coroutines with out stack variables
 as can be seen [here](https://godbolt.org/z/6adGcqP1z) and should be avoided for coroutines.
 
-Clang only added `std::pmr` support in 16, so older clang versions use `boost::contianer::pmr` as a drop-in replacement.
+Clang only added `std::pmr` support in 16, so older clang versions use `boost::container::pmr` as a drop-in replacement.
 
 WARNING: Some if not all MSVC versions have a broken coroutine implementation,
 that this library needs to workaround. This may cause non-deterministic behaviour and overhead.
