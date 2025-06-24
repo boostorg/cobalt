@@ -13,7 +13,11 @@ import ac ;
 
 using openssl ;
 
-lib ws2_32 ; # NT
+explicit
+        [ searched-lib ws2_32 : : <target-os>windows ]
+        [ searched-lib mswsock : : <target-os>windows ]
+        [ searched-lib bcrypt : : <target-os>windows ]
+        ;
 
 project : requirements
   <define>BOOST_ASIO_NO_DEPRECATED
@@ -96,6 +100,11 @@ lib boost_cobalt_io
     : cobalt_io_sources boost_cobalt
     : requirements <define>BOOST_COBALT_IO_SOURCE=1
       <link>shared:<define>BOOST_COBALT_DYN_LINK=1
+      <target-os>windows,<toolset>gcc:<library>bcrypt
+      <target-os>windows,<toolset>gcc:<library>mswsock
+    : usage-requirements
+      <target-os>windows,<toolset>gcc:<library>bcrypt
+      <target-os>windows,<toolset>gcc:<library>mswsock
     ;
 
 lib boost_cobalt_io_ssl
