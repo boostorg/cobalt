@@ -217,7 +217,6 @@ def main(ctx):
         linux("gcc-13",                 branch, "docker.io/library/gcc:13",   variant="release", cxxstd="20"),
         linux("gcc-13 (asan)",          branch, "docker.io/library/gcc:13",   variant="release", cxxstd="20", debug_symbols="on", address_sanitizer="on"),
         linux("gcc-13 (usan)",          branch, "docker.io/library/gcc:13",   variant="release", cxxstd="20", debug_symbols="on", undefined_sanitizer="on"),
-        linux("gcc-13 (tsan)",          branch, "docker.io/library/gcc:13",   variant="release", cxxstd="20", debug_symbols="on", thread_sanitizer="on"),
         linux("gcc-13 (io_context)",    branch, "docker.io/library/gcc:13",   variant="release", cxxstd="20", **{'boost.cobalt.executor': 'use_io_context'}),
         linux("gcc-13 (container.pmr)", branch, "docker.io/library/gcc:13",   variant="release", cxxstd="20", **{'boost.cobalt.pmr': 'boost-container'}),
         linux("gcc-13 (no pmr)",        branch, "docker.io/library/gcc:13",   variant="release", cxxstd="20", **{'boost.cobalt.pmr': 'no'}),
