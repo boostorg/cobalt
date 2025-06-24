@@ -10,6 +10,7 @@
 
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/registered_buffer.hpp>
+#include <boost/cobalt/config.hpp>
 #include <span>
 
 namespace boost::cobalt::io
@@ -111,15 +112,18 @@ struct mutable_buffer_sequence
     using pointer           = const asio::mutable_buffer*;
     using reference         = const asio::mutable_buffer&;
 
+    BOOST_COBALT_MSVC_NOINLINE
     const_iterator(asio::mutable_buffer head,
                    std::span<const asio::mutable_buffer> tail,
                    std::size_t offset = std::numeric_limits<std::size_t>::max()) : head_(head), tail_(tail), offset_(offset) {}
 
+    BOOST_COBALT_MSVC_NOINLINE
     reference & operator*() const
     {
       return offset_ == std::numeric_limits<std::size_t>::max() ? head_ : tail_[offset_];
     }
 
+    BOOST_COBALT_MSVC_NOINLINE
     pointer operator->() const
     {
       return offset_ == std::numeric_limits<std::size_t>::max() ? &head_ : &tail_[offset_];
@@ -213,7 +217,9 @@ struct mutable_buffer_sequence
     std::size_t offset_{std::numeric_limits<std::size_t>::max()};
   };
 
+  BOOST_COBALT_MSVC_NOINLINE
   const_iterator begin() const {return const_iterator{head_, tail_};}
+  BOOST_COBALT_MSVC_NOINLINE
   const_iterator   end() const {return const_iterator{head_, tail_, tail_.size()};}
 
   bool is_registered() const
@@ -346,15 +352,21 @@ struct const_buffer_sequence
     using pointer           = const asio::const_buffer*;
     using reference         = const asio::const_buffer&;
 
+    BOOST_COBALT_MSVC_NOINLINE
     const_iterator(asio::const_buffer head,
                    std::span<const asio::const_buffer> tail,
-                   std::size_t offset = std::numeric_limits<std::size_t>::max()) : head_(head), tail_(tail), offset_(offset) {}
+                   std::size_t offset = std::numeric_limits<std::size_t>::max()) : head_(head), tail_(tail), offset_(offset)
+    {
 
+    }
+
+    BOOST_COBALT_MSVC_NOINLINE
     reference & operator*() const
     {
       return offset_ == std::numeric_limits<std::size_t>::max() ? head_ : tail_[offset_];
     }
 
+    BOOST_COBALT_MSVC_NOINLINE
     pointer operator->() const
     {
       return offset_ == std::numeric_limits<std::size_t>::max() ? &head_ : &tail_[offset_];
@@ -412,6 +424,7 @@ struct const_buffer_sequence
       return *this;
     }
 
+    BOOST_COBALT_MSVC_NOINLINE
     reference operator[](difference_type n) const
     {
       auto idx = offset_ + n;
@@ -436,7 +449,7 @@ struct const_buffer_sequence
     friend bool operator!=(const const_iterator & lhs, const const_iterator & rhs)
     {
       return std::make_tuple(lhs.head_.data(), lhs.head_.size(), lhs.tail_.data(), lhs.tail_.size(), lhs.offset_)
-             != std::make_tuple(rhs.head_.data(), rhs.head_.size(), rhs.tail_.data(), rhs.tail_.size(), rhs.offset_);
+          != std::make_tuple(rhs.head_.data(), rhs.head_.size(), rhs.tail_.data(), rhs.tail_.size(), rhs.offset_);
     }
 
    private:
@@ -448,7 +461,10 @@ struct const_buffer_sequence
 
   };
 
+  BOOST_COBALT_MSVC_NOINLINE
   const_iterator begin() const {return const_iterator{head_, tail_};}
+
+  BOOST_COBALT_MSVC_NOINLINE
   const_iterator   end() const {return const_iterator{head_, tail_, tail_.size()};}
 
   bool is_registered() const
