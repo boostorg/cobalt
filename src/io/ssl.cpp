@@ -12,24 +12,27 @@ namespace boost::cobalt::io::ssl
 {
 
 stream::stream(context & ctx, const cobalt::executor & exec)
-    : socket(stream_socket_.lowest_layer()), stream_socket_(exec, ctx)
+    : stream_impl{.stream_socket_={exec, ctx}}, socket(stream_socket_.lowest_layer())
 {
 }
 
 stream::stream(context & ctx, native_handle_type h,
                        protocol_type protocol, const cobalt::executor & exec)
-    : socket(stream_socket_.lowest_layer()),
-      stream_socket_(asio::basic_stream_socket<protocol_type, executor>(exec, protocol, h), ctx)
+    : stream_impl{.stream_socket_ = {asio::basic_stream_socket<protocol_type, executor>(exec, protocol, h), ctx}},
+      socket(stream_socket_.lowest_layer())
+
 {
 }
 
 stream::stream(context & ctx, endpoint ep, const cobalt::executor & exec)
-    : socket(stream_socket_.lowest_layer()),
-      stream_socket_(asio::basic_stream_socket<protocol_type, executor>(exec, ep), ctx) {}
+    : stream_impl{.stream_socket_={asio::basic_stream_socket<protocol_type, executor>(exec, ep), ctx}},
+      socket(stream_socket_.lowest_layer())
+{}
 
 stream::stream(context & ctx, stream_socket && sock)
-    : socket(stream_socket_.lowest_layer()),
-      stream_socket_(std::move(sock.stream_socket_), ctx) {}
+    : stream_impl{.stream_socket_={std::move(sock.stream_socket_), ctx}},
+      socket(stream_socket_.lowest_layer())
+{}
 
 
 void stream::adopt_endpoint_(endpoint & ep)

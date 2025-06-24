@@ -31,7 +31,17 @@ enum class verify
 using context = asio::ssl::context;
 using verify_mode = asio::ssl::verify_mode;
 
-struct BOOST_SYMBOL_VISIBLE stream final : socket, cobalt::io::stream, asio::ssl::stream_base
+namespace detail
+{
+
+struct stream_impl
+{
+  asio::ssl::stream<asio::basic_stream_socket<protocol_type, executor>> stream_socket_;
+};
+
+}
+
+struct BOOST_SYMBOL_VISIBLE stream final : private detail::stream_impl, socket, cobalt::io::stream, asio::ssl::stream_base
 {
   BOOST_COBALT_SSL_DECL stream(context & ctx, const cobalt::executor & executor = this_thread::get_executor());
   BOOST_COBALT_SSL_DECL stream(context & ctx, stream_socket && sock);
@@ -131,7 +141,6 @@ struct BOOST_SYMBOL_VISIBLE stream final : socket, cobalt::io::stream, asio::ssl
 
 
   bool upgraded_ = false;
-  asio::ssl::stream<asio::basic_stream_socket<protocol_type, executor>> stream_socket_;
 };
 
 }
