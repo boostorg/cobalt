@@ -23,19 +23,26 @@ struct mutable_buffer_sequence
 {
   std::size_t buffer_count() const {return tail_.size() + 1u;}
 
-  mutable_buffer_sequence(asio::mutable_registered_buffer buffer = {}) : registered_(buffer)
-  {
-  }
-
+#if defined(BOOST_ASIO_HAS_IO_URING)
+  mutable_buffer_sequence(asio::mutable_registered_buffer buffer = {}) : registered_(buffer) { }
   mutable_buffer_sequence(asio::mutable_buffer head)  : registered_{}
   {
     this->head_ = head;
   }
-
   mutable_buffer_sequence(const mutable_buffer_sequence & rhs) : registered_(rhs.registered_), tail_(rhs.tail_) {}
+#else
+  mutable_buffer_sequence(asio::mutable_registered_buffer buffer = {}) : head_(buffer.buffer()) { }
+  mutable_buffer_sequence(asio::mutable_buffer head)  : head_{head} { }
+  mutable_buffer_sequence(const mutable_buffer_sequence & rhs) : head_(rhs.head_), tail_(rhs.tail_) {}
+#endif
+
   mutable_buffer_sequence& operator=(const mutable_buffer_sequence & rhs)
   {
+#if defined(BOOST_ASIO_HAS_IO_URING)
     registered_ = rhs.registered_;
+#else
+    head_ = rhs.head_;
+#endif
     tail_ = rhs.tail_;
     return *this;
   }
@@ -43,7 +50,10 @@ struct mutable_buffer_sequence
 
   template<typename T>
     requires (std::constructible_from<std::span<const asio::mutable_buffer>, const T&>)
-  mutable_buffer_sequence(const T & value) : registered_{}
+  mutable_buffer_sequence(const T & value)
+#if defined(BOOST_ASIO_HAS_IO_URING)
+        : registered_{}
+#endif
   {
     std::span<const asio::mutable_buffer> spn(value);
     if (!spn.empty())
@@ -53,7 +63,10 @@ struct mutable_buffer_sequence
     }
   }
 
-  mutable_buffer_sequence(std::span<const asio::mutable_buffer> spn) : registered_{}
+  mutable_buffer_sequence(std::span<const asio::mutable_buffer> spn)
+#if defined(BOOST_ASIO_HAS_IO_URING)
+        : registered_{}
+#endif
   {
     if (!spn.empty())
     {
@@ -205,7 +218,11 @@ struct mutable_buffer_sequence
 
   bool is_registered() const
   {
+#if defined(BOOST_ASIO_HAS_IO_URING)
     return registered_.id() != asio::registered_buffer_id();
+#else
+    return false;
+#endif
   }
 
   template<typename Func>
@@ -213,7 +230,7 @@ struct mutable_buffer_sequence
   {
     if (seq.buffer_count() > 1u)
       return std::forward<Func>(func)(seq);
-#if !defined(BOOST_ASIO_WINDOWS)
+#if defined(BOOST_ASIO_HAS_IO_URING)
     else if (seq.is_registered())
       return std::forward<Func>(func)(seq.registered_);
 #endif
@@ -221,10 +238,15 @@ struct mutable_buffer_sequence
       return std::forward<Func>(func)(seq.head_);
   }
  private:
+#if defined(BOOST_ASIO_HAS_IO_URING)
   union {
     asio::mutable_registered_buffer registered_{};
     asio::mutable_buffer head_;
   };
+#else
+
+  asio::mutable_buffer head_;
+#endif
   std::span<const asio::mutable_buffer> tail_;
 };
 
@@ -235,19 +257,26 @@ struct const_buffer_sequence
 {
   std::size_t buffer_count() const {return tail_.size() + 1u;}
 
-  const_buffer_sequence(asio::const_registered_buffer buffer = {}) : registered_(buffer)
-  {
-  }
-  const_buffer_sequence(asio::mutable_registered_buffer buffer) : registered_(buffer)
-  {
-  }
-
+#if defined(BOOST_ASIO_HAS_IO_URING)
+  const_buffer_sequence(asio::const_registered_buffer buffer = {}) : registered_(buffer) {}
+  const_buffer_sequence(asio::mutable_registered_buffer buffer)    : registered_(buffer) {}
   const_buffer_sequence(asio::const_buffer head)   : registered_{} { this->head_ = head; }
   const_buffer_sequence(asio::mutable_buffer head) : registered_{} { this->head_ = head; }
+  const_buffer_sequence(const const_buffer_sequence & rhs) : registered_(rhs.registered_), tail_(rhs.tail_) {}
+#else
 
+  const_buffer_sequence(asio::const_registered_buffer buffer = {}) : head_(buffer.buffer()) {}
+  const_buffer_sequence(asio::mutable_registered_buffer buffer)    : head_(buffer.buffer()) {}
+  const_buffer_sequence(asio::const_buffer head)   : head_{ head} { }
+  const_buffer_sequence(asio::mutable_buffer head) : head_{ head} { }
+  const_buffer_sequence(const const_buffer_sequence & rhs) : head_(rhs.head_), tail_(rhs.tail_) {}
+#endif
   template<typename T>
     requires (std::constructible_from<std::span<const asio::const_buffer>, const T&>)
-  const_buffer_sequence(const T & value) : registered_{}
+  const_buffer_sequence(const T & value)
+#if defined(BOOST_ASIO_HAS_IO_URING)
+      : registered_{}
+#endif
   {
     std::span<const asio::const_buffer> spn(value);
     if (!spn.empty())
@@ -257,16 +286,22 @@ struct const_buffer_sequence
     }
   }
 
-  const_buffer_sequence(const const_buffer_sequence & rhs) : registered_(rhs.registered_), tail_(rhs.tail_) {}
   const_buffer_sequence& operator=(const const_buffer_sequence & rhs)
   {
+#if defined(BOOST_ASIO_HAS_IO_URING)
     registered_ = rhs.registered_;
+#else
+    head_ = rhs.head_;
+#endif
     tail_ = rhs.tail_;
     return *this;
   }
   ~const_buffer_sequence() {}
 
-  const_buffer_sequence(std::span<const asio::const_buffer> spn) : registered_{}
+  const_buffer_sequence(std::span<const asio::const_buffer> spn)
+#if defined(BOOST_ASIO_HAS_IO_URING)
+    : registered_{}
+#endif
   {
     if (!spn.empty())
     {
@@ -418,7 +453,11 @@ struct const_buffer_sequence
 
   bool is_registered() const
   {
+#if defined(BOOST_ASIO_HAS_IO_URING)
     return registered_.id() != asio::registered_buffer_id();
+#else
+    return false;
+#endif
   }
 
   template<typename Func>
@@ -427,7 +466,7 @@ struct const_buffer_sequence
     if (seq.buffer_count() > 1u)
       return std::forward<Func>(func)(seq);
     // Windows doesn't support registerd buffers anyhow
-#if !defined(BOOST_ASIO_WINDOWS)
+#if defined(BOOST_ASIO_HAS_IO_URING)
     else if (seq.is_registered())
       return std::forward<Func>(func)(seq.registered_);
 #endif
@@ -436,10 +475,14 @@ struct const_buffer_sequence
   }
 
  private:
+#if defined(BOOST_ASIO_HAS_IO_URING)
   union {
     asio::const_registered_buffer registered_;
     asio::const_buffer head_;
   };
+#else
+  asio::const_buffer head_;
+#endif
   std::span<const asio::const_buffer> tail_;
 };
 
