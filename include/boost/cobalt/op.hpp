@@ -12,7 +12,7 @@
 #include <boost/cobalt/detail/sbo_resource.hpp>
 #include <boost/cobalt/result.hpp>
 #include <boost/core/no_exceptions_support.hpp>
-
+#include <boost/config.hpp>
 #include <boost/asio/deferred.hpp>
 
 
@@ -21,7 +21,7 @@ namespace boost::cobalt
 
 
 template<typename ... Args>
-struct [[nodiscard]] op
+struct BOOST_SYMBOL_VISIBLE op
 {
   virtual void ready(cobalt::handler<Args...>) {};
   virtual void initiate(cobalt::completion_handler<Args...> complete) = 0 ;
