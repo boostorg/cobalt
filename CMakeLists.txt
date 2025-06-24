@@ -51,10 +51,12 @@ if (NOT BOOST_COBALT_IS_ROOT)
             Boost::circular_buffer
             Boost::config
             Boost::core
+            Boost::endian
             Boost::intrusive
             Boost::mp11
             Boost::preprocessor
             Boost::smart_ptr
+            Boost::static_string
             Boost::system
             Boost::throw_exception
             Boost::variant2
@@ -68,6 +70,10 @@ if (NOT BOOST_COBALT_IS_ROOT)
 
     if (MSVC)
         target_compile_definitions(boost_cobalt PUBLIC _WIN32_WINNT=0x0601)
+    endif()
+
+    if(WIN32)
+        target_link_libraries(boost_cobalt PUBLIC ws2_32)
     endif()
 
     if (BOOST_COBALT_USE_BOOST_CONTAINER)
@@ -198,6 +204,14 @@ else()
 
     target_compile_features(boost_cobalt PUBLIC cxx_std_20)
     add_library(Boost::cobalt ALIAS boost_cobalt)
+
+    if (MSVC)
+        target_compile_definitions(boost_cobalt PUBLIC _WIN32_WINNT=0x0601)
+    endif()
+
+    if(WIN32)
+        target_link_libraries(boost_cobalt PUBLIC ws2_32)
+    endif()
 
     if(BUILD_SHARED_LIBS)
         target_compile_definitions(boost_cobalt PUBLIC BOOST_COBALT_DYN_LINK=1)
