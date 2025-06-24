@@ -72,7 +72,7 @@ if (NOT BOOST_COBALT_IS_ROOT)
         target_compile_definitions(boost_cobalt PUBLIC _WIN32_WINNT=0x0601)
     endif()
 
-    if(MINGW)
+    if(MINGW OR CYGWIN)
         target_link_libraries(boost_cobalt PUBLIC ws2_32)
     endif()
 
@@ -209,7 +209,7 @@ else()
         target_compile_definitions(boost_cobalt PUBLIC _WIN32_WINNT=0x0601)
     endif()
 
-    if(MINGW)
+    if(MINGW OR CYGWIN)
         target_link_libraries(boost_cobalt PUBLIC ws2_32)
     endif()
 
