@@ -96,6 +96,9 @@ template<typename T>
 template<typename Promise>
 std::coroutine_handle<void> channel<T>::read_op::await_suspend(std::coroutine_handle<Promise> h)
 {
+  if (cancelled)
+    return h; // already interrupted.
+
   if constexpr (requires (Promise p) {p.get_cancellation_slot();})
     if ((cancel_slot = h.promise().get_cancellation_slot()).is_connected())
       cancel_slot.emplace<cancel_impl>(this);
@@ -162,8 +165,17 @@ system::result<T> channel<T>::read_op::await_resume(const struct as_result_tag &
   if (cancel_slot.is_connected())
     cancel_slot.clear();
 
+  if (chn->is_closed_ && chn->buffer_.empty() && !direct)
+  {
+    constexpr static boost::source_location loc{BOOST_CURRENT_LOCATION};
+    return {system::in_place_error, asio::error::broken_pipe, &loc};
+  }
+
   if (cancelled)
-   return {system::in_place_error, asio::error::operation_aborted};
+  {
+    constexpr static boost::source_location loc{BOOST_CURRENT_LOCATION};
+    return {system::in_place_error, asio::error::operation_aborted, &loc};
+  }
 
   T value = chn->buffer_.empty() ? std::move(*direct) : std::move(chn->buffer_.front());
   if (!chn->buffer_.empty())
@@ -207,6 +219,10 @@ template<typename T>
 template<typename Promise>
 std::coroutine_handle<void> channel<T>::write_op::await_suspend(std::coroutine_handle<Promise> h)
 {
+  if (cancelled)
+    return h; // already interrupted.
+
+
   if constexpr (requires (Promise p) {p.get_cancellation_slot();})
     if ((cancel_slot = h.promise().get_cancellation_slot()).is_connected())
       cancel_slot.emplace<cancel_impl>(this);
@@ -263,8 +279,19 @@ system::result<void>  channel<T>::write_op::await_resume(const struct as_result_
 {
   if (cancel_slot.is_connected())
     cancel_slot.clear();
+
+  if (chn->is_closed_)
+  {
+    constexpr static boost::source_location loc{BOOST_CURRENT_LOCATION};
+    return {system::in_place_error, asio::error::broken_pipe, &loc};
+  }
+
+
   if (cancelled)
-    return {system::in_place_error, asio::error::operation_aborted};
+  {
+    constexpr static boost::source_location loc{BOOST_CURRENT_LOCATION};
+    return {system::in_place_error, asio::error::operation_aborted, &loc};
+  }
 
   if (!direct)
   {
@@ -326,6 +353,10 @@ struct channel<void>::write_op::cancel_impl
 template<typename Promise>
 std::coroutine_handle<void> channel<void>::read_op::await_suspend(std::coroutine_handle<Promise> h)
 {
+
+  if (cancelled)
+    return h; // already interrupted.
+
   if constexpr (requires (Promise p) {p.get_cancellation_slot();})
     if ((cancel_slot = h.promise().get_cancellation_slot()).is_connected())
       cancel_slot.emplace<cancel_impl>(this);
@@ -362,6 +393,9 @@ std::coroutine_handle<void> channel<void>::read_op::await_suspend(std::coroutine
 template<typename Promise>
 std::coroutine_handle<void> channel<void>::write_op::await_suspend(std::coroutine_handle<Promise> h)
 {
+  if (cancelled)
+    return h; // already interrupted.
+
   if constexpr (requires (Promise p) {p.get_cancellation_slot();})
     if ((cancel_slot = h.promise().get_cancellation_slot()).is_connected())
       cancel_slot.emplace<cancel_impl>(this);

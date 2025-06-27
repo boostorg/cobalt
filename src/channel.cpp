@@ -49,8 +49,17 @@ system::result<void>  channel<void>::read_op::await_resume(const struct as_resul
   if (cancel_slot.is_connected())
     cancel_slot.clear();
 
+  if (chn->is_closed_)
+  {
+    constexpr static boost::source_location loc{BOOST_CURRENT_LOCATION};
+    return {system::in_place_error, asio::error::broken_pipe, &loc};
+  }
+
   if (cancelled)
-    return {system::in_place_error, asio::error::operation_aborted};
+  {
+    constexpr static boost::source_location loc{BOOST_CURRENT_LOCATION};
+    return {system::in_place_error, asio::error::operation_aborted, &loc};
+  }
 
   if (!direct)
     chn->n_--;
@@ -83,8 +92,18 @@ system::result<void> channel<void>::write_op::await_resume(const struct as_resul
 {
   if (cancel_slot.is_connected())
     cancel_slot.clear();
+
+  if (chn->is_closed_)
+  {
+    constexpr static boost::source_location loc{BOOST_CURRENT_LOCATION};
+    return {system::in_place_error, asio::error::broken_pipe, &loc};
+  }
+
   if (cancelled)
-    return {system::in_place_error, asio::error::operation_aborted};
+  {
+    constexpr static boost::source_location loc{BOOST_CURRENT_LOCATION};
+    return {system::in_place_error, asio::error::operation_aborted, &loc};
+  }
   if (!direct)
     chn->n_++;
 

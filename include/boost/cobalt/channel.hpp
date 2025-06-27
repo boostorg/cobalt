@@ -96,7 +96,7 @@ struct channel
     }
 
     struct cancel_impl;
-    bool await_ready() { return !chn->buffer_.empty(); }
+    bool await_ready() { return !chn->buffer_.empty() || chn->is_closed_; }
     template<typename Promise>
     BOOST_COBALT_MSVC_NOINLINE
     std::coroutine_handle<void> await_suspend(std::coroutine_handle<Promise> h);
@@ -140,7 +140,7 @@ struct channel
 
     struct cancel_impl;
 
-    bool await_ready() { return !chn->buffer_.full(); }
+    bool await_ready() { return !chn->buffer_.full() || chn->is_closed_; }
     template<typename Promise>
     BOOST_COBALT_MSVC_NOINLINE
     std::coroutine_handle<void> await_suspend(std::coroutine_handle<Promise> h);
@@ -257,9 +257,12 @@ struct channel<void>
     }
 
     struct cancel_impl;
-    bool await_ready() { return (chn->n_ > 0); }
-    template<typename Promise>
+    bool await_ready()
+    {
+      return (chn->n_ > 0) || chn->is_closed_;
+    }
 
+    template<typename Promise>
     BOOST_COBALT_MSVC_NOINLINE
     std::coroutine_handle<void> await_suspend(std::coroutine_handle<Promise> h);
     BOOST_COBALT_DECL void await_resume();
@@ -297,7 +300,7 @@ struct channel<void>
     struct cancel_impl;
     bool await_ready()
     {
-      return chn->n_ < chn->limit_;
+      return chn->n_ < chn->limit_ || chn->is_closed_;
     }
 
     template<typename Promise>

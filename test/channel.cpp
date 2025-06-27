@@ -393,4 +393,92 @@ CO_TEST_CASE(interrupt_void_1)
   BOOST_CHECK(rl == 1);
 }
 
+
+
+cobalt::promise<void> do_write(cobalt::channel<void> & c, int times = 1)
+{
+  while (times --> 0)
+    co_await c.write();
+};
+
+CO_TEST_CASE(interrupt_0_void)
+{
+  cobalt::channel<void> c{0};
+  auto w = do_write(c);
+
+  BOOST_CHECK(!w.ready());
+  auto [ec] = co_await cobalt::as_tuple(test_interrupt(c.read()));
+  BOOST_CHECK_MESSAGE(ec == asio::error::operation_aborted, ec.to_string());
+  co_await asio::post(co_await this_coro::executor);
+  BOOST_CHECK(!w.ready());
+  co_await c.read();
+  co_await asio::post(co_await this_coro::executor);
+  BOOST_CHECK(w.ready());
+}
+
+
+CO_TEST_CASE(interrupt_1_void)
+{
+  cobalt::channel<void> c{1};
+  auto w = do_write(c, 2);
+
+  BOOST_CHECK(!w.ready());
+  auto [ec] = co_await cobalt::as_tuple(test_interrupt(c.read()));
+  BOOST_CHECK_MESSAGE(ec == asio::error::operation_aborted, ec.to_string());
+  co_await asio::post(co_await this_coro::executor);
+  BOOST_CHECK(!w.ready());
+  co_await c.read();
+  co_await asio::post(co_await this_coro::executor);
+  BOOST_CHECK(w.ready());
+  co_await c.read();
+  co_await asio::post(co_await this_coro::executor);
+  BOOST_CHECK(w.ready());
+}
+
+cobalt::promise<void> do_write(cobalt::channel<int> & c, int times = 1)
+{
+  int i = 0;
+  while (times --> 0)
+    co_await c.write(i++);
+};
+
+
+CO_TEST_CASE(interrupt_0_int)
+{
+  cobalt::channel<int> c{0};
+  auto w = do_write(c);
+
+  BOOST_CHECK(!w.ready());
+  auto [ec, i] = co_await cobalt::as_tuple(test_interrupt(c.read()));
+
+  BOOST_CHECK_MESSAGE(ec == asio::error::operation_aborted, ec.to_string());
+  co_await asio::post(co_await this_coro::executor);
+  BOOST_CHECK(!w.ready());
+  i = co_await c.read();
+  BOOST_CHECK_EQUAL(i, 0);
+  co_await asio::post(co_await this_coro::executor);
+  BOOST_CHECK(w.ready());
+}
+
+
+CO_TEST_CASE(interrupt_1_int)
+{
+  cobalt::channel<int> c{1};
+  auto w = do_write(c, 2);
+
+  BOOST_CHECK(!w.ready());
+  auto [ec, i] = co_await cobalt::as_tuple(test_interrupt(c.read()));
+  BOOST_CHECK_MESSAGE(ec == asio::error::operation_aborted, ec.to_string());
+  co_await asio::post(co_await this_coro::executor);
+  BOOST_CHECK(!w.ready());
+  i = co_await c.read();
+  BOOST_CHECK_EQUAL(i, 0);
+  co_await asio::post(co_await this_coro::executor);
+  BOOST_CHECK(w.ready());
+  i = co_await c.read();
+  BOOST_CHECK_EQUAL(i, 1);
+  co_await asio::post(co_await this_coro::executor);
+  BOOST_CHECK(w.ready());
+}
+
 }
