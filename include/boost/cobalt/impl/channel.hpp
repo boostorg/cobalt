@@ -68,6 +68,7 @@ void channel<T>::close()
     auto & op = write_queue_.front();
     op.unlink();
     op.cancelled = true;
+    op.closed = true;
     op.cancel_slot.clear();
     if (op.awaited_from)
       asio::post(executor_, std::move(op.awaited_from));
@@ -280,12 +281,11 @@ system::result<void>  channel<T>::write_op::await_resume(const struct as_result_
   if (cancel_slot.is_connected())
     cancel_slot.clear();
 
-  if (chn->is_closed_)
+  if (closed)
   {
     constexpr static boost::source_location loc{BOOST_CURRENT_LOCATION};
     return {system::in_place_error, asio::error::broken_pipe, &loc};
   }
-
 
   if (cancelled)
   {
@@ -353,7 +353,6 @@ struct channel<void>::write_op::cancel_impl
 template<typename Promise>
 std::coroutine_handle<void> channel<void>::read_op::await_suspend(std::coroutine_handle<Promise> h)
 {
-
   if (cancelled)
     return h; // already interrupted.
 

@@ -115,7 +115,7 @@ struct channel
         T*>;
     ref_t ref;
     boost::source_location loc;
-    bool cancelled = false, direct = false;
+    bool cancelled = false, direct = false, closed = !chn->is_open();
     asio::cancellation_slot cancel_slot{};
 
     unique_handle<void> awaited_from{nullptr};
@@ -275,7 +275,7 @@ struct channel<void>
   {
     channel * chn;
     boost::source_location loc;
-    bool cancelled = false, direct = false;
+    bool cancelled = false, direct = false, closed = !chn->is_open();
     asio::cancellation_slot cancel_slot{};
     unique_handle<void> awaited_from{nullptr};
     void (*begin_transaction)(void*) = nullptr;
