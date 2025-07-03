@@ -129,7 +129,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
 
   generator_receiver& operator=(generator_receiver && lhs) noexcept
   {
-    if (*reference == this)
+    if (reference && *reference == this)
     {
       *reference = nullptr;
     }

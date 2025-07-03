@@ -133,7 +133,7 @@ struct promise_receiver : promise_value_holder<T>
 
   promise_receiver& operator=(promise_receiver && lhs) noexcept
   {
-    if (*reference == this)
+    if (reference && *reference == this)
     {
       *reference = nullptr;
     }
