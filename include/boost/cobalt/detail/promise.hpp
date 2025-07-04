@@ -201,7 +201,7 @@ struct promise_receiver : promise_value_holder<T>
         return false;
       }
 
-      if constexpr (requires (Promise p) {p.get_cancellation_slot();})
+      if constexpr (requires {h.promise().get_cancellation_slot();})
         if ((cl = h.promise().get_cancellation_slot()).is_connected())
           cl.emplace<forward_cancellation>(*self->cancel_signal);
 

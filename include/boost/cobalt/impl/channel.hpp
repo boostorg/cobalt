@@ -100,7 +100,7 @@ std::coroutine_handle<void> channel<T>::read_op::await_suspend(std::coroutine_ha
   if (cancelled)
     return h; // already interrupted.
 
-  if constexpr (requires (Promise p) {p.get_cancellation_slot();})
+  if constexpr (requires {h.promise().get_cancellation_slot();})
     if ((cancel_slot = h.promise().get_cancellation_slot()).is_connected())
       cancel_slot.emplace<cancel_impl>(this);
 
@@ -108,7 +108,7 @@ std::coroutine_handle<void> channel<T>::read_op::await_suspend(std::coroutine_ha
     boost::throw_exception(std::runtime_error("already-awaited"), loc);
   awaited_from.reset(h.address());
   // currently nothing to read
-  if constexpr (requires (Promise p) {p.begin_transaction();})
+  if constexpr (requires {h.promise().begin_transaction();})
     begin_transaction = +[](void * p){std::coroutine_handle<Promise>::from_address(p).promise().begin_transaction();};
 
   if (chn->write_queue_.empty())
@@ -224,12 +224,12 @@ std::coroutine_handle<void> channel<T>::write_op::await_suspend(std::coroutine_h
     return h; // already interrupted.
 
 
-  if constexpr (requires (Promise p) {p.get_cancellation_slot();})
+  if constexpr (requires {h.promise().get_cancellation_slot();})
     if ((cancel_slot = h.promise().get_cancellation_slot()).is_connected())
       cancel_slot.emplace<cancel_impl>(this);
 
   awaited_from.reset(h.address());
-  if constexpr (requires (Promise p) {p.begin_transaction();})
+  if constexpr (requires {h.promise().begin_transaction();})
     begin_transaction = +[](void * p){std::coroutine_handle<Promise>::from_address(p).promise().begin_transaction();};
 
   BOOST_ASSERT(this->chn->buffer_.full());
@@ -356,7 +356,7 @@ std::coroutine_handle<void> channel<void>::read_op::await_suspend(std::coroutine
   if (cancelled)
     return h; // already interrupted.
 
-  if constexpr (requires (Promise p) {p.get_cancellation_slot();})
+  if constexpr (requires {h.promise().get_cancellation_slot();})
     if ((cancel_slot = h.promise().get_cancellation_slot()).is_connected())
       cancel_slot.emplace<cancel_impl>(this);
 
@@ -364,7 +364,7 @@ std::coroutine_handle<void> channel<void>::read_op::await_suspend(std::coroutine
     boost::throw_exception(std::runtime_error("already-awaited"), loc);
   awaited_from.reset(h.address());
 
-  if constexpr (requires (Promise p) {p.begin_transaction();})
+  if constexpr (requires {h.promise().begin_transaction();})
     begin_transaction = +[](void * p){std::coroutine_handle<Promise>::from_address(p).promise().begin_transaction();};
 
   // nothing to read currently, enqueue
@@ -395,13 +395,13 @@ std::coroutine_handle<void> channel<void>::write_op::await_suspend(std::coroutin
   if (cancelled)
     return h; // already interrupted.
 
-  if constexpr (requires (Promise p) {p.get_cancellation_slot();})
+  if constexpr (requires {h.promise().get_cancellation_slot();})
     if ((cancel_slot = h.promise().get_cancellation_slot()).is_connected())
       cancel_slot.emplace<cancel_impl>(this);
 
   awaited_from.reset(h.address());
   // currently nothing to read
-  if constexpr (requires (Promise p) {p.begin_transaction();})
+  if constexpr (requires {h.promise().begin_transaction();})
     begin_transaction = +[](void * p){std::coroutine_handle<Promise>::from_address(p).promise().begin_transaction();};
 
   if (chn->read_queue_.empty())
