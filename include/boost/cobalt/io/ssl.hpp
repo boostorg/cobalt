@@ -87,6 +87,7 @@ struct BOOST_SYMBOL_VISIBLE stream final : private detail::stream_impl, socket, 
     void initiate(completion_handler<system::error_code> h) final;
     handshake_op_(handshake_type type, bool upgraded, asio::ssl::stream<asio::basic_stream_socket<protocol_type, executor>>  & stream_socket)
         : type_(type), upgraded_(upgraded), stream_socket_(stream_socket) {}
+    ~handshake_op_() = default;
    private:
     handshake_type type_;
     bool upgraded_;
@@ -103,6 +104,7 @@ struct BOOST_SYMBOL_VISIBLE stream final : private detail::stream_impl, socket, 
     handshake_buffer_op_(handshake_type type, bool upgraded, const_buffer_sequence buffer_,
                          asio::ssl::stream<asio::basic_stream_socket<protocol_type, executor>>  & stream_socket)
         : type_(type), upgraded_(upgraded), buffer_(buffer_), stream_socket_(stream_socket) {}
+    ~handshake_buffer_op_() = default;
    private:
     handshake_type type_;
     bool upgraded_;
@@ -119,6 +121,7 @@ struct BOOST_SYMBOL_VISIBLE stream final : private detail::stream_impl, socket, 
     void initiate(completion_handler<system::error_code> h) final;
     shutdown_op_(bool upgraded, asio::ssl::stream<asio::basic_stream_socket<protocol_type, executor>>  & stream_socket)
         : upgraded_(upgraded), stream_socket_(stream_socket) {}
+    ~shutdown_op_() = default;
    private:
     bool upgraded_;
     asio::ssl::stream<asio::basic_stream_socket<protocol_type, executor>> &stream_socket_;

@@ -21,6 +21,7 @@ struct BOOST_SYMBOL_VISIBLE write_all  final : op<system::error_code, std::size_
   write_op step;
   write_all(write_op op) : step(op) {}
 
+  ~write_all() = default;
   BOOST_COBALT_IO_DECL void initiate(completion_handler<system::error_code, std::size_t>) final;
 };
 
@@ -40,7 +41,7 @@ struct BOOST_SYMBOL_VISIBLE write_all_at  final : op<system::error_code, std::si
 {
   write_at_op step;
   write_all_at(write_at_op op) : step(op) {}
-
+  ~write_all_at() = default;
   BOOST_COBALT_IO_DECL void initiate(completion_handler<system::error_code, std::size_t>) final;
 };
 

@@ -95,7 +95,7 @@ struct BOOST_SYMBOL_VISIBLE socket
 
     wait_op(wait_type wt, socket & sock) :
         wt(wt), sock_(sock) {}
-
+    ~wait_op() = default;
    private:
     socket & sock_;
 
@@ -114,6 +114,7 @@ struct BOOST_SYMBOL_VISIBLE socket
 
     connect_op(struct endpoint endpoint, socket & socket) :
         endpoint(endpoint), sock_(socket) {}
+    ~connect_op() = default;
    private:
     socket & sock_;
   };
@@ -132,6 +133,7 @@ struct BOOST_SYMBOL_VISIBLE socket
 
     ranged_connect_op(endpoint_sequence eps, socket & socket) :
         endpoints(eps), sock_(socket) {}
+    ~ranged_connect_op() = default;
    private:
     socket & sock_;
   };

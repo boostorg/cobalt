@@ -20,6 +20,7 @@ struct BOOST_SYMBOL_VISIBLE read_all final : op<system::error_code, std::size_t>
 {
   read_op step;
   read_all(read_op op) : step(op) {}
+  ~read_all() = default;
 
   BOOST_COBALT_IO_DECL void initiate(completion_handler<system::error_code, std::size_t>) final;
 };
@@ -40,6 +41,7 @@ struct BOOST_SYMBOL_VISIBLE read_all_at  final : op<system::error_code, std::siz
 {
   read_at_op step;
   read_all_at(read_at_op op) : step(op) {}
+  ~read_all_at() = default;
 
   BOOST_COBALT_IO_DECL void initiate(completion_handler<system::error_code, std::size_t>) final;
 };

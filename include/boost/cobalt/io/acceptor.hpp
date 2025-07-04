@@ -35,6 +35,7 @@ struct BOOST_SYMBOL_VISIBLE acceptor
 
     accept_op(asio::basic_socket_acceptor<protocol_type, executor> & acceptor, socket& sock)
             : acceptor_(acceptor), sock_(sock) {}
+    ~accept_op() = default;
    protected:
     asio::basic_socket_acceptor<protocol_type, executor> &acceptor_;
     socket & sock_;
@@ -46,6 +47,7 @@ struct BOOST_SYMBOL_VISIBLE acceptor
     void initiate(completion_handler<system::error_code, stream_socket> h) override;
 
     accept_stream_op(asio::basic_socket_acceptor<protocol_type, executor> & acceptor) : acceptor_(acceptor)   {}
+    ~accept_stream_op() = default;
    private:
     asio::basic_socket_acceptor<protocol_type, executor> &acceptor_;
     stream_socket sock_{acceptor_.get_executor()};
@@ -57,6 +59,7 @@ struct BOOST_SYMBOL_VISIBLE acceptor
     void initiate(completion_handler<system::error_code, seq_packet_socket> h) override;
 
     accept_seq_packet_op(asio::basic_socket_acceptor<protocol_type, executor> & acceptor) : acceptor_(acceptor)   {}
+    ~accept_seq_packet_op() = default;
    private:
     asio::basic_socket_acceptor<protocol_type, executor> &acceptor_;
     seq_packet_socket sock_{acceptor_.get_executor()};
@@ -70,7 +73,7 @@ struct BOOST_SYMBOL_VISIBLE acceptor
 
     wait_op(asio::basic_socket_acceptor<protocol_type, executor> & acceptor, wait_type wt)
     : acceptor_(acceptor), wt_(wt) {}
-
+    ~wait_op() = default;
    private:
     asio::basic_socket_acceptor<protocol_type, executor> &acceptor_;
     wait_type wt_;
