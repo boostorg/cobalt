@@ -28,9 +28,8 @@ struct BOOST_SYMBOL_VISIBLE acceptor
   BOOST_COBALT_IO_DECL system::result<void> listen(int backlog = max_listen_connections); // int backlog = net::max_backlog()
   BOOST_COBALT_IO_DECL endpoint local_endpoint();
  private:
-  struct [[nodiscard]]  accept_op final : op<system::error_code>
+  struct BOOST_COBALT_IO_DECL accept_op final : op<system::error_code>
   {
-    BOOST_COBALT_IO_DECL
     void initiate(completion_handler<system::error_code> h) override;
 
     accept_op(asio::basic_socket_acceptor<protocol_type, executor> & acceptor, socket& sock)
@@ -41,9 +40,8 @@ struct BOOST_SYMBOL_VISIBLE acceptor
     socket & sock_;
   };
 
-  struct [[nodiscard]]  accept_stream_op final : op<system::error_code, stream_socket>
+  struct BOOST_COBALT_IO_DECL accept_stream_op final : op<system::error_code, stream_socket>
   {
-    BOOST_COBALT_IO_DECL
     void initiate(completion_handler<system::error_code, stream_socket> h) override;
 
     accept_stream_op(asio::basic_socket_acceptor<protocol_type, executor> & acceptor) : acceptor_(acceptor)   {}
@@ -53,9 +51,8 @@ struct BOOST_SYMBOL_VISIBLE acceptor
     stream_socket sock_{acceptor_.get_executor()};
   };
 
-  struct [[nodiscard]]  accept_seq_packet_op final : op<system::error_code, seq_packet_socket>
+  struct BOOST_COBALT_IO_DECL accept_seq_packet_op final : op<system::error_code, seq_packet_socket>
   {
-    BOOST_COBALT_IO_DECL
     void initiate(completion_handler<system::error_code, seq_packet_socket> h) override;
 
     accept_seq_packet_op(asio::basic_socket_acceptor<protocol_type, executor> & acceptor) : acceptor_(acceptor)   {}
@@ -66,9 +63,8 @@ struct BOOST_SYMBOL_VISIBLE acceptor
   };
 
 
-  struct [[nodiscard]] wait_op final : op<system::error_code>
+  struct BOOST_COBALT_IO_DECL wait_op final : op<system::error_code>
   {
-    BOOST_COBALT_IO_DECL
     void initiate(completion_handler<system::error_code> h) override;
 
     wait_op(asio::basic_socket_acceptor<protocol_type, executor> & acceptor, wait_type wt)
@@ -83,25 +79,25 @@ struct BOOST_SYMBOL_VISIBLE acceptor
 
 
  public:
-  accept_op accept(socket & sock)
+  [[nodiscard]] accept_op accept(socket & sock)
   {
     return accept_op{acceptor_, sock};
   }
 
   template<protocol_type::family_t F = tcp.family(), protocol_type::protocol_t P = tcp.protocol()>
-  accept_stream_op accept(static_protocol<F, tcp.type(), P> stream_proto = tcp)
+  [[nodiscard]] accept_stream_op accept(static_protocol<F, tcp.type(), P> stream_proto = tcp)
   {
     return accept_stream_op{acceptor_};
   }
 
   template<protocol_type::family_t F, protocol_type::protocol_t P>
-  accept_seq_packet_op accept(static_protocol<F, local_seqpacket.type(), P> stream_proto)
+  [[nodiscard]] accept_seq_packet_op accept(static_protocol<F, local_seqpacket.type(), P> stream_proto)
   {
     return accept_seq_packet_op{acceptor_};
   }
 
 
-  wait_op     wait(wait_type wt = wait_type::wait_read)
+  [[nodiscard]] wait_op wait(wait_type wt = wait_type::wait_read)
   {
     return {acceptor_, wt};
   }

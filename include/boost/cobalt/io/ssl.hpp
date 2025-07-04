@@ -50,11 +50,11 @@ struct BOOST_SYMBOL_VISIBLE stream final : private detail::stream_impl, socket, 
   BOOST_COBALT_SSL_DECL stream(context & ctx, endpoint ep,
                                      const cobalt::executor & executor = this_thread::get_executor());
 
-  write_op write_some(const_buffer_sequence buffer) override
+  [[nodiscard]] write_op write_some(const_buffer_sequence buffer) override
   {
     return {buffer, this, initiate_write_some_};
   }
-  read_op read_some(mutable_buffer_sequence buffer) override
+  [[nodiscard]] read_op read_some(mutable_buffer_sequence buffer) override
   {
     return {buffer, this, initiate_read_some_};
   }
@@ -79,11 +79,9 @@ struct BOOST_SYMBOL_VISIBLE stream final : private detail::stream_impl, socket, 
 
  private:
 
-  struct [[nodiscard]] handshake_op_ final : cobalt::op<system::error_code>
+  struct BOOST_COBALT_SSL_DECL handshake_op_ final : cobalt::op<system::error_code>
   {
-    BOOST_COBALT_SSL_DECL
     void ready(handler<system::error_code> h) final;
-    BOOST_COBALT_SSL_DECL
     void initiate(completion_handler<system::error_code> h) final;
     handshake_op_(handshake_type type, bool upgraded, asio::ssl::stream<asio::basic_stream_socket<protocol_type, executor>>  & stream_socket)
         : type_(type), upgraded_(upgraded), stream_socket_(stream_socket) {}
@@ -95,11 +93,9 @@ struct BOOST_SYMBOL_VISIBLE stream final : private detail::stream_impl, socket, 
   };
 
 
-  struct [[nodiscard]] handshake_buffer_op_ final : cobalt::op<system::error_code, std::size_t>
+  struct BOOST_COBALT_SSL_DECL handshake_buffer_op_ final : cobalt::op<system::error_code, std::size_t>
   {
-    BOOST_COBALT_SSL_DECL
     void ready(handler<system::error_code, std::size_t> h) final;
-    BOOST_COBALT_SSL_DECL
     void initiate(completion_handler<system::error_code, std::size_t> h) final;
     handshake_buffer_op_(handshake_type type, bool upgraded, const_buffer_sequence buffer_,
                          asio::ssl::stream<asio::basic_stream_socket<protocol_type, executor>>  & stream_socket)
@@ -113,11 +109,9 @@ struct BOOST_SYMBOL_VISIBLE stream final : private detail::stream_impl, socket, 
   };
 
 
-  struct [[nodiscard]] shutdown_op_ final : cobalt::op<system::error_code>
+  struct BOOST_COBALT_SSL_DECL shutdown_op_ final : cobalt::op<system::error_code>
   {
-    BOOST_COBALT_SSL_DECL
     void ready(handler<system::error_code> h) final;
-    BOOST_COBALT_SSL_DECL
     void initiate(completion_handler<system::error_code> h) final;
     shutdown_op_(bool upgraded, asio::ssl::stream<asio::basic_stream_socket<protocol_type, executor>>  & stream_socket)
         : upgraded_(upgraded), stream_socket_(stream_socket) {}
@@ -133,8 +127,6 @@ struct BOOST_SYMBOL_VISIBLE stream final : private detail::stream_impl, socket, 
     return handshake_buffer_op_{type, upgraded_, buffer, stream_socket_};
   }
   [[nodiscard]] auto shutdown() { return shutdown_op_{upgraded_, stream_socket_}; }
-
-
  private:
 
   BOOST_COBALT_SSL_DECL void adopt_endpoint_(endpoint & ep) override;

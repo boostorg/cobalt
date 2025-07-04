@@ -28,11 +28,11 @@ struct BOOST_SYMBOL_VISIBLE stream_socket final : socket, stream
   BOOST_COBALT_IO_DECL stream_socket(endpoint ep,
                   const cobalt::executor & executor = this_thread::get_executor());
 
-  write_op write_some(const_buffer_sequence buffer) override
+  [[nodiscard]] write_op write_some(const_buffer_sequence buffer) override
   {
     return {buffer, this, initiate_write_some_};
   }
-  read_op read_some(mutable_buffer_sequence buffer) override
+  [[nodiscard]] read_op read_some(mutable_buffer_sequence buffer) override
   {
     return {buffer, this, initiate_read_some_};
   }

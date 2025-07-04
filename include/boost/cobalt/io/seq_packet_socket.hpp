@@ -27,7 +27,7 @@ struct BOOST_SYMBOL_VISIBLE seq_packet_socket final : socket
                                          const executor & executor = this_thread::get_executor());
 
 
-  struct [[nodiscard]] send_op final : op<system::error_code, std::size_t>
+  struct BOOST_COBALT_IO_DECL send_op final : op<system::error_code, std::size_t>
   {
     message_flags in_flags;
     const_buffer_sequence buffer;
@@ -36,14 +36,13 @@ struct BOOST_SYMBOL_VISIBLE seq_packet_socket final : socket
             asio::basic_seq_packet_socket<protocol_type, executor> & seq_packet_socket)
             : in_flags(in_flags), buffer(buffer), socket_(seq_packet_socket) {}
 
-    BOOST_COBALT_IO_DECL
     void initiate(completion_handler<system::error_code, std::size_t> handler) final;
     ~send_op() = default;
    private:
     asio::basic_seq_packet_socket<protocol_type, executor> & socket_;
   };
 
-  struct [[nodiscard]] receive_op final : op<system::error_code, std::size_t>
+  struct BOOST_COBALT_IO_DECL receive_op final : op<system::error_code, std::size_t>
   {
     message_flags in_flags, *out_flags;
     mutable_buffer_sequence buffer;
@@ -52,23 +51,22 @@ struct BOOST_SYMBOL_VISIBLE seq_packet_socket final : socket
                mutable_buffer_sequence buffer, asio::basic_seq_packet_socket<protocol_type, executor> & seq_packet_socket)
     : in_flags(in_flags), out_flags(out_flags), buffer(buffer), socket_(seq_packet_socket) {}
 
-    BOOST_COBALT_IO_DECL
     void initiate(completion_handler<system::error_code, std::size_t> handler) final;
     ~receive_op() = default;
    private:
     asio::basic_seq_packet_socket<protocol_type, executor> & socket_;
   };
 
-  receive_op receive(message_flags in_flags, message_flags& out_flags, mutable_buffer_sequence buffer)
+  [[nodiscard]] receive_op receive(message_flags in_flags, message_flags& out_flags, mutable_buffer_sequence buffer)
   {
     return receive_op{in_flags, &out_flags, buffer, seq_packet_socket_};
   }
 
-  send_op send(message_flags in_flags, const_buffer_sequence buffer)
+  [[nodiscard]] send_op send(message_flags in_flags, const_buffer_sequence buffer)
   {
     return send_op{in_flags, buffer, seq_packet_socket_};
   }
-  receive_op receive(message_flags in_flags, mutable_buffer_sequence buffer)
+  [[nodiscard]] receive_op receive(message_flags in_flags, mutable_buffer_sequence buffer)
   {
     return receive_op{in_flags, nullptr, buffer, seq_packet_socket_};
   }

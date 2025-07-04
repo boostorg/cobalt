@@ -34,11 +34,11 @@ struct BOOST_SYMBOL_VISIBLE stream_file : file, stream
                                 const cobalt::executor & executor = this_thread::get_executor());
   BOOST_COBALT_IO_DECL stream_file(stream_file && sf) noexcept;
 
-  write_op write_some(const_buffer_sequence buffer)
+  [[nodiscard]] write_op write_some(const_buffer_sequence buffer)
   {
     return {buffer, this, initiate_write_some_};
   }
-  read_op read_some(mutable_buffer_sequence buffer)
+  [[nodiscard]] read_op read_some(mutable_buffer_sequence buffer)
   {
     return {buffer, this, initiate_read_some_};
   }

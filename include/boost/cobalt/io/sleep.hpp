@@ -15,10 +15,10 @@
 namespace boost::cobalt::detail::io
 {
 
-struct BOOST_SYMBOL_VISIBLE steady_sleep final : op<system::error_code>
+struct BOOST_COBALT_IO_DECL steady_sleep final : op<system::error_code>
 {
-  BOOST_COBALT_IO_DECL steady_sleep(const std::chrono::steady_clock::time_point & tp);
-  BOOST_COBALT_IO_DECL steady_sleep(const std::chrono::steady_clock::duration & du);
+  steady_sleep(const std::chrono::steady_clock::time_point & tp);
+  steady_sleep(const std::chrono::steady_clock::duration & du);
 
   std::chrono::steady_clock::time_point tp;
 
@@ -27,17 +27,16 @@ struct BOOST_SYMBOL_VISIBLE steady_sleep final : op<system::error_code>
     if (tp < std::chrono::steady_clock::now())
       h({});
   }
-  BOOST_COBALT_IO_DECL void initiate(completion_handler<system::error_code> h) final override;
+  void initiate(completion_handler<system::error_code> h) final override;
   ~steady_sleep() = default;
 
   std::optional< asio::basic_waitable_timer<std::chrono::steady_clock, asio::wait_traits<std::chrono::steady_clock>, executor> > timer_;
 };
 
-struct BOOST_SYMBOL_VISIBLE system_sleep final : op<system::error_code>
+struct BOOST_COBALT_IO_DECL system_sleep final : op<system::error_code>
 {
-  BOOST_COBALT_IO_DECL system_sleep(const std::chrono::system_clock::time_point & tp);
-  BOOST_COBALT_IO_DECL system_sleep(const std::chrono::system_clock::duration & du);
-
+  system_sleep(const std::chrono::system_clock::time_point & tp);
+  system_sleep(const std::chrono::system_clock::duration & du);
 
   std::chrono::system_clock::time_point tp;
 
@@ -47,7 +46,7 @@ struct BOOST_SYMBOL_VISIBLE system_sleep final : op<system::error_code>
       h({});
   }
 
-  BOOST_COBALT_IO_DECL void initiate(completion_handler<system::error_code> h) final override;
+  void initiate(completion_handler<system::error_code> h) final override;
   ~system_sleep() = default;
 
   std::optional<asio::basic_waitable_timer<std::chrono::system_clock, asio::wait_traits<std::chrono::system_clock>, executor> > timer_;

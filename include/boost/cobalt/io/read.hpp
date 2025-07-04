@@ -16,13 +16,13 @@
 namespace boost::cobalt::io
 {
 
-struct BOOST_SYMBOL_VISIBLE read_all final : op<system::error_code, std::size_t>
+struct BOOST_COBALT_IO_DECL read_all final : op<system::error_code, std::size_t>
 {
   read_op step;
   read_all(read_op op) : step(op) {}
   ~read_all() = default;
 
-  BOOST_COBALT_IO_DECL void initiate(completion_handler<system::error_code, std::size_t>) final;
+   void initiate(completion_handler<system::error_code, std::size_t>) final;
 };
 
 template<typename Stream>
@@ -31,19 +31,19 @@ template<typename Stream>
     {str.read_some(buffer)} -> std::same_as<read_op>;
   }
 BOOST_COBALT_MSVC_NOINLINE
-read_all read(Stream & str, mutable_buffer_sequence buffer)
+[[nodiscard]] read_all read(Stream & str, mutable_buffer_sequence buffer)
 {
   return read_all{str.read_some(buffer)};
 }
 
 
-struct BOOST_SYMBOL_VISIBLE read_all_at  final : op<system::error_code, std::size_t>
+struct BOOST_COBALT_IO_DECL read_all_at  final : op<system::error_code, std::size_t>
 {
   read_at_op step;
   read_all_at(read_at_op op) : step(op) {}
   ~read_all_at() = default;
 
-  BOOST_COBALT_IO_DECL void initiate(completion_handler<system::error_code, std::size_t>) final;
+  void initiate(completion_handler<system::error_code, std::size_t>) final;
 };
 
 template<typename Stream>
@@ -52,7 +52,7 @@ requires requires (Stream & str, std::uint64_t offset,  mutable_buffer_sequence 
   {str.read_some_at(offset, buffer)} -> std::same_as<read_at_op>;
 }
 BOOST_COBALT_MSVC_NOINLINE
-read_all_at read_at(Stream & str, std::uint64_t offset, mutable_buffer_sequence buffer)
+[[nodiscard]] read_all_at read_at(Stream & str, std::uint64_t offset, mutable_buffer_sequence buffer)
 {
   return read_all_at{str.read_some_at(offset, buffer)};
 }
