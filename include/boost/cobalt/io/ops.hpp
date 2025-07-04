@@ -48,6 +48,7 @@ struct [[nodiscard]] write_op final : op<system::error_code, std::size_t>
     if (try_implementation_)
         try_implementation_(this_, buffer, std::move(handler));
   }
+  ~write_op() = default;
 
  private:
   void *this_;
@@ -84,6 +85,7 @@ struct [[nodiscard]] read_op final : op<system::error_code, std::size_t>
     if (try_implementation_)
         try_implementation_(this_, buffer, std::move(handler));
   }
+  ~read_op() = default;
 
  private:
   void *this_;
@@ -122,7 +124,7 @@ struct [[nodiscard]] write_at_op final : op<system::error_code, std::size_t>
     if (try_implementation_)
         try_implementation_(this_, offset, buffer, std::move(handler));
   }
-
+  ~write_at_op() = default;
  private:
   void *this_;
   implementation_t *implementation_;
@@ -160,7 +162,7 @@ struct [[nodiscard]] read_at_op final : op<system::error_code, std::size_t>
     if (try_implementation_)
         try_implementation_(this_, offset, buffer, std::move(handler));
   }
-
+  ~read_at_op() = default;
  private:
   void *this_;
   implementation_t *implementation_;
@@ -193,6 +195,7 @@ struct [[nodiscard]] wait_op final : op<system::error_code>
     if (try_implementation_)
       try_implementation_(this_, std::move(handler));
   }
+  ~wait_op() = default;
 
  private:
   void *this_;

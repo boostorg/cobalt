@@ -38,6 +38,7 @@ struct BOOST_SYMBOL_VISIBLE seq_packet_socket final : socket
 
     BOOST_COBALT_IO_DECL
     void initiate(completion_handler<system::error_code, std::size_t> handler) final;
+    ~send_op() = default;
    private:
     asio::basic_seq_packet_socket<protocol_type, executor> & socket_;
   };
@@ -53,6 +54,7 @@ struct BOOST_SYMBOL_VISIBLE seq_packet_socket final : socket
 
     BOOST_COBALT_IO_DECL
     void initiate(completion_handler<system::error_code, std::size_t> handler) final;
+    ~receive_op() = default;
    private:
     asio::basic_seq_packet_socket<protocol_type, executor> & socket_;
   };

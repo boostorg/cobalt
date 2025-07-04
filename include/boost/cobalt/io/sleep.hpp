@@ -28,6 +28,7 @@ struct BOOST_SYMBOL_VISIBLE steady_sleep final : op<system::error_code>
       h({});
   }
   BOOST_COBALT_IO_DECL void initiate(completion_handler<system::error_code> h) final override;
+  ~steady_sleep() = default;
 
   std::optional< asio::basic_waitable_timer<std::chrono::steady_clock, asio::wait_traits<std::chrono::steady_clock>, executor> > timer_;
 };
@@ -47,6 +48,7 @@ struct BOOST_SYMBOL_VISIBLE system_sleep final : op<system::error_code>
   }
 
   BOOST_COBALT_IO_DECL void initiate(completion_handler<system::error_code> h) final override;
+  ~system_sleep() = default;
 
   std::optional<asio::basic_waitable_timer<std::chrono::system_clock, asio::wait_traits<std::chrono::system_clock>, executor> > timer_;
 };

@@ -38,6 +38,7 @@ struct BOOST_SYMBOL_VISIBLE resolver
     resolve_op_(asio::ip::basic_resolver<protocol_type, executor> & resolver,
                 std::string_view host, std::string_view service, flags flags_ = {})
         : resolver_(resolver), host_(host), service_(service), flags_(flags_) {}
+    ~resolve_op_() = default;
    private:
     asio::ip::basic_resolver<protocol_type, executor> & resolver_;
     std::string_view host_;
@@ -56,14 +57,14 @@ struct BOOST_SYMBOL_VISIBLE resolver
   asio::ip::basic_resolver<protocol_type, executor> resolver_;
 };
 
-struct BOOST_SYMBOL_VISIBLE lookup : op<system::error_code, endpoint_sequence>
+struct BOOST_SYMBOL_VISIBLE lookup final : op<system::error_code, endpoint_sequence>
 {
   lookup(std::string_view host, std::string_view service,
          const executor & exec = this_thread::get_executor(),
          resolver::flags flags_ = {})
       : host_(host), service_(service), resolver_{exec}, flags_{flags_} {}
   BOOST_COBALT_IO_DECL void initiate(completion_handler<system::error_code, endpoint_sequence> h) final override;
-
+  ~lookup() = default;
  private:
   std::string_view host_;
   std::string_view service_;
