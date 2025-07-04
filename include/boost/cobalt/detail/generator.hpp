@@ -216,7 +216,7 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
       if (ex)
         return h;
 
-      if constexpr (requires (Promise p) {p.get_cancellation_slot();})
+      if constexpr (requires {h.promise().get_cancellation_slot();})
         if ((cl = h.promise().get_cancellation_slot()).is_connected())
           cl.emplace<forward_cancellation>(*self->cancel_signal);
 

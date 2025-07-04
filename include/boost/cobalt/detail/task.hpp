@@ -179,12 +179,12 @@ struct task_receiver : task_value_holder<T>
       if (self->done) // ok, so we're actually done already, so noop
         return std::coroutine_handle<void>::from_address(h.address());
 
-      if constexpr (requires (Promise p) {p.get_cancellation_slot();})
+      if constexpr (requires {h.promise().get_cancellation_slot();})
         if ((cl = h.promise().get_cancellation_slot()).is_connected())
           cl.emplace<forward_cancellation>(self->promise->signal);
 
 
-      if constexpr (requires (Promise p) {p.get_executor();})
+      if constexpr (requires {h.promise().get_executor();})
         self->promise->exec.emplace(h.promise().get_executor());
       else
         self->promise->exec.emplace(this_thread::get_executor());

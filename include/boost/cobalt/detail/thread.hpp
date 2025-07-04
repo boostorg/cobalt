@@ -142,7 +142,7 @@ struct thread_awaitable
     if (state_->done)
       return false;
 
-    if constexpr (requires (Promise p) {p.get_cancellation_slot();})
+    if constexpr (requires {h.promise().get_cancellation_slot();})
       if ((cl = h.promise().get_cancellation_slot()).is_connected())
       {
         cl.assign(

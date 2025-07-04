@@ -138,12 +138,12 @@ template<typename T>
 template<typename Promise>
 auto with_impl<T>::await_suspend(std::coroutine_handle<Promise> h) -> std::coroutine_handle<promise_type>
 {
-    if constexpr (requires (Promise p) {p.get_executor();})
+    if constexpr (requires {h.promise().get_executor();})
         promise.exec.emplace(h.promise().get_executor());
     else
         promise.exec.emplace(this_thread::get_executor());
 
-    if constexpr (requires (Promise p) {p.get_cancellation_slot();})
+    if constexpr (requires {h.promise().get_cancellation_slot();})
         promise.slot_ = h.promise().get_cancellation_slot();
 
     promise.awaited_from = h;
