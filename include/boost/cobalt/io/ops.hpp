@@ -20,7 +20,7 @@
 namespace boost::cobalt::io
 {
 
-struct [[nodiscard]] write_op final : op<system::error_code, std::size_t>
+struct BOOST_COBALT_IO_DECL write_op final : op<system::error_code, std::size_t>
 {
   const_buffer_sequence buffer;
 
@@ -57,7 +57,7 @@ struct [[nodiscard]] write_op final : op<system::error_code, std::size_t>
 };
 
 
-struct [[nodiscard]] read_op final : op<system::error_code, std::size_t>
+struct BOOST_COBALT_IO_DECL read_op final : op<system::error_code, std::size_t>
 {
   mutable_buffer_sequence buffer;
 
@@ -94,7 +94,7 @@ struct [[nodiscard]] read_op final : op<system::error_code, std::size_t>
 };
 
 
-struct [[nodiscard]] write_at_op final : op<system::error_code, std::size_t>
+struct BOOST_COBALT_IO_DECL write_at_op final : op<system::error_code, std::size_t>
 {
   std::uint64_t offset;
   const_buffer_sequence buffer;
@@ -132,7 +132,7 @@ struct [[nodiscard]] write_at_op final : op<system::error_code, std::size_t>
 };
 
 
-struct [[nodiscard]] read_at_op final : op<system::error_code, std::size_t>
+struct BOOST_COBALT_IO_DECL read_at_op final : op<system::error_code, std::size_t>
 {
   std::uint64_t offset;
   mutable_buffer_sequence buffer;
@@ -170,7 +170,7 @@ struct [[nodiscard]] read_at_op final : op<system::error_code, std::size_t>
 };
 
 
-struct [[nodiscard]] wait_op final : op<system::error_code>
+struct BOOST_COBALT_IO_DECL wait_op final : op<system::error_code>
 {
   using     implementation_t = void(void*, completion_handler<system::error_code>);
   using try_implementation_t = void(void*,            handler<system::error_code>);

@@ -30,9 +30,8 @@ struct BOOST_SYMBOL_VISIBLE resolver
   void cancel();
 
  private:
-  struct [[nodiscard]] resolve_op_ final : op<system::error_code, endpoint_sequence>
+  struct BOOST_COBALT_IO_DECL resolve_op_ final : op<system::error_code, endpoint_sequence>
   {
-    BOOST_COBALT_IO_DECL
     void initiate(completion_handler<system::error_code, endpoint_sequence> h) override;
 
     resolve_op_(asio::ip::basic_resolver<protocol_type, executor> & resolver,
@@ -57,13 +56,14 @@ struct BOOST_SYMBOL_VISIBLE resolver
   asio::ip::basic_resolver<protocol_type, executor> resolver_;
 };
 
-struct BOOST_SYMBOL_VISIBLE lookup final : op<system::error_code, endpoint_sequence>
+struct BOOST_COBALT_IO_DECL lookup final : op<system::error_code, endpoint_sequence>
 {
   lookup(std::string_view host, std::string_view service,
          const executor & exec = this_thread::get_executor(),
          resolver::flags flags_ = {})
       : host_(host), service_(service), resolver_{exec}, flags_{flags_} {}
-  BOOST_COBALT_IO_DECL void initiate(completion_handler<system::error_code, endpoint_sequence> h) final override;
+
+  void initiate(completion_handler<system::error_code, endpoint_sequence> h) final override;
   ~lookup() = default;
  private:
   std::string_view host_;

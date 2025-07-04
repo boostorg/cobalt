@@ -84,13 +84,10 @@ struct BOOST_SYMBOL_VISIBLE socket
   [[nodiscard]] BOOST_COBALT_IO_DECL system::result<void> set_no_delay(bool reuse_address);
   [[nodiscard]] BOOST_COBALT_IO_DECL system::result<bool> get_no_delay() const;
 
-  struct [[nodiscard]] wait_op final : op<system::error_code>
+  struct BOOST_COBALT_IO_DECL wait_op final : op<system::error_code>
   {
     wait_type wt;
-
-    BOOST_COBALT_IO_DECL
     void ready(boost::cobalt::handler<system::error_code>) final;
-    BOOST_COBALT_IO_DECL
     void initiate(boost::cobalt::completion_handler<system::error_code>) final;
 
     wait_op(wait_type wt, socket & sock) :
@@ -100,16 +97,15 @@ struct BOOST_SYMBOL_VISIBLE socket
     socket & sock_;
 
   };
-  wait_op     wait(wait_type wt = wait_type::wait_read)
+  [[nodiscard]]  wait_op wait(wait_type wt = wait_type::wait_read)
   {
     return {wt, *this};
   }
 
-  struct [[nodiscard]] connect_op final : op<system::error_code>
+  struct BOOST_COBALT_IO_DECL connect_op final : op<system::error_code>
   {
     struct endpoint endpoint;
 
-    BOOST_COBALT_IO_DECL
     void initiate(boost::cobalt::completion_handler<system::error_code>) final;
 
     connect_op(struct endpoint endpoint, socket & socket) :
@@ -118,17 +114,17 @@ struct BOOST_SYMBOL_VISIBLE socket
    private:
     socket & sock_;
   };
-  connect_op connect(endpoint ep)
+
+  [[nodiscard]] connect_op connect(endpoint ep)
   {
     return {ep, *this};
   }
 
 
-  struct [[nodiscard]] ranged_connect_op final : op<system::error_code, endpoint>
+  struct BOOST_COBALT_IO_DECL ranged_connect_op final : op<system::error_code, endpoint>
   {
     endpoint_sequence endpoints;
 
-    BOOST_COBALT_IO_DECL
     void initiate(boost::cobalt::completion_handler<system::error_code, endpoint>) final;
 
     ranged_connect_op(endpoint_sequence eps, socket & socket) :
@@ -137,7 +133,7 @@ struct BOOST_SYMBOL_VISIBLE socket
    private:
     socket & sock_;
   };
-  ranged_connect_op connect(endpoint_sequence ep)
+  [[nodiscard]] ranged_connect_op connect(endpoint_sequence ep)
   {
     return {std::move(ep), *this};
   }

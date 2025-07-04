@@ -30,9 +30,8 @@ struct BOOST_SYMBOL_VISIBLE signal_set
 
 
  private:
-  struct [[nodiscard]] wait_op_ final : cobalt::op<system::error_code, int>
+  struct BOOST_COBALT_IO_DECL wait_op_ final : cobalt::op<system::error_code, int>
   {
-    BOOST_COBALT_IO_DECL
     void initiate(completion_handler<system::error_code, int> h) final;
     wait_op_(asio::basic_signal_set<cobalt::executor> & signal_set) : signal_set_(signal_set) {}
     ~wait_op_() = default;

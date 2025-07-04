@@ -26,11 +26,11 @@ struct BOOST_SYMBOL_VISIBLE datagram_socket final : socket
   BOOST_COBALT_IO_DECL datagram_socket(endpoint ep,
                   const cobalt::executor & executor = this_thread::get_executor());
 
-  write_op send(const_buffer_sequence buffer)
+  [[nodiscard]]  write_op send(const_buffer_sequence buffer)
   {
     return {buffer, this, initiate_send_};
   }
-  read_op receive(mutable_buffer_sequence buffer)
+  [[nodiscard]] read_op receive(mutable_buffer_sequence buffer)
   {
     return {buffer, this, initiate_receive_};
   }
