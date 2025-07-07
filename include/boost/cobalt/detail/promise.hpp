@@ -259,8 +259,8 @@ struct promise_receiver : promise_value_holder<T>
     }
   };
 
-  promise_receiver  **reference;
-  asio::cancellation_signal * cancel_signal;
+  promise_receiver  **reference = nullptr;
+  asio::cancellation_signal * cancel_signal= nullptr;
 
   awaitable get_awaitable() {return awaitable{this};}
 

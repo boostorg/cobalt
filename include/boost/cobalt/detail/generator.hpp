@@ -155,8 +155,8 @@ struct generator_receiver : generator_receiver_base<Yield, Push>
     return *this;
   }
 
-  generator_receiver  **reference;
-  asio::cancellation_signal * cancel_signal;
+  generator_receiver  **reference = nullptr;
+  asio::cancellation_signal * cancel_signal = nullptr;
 
   using yield_awaitable = generator_yield_awaitable<Yield, Push>;
 
