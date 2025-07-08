@@ -41,9 +41,9 @@ struct with_promise_value
       result.emplace(std::move(*value));
   }
 
-  T get_result()
+  std::optional<T> get_result()
   {
-    return std::move(result).value();
+    return std::move(result);
   }
 };
 
@@ -117,12 +117,12 @@ template<typename T>
 T with_impl<T>::await_resume()
 {
     auto e = promise.e;
-    auto res = std::move(promise.get_result());
+    auto res = promise.get_result();
     std::coroutine_handle<promise_type>::from_promise(promise).destroy();
     if (e)
         std::rethrow_exception(e);
 
-    return std::move(res);
+    return *std::move(res);
 }
 
 template<>

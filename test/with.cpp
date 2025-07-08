@@ -91,8 +91,9 @@ CO_TEST_CASE(async)
     BOOST_CHECK_THROW(
             co_await boost::cobalt::with (
                     &ft,
-                    [](finalizer_test * ) -> boost::cobalt::promise<void>
+                    [](finalizer_test * t) -> boost::cobalt::promise<void>
                     {
+                      co_await asio::post(t->exec);
                       throw std::runtime_error("42");
                       co_return;
                     },
@@ -143,6 +144,48 @@ CO_TEST_CASE(async_int)
           }));
 
   BOOST_CHECK(ft.e == nullptr);
+}
+
+
+CO_TEST_CASE(sync_int_throw)
+{
+  finalizer_test ft{co_await boost::cobalt::this_coro::executor};
+
+  BOOST_CHECK_THROW(
+              co_await boost::cobalt::with (
+                  &ft,
+                  [](finalizer_test *)
+                  {
+                    throw std::runtime_error("test");
+                    return 23;
+                  },
+                  [](finalizer_test * ft, std::exception_ptr &e)
+                  {
+                    return ft->exit(e);
+                  }), std::runtime_error);
+
+
+  BOOST_CHECK(ft.e != nullptr);
+}
+
+CO_TEST_CASE(async_int_throw)
+{
+  finalizer_test ft{co_await boost::cobalt::this_coro::executor};
+
+  BOOST_CHECK_THROW(
+      co_await boost::cobalt::with (
+          &ft,
+          [](finalizer_test * ) -> boost::cobalt::promise<int>
+          {
+            throw std::runtime_error("test");
+            co_return 42;
+          },
+          [](finalizer_test * ft, std::exception_ptr &e)
+          {
+            return ft->exit(e);
+          }), std::runtime_error);
+
+  BOOST_CHECK(ft.e != nullptr);
 }
 
 
