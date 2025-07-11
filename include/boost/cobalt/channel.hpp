@@ -33,6 +33,7 @@ struct channel
 {
   // end::outline[]
 #if defined(BOOST_COBALT_NO_PMR)
+  explicit
   channel(std::size_t limit = 0u,
           executor executor = this_thread::get_executor());
 #else
@@ -153,6 +154,7 @@ struct channel
   boost::intrusive::list<read_op,  intrusive::constant_time_size<false> > read_queue_;
   boost::intrusive::list<write_op, intrusive::constant_time_size<false> > write_queue_;
  public:
+  BOOST_COBALT_MSVC_NOINLINE
   read_op   read(const boost::source_location & loc = BOOST_CURRENT_LOCATION)  {return  read_op{{}, this, loc}; }
 
   BOOST_COBALT_MSVC_NOINLINE
