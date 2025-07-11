@@ -34,6 +34,7 @@ if (NOT BOOST_COBALT_IS_ROOT)
             src/detail/exception.cpp
             src/detail/util.cpp
             src/channel.cpp
+            src/ring_buffer.cpp
             src/error.cpp
             src/main.cpp
             src/this_thread.cpp
@@ -186,6 +187,7 @@ else()
                 src/detail/util.cpp
                 src/error.cpp
                 src/channel.cpp
+                src/ring_buffer.cpp
                 src/main.cpp
                 src/this_thread.cpp
                 src/thread.cpp)
