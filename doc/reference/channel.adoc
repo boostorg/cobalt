@@ -54,7 +54,7 @@ generator<variant2::variant<int, double>> merge(
     channel<double> & c2)
 {
     while (c1 && c2)
-       co_yield co_await race(c1, c2);
+       co_yield co_await race(c1.read(), c2.read());
 }
 ----
 
