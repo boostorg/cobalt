@@ -15,7 +15,7 @@ namespace boost::cobalt::detail
 
 std::exception_ptr moved_from_exception()
 {
-  static auto ep = std::make_exception_ptr(system::error_code(
+   static auto ep = std::make_exception_ptr(system::system_error(
       error::moved_from
       ));
   return ep;
@@ -24,7 +24,7 @@ std::exception_ptr moved_from_exception()
 std::exception_ptr detached_exception()
 {
 
-  static auto ep = std::make_exception_ptr(system::error_code(
+  static auto ep = std::make_exception_ptr(system::system_error(
         error::detached
       ));
   return ep;
@@ -33,7 +33,7 @@ std::exception_ptr detached_exception()
 std::exception_ptr completed_unexpected()
 {
 
-  static auto ep = std::make_exception_ptr(system::error_code(
+  static auto ep = std::make_exception_ptr(system::system_error(
           error::completed_unexpected
       ));
   return ep;
@@ -41,7 +41,7 @@ std::exception_ptr completed_unexpected()
 
 std::exception_ptr wait_not_ready()
 {
-  static auto ep = std::make_exception_ptr(system::error_code(
+  static auto ep = std::make_exception_ptr(system::system_error(
           error::wait_not_ready
       ));
   return ep;
@@ -49,7 +49,7 @@ std::exception_ptr wait_not_ready()
 
 std::exception_ptr already_awaited()
 {
-  static auto ep = std::make_exception_ptr(system::error_code(
+  static auto ep = std::make_exception_ptr(system::system_error(
         error::already_awaited
     ));
   return ep;
@@ -58,7 +58,7 @@ std::exception_ptr already_awaited()
 
 std::exception_ptr allocation_failed()
 {
-  static auto ep = std::make_exception_ptr(system::error_code(
+  static auto ep = std::make_exception_ptr(system::system_error(
       error::already_awaited
   ));
   return ep;
