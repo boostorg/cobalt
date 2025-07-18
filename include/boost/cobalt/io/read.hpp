@@ -30,8 +30,8 @@ template<typename Stream>
   {
     {str.read_some(buffer)} -> std::same_as<read_op>;
   }
-BOOST_COBALT_MSVC_NOINLINE
-[[nodiscard]] read_all read(Stream & str, mutable_buffer_sequence buffer)
+[[nodiscard]] BOOST_COBALT_MSVC_NOINLINE
+read_all read(Stream & str, mutable_buffer_sequence buffer)
 {
   return read_all{str.read_some(buffer)};
 }
@@ -51,8 +51,8 @@ requires requires (Stream & str, std::uint64_t offset,  mutable_buffer_sequence 
 {
   {str.read_some_at(offset, buffer)} -> std::same_as<read_at_op>;
 }
-BOOST_COBALT_MSVC_NOINLINE
-[[nodiscard]] read_all_at read_at(Stream & str, std::uint64_t offset, mutable_buffer_sequence buffer)
+[[nodiscard]] BOOST_COBALT_MSVC_NOINLINE
+read_all_at read_at(Stream & str, std::uint64_t offset, mutable_buffer_sequence buffer)
 {
   return read_all_at{str.read_some_at(offset, buffer)};
 }

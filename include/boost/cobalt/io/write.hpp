@@ -30,7 +30,7 @@ template<typename Stream>
   {
     {str.write_some(buffer)} -> std::same_as<write_op>;
   }
-BOOST_COBALT_MSVC_NOINLINE
+[[nodiscard]] BOOST_COBALT_MSVC_NOINLINE
 write_all write(Stream & str, const_buffer_sequence buffer)
 {
   return write_all{str.write_some(buffer)};
@@ -50,7 +50,7 @@ requires requires (Stream & str, std::uint64_t offset, const_buffer_sequence buf
 {
   {str.write_some_at(offset, buffer)} -> std::same_as<write_op>;
 }
-BOOST_COBALT_MSVC_NOINLINE
+[[nodiscard]] BOOST_COBALT_MSVC_NOINLINE
 write_all_at write_at(Stream & str, std::uint64_t offset, const_buffer_sequence buffer)
 {
   return write_all_at{str.write_some_at(offset, buffer)};
