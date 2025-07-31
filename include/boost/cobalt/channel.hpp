@@ -181,7 +181,7 @@ struct channel
   BOOST_COBALT_MSVC_NOINLINE
   write_op write(      T  &  value, const boost::source_location & loc = BOOST_CURRENT_LOCATION)
   {
-    return write_op{{}, this, &value, loc};
+    return write_op{{}, this, &static_cast<const T&>(value), loc};
   }
   /*
   // tag::outline[]
