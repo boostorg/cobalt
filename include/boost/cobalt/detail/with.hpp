@@ -18,7 +18,7 @@ struct [[nodiscard]] with_impl
 {
     struct promise_type;
 
-    bool await_ready() { return false;}
+    bool await_ready() const { return false;}
 
     template<typename Promise>
     BOOST_COBALT_MSVC_NOINLINE

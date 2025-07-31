@@ -33,6 +33,7 @@ struct channel
 {
   // end::outline[]
 #if defined(BOOST_COBALT_NO_PMR)
+  explicit
   channel(std::size_t limit = 0u,
           executor executor = this_thread::get_executor());
 #else
@@ -96,7 +97,7 @@ struct channel
     }
 
     struct cancel_impl;
-    bool await_ready() { return !chn->buffer_.empty() || chn->is_closed_; }
+    bool await_ready() const noexcept{ return !chn->buffer_.empty() || chn->is_closed_; }
     template<typename Promise>
     BOOST_COBALT_MSVC_NOINLINE
     std::coroutine_handle<void> await_suspend(std::coroutine_handle<Promise> h);
@@ -140,7 +141,7 @@ struct channel
 
     struct cancel_impl;
 
-    bool await_ready() { return !chn->buffer_.full() || chn->is_closed_; }
+    bool await_ready() const noexcept { return !chn->buffer_.full() || chn->is_closed_; }
     template<typename Promise>
     BOOST_COBALT_MSVC_NOINLINE
     std::coroutine_handle<void> await_suspend(std::coroutine_handle<Promise> h);
@@ -153,6 +154,7 @@ struct channel
   boost::intrusive::list<read_op,  intrusive::constant_time_size<false> > read_queue_;
   boost::intrusive::list<write_op, intrusive::constant_time_size<false> > write_queue_;
  public:
+  BOOST_COBALT_MSVC_NOINLINE
   read_op   read(const boost::source_location & loc = BOOST_CURRENT_LOCATION)  {return  read_op{{}, this, loc}; }
 
   BOOST_COBALT_MSVC_NOINLINE
@@ -179,7 +181,7 @@ struct channel
   BOOST_COBALT_MSVC_NOINLINE
   write_op write(      T  &  value, const boost::source_location & loc = BOOST_CURRENT_LOCATION)
   {
-    return write_op{{}, this, &value, loc};
+    return write_op{{}, this, &static_cast<const T&>(value), loc};
   }
   /*
   // tag::outline[]
@@ -257,7 +259,7 @@ struct channel<void>
     }
 
     struct cancel_impl;
-    bool await_ready()
+    bool await_ready() const noexcept
     {
       return (chn->n_ > 0) || chn->is_closed_;
     }
@@ -298,7 +300,7 @@ struct channel<void>
     }
 
     struct cancel_impl;
-    bool await_ready()
+    bool await_ready() const noexcept
     {
       return chn->n_ < chn->limit_ || chn->is_closed_;
     }

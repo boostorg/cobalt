@@ -40,6 +40,7 @@ alias cobalt_sources
      channel.cpp
      error.cpp
      main.cpp
+     ring_buffer.cpp
      this_thread.cpp
      thread.cpp
    ;

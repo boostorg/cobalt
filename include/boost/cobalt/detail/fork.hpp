@@ -139,7 +139,7 @@ struct fork
     struct final_awaitable
     {
       promise_type * self;
-      bool await_ready() noexcept
+      bool await_ready() const noexcept
       {
         return self->state->use_count != 1u;
       }
