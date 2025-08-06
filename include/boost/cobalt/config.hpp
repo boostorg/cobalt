@@ -32,6 +32,24 @@
 #define BOOST_COBALT_IO_DECL
 #endif
 
+///////////////////////////////////////////////////////////////////////////////
+// enable automatic library variant selection 
+#if !defined(BOOST_COBALT_SOURCE) && !defined(BOOST_ALL_NO_LIB) && \
+    !defined(BOOST_COBALT_NO_LIB)
+
+// Set the name of our library, this will get undef'ed by auto_link.hpp
+// once it's done with it:
+#define BOOST_LIB_NAME boost_cobalt
+// tell the auto-link code to select a dll when required:
+#if defined(BOOST_ALL_DYN_LINK) || defined(BOOST_COBALT_DYN_LINK)
+#  define BOOST_DYN_LINK
+#endif
+
+// And include the header that does the work:
+#include <boost/config/auto_link.hpp>
+
+#endif  // auto-linking disabled
+
 #if _MSC_VER
 #define BOOST_COBALT_MSVC_NOINLINE BOOST_NOINLINE
 #else
