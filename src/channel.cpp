@@ -71,6 +71,11 @@ system::result<void>  channel<void>::read_op::await_resume(const struct as_resul
     if (op.await_ready())
     {
       op.unlink();
+      if (!op.cancelled && !op.closed)
+      {
+        op.direct = true;
+        chn->n_++;
+      }
       BOOST_ASSERT(op.awaited_from);
       asio::post(chn->executor_, std::move(op.awaited_from));
     }

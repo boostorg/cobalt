@@ -193,6 +193,19 @@ system::result<T> channel<T>::read_op::await_resume(const struct as_result_tag &
     if (op.await_ready())
     {
       op.unlink();
+      if (!op.cancelled && !op.closed)
+      {
+        op.direct = true;
+        if constexpr (std::is_copy_constructible_v<T>)
+        {
+          if (op.ref.index() == 0)
+            chn->buffer_.push_back(std::move(*variant2::get<0>(op.ref)));
+          else
+            chn->buffer_.push_back(*variant2::get<1>(op.ref));
+        }
+        else
+          chn->buffer_.push_back(std::move(*op.ref));
+      }
       BOOST_ASSERT(op.awaited_from);
       asio::post(chn->executor_, std::move(op.awaited_from));
     }
