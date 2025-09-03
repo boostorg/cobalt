@@ -39,6 +39,6 @@ explicit
     ;
 
 call-if : boost-library cobalt
-        : install boost_cobalt boost_cobalt_io
+        : install boost_cobalt boost_cobalt_io boost_cobalt_io_ssl
     ;
 
