@@ -50,9 +50,9 @@ struct stream_socket;
 
 struct protocol_type
 {
-  using family_t   = decltype(BOOST_ASIO_OS_DEF(AF_INET));
-  using type_t     = decltype(BOOST_ASIO_OS_DEF(SOCK_STREAM));
-  using protocol_t = decltype(BOOST_ASIO_OS_DEF(IPPROTO_TCP));
+  using family_t   = int;
+  using type_t     = int;
+  using protocol_t = int;
 
   constexpr family_t     family() const noexcept {return family_;};
   constexpr type_t         type() const noexcept {return type_;};
@@ -90,9 +90,9 @@ struct protocol_type
   protocol_t protocol_ = static_cast<protocol_t>(0);
 };
 
-template<auto Family   = static_cast<protocol_type::family_t>(0),
-         auto Type     = static_cast<protocol_type::type_t>(0),
-         auto Protocol = static_cast<protocol_type::protocol_t>(0)>
+template<protocol_type::family_t Family     = static_cast<protocol_type::family_t>(0),
+         protocol_type::type_t Type         = static_cast<protocol_type::type_t>(0),
+         protocol_type::protocol_t Protocol = static_cast<protocol_type::protocol_t>(0)>
 struct static_protocol
 {
   using family_t   = protocol_type::family_t  ;
