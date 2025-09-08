@@ -62,7 +62,7 @@ struct enable_awaitables
 template <typename T>
 concept with_get_executor = requires (T& t)
 {
-  {t.get_executor()} -> asio::execution::executor;
+  t.get_executor();
 };
 
 
