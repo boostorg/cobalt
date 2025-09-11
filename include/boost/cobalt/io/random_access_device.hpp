@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_COBALT_IO_STREAM_HPP
-#define BOOST_COBALT_IO_STREAM_HPP
+#ifndef BOOST_COBALT_IO_RANDOM_ACCESS_DEVICE_HPP
+#define BOOST_COBALT_IO_RANDOM_ACCESS_DEVICE_HPP
 
 #include <boost/cobalt/io/buffer.hpp>
 #include <boost/cobalt/io/ops.hpp>
@@ -34,4 +34,4 @@ struct random_access_device : random_access_read_device, random_access_write_dev
 
 }
 
-#endif //BOOST_COBALT_IO_STREAM_HPP
+#endif //BOOST_COBALT_IO_RANDOM_ACCESS_DEVICE_HPP
