@@ -8,6 +8,7 @@
 #ifndef BOOST_COBALT_IOSOCKET_HPP
 #define BOOST_COBALT_IOSOCKET_HPP
 
+#include <boost/cobalt/io/detail/config.hpp>
 #include <boost/cobalt/io/endpoint.hpp>
 #include <boost/cobalt/io/ops.hpp>
 #include <boost/asio/socket_base.hpp>

@@ -8,6 +8,7 @@
 #ifndef BOOST_COBALT_IO_STREAM_SOCKET_HPP
 #define BOOST_COBALT_IO_STREAM_SOCKET_HPP
 
+#include <boost/cobalt/io/detail/config.hpp>
 #include <boost/cobalt/io/endpoint.hpp>
 #include <boost/cobalt/io/socket.hpp>
 #include <boost/cobalt/io/stream.hpp>

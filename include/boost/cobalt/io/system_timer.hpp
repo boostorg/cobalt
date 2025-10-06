@@ -8,6 +8,7 @@
 #ifndef BOOST_COBALT_IO_SYSTEM_TIMER_HPP
 #define BOOST_COBALT_IO_SYSTEM_TIMER_HPP
 
+#include <boost/cobalt/io/detail/config.hpp>
 #include <boost/cobalt/op.hpp>
 #include <boost/cobalt/io/ops.hpp>
 #include <boost/asio/basic_waitable_timer.hpp>

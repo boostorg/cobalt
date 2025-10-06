@@ -6,8 +6,18 @@
 //
 
 
-#ifndef BOOST_COBALT_SSL_HPP
-#define BOOST_COBALT_SSL_HPP
+#ifndef BOOST_COBALT_IO_SSL_HPP
+#define BOOST_COBALT_IO_SSL_HPP
+
+
+#if !defined(BOOST_COBALT_SSL_SOURCE) && !defined(BOOST_ALL_NO_LIB)  \
+ && !defined(BOOST_COBALT_NO_LIB) && !defined(BOOST_COBALT_IO_SSL_NO_LIB)
+#define BOOST_LIB_NAME boost_cobalt_io_ssl
+#if defined(BOOST_ALL_DYN_LINK) || defined(BOOST_COBALT_DYN_LINK)
+#define BOOST_DYN_LINK
+#endif
+#include <boost/config/auto_link.hpp>
+#endif
 
 #include <boost/cobalt/io/socket.hpp>
 #include <boost/cobalt/io/stream.hpp>
@@ -140,4 +150,5 @@ struct BOOST_SYMBOL_VISIBLE stream final : private detail::stream_impl, socket, 
 
 }
 
-#endif //BOOST_COBALT_SSL_HPP
+#endif //BOOST_COBALT_IO_SSL_HPP
+

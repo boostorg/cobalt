@@ -10,6 +10,7 @@
 
 #include <boost/asio/basic_random_access_file.hpp>
 
+#include <boost/cobalt/io/detail/config.hpp>
 #include <boost/cobalt/config.hpp>
 #include <boost/cobalt/io/buffer.hpp>
 #include <boost/cobalt/io/file.hpp>

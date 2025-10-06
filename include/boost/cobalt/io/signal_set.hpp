@@ -8,6 +8,7 @@
 #ifndef BOOST_COBALT_IO_SIGNAL_SET_HPP
 #define BOOST_COBALT_IO_SIGNAL_SET_HPP
 
+#include <boost/cobalt/io/detail/config.hpp>
 #include <boost/cobalt/op.hpp>
 
 #include <boost/asio/basic_signal_set.hpp>

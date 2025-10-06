@@ -92,4 +92,12 @@ namespace pmr = std::pmr;
 
 }
 
+#if !defined(BOOST_COBALT_SOURCE) && !defined(BOOST_ALL_NO_LIB) && !defined(BOOST_COBALT_NO_LIB)
+#define BOOST_LIB_NAME boost_cobalt
+#if defined(BOOST_ALL_DYN_LINK) || defined(BOOST_COBALT_DYN_LINK)
+#define BOOST_DYN_LINK
+#endif
+#include <boost/config/auto_link.hpp>
+#endif
+
 #endif //BOOST_COBALT_CONFIG_HPP

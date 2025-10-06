@@ -8,6 +8,7 @@
 #ifndef BOOST_COBALT_OPS_HPP
 #define BOOST_COBALT_OPS_HPP
 
+#include <boost/cobalt/io/detail/config.hpp>
 #include <boost/cobalt/config.hpp>
 #include <boost/cobalt/detail/handler.hpp>
 #include <boost/cobalt/io/buffer.hpp>

@@ -8,6 +8,7 @@
 #ifndef BOOST_COBALT_IO_STREAM_HPP
 #define BOOST_COBALT_IO_STREAM_HPP
 
+#include <boost/cobalt/io/detail/config.hpp>
 #include <boost/cobalt/io/buffer.hpp>
 #include <boost/cobalt/io/ops.hpp>
 
