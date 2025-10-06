@@ -10,6 +10,7 @@
 
 #include <boost/asio/basic_file.hpp>
 
+#include <boost/cobalt/io/detail/config.hpp>
 #include <boost/cobalt/config.hpp>
 #include <boost/system/result.hpp>
 

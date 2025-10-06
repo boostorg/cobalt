@@ -9,6 +9,7 @@
 #define BOOST_COBALT_EXPERIMENTAL_IO_ACCEPTOR_HPP
 
 
+#include <boost/cobalt/io/detail/config.hpp>
 #include <boost/cobalt/io/ops.hpp>
 #include <boost/cobalt/io/stream_socket.hpp>
 #include <boost/cobalt/io/seq_packet_socket.hpp>

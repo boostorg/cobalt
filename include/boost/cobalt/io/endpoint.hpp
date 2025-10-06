@@ -8,6 +8,7 @@
 #ifndef BOOST_COBALT_IO_ENDPOINT_HPP
 #define BOOST_COBALT_IO_ENDPOINT_HPP
 
+#include <boost/cobalt/io/detail/config.hpp>
 #include <boost/cobalt/config.hpp>
 #include <boost/cobalt/detail/exception.hpp>
 

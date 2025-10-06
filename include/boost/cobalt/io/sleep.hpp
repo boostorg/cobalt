@@ -8,6 +8,7 @@
 #ifndef BOOST_COBALT_IO_SLEEP_HPP
 #define BOOST_COBALT_IO_SLEEP_HPP
 
+#include <boost/cobalt/io/detail/config.hpp>
 #include <boost/cobalt/io/ops.hpp>
 #include <boost/cobalt/io/steady_timer.hpp>
 #include <boost/cobalt/io/system_timer.hpp>
