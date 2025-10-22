@@ -28,6 +28,12 @@ project : requirements
   <target-os>linux:<linkflags>-lpthread
   : source-location ../src
   : common-requirements <library>$(boost_dependencies)
+    <boost.cobalt.pmr>std:<define>BOOST_COBALT_USE_STD_PMR=1
+    <boost.cobalt.pmr>boost-container:<define>BOOST_COBALT_USE_BOOST_CONTAINER_PMR=1
+    <boost.cobalt.pmr>custom:<define>BOOST_COBALT_USE_CUSTOM_PMR=1
+    <boost.cobalt.pmr>no:<define>BOOST_COBALT_NO_PMR=1
+    <boost.cobalt.executor>use_io_context:<define>BOOST_COBALT_USE_IO_CONTEXT=1
+    <boost.cobalt.executor>custom_executor:<define>BOOST_COBALT_CUSTOM_EXECUTOR=1
 ;
 
 
@@ -60,7 +66,6 @@ lib boost_cobalt
       : <conditional>@set-pmr-std
       : <conditional>@set-pmr-boost
       ]
-    <target-os>windows,<toolset>gcc:<library>ws2_32
    : usage-requirements
      <boost.cobalt.pmr>boost-container:<library>/boost/container//boost_container
      <link>shared:<define>BOOST_COBALT_DYN_LINK=1
