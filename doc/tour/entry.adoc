@@ -35,7 +35,7 @@ int main(int argc, char ** argv[])
 <<task>>:: create a task and run or spawn it
 [source,cpp]
 ----
-cobalt::task<void> my_thread()
+cobalt::task<void> my_task()
 {
    // co_await things here
    co_return;
