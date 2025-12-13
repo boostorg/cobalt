@@ -73,7 +73,7 @@ if (NOT BOOST_COBALT_IS_ROOT)
     endif()
 
     if(MINGW OR CYGWIN)
-        target_link_libraries(boost_cobalt PUBLIC ws2_32)
+        target_link_libraries(boost_cobalt PUBLIC ws2_32 mswsock bcrypt)
     endif()
 
     if (BOOST_COBALT_USE_BOOST_CONTAINER)
@@ -210,7 +210,7 @@ else()
     endif()
 
     if(MINGW OR CYGWIN)
-        target_link_libraries(boost_cobalt PUBLIC ws2_32)
+        target_link_libraries(boost_cobalt PUBLIC ws2_32 mswsock bcrypt)
     endif()
 
     if(BUILD_SHARED_LIBS)
