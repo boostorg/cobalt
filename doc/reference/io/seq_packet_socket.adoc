@@ -1,4 +1,4 @@
-== cobalt/io/socket.hpp
+== cobalt/io/seq_packet_socket.hpp
 
 The socket class for a seq packet socket, e.g. SCTP.
 

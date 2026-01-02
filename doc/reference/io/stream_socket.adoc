@@ -1,4 +1,4 @@
-== cobalt/io/socket.hpp
+== cobalt/io/stream_socket.hpp
 
 The socket class for a stream socket, e.g. TCP.
 
