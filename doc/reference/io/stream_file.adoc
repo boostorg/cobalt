@@ -1,7 +1,7 @@
 == cobalt/io/stream_file.hpp
 
 The `stream_file` provides stream access to file.
-If asio does not support asynchronous file IO the cobalt will fall back on synchronous operations.
+If Asio does not support asynchronous file IO, Cobalt will fall back on synchronous operations.
 
 [source,cpp]
 ----
