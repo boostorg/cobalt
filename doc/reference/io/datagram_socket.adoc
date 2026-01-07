@@ -1,4 +1,4 @@
-== cobalt/io/socket.hpp
+== cobalt/io/datagram_socket.hpp
 
 This socket class implements a datagram socket, such as UDP.
 
