@@ -174,7 +174,7 @@ cobalt::generator<int> my_gen(std::allocator_arg_t, pmr::polymorphic_allocator<v
 ----
 include::../../include/boost/cobalt/generator.hpp[tag=outline]
 ----
-<1> This allows code like `while (gen) co_await gen:`
+<1> This allows code like `while (gen) co_await gen;`
 <2> Supports <<interrupt_await>>
 <3> A cancelled generator maybe be resumable
 

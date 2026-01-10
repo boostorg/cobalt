@@ -1,7 +1,7 @@
 [#main]
 == cobalt/main.hpp
 
-The easiest way to get started with an cobalt application is to use the `co_main` function with the following signature:
+The easiest way to get started with a cobalt application is to use the `co_main` function with the following signature:
 
 [source,cpp]
 ----
@@ -23,13 +23,13 @@ cobalt::main co_main(int argc, char *argv[])
 ----
 <1> get the executor `main` running on
 <2> Use it with an asio object
-<3> `co_await` an cobalt operation
+<3> `co_await` a cobalt operation
 
 The main promise will create an `asio::signal_set` and uses it for cancellation.
 `SIGINT` becomes total , while `SIGTERM` becomes terminal cancellation.
 
 NOTE: The cancellation will not be forwarded to detached coroutines.
-The user will need to take care to end then on cancellation,
+The user will need to take care to end them on cancellation,
 since the program otherwise doesn't allow graceful termination.
 
 === Executor
@@ -42,7 +42,7 @@ It will be assigned to the `cobalt::this_thread::get_executor()` .
 [#main-allocator]
 
 It also creates a memory resource that will be used as a default for internal memory allocations.
-It will be assigned to the `thread_local` to the  `cobalt::this_thread::get_default_resource()`.
+It will be assigned to `cobalt::this_thread::get_default_resource()`.
 
 [#main-promise]
 === Promise

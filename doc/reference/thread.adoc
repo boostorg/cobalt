@@ -15,7 +15,7 @@ cobalt::thread my_thread()
 ----
 <1> get the executor `thread` running on
 <2> Use it with an asio object
-<3> `co_await` an cobalt operation
+<3> `co_await` a cobalt operation
 
 To use a thread you can use it like a `std::thread`:
 
@@ -58,7 +58,7 @@ It will be assigned to the `cobalt::this_thread::get_executor()` .
 [#thread-allocator]
 
 It also creates a memory resource that will be used as a default for internal memory allocations.
-It will be assigned to the `thread_local` to the  `cobalt::this_thread::get_default_resource()`.
+It will be assigned to `cobalt::this_thread::get_default_resource()`.
 
 [#thread-outline]
 === Outline

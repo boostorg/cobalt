@@ -1,4 +1,4 @@
-== Entry into an cobalt environment
+== Entry into a cobalt environment
 
 In order to use <<awaitable, awaitables>> we need to be able to `co_await` them, i.e. be within a coroutine.
 
@@ -24,7 +24,7 @@ cobalt::thread my_thread()
     co_return;
 }
 
-int main(int argc, char ** argv[])
+int main(int argc, char * argv[])
 {
     auto t = my_thread();
     t.join();
@@ -41,7 +41,7 @@ cobalt::task<void> my_thread()
    co_return;
 }
 
-int main(int argc, char ** argv[])
+int main(int argc, char * argv[])
 {
     cobalt::run(my_task()); // sync
     asio::io_context ctx;

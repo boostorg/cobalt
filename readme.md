@@ -2,7 +2,7 @@
 
 This library provides a set of easy to use coroutine primitives & utilities running on top of boost.asio.
 These will be of interest for applications that perform a lot of IO that want to not block unnecessarily,
-yet still want to have linear & readable code (i..e. avoid callbacks).
+yet still want to have linear & readable code (i.e. avoid callbacks).
 
 A minimum of Boost 1.82 is necessary as the ASIO in that version has needed support. C++ 20 is needed for C++ coroutines.
 
@@ -244,7 +244,7 @@ cobalt::promise<void> delay(int ms)
 cobalt::main co_main(int argc, char ** argv)
 {
   auto res = co_await race(delay(100), delay(50));
-  asert(res == 1); // delay(50) completes earlier, delay(100) is not cancelled  
+  assert(res == 1); // delay(50) completes earlier, delay(100) is not cancelled  
   co_return 0u;
 }
 ```

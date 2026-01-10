@@ -20,7 +20,7 @@ cobalt::promise<void> do_wait()
 <1> Wait for a variadic set of <<awaitable, awaitables>>
 <2> wait for a vector of <<awaitable, awaitables>>
 
-The first parameter so `race` can be a https://en.cppreference.com/w/cpp/named_req/UniformRandomBitGenerator::[uniform random bit generator].
+The first parameter so `race` can be a https://en.cppreference.com/w/cpp/named_req/UniformRandomBitGenerator[uniform random bit generator].
 
 
 .Signatures of race

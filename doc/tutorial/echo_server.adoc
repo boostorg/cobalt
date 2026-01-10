@@ -79,5 +79,5 @@ include::../../example/echo_server.cpp[tag=main]
 
 The <<with, with>> function shown above, will run a function with a resource such as <<wait_group, wait_group>>.
 On scope exit `with` will invoke & `co_await` an asynchronous teardown function.
-This will cause all connections to be properly shutdown before `co_main` exists.
+This will cause all connections to be properly shutdown before `co_main` exits.
 

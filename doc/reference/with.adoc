@@ -24,7 +24,7 @@ that returns an <<awaitable, awaitable>> or by providing the teardown as the thi
 
 [source,cpp]
 ----
-using ws_stream = beast::websocket::stream<asio::ip::tcp::socket>>;
+using ws_stream = beast::websocket::stream<asio::ip::tcp::socket>;
 cobalt::promise<ws_stream> connect(urls::url); // <1>
 cobalt::promise<void>   disconnect(ws_stream &ws); // <2>
 

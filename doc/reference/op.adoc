@@ -6,7 +6,7 @@ An operation in `cobalt` is an <<awaitable, awaitable>> wrapping an `asio` opera
 [#use_op]
 === use_op
 
-The `use_op` token is the direct to create an op,
+The `use_op` token is the direct way to create an op,
 i.e. using `cobalt::use_op` as the completion token will create the required awaitable.
 
 [source,cpp]
