@@ -95,6 +95,21 @@ auto serial_port::get_parity() -> system::result<parity>
   return ec ? ec : system::result<parity>(br.value());
 }
 
+system::result<void>     serial_port::set_stop_bits(stop_bits stop_bits)
+{
+  system::error_code ec;
+  serial_port_.set_option(asio::serial_port_base::stop_bits(stop_bits), ec);
+  return ec ? ec : boost::system::result<void>();
+}
+
+auto serial_port::get_stop_bits() -> system::result<stop_bits>
+{
+  system::error_code ec;
+  asio::serial_port_base::stop_bits sb;
+  serial_port_.get_option(sb, ec);
+  return ec ? ec : boost::system::result<stop_bits>(sb.value());
+}
+
 serial_port::serial_port(const cobalt::executor & executor)
     : serial_port_(executor) {}
 serial_port::serial_port(std::string_view device, const cobalt::executor & executor)
