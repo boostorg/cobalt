@@ -46,6 +46,11 @@ struct BOOST_SYMBOL_VISIBLE serial_port final : stream
   [[nodiscard]] BOOST_COBALT_IO_DECL system::result<void>   set_parity(parity rate);
   [[nodiscard]] BOOST_COBALT_IO_DECL system::result<parity> get_parity();
 
+  using stop_bits = asio::serial_port_base::stop_bits::type;
+
+  [[nodiscard]] BOOST_COBALT_IO_DECL system::result<void>      set_stop_bits(stop_bits stop_bits);
+  [[nodiscard]] BOOST_COBALT_IO_DECL system::result<stop_bits> get_stop_bits();
+
   using native_handle_type = typename asio::basic_serial_port<executor>::native_handle_type;
   native_handle_type native_handle() {return serial_port_.native_handle();}
 
