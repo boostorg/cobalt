@@ -20,10 +20,10 @@ namespace boost::cobalt::io
 
 struct BOOST_SYMBOL_VISIBLE socket
 {
-  [[nodiscard]] system::result<void> open(protocol_type prot = protocol_type {});
-  [[nodiscard]] system::result<void> close();
-  [[nodiscard]] system::result<void> cancel();
-  [[nodiscard]] bool is_open() const;
+  [[nodiscard]] BOOST_COBALT_IO_DECL system::result<void> open(protocol_type prot = protocol_type {});
+  [[nodiscard]] BOOST_COBALT_IO_DECL system::result<void> close();
+  [[nodiscard]] BOOST_COBALT_IO_DECL system::result<void> cancel();
+  [[nodiscard]] BOOST_COBALT_IO_DECL bool is_open() const;
 
   // asio acceptor compatibility
   template<typename T>
