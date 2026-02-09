@@ -233,5 +233,5 @@ def main(ctx):
         windows("msvc-14.3 (x32)",      branch, "cppalliance/dronevs2022:latest", variant="release", cxxstd="20", address_model="32"),
         windows("msvc-14.5 (x64)",      branch, "cppalliance/dronevs2026:latest", variant="release", cxxstd="20", address_model="64"),
         windows("msvc-14.5 (x32)",      branch, "cppalliance/dronevs2026:latest", variant="release", cxxstd="20", address_model="32"),
-        windows("clang-win",            branch, "cppalliance/dronevs2026:latest", variant="release", cxxstd="20", toolset='clang')
+        windows("clang-win",            branch, "cppalliance/dronevs2026:latest", variant="release", cxxstd="20", toolset='clang-win')
     ]
