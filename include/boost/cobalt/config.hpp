@@ -32,7 +32,7 @@
 #define BOOST_COBALT_IO_DECL
 #endif
 
-#if BOOST_MSVC
+#if defined(BOOST_MSVC)
 #define BOOST_COBALT_MSVC_NOINLINE BOOST_NOINLINE
 #else
 #define BOOST_COBALT_MSVC_NOINLINE
@@ -44,7 +44,7 @@
 # include <boost/asio/any_io_executor.hpp>
 #endif
 
-#if BOOST_MSVC
+#if defined(BOOST_MSVC) && (BOOST_MSVC < 1950)
 // msvc doesn't correctly suspend for self-deletion, hence we must workaround here
 #define BOOST_COBALT_NO_SELF_DELETE 1
 #endif
