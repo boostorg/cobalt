@@ -20,7 +20,7 @@ using asio::buffer;
 using asio::mutable_buffer;
 
 
-struct mutable_buffer_sequence
+struct BOOST_COBALT_IO_DECL mutable_buffer_sequence
 {
   std::size_t buffer_count() const {return tail_.size() + 1u;}
 
@@ -259,7 +259,7 @@ struct mutable_buffer_sequence
 
 using asio::const_buffer;
 
-struct const_buffer_sequence
+struct BOOST_COBALT_IO_DECL const_buffer_sequence
 {
   std::size_t buffer_count() const {return tail_.size() + 1u;}
 
