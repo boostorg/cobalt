@@ -16,6 +16,7 @@ deps = [
     'libs/callable_traits',
     'libs/chrono',
     'libs/circular_buffer',
+    'libs/compat',
     'libs/concept_check',
     'libs/config',
     'libs/container',
@@ -229,5 +230,8 @@ def main(ctx):
         linux("clang (usan)",           branch, "cppalliance/droneubuntu2404:1", privileged=True, toolset='clang', variant="release", cxxstd="20", debug_symbols="on",  undefined_sanitizer="on"),
         linux("clang (tsan)",           branch, "cppalliance/droneubuntu2404:1", privileged=True, toolset='clang', variant="release", cxxstd="20", debug_symbols="on",  thread_sanitizer="on"),
         windows("msvc-14.3 (x64)",      branch, "cppalliance/dronevs2022:latest", variant="release", cxxstd="20", address_model="64"),
-        windows("msvc-14.3 (x32)",      branch, "cppalliance/dronevs2022:latest", variant="release", cxxstd="20", address_model="32")
+        windows("msvc-14.3 (x32)",      branch, "cppalliance/dronevs2022:latest", variant="release", cxxstd="20", address_model="32"),
+        windows("msvc-14.5 (x64)",      branch, "cppalliance/dronevs2026:latest", variant="release", cxxstd="20", address_model="64"),
+        windows("msvc-14.5 (x32)",      branch, "cppalliance/dronevs2026:latest", variant="release", cxxstd="20", address_model="32"),
+        windows("clang-win",            branch, "cppalliance/dronevs2026:latest", variant="release", cxxstd="20", toolset='clang')
     ]
