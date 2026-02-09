@@ -41,9 +41,7 @@ struct BOOST_SYMBOL_VISIBLE op
     awaitable_base(op<Args...> * op_, resource_type *resource) : op_(*op_), resource(resource) {}
     awaitable_base(awaitable_base && lhs) noexcept = default;
 
-#if defined(_MSC_VER)
-    BOOST_NOINLINE ~awaitable_base() {}
-#endif
+    BOOST_COBALT_MSVC_NOINLINE ~awaitable_base() {}
 
     bool await_ready()
     {
@@ -91,9 +89,7 @@ struct BOOST_SYMBOL_VISIBLE op
       return await_resume(as_result_tag{}).value(loc);
     }
 
-#if defined(_MSC_VER)
-    BOOST_NOINLINE
-#endif
+    BOOST_COBALT_MSVC_NOINLINE
     auto await_resume(const struct as_tuple_tag &)
     {
       if (init_ep)
@@ -101,9 +97,7 @@ struct BOOST_SYMBOL_VISIBLE op
       return *std::move(result);
     }
 
-#if defined(_MSC_VER)
-    BOOST_NOINLINE
-#endif
+    BOOST_COBALT_MSVC_NOINLINE
     auto await_resume(const struct as_result_tag &)
     {
       if (init_ep)
