@@ -49,7 +49,7 @@ struct BOOST_SYMBOL_VISIBLE readable_pipe final : read_stream
   BOOST_COBALT_IO_DECL native_handle_type native_handle();
   BOOST_COBALT_IO_DECL system::result<native_handle_type> release();
 
-  [[nodiscard]] read_op read_some(mutable_buffer_sequence buffer)
+  [[nodiscard]] BOOST_COBALT_MSVC_NOINLINE read_op read_some(mutable_buffer_sequence buffer)
   {
     return {buffer, this, initiate_read_some_};
   }
@@ -79,7 +79,7 @@ struct BOOST_SYMBOL_VISIBLE writable_pipe final : write_stream
   BOOST_COBALT_IO_DECL executor get_executor();
   BOOST_COBALT_IO_DECL bool is_open() const;
 
-  [[nodiscard]] write_op write_some(const_buffer_sequence buffer)
+  [[nodiscard]] BOOST_COBALT_MSVC_NOINLINE write_op write_some(const_buffer_sequence buffer)
   {
     return {buffer, this, initiate_write_some_};
   }
