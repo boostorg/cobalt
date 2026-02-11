@@ -52,6 +52,7 @@ deps = [
     'libs/ratio',
     'libs/regex',
     'libs/smart_ptr',
+    'libs/static_assert',
     'libs/static_string',
     'libs/system',
     'libs/test',
