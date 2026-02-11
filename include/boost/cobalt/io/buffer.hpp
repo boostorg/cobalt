@@ -30,11 +30,11 @@ struct BOOST_COBALT_IO_DECL mutable_buffer_sequence
   {
     this->head_ = head;
   }
-  mutable_buffer_sequence(const mutable_buffer_sequence & rhs) : registered_(rhs.registered_), tail_(rhs.tail_) {}
+  mutable_buffer_sequence(const mutable_buffer_sequence & rhs) noexcept : registered_(rhs.registered_), tail_(rhs.tail_) {}
 #else
-  mutable_buffer_sequence(asio::mutable_registered_buffer buffer = {}) : head_(buffer.buffer()) { }
-  mutable_buffer_sequence(asio::mutable_buffer head)  : head_{head} { }
-  mutable_buffer_sequence(const mutable_buffer_sequence & rhs) : head_(rhs.head_), tail_(rhs.tail_) {}
+  mutable_buffer_sequence(const asio::mutable_registered_buffer & buffer = {}) : head_(buffer.buffer()) { }
+  mutable_buffer_sequence(const asio::mutable_buffer & head)  : head_{head} { }
+  mutable_buffer_sequence(const mutable_buffer_sequence & rhs) noexcept : head_(rhs.head_), tail_(rhs.tail_) {}
 #endif
 
   mutable_buffer_sequence& operator=(const mutable_buffer_sequence & rhs)
@@ -271,10 +271,10 @@ struct BOOST_COBALT_IO_DECL const_buffer_sequence
   const_buffer_sequence(const const_buffer_sequence & rhs) : registered_(rhs.registered_), tail_(rhs.tail_) {}
 #else
 
-  const_buffer_sequence(asio::const_registered_buffer buffer = {}) : head_(buffer.buffer()) {}
-  const_buffer_sequence(asio::mutable_registered_buffer buffer)    : head_(buffer.buffer()) {}
-  const_buffer_sequence(asio::const_buffer head)   : head_{ head} { }
-  const_buffer_sequence(asio::mutable_buffer head) : head_{ head} { }
+  const_buffer_sequence(const asio::const_registered_buffer &buffer = {}) : head_(buffer.buffer()) {}
+  const_buffer_sequence(const asio::mutable_registered_buffer &buffer)    : head_(buffer.buffer()) {}
+  const_buffer_sequence(const asio::const_buffer &head)   : head_{ head} { }
+  const_buffer_sequence(const asio::mutable_buffer &head) : head_{ head} { }
   const_buffer_sequence(const const_buffer_sequence & rhs) : head_(rhs.head_), tail_(rhs.tail_) {}
 #endif
   template<typename T>
