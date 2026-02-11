@@ -1,4 +1,4 @@
-== cobalt/io/read.hpp
+== cobalt/io/write.hpp
 
 The `write` and `write_at` write the full buffer to a stream.
 
