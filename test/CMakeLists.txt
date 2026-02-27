@@ -36,5 +36,6 @@ add_executable(boost_cobalt_io_test EXCLUDE_FROM_ALL
                io/endpoint.cpp
                io/lookup.cpp
                )
-target_link_libraries(boost_cobalt_io_test  Boost::cobalt::io Boost::unit_test_framework OpenSSL::SSL OpenSSL::Crypto Boost::url)
+
+target_link_libraries(boost_cobalt_io_test  Boost::cobalt::io Boost::unit_test_framework Boost::url)
 add_dependencies(tests boost_cobalt_main boost_cobalt_basic_tests boost_cobalt_static_tests boost_cobalt_experimental boost_cobalt_io_test)
