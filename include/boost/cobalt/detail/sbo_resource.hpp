@@ -10,6 +10,9 @@
 
 #include <boost/cobalt/config.hpp>
 
+#include <cstdint>      // std::uintptr_t
+#include <type_traits>  // std::is_constant_evaluated
+
 namespace boost::cobalt::detail
 {
 
@@ -41,12 +44,18 @@ struct sbo_resource
   }
   constexpr void align_as_max_()
   {
-    const auto buffer = static_cast<char*>(buffer_.p) - static_cast<char*>(nullptr);
+    // During constant evaluation a pointer's numeric address is not observable
+    // (reinterpret_cast cannot be evaluated). No real buffer is ever aligned at
+    // compile time, so just skip - this keeps the function a valid constexpr function.
+    if (std::is_constant_evaluated())
+      return;
+
+    const auto buffer = reinterpret_cast<std::uintptr_t>(buffer_.p);
     const auto diff = buffer % alignof(std::max_align_t );
     if (diff > 0)
     {
       const auto padding = alignof(std::max_align_t) - diff;
-      buffer_.p = static_cast<void*>(static_cast<char*>(nullptr) + buffer + padding);
+      buffer_.p = static_cast<char*>(buffer_.p) + padding;
       if (padding >= buffer_.size) [[unlikely]]
       {
         buffer_.size = 0;
