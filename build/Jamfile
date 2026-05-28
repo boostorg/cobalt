@@ -116,6 +116,7 @@ lib boost_cobalt_io_ssl
     : io/ssl.cpp boost_cobalt_io
     : requirements <define>BOOST_COBALT_SSL_SOURCE=1
                    <link>shared:<define>BOOST_COBALT_DYN_LINK=1
+                   <boost.cobalt.ssl>off:<build>no
                    [ ac.check-library /openssl//ssl : <library>/openssl//ssl/<link>shared : <build>no ]
                    [ ac.check-library /openssl//crypto : <library>/openssl//crypto/<link>shared : <build>no ]
     : usage-requirements
