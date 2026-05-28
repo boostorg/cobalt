@@ -34,7 +34,9 @@ project /boost/cobalt
 explicit
     [ alias boost_cobalt : build//boost_cobalt ]
     [ alias boost_cobalt_io : build//boost_cobalt_io ]
-    [ alias boost_cobalt_io_ssl : build//boost_cobalt_io_ssl ]
+    [ alias boost_cobalt_io_ssl : build//boost_cobalt_io_ssl
+        : <boost.cobalt.ssl>off:<build>no
+    ]
     [ alias all : boost_cobalt boost_cobalt_io test example ]
     ;
 

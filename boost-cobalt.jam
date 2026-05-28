@@ -9,4 +9,5 @@ import feature ;
 
 feature.feature boost.cobalt.pmr : std boost-container custom no : propagated ;
 feature.feature boost.cobalt.executor : any_io_executor use_io_context custom : propagated ;
+feature.feature boost.cobalt.ssl : auto on off : propagated ;
 
