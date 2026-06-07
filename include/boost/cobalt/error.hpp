@@ -13,7 +13,7 @@ namespace boost::cobalt
 
 enum class error
 {
-  moved_from,
+  moved_from = 1,
   detached,
   completed_unexpected,
   wait_not_ready,
