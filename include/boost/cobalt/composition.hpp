@@ -88,6 +88,17 @@ struct composition_promise
     return cobalt::as_tuple(replacing_op{std::forward<Op>(op_), handler.get_allocator().resource()});
   }
 
+  template<awaitable<composition_promise> Op>
+    requires (!requires (Op && op, resource_type* res)
+    {
+      {static_cast<Op>(op).operator co_await().replace_resource(res)} -> awaitable<composition_promise>;
+    })
+  BOOST_COBALT_MSVC_NOINLINE
+  auto await_transform(Op && op_)
+  {
+    return cobalt::as_tuple(std::forward<Op>(op_));
+  }
+
 
   using executor_type = typename handler_type::executor_type ;
   const executor & get_executor() const {return handler.get_executor();}
