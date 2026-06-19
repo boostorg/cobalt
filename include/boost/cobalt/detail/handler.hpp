@@ -145,6 +145,19 @@ struct completion_handler_base
             completed_immediately(completed_immediately)
   {
   }
+
+  completion_handler_base(std::coroutine_handle<void> h,
+                          completed_immediately_t * completed_immediately = nullptr)
+          : executor_(cobalt::this_thread::get_executor()),
+#if !defined(BOOST_COBALT_NO_PMR)
+            allocator(this_thread::get_allocator()),
+#else
+            allocator(detail::get_null_sbo_resource()),
+#endif
+            completed_immediately(completed_immediately)
+  {
+  }
+  
 #if !defined(BOOST_COBALT_NO_PMR)
   template<typename Promise>
   completion_handler_base(std::coroutine_handle<Promise> h,
@@ -167,8 +180,31 @@ struct completion_handler_base
         completed_immediately(completed_immediately)
   {
   }
-
 #endif
+
+#if !defined(BOOST_COBALT_NO_PMR)
+  completion_handler_base(std::coroutine_handle<void> h,
+                          pmr::memory_resource * resource,
+                          completed_immediately_t * completed_immediately = nullptr)
+          : executor_(cobalt::this_thread::get_executor()),
+            allocator(resource),
+            completed_immediately(completed_immediately)
+  {
+  }
+#else
+  template<typename Promise>
+  completion_handler_base(std::coroutine_handle<void> h,
+                          detail::sbo_resource * resource,
+                          completed_immediately_t * completed_immediately = nullptr)
+      : executor_(cobalt::this_thread::get_executor()),
+        allocator(resource),
+        completed_immediately(completed_immediately)
+  {
+  }
+#endif
+
+
+
 };
 
 
