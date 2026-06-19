@@ -14,12 +14,21 @@ namespace boost::cobalt::io
 acceptor::acceptor(const cobalt::executor & exec) : acceptor_{exec} {}
 acceptor::acceptor(endpoint ep, const cobalt::executor & exec) : acceptor_{exec, ep} {}
 
+system::result<void> acceptor::open(protocol_type proto)
+{
+  system::error_code ec;
+  acceptor_.open(proto, ec);
+  return ec ? ec : system::result<void>{};
+}
+
+
 system::result<void> acceptor::bind(endpoint ep)
 {
   system::error_code ec;
   acceptor_.bind(ep, ec);
   return ec ? ec : system::result<void>{};
 }
+
 system::result<void> acceptor::listen(int backlog)
 {
   system::error_code ec;

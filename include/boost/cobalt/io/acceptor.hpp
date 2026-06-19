@@ -25,6 +25,7 @@ struct BOOST_SYMBOL_VISIBLE acceptor
 
   BOOST_COBALT_IO_DECL acceptor(const cobalt::executor & executor = this_thread::get_executor());
   BOOST_COBALT_IO_DECL acceptor(endpoint ep, const cobalt::executor & executor = this_thread::get_executor());
+  BOOST_COBALT_IO_DECL system::result<void> open(protocol_type proto);
   BOOST_COBALT_IO_DECL system::result<void> bind(endpoint ep);
   BOOST_COBALT_IO_DECL system::result<void> listen(int backlog = max_listen_connections); // int backlog = net::max_backlog()
   BOOST_COBALT_IO_DECL endpoint local_endpoint();
