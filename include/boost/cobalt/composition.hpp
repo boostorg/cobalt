@@ -141,7 +141,7 @@ struct composition_promise
   template<typename ... Ts>
   composition_promise(Ts && ... args) : handler(std::move(std::get<sizeof... (Ts) - 1>(std::tie(args...))))
   {
-
+    this->reset_cancellation_source(handler.get_cancellation_slot());
   }
 
   void unhandled_exception() { throw ; }
