@@ -127,22 +127,22 @@ CO_TEST_CASE(generator_left_race)
   auto v1 = [](int value) -> v {return v{variant2::in_place_index<0u>, value};};
   auto v2 = [](int value) -> v {return v{variant2::in_place_index<1u>, value};};
 
-  BOOST_CHECK(v1(0) == co_await left_race(g1, g2));
-  BOOST_CHECK(v2(0) == co_await left_race(g1, g2));
-  BOOST_CHECK(v2(1) == co_await left_race(g1, g2));
-  BOOST_CHECK(v1(1) == co_await left_race(g1, g2));
-  BOOST_CHECK(v2(2) == co_await left_race(g1, g2));
-  BOOST_CHECK(v2(3) == co_await left_race(g1, g2));
-  BOOST_CHECK(v1(2) == co_await left_race(g1, g2));
-  BOOST_CHECK(v2(4) == co_await left_race(g1, g2));
-  BOOST_CHECK(v2(5) == co_await left_race(g1, g2));
-  BOOST_CHECK(v1(3) == co_await left_race(g1, g2));
-  BOOST_CHECK(v2(6) == co_await left_race(g1, g2));
-  BOOST_CHECK(v2(7) == co_await left_race(g1, g2));
-  BOOST_CHECK(v1(4) == co_await left_race(g1, g2));
-  BOOST_CHECK(v2(8) == co_await left_race(g1, g2));
-  BOOST_CHECK(v2(9) == co_await left_race(g1, g2));
-  BOOST_CHECK(v2(10) == co_await left_race(g1, g2));
+  BOOST_CHECK_EQUAL(v1(0), co_await left_race(g1, g2));
+  BOOST_CHECK_EQUAL(v2(0), co_await left_race(g1, g2));
+  BOOST_CHECK_EQUAL(v2(1), co_await left_race(g1, g2));
+  BOOST_CHECK_EQUAL(v1(1), co_await left_race(g1, g2));
+  BOOST_CHECK_EQUAL(v2(2), co_await left_race(g1, g2));
+  BOOST_CHECK_EQUAL(v2(3), co_await left_race(g1, g2));
+  BOOST_CHECK_EQUAL(v1(2), co_await left_race(g1, g2));
+  BOOST_CHECK_EQUAL(v2(4), co_await left_race(g1, g2));
+  BOOST_CHECK_EQUAL(v2(5), co_await left_race(g1, g2));
+  BOOST_CHECK_EQUAL(v1(3), co_await left_race(g1, g2));
+  BOOST_CHECK_EQUAL(v2(6), co_await left_race(g1, g2));
+  BOOST_CHECK_EQUAL(v2(7), co_await left_race(g1, g2));
+  BOOST_CHECK_EQUAL(v1(4), co_await left_race(g1, g2));
+  BOOST_CHECK_EQUAL(v2(8), co_await left_race(g1, g2));
+  BOOST_CHECK_EQUAL(v2(9), co_await left_race(g1, g2));
+  BOOST_CHECK_EQUAL(v2(10), co_await left_race(g1, g2));
 
 
   BOOST_CHECK(!g2);
