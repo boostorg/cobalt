@@ -25,6 +25,7 @@ project : requirements
   <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
   <toolset>msvc:<cxxflags>/bigobj
   <target-os>windows:<define>WIN32_LEAN_AND_MEAN
+  <target-os>windows,<toolset>gcc:<library>ws2_32
   <target-os>linux:<linkflags>-lpthread
   : source-location ../src
   : common-requirements <library>$(boost_dependencies)
