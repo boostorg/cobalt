@@ -10,6 +10,8 @@
 #ifndef BOOST_COBALT_CONFIG_HPP
 #define BOOST_COBALT_CONFIG_HPP
 
+#include <cstddef>
+
 #if defined(BOOST_ALL_DYN_LINK) || defined(BOOST_COBALT_DYN_LINK)
 #if defined(BOOST_COBALT_SOURCE)
 #define BOOST_COBALT_DECL BOOST_SYMBOL_EXPORT
@@ -89,6 +91,21 @@ namespace pmr = boost::container::pmr;
 #if defined(BOOST_COBALT_USE_STD_PMR)
 namespace pmr = std::pmr;
 #endif
+
+// Thanks to @chriskohlhoff, asio/072ebfe83ba3869beff538b4152e784bd7814d6a
+
+#if defined(BOOST_MSVC) 
+    // Force 16-byte alignment as std::max_align_t is only 8-byte aligned on
+    // MSVC, but the compiler may emit aligned SSE stores into the storage.
+constexpr static std::size_t coroutine_align = 16;
+struct coroutine_align_t
+{
+    alignas (coroutine_align) int _; 
+};
+#else // defined(ASIO_MSVC) && !defined(__clang__)
+constexpr static std::size_t coroutine_align = alignof(std::max_align_t);
+using coroutine_align_t = std::max_align_t;
+#endif 
 
 }
 

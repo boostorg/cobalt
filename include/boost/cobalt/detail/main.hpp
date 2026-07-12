@@ -56,29 +56,29 @@ struct main_promise : signal_helper,
 #if defined(__cpp_sized_deallocation)
     void * operator new(const std::size_t size)
     {
-        return my_resource->allocate(size);
+        return my_resource->allocate(size, coroutine_align);
     }
 
     void operator delete(void * raw, const std::size_t size)
     {
-        return my_resource->deallocate(raw, size);
+        return my_resource->deallocate(raw, size, coroutine_align);
     }
 #else
   void * operator new(const std::size_t size)
   {
       // embed the size at the end
-      constexpr auto sz = (std::max)(alignof(std::max_align_t), sizeof(std::size_t));
-      auto data = my_resource->allocate(size + sz);
+      constexpr auto sz = (std::max)(coroutine_align, sizeof(std::size_t));
+      auto data = my_resource->allocate(size + sz, coroutine_align);
 
       return static_cast<char*>(data) + sz;
   }
 
   void operator delete(void * data)
   {
-      constexpr auto sz = (std::max)(alignof(std::max_align_t), sizeof(std::size_t));
+      constexpr auto sz = (std::max)(coroutine_align, sizeof(std::size_t));
       const auto size = *reinterpret_cast<std::size_t*>(static_cast<char*>(data) - sz);
 
-      return my_resource->deallocate(data, size);
+      return my_resource->deallocate(data, size, coroutine_align);
   }
 #endif
 
@@ -166,3 +166,4 @@ struct coroutine_traits<boost::cobalt::main, int, Char>
 }
 
 #endif //BOOST_DETAIL_COBALT_MAIN_HPP
+

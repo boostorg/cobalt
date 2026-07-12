@@ -33,19 +33,19 @@ struct sbo_resource
 #endif
   constexpr std::size_t align_as_max_(std::size_t size)
   {
-    auto diff = size % alignof(std::max_align_t );
+    auto diff = size % coroutine_align;
     if (diff > 0)
-      return size + alignof(std::max_align_t) - diff;
+      return size + coroutine_align - diff;
     else
       return size;
   }
   constexpr void align_as_max_()
   {
     const auto buffer = static_cast<char*>(buffer_.p) - static_cast<char*>(nullptr);
-    const auto diff = buffer % alignof(std::max_align_t );
+    const auto diff = buffer % coroutine_align;
     if (diff > 0)
     {
-      const auto padding = alignof(std::max_align_t) - diff;
+      const auto padding = coroutine_align - diff;
       buffer_.p = static_cast<void*>(static_cast<char*>(nullptr) + buffer + padding);
       if (padding >= buffer_.size) [[unlikely]]
       {
@@ -143,13 +143,13 @@ struct sbo_resource
 #if defined(BOOST_COBALT_NO_PMR)
   [[nodiscard]]
     void*
-    allocate(size_t bytes, size_t alignment = alignof(std::max_align_t))
+    allocate(size_t bytes, size_t alignment = coroutine_align)
     {
       return ::operator new(bytes, do_allocate(bytes, alignment));
     }
 
     void
-    deallocate(void* p, size_t bytes, size_t alignment = alignof(std::max_align_t))
+    deallocate(void* p, size_t bytes, size_t alignment = coroutine_align)
     {
       return do_deallocate(p, bytes, alignment);
     }

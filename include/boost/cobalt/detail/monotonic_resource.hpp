@@ -67,7 +67,7 @@ struct monotonic_resource
     }
   }
 
-  constexpr void * allocate(std::size_t size, std::align_val_t align_ = std::align_val_t(alignof(std::max_align_t)))
+  constexpr void * allocate(std::size_t size, std::align_val_t align_ = std::align_val_t(coroutine_align))
   {
     const auto align = (std::max)(static_cast<std::size_t>(align_), alignof(block_));
     // let's say size = 11, and align is 8, that leaves us with 3

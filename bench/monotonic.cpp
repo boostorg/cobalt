@@ -65,7 +65,7 @@ struct std_test
   }
 };
 
-alignas(std::max_align_t) char buf[1024];
+alignas(coroutine_align) char buf[1024];
 cobalt::detail::monotonic_resource res{buf, sizeof(buf)};
 
 struct mono_test
@@ -166,3 +166,4 @@ int main(int argc, char * argv[])
 
   return 0;
 }
+

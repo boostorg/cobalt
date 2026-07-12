@@ -109,14 +109,14 @@ struct composition_promise
     using tt = std::pair<resource_type *, std::size_t>;
 
     // | memory_resource | size_t | <padding> | coroutine.
-    constexpr auto block_size =  sizeof(tt) / sizeof(std::max_align_t)
-                                 + (sizeof(tt) % sizeof(std::max_align_t) ? 1 : 0);
+    constexpr auto block_size = sizeof(tt) / coroutine_align
+                             + (sizeof(tt) % coroutine_align ? 1 : 0);
 
 
     auto res = std::get<sizeof... (Ts) - 1>(std::tie(args...)).get_allocator().resource();
-    const auto p = res->allocate(size + (block_size * sizeof(std::max_align_t)));
+    const auto p = res->allocate(size + (block_size * coroutine_align), coroutine_align);
     new (p) tt(res, size);
-    return static_cast<std::max_align_t*>(p) + block_size;
+    return static_cast<std::uint8_t*>(p) + (block_size * coroutine_align);
   }
 
   static void operator delete(void * raw) noexcept
@@ -124,16 +124,16 @@ struct composition_promise
     using tt = std::pair<resource_type *, std::size_t>;
 
     // | memory_resource | size_t | <padding> | coroutine.
-    constexpr auto block_size =  sizeof(tt) / sizeof(std::max_align_t)
-                                 + (sizeof(tt) % sizeof(std::max_align_t) ? 1 : 0);
+    constexpr auto block_size =  sizeof(tt) / coroutine_align
+                              + (sizeof(tt) % coroutine_align ? 1 : 0);
 
-    const auto p = static_cast<std::max_align_t*>(raw) - block_size;
+    const auto p = static_cast<std::uint8_t*>(raw) - (block_size * coroutine_align);
 
     const auto tp = *reinterpret_cast<tt*>(p);
     const auto res = tp.first;
     const auto size = tp.second;
 
-    res->deallocate(p, size +  (block_size * sizeof(std::max_align_t)));
+    res->deallocate(p, size + (block_size * coroutine_align), coroutine_align);
   }
 
   completion_handler<Args...> handler;

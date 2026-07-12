@@ -37,6 +37,7 @@ struct race_dummy_op final : op<boost::system::error_code, int>
   void initiate(completion_handler<boost::system::error_code, int>)
   {
     auto t = co_await left_race(dummy_op{}, dummy_op{});
+    co_return {};
   }
 };
 

@@ -341,17 +341,17 @@ struct promise_memory_resource_base
   static void * operator new(const std::size_t size, Args & ... args)
   {
     auto res = detail::get_memory_resource_from_args(args...);
-    const auto p = res->allocate(size + sizeof(std::max_align_t));
+    const auto p = res->allocate(size + coroutine_align, coroutine_align);
     auto pp = static_cast<pmr::memory_resource**>(p);
     *pp = res;
-    return static_cast<std::max_align_t *>(p) + 1;
+    return static_cast<std::uint8_t *>(p) + coroutine_align;
   }
 
   static void operator delete(void * raw, const std::size_t size) noexcept
   {
-    const auto p = static_cast<std::max_align_t *>(raw) - 1;
+    const auto p = static_cast<std::uint8_t*>(raw) - coroutine_align;
     pmr::memory_resource * res = *reinterpret_cast<pmr::memory_resource**>(p);
-    res->deallocate(p, size + sizeof(std::max_align_t));
+    res->deallocate(p, size + coroutine_align, coroutine_align);
   }
 #else
   template<typename ... Args>
@@ -360,14 +360,14 @@ struct promise_memory_resource_base
     using tt = std::pair<pmr::memory_resource *, std::size_t>;
 
     // | memory_resource | size_t | <padding> | coroutine.
-    constexpr auto block_size =  sizeof(tt) / sizeof(std::max_align_t)
-                              + (sizeof(tt) % sizeof(std::max_align_t) ? 1 : 0);
+    constexpr auto block_size =  sizeof(tt) / coroutine_align
+                              + (sizeof(tt) % coroutine_align ? 1 : 0);
 
 
     auto res = detail::get_memory_resource_from_args(args...);
-    const auto p = res->allocate(size + (block_size * sizeof(std::max_align_t)));
+    const auto p = res->allocate(size + (block_size * coroutine_align), coroutine_align);
     new (p) tt(res, size);
-    return static_cast<std::max_align_t*>(p) + block_size;
+    return static_cast<std::uint8_t*>(p) + (coroutine_align * block_size);
   }
 
   static void operator delete(void * raw) noexcept
@@ -375,16 +375,16 @@ struct promise_memory_resource_base
     using tt = std::pair<pmr::memory_resource *, std::size_t>;
 
     // | memory_resource | size_t | <padding> | coroutine.
-    constexpr auto block_size =  sizeof(tt) / sizeof(std::max_align_t)
-                              + (sizeof(tt) % sizeof(std::max_align_t) ? 1 : 0);
+    constexpr auto block_size =  sizeof(tt) / coroutine_align
+                              + (sizeof(tt) % coroutine_align ? 1 : 0);
 
-    const auto p = static_cast<std::max_align_t*>(raw) - block_size;
+    const auto p = static_cast<std::uint8_t*>(raw) - (coroutine_align * block_size);
 
     const auto tp = *reinterpret_cast<tt*>(p);
     const auto res = tp.first;
     const auto size = tp.second;
 
-    res->deallocate(p, size +  (block_size * sizeof(std::max_align_t)));
+    res->deallocate(p, size +  (block_size * coroutine_align), coroutine_align);
   }
 #endif
 
@@ -400,14 +400,15 @@ private:
 template<typename AllocatorType>
 void *allocate_coroutine(const std::size_t size, AllocatorType alloc_)
 {
-    using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<std::max_align_t>;
+  
+    using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<coroutine_align_t>;
     alloc_type alloc{alloc_};
 
-    const std::size_t aligned_size =  size / sizeof(std::max_align_t)
-                                   + (size % sizeof(std::max_align_t) > 0 ? 1 : 0);
+    const std::size_t aligned_size =  size / coroutine_align
+                                   + (size % coroutine_align > 0 ? 1 : 0);
 
-    const std::size_t alloc_size   =  sizeof(AllocatorType) / sizeof(std::max_align_t)
-                                   + (sizeof(AllocatorType) % sizeof(std::max_align_t) > 0 ? 1 : 0);
+    const std::size_t alloc_size   =  sizeof(AllocatorType) / coroutine_align
+                                   + (sizeof(AllocatorType) % coroutine_align > 0 ? 1 : 0);
 
     const auto raw = std::allocator_traits<alloc_type>::allocate(alloc, alloc_size + aligned_size);
     new(raw + aligned_size) alloc_type(std::move(alloc));
@@ -418,14 +419,14 @@ void *allocate_coroutine(const std::size_t size, AllocatorType alloc_)
 template<typename AllocatorType>
 void deallocate_coroutine(void *raw_, const std::size_t size)
 {
-    using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<std::max_align_t>;
-    const auto raw = static_cast<std::max_align_t*>(raw_);
+    using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<coroutine_align_t>;
+    const auto raw = static_cast<coroutine_align_t*>(raw_);
 
-    const std::size_t aligned_size =  size / sizeof(std::max_align_t)
-                                   + (size % sizeof(std::max_align_t) > 0 ? 1 : 0);
+    const std::size_t aligned_size =  size / coroutine_align
+                                   + (size % coroutine_align > 0 ? 1 : 0);
 
-    const std::size_t alloc_size   =  sizeof(AllocatorType) / sizeof(std::max_align_t)
-                                   + (sizeof(AllocatorType) % sizeof(std::max_align_t) > 0 ? 1 : 0);
+    const std::size_t alloc_size   =  sizeof(AllocatorType) / coroutine_align
+                                   + (sizeof(AllocatorType) % coroutine_align > 0 ? 1 : 0);
 
     auto alloc_p = reinterpret_cast<alloc_type *>(raw + aligned_size);
     auto alloc = std::move(*alloc_p);
@@ -439,20 +440,20 @@ void deallocate_coroutine(void *raw_, const std::size_t size)
 template<typename AllocatorType>
 void *allocate_coroutine(const std::size_t size, AllocatorType alloc_)
 {
-  using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<std::max_align_t>;
+  using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<coroutine_align_t>;
   alloc_type alloc{alloc_};
+  static_assert(alignof(coroutine_align_t) == coroutine_align);
+  const std::size_t aligned_size =  size / coroutine_align
+                                 + (size % coroutine_align > 0 ? 1 : 0);
 
-  const std::size_t aligned_size =  size / sizeof(std::max_align_t)
-                                 + (size % sizeof(std::max_align_t) > 0 ? 1 : 0);
+  const std::size_t  alloc_size  =  sizeof(AllocatorType) / coroutine_align
+                                 + (sizeof(AllocatorType) % coroutine_align > 0 ? 1 : 0);
 
-  const std::size_t  alloc_size  =  sizeof(AllocatorType) / sizeof(std::max_align_t)
-                                 + (sizeof(AllocatorType) % sizeof(std::max_align_t) > 0 ? 1 : 0);
-
-  const std::size_t   size_size  =  sizeof(std::size_t) / sizeof(std::max_align_t)
-                                 + (sizeof(std::size_t) % sizeof(std::max_align_t) > 0 ? 1 : 0);
+  const std::size_t   size_size  =  sizeof(std::size_t) / coroutine_align
+                                 + (sizeof(std::size_t) % coroutine_align > 0 ? 1 : 0);
 
 
-  static_assert(alignof(std::max_align_t) >= sizeof(std::size_t));
+  static_assert(coroutine_align >= sizeof(std::size_t));
   const auto raw = std::allocator_traits<alloc_type>::allocate(alloc, alloc_size + aligned_size + size_size);
 
   new(raw) alloc_type(std::move(alloc));
@@ -464,14 +465,14 @@ void *allocate_coroutine(const std::size_t size, AllocatorType alloc_)
 template<typename AllocatorType>
 void deallocate_coroutine(void *raw_)
 {
-  using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<std::max_align_t>;
-  const auto raw = static_cast<std::max_align_t*>(raw_);
+  using alloc_type = typename std::allocator_traits<AllocatorType>::template rebind_alloc<coroutine_align_t>;
+  const auto raw = static_cast<coroutine_align_t*>(raw_);
 
-  const std::size_t   size_size  =  sizeof(std::size_t) / sizeof(std::max_align_t)
-                                    + (sizeof(std::size_t) % sizeof(std::max_align_t) > 0 ? 1 : 0);
+  const std::size_t   size_size  =  sizeof(std::size_t) /    coroutine_align
+                                    + (sizeof(std::size_t) % coroutine_align > 0 ? 1 : 0);
   const std::size_t aligned_size = *reinterpret_cast<std::size_t *>(raw - size_size);
-  const std::size_t alloc_size   =  sizeof(AllocatorType) / sizeof(std::max_align_t)
-                                 + (sizeof(AllocatorType) % sizeof(std::max_align_t) > 0 ? 1 : 0);
+  const std::size_t alloc_size   =  sizeof(AllocatorType) / coroutine_align
+                                 + (sizeof(AllocatorType) % coroutine_align > 0 ? 1 : 0);
 
   auto alloc_p = reinterpret_cast<alloc_type *>(raw - alloc_size - size_size);
   auto alloc = std::move(*alloc_p);
