@@ -11,8 +11,6 @@
 #include <boost/cobalt/task.hpp>
 #include <boost/asio/dispatch.hpp>
 
-#include <boost/smart_ptr/allocate_unique.hpp>
-
 namespace boost::cobalt
 {
 template<typename T>
@@ -46,7 +44,7 @@ struct async_initiate_spawn
 #else
     auto alloc = asio::get_associated_allocator(h);
 #endif
-    auto recs = std::allocate_shared<detail::task_receiver<T>>(alloc, std::move(rec));
+    auto recs = std::make_shared<detail::task_receiver<T>>(std::move(rec));
 
     auto sl = asio::get_associated_cancellation_slot(h);
     if (sl.is_connected())
@@ -111,7 +109,7 @@ struct async_initiate_spawn
 #else
     auto alloc = asio::get_associated_allocator(h);
 #endif
-    auto recs = std::allocate_shared<detail::task_receiver<void>>(alloc, std::move(a.receiver_));
+    auto recs = std::make_shared<detail::task_receiver<void>>(std::move(a.receiver_));
 
     if (recs->done)
       return asio::dispatch(asio::get_associated_immediate_executor(h, exec),
