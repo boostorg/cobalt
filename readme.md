@@ -89,7 +89,7 @@ test-2
 main-3
 ```
 
-Unlike ops, returned by .wait, the promise can be disregarded; disregarding the promise does not cancel it, but rather detaches is. This makes it easy to 
+Unlike ops, returned by .wait, the promise can be disregarded; disregarding the promise does not cancel it, but rather detaches it. This makes it easy to 
 spin up multiple tasks to run in parallel. In order to avoid accidental detaching the promise type uses `nodiscard` unless one uses `+` to detach it:
 
 ```cpp
