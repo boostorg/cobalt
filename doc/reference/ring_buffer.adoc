@@ -1,0 +1,53 @@
+[#ring_buffer]
+== cobalt/ring_buffer.hpp
+
+Channels can be used to exchange data between different coroutines
+on a single thread.
+
+=== Outline
+
+.ring_buffer outline
+[example]
+[source,cpp,subs=+quotes]
+----
+include::../../include/boost/cobalt/ring_buffer.hpp[tag=outline]
+----
+
+=== Description
+
+Ring Buffers are a tool for two coroutines to communicate and synchronize,
+which does not block the writing coroutine, but overwrites the values in tbue ffer.
+
+[source,cpp]
+----
+const std::size_t buffer_size = 2;
+ring_buffer<int> ch{exec, buffer_size};
+
+// in coroutine <1>
+co_await ch.write(42);
+
+// in coroutine <2>
+auto val = co_await ch.read();
+----
+<1> Send a value to the ring_buffer - will not block, but may prioritize coroutine
+<2> Read a value from the ring_buffer - will block until a value is awaitable.
+
+The read operation will block if no value is available.
+The write operation might suspend and resume itself later if a read is waiting.
+
+NOTE: A ring_buffer type can be `void`, in which case `write` takes no parameter.
+
+The ring_buffer read operation can be cancelled without losing data.
+This makes it usable with <<race, race>>.
+
+[source,cpp]
+----
+generator<variant2::variant<int, double>> merge(
+    ring_buffer<int> & c1,
+    ring_buffer<double> & c2)
+{
+    while (c1 && c2)
+       co_yield co_await race(c1.read(), c2.read());
+}
+----
+
