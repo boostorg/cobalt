@@ -6,6 +6,7 @@
 //
 
 #include <boost/cobalt/io/endpoint.hpp>
+#include <boost/asio/detail/socket_ops.hpp>
 #include <boost/asio/ip/address.hpp>
 
 namespace boost::cobalt::detail

@@ -29,9 +29,11 @@
 #include <boost/core/span.hpp>
 #include <boost/variant2/variant.hpp>
 
+#include <algorithm>
 #include <coroutine>
 #include <optional>
 #include <algorithm>
+#include <vector>
 
 
 namespace boost::cobalt::detail
