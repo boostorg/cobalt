@@ -9,6 +9,7 @@
 #include <boost/cobalt/error.hpp>
 
 #include <boost/asio/executor.hpp>
+#include <boost/system/system_error.hpp>
 
 namespace boost::cobalt::detail
 {
