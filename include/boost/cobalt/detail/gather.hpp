@@ -27,9 +27,11 @@
 #include <boost/system/result.hpp>
 #include <boost/variant2/variant.hpp>
 
+#include <algorithm>
 #include <array>
 #include <coroutine>
 #include <algorithm>
+#include <vector>
 
 namespace boost::cobalt::detail
 {
