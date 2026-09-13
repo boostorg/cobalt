@@ -31,7 +31,7 @@ struct sbo_resource
 #if !defined(BOOST_COBALT_NO_PMR)
   pmr::memory_resource * upstream_;
 #endif
-  constexpr std::size_t align_as_max_(std::size_t size)
+  std::size_t align_as_max_(std::size_t size)
   {
     auto diff = size % coroutine_align;
     if (diff > 0)
@@ -39,14 +39,16 @@ struct sbo_resource
     else
       return size;
   }
-  constexpr void align_as_max_()
+  
+  void align_as_max_()
   {
-    const auto buffer = static_cast<char*>(buffer_.p) - static_cast<char*>(nullptr);
+    const auto buffer = reinterpret_cast<std::uintptr_t>(buffer_.p);
     const auto diff = buffer % coroutine_align;
     if (diff > 0)
     {
       const auto padding = coroutine_align - diff;
-      buffer_.p = static_cast<void*>(static_cast<char*>(nullptr) + buffer + padding);
+      buffer_.p = reinterpret_cast<void*>(reinterpret_cast<std::uintptr_t>(buffer) + padding);
+
       if (padding >= buffer_.size) [[unlikely]]
       {
         buffer_.size = 0;
@@ -62,7 +64,7 @@ struct sbo_resource
   }
 
  public:
-  constexpr sbo_resource(void * buffer, std::size_t size
+  sbo_resource(void * buffer, std::size_t size
 #if !defined(BOOST_COBALT_NO_PMR)
                         , pmr::memory_resource * upstream = pmr::get_default_resource()
 #endif
@@ -84,7 +86,7 @@ struct sbo_resource
 
   ~sbo_resource() = default;
 
-  constexpr void * do_allocate(std::size_t size, std::size_t align)
+  void * do_allocate(std::size_t size, std::size_t align)
 #if !defined(BOOST_COBALT_NO_PMR)
   override
 #endif
@@ -105,7 +107,7 @@ struct sbo_resource
 
   }
 
-  constexpr void do_deallocate(void * p, std::size_t size, std::size_t align)
+  void do_deallocate(void * p, std::size_t size, std::size_t align)
 #if !defined(BOOST_COBALT_NO_PMR)
       override
 #endif
