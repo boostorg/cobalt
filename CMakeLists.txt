@@ -127,6 +127,19 @@ if (NOT BOOST_COBALT_IS_ROOT)
         endif()
     endif()
 
+    if (BOOST_SUPERPROJECT_VERSION AND NOT CMAKE_VERSION VERSION_LESS 3.13)
+        set(boost_cobalt_install_targets boost_cobalt boost_cobalt_io)
+        if (TARGET boost_cobalt_io_ssl)
+            list(APPEND boost_cobalt_install_targets boost_cobalt_io_ssl)
+        endif()
+
+        boost_install(
+            TARGETS ${boost_cobalt_install_targets}
+            VERSION "${BOOST_SUPERPROJECT_VERSION}"
+            HEADER_DIRECTORY include
+        )
+    endif()
+
     if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/CMakeLists.txt")
         add_subdirectory(test)
     endif()
@@ -260,7 +273,12 @@ else()
     endif()
 
     if(BOOST_COBALT_INSTALL AND NOT BOOST_SUPERPROJECT_VERSION)
-        install(TARGETS boost_cobalt boost_cobalt_io
+        set(boost_cobalt_install_targets boost_cobalt boost_cobalt_io)
+        if (TARGET boost_cobalt_io_ssl)
+            list(APPEND boost_cobalt_install_targets boost_cobalt_io_ssl)
+        endif()
+
+        install(TARGETS ${boost_cobalt_install_targets}
                 RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
                 LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
                 ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
