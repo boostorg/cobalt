@@ -47,7 +47,7 @@ struct sbo_resource
     if (diff > 0)
     {
       const auto padding = coroutine_align - diff;
-      buffer_.p = reinterpret_cast<void*>(reinterpret_cast<std::uintptr_t>(buffer) + padding);
+      buffer_.p = reinterpret_cast<void*>(buffer + padding);
 
       if (padding >= buffer_.size) [[unlikely]]
       {
