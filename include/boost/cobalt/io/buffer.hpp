@@ -22,6 +22,8 @@ using asio::mutable_buffer;
 
 struct BOOST_COBALT_IO_DECL mutable_buffer_sequence
 {
+  using value_type = asio::mutable_buffer;
+  
   std::size_t buffer_count() const {return tail_.size() + 1u;}
 
 #if defined(BOOST_ASIO_HAS_IO_URING)
@@ -112,6 +114,8 @@ struct BOOST_COBALT_IO_DECL mutable_buffer_sequence
     using pointer           = const asio::mutable_buffer*;
     using reference         = const asio::mutable_buffer&;
 
+    const_iterator() = default;
+
     BOOST_COBALT_MSVC_NOINLINE
     const_iterator(asio::mutable_buffer head,
                    std::span<const asio::mutable_buffer> tail,
@@ -129,7 +133,7 @@ struct BOOST_COBALT_IO_DECL mutable_buffer_sequence
       return offset_ == std::numeric_limits<std::size_t>::max() ? &head_ : &tail_[offset_];
     }
 
-    const_iterator operator++()
+    const_iterator& operator++()
     {
       offset_++;
       return *this;
@@ -142,7 +146,7 @@ struct BOOST_COBALT_IO_DECL mutable_buffer_sequence
       return o;
     }
 
-    const_iterator operator--()
+    const_iterator& operator--()
     {
       offset_ --;
       return *this;
@@ -175,7 +179,7 @@ struct BOOST_COBALT_IO_DECL mutable_buffer_sequence
       return *this;
     }
 
-    const_iterator operator-=(difference_type diff)
+    const_iterator& operator-=(difference_type diff)
     {
       offset_ -= diff;
       return *this;
@@ -261,6 +265,8 @@ using asio::const_buffer;
 
 struct BOOST_COBALT_IO_DECL const_buffer_sequence
 {
+  using value_type = asio::const_buffer;
+
   std::size_t buffer_count() const {return tail_.size() + 1u;}
 
 #if defined(BOOST_ASIO_HAS_IO_URING)
@@ -352,6 +358,8 @@ struct BOOST_COBALT_IO_DECL const_buffer_sequence
     using pointer           = const asio::const_buffer*;
     using reference         = const asio::const_buffer&;
 
+    const_iterator() = default;
+
     BOOST_COBALT_MSVC_NOINLINE
     const_iterator(asio::const_buffer head,
                    std::span<const asio::const_buffer> tail,
@@ -372,7 +380,7 @@ struct BOOST_COBALT_IO_DECL const_buffer_sequence
       return offset_ == std::numeric_limits<std::size_t>::max() ? &head_ : &tail_[offset_];
     }
 
-    const_iterator operator++()
+    const_iterator& operator++()
     {
       offset_++;
       return *this;
@@ -385,7 +393,7 @@ struct BOOST_COBALT_IO_DECL const_buffer_sequence
       return o;
     }
 
-    const_iterator operator--()
+    const_iterator& operator--()
     {
       offset_ --;
       return *this;
@@ -418,7 +426,7 @@ struct BOOST_COBALT_IO_DECL const_buffer_sequence
       return *this;
     }
 
-    const_iterator operator-=(difference_type diff)
+    const_iterator& operator-=(difference_type diff)
     {
       offset_ -= diff;
       return *this;
@@ -439,7 +447,7 @@ struct BOOST_COBALT_IO_DECL const_buffer_sequence
     friend auto operator<=>(const const_iterator & lhs, const const_iterator & rhs)
     {
       return std::make_tuple(lhs.head_.data(), lhs.head_.size(), lhs.tail_.data(), lhs.tail_.size(), lhs.offset_)
-             <=> std::make_tuple(rhs.head_.data(), rhs.head_.size(), rhs.tail_.data(), rhs.tail_.size(), rhs.offset_);
+         <=> std::make_tuple(rhs.head_.data(), rhs.head_.size(), rhs.tail_.data(), rhs.tail_.size(), rhs.offset_);
     };
     friend bool operator==(const const_iterator & lhs, const const_iterator & rhs)
     {
