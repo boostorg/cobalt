@@ -12,6 +12,12 @@
 #include <boost/test/unit_test.hpp>
 
 
+#if (__GNUC__ == 15 && __GNUC_MINOR__ == 2)
+// gcc 15.2 results in an internal compiler error for race
+#define BOOST_COBALT_DISABLE_RACE_TEST
+#endif
+
+
 inline void test_run(boost::cobalt::task<void> (*func) ())
 {
   using namespace boost;

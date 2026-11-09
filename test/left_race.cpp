@@ -17,6 +17,7 @@
 
 using namespace boost;
 
+#if !defined(BOOST_COBALT_DISABLE_RACE_TEST)
 
 static cobalt::promise<std::chrono::milliseconds::rep> dummy(
                                   asio::any_io_executor exec,
@@ -156,3 +157,7 @@ CO_TEST_CASE(compliance_ranged)
 }
 
 BOOST_AUTO_TEST_SUITE_END();
+
+#endif // !defined(BOOST_COBALT_DISABLE_RACE_TEST)
+
+

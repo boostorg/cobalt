@@ -114,7 +114,7 @@ cobalt::generator<int> lazy_delay_gen(std::chrono::milliseconds tick)
 }
 
 
-#if !defined(BOOST_COBALT_NO_SELF_DELETE)
+#if !defined(BOOST_COBALT_NO_SELF_DELETE) && !defined(BOOST_COBALT_DISABLE_RACE_TEST)
 
 CO_TEST_CASE(generator_left_race)
 {
