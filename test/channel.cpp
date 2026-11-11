@@ -214,6 +214,8 @@ CO_TEST_CASE(str)
     BOOST_CHECK(seq[15] == 17);
 }
 
+#if !defined(BOOST_COBALT_DISABLE_RACE_TEST)
+
 CO_TEST_CASE(raceable)
 {
     cobalt::channel<int>  ci{0u};
@@ -238,7 +240,7 @@ CO_TEST_CASE(raceable_1)
   BOOST_CHECK(!r2.has_error());
 }
 
-
+#endif // !defined(BOOST_COBALT_DISABLE_RACE_TEST)
 
 namespace issue_53
 {
@@ -268,11 +270,14 @@ cobalt::promise<void> test()
   cobalt::channel<std::string> channel;
   co_await cobalt::join(timeout_and_write(channel), read(channel));
 }
+#if !defined(BOOST_COBALT_DISABLE_RACE_TEST)
 
 CO_TEST_CASE(issue_93)
 {
   co_await cobalt::race(test(), boost::asio::post(cobalt::use_op));
 }
+
+#endif // !defined(BOOST_COBALT_DISABLE_RACE_TEST)
 
 cobalt::promise<void> writer(cobalt::channel<int> & c)
 {
@@ -319,6 +324,7 @@ CO_TEST_CASE(any)
   co_return ;
 }
 
+#if !defined(BOOST_COBALT_DISABLE_RACE_TEST)
 
 CO_TEST_CASE(interrupt_)
 {
@@ -396,7 +402,7 @@ CO_TEST_CASE(interrupt_void_1)
   BOOST_CHECK(rl == 0);
 }
 
-
+#endif // !defined(BOOST_COBALT_DISABLE_RACE_TEST)
 
 cobalt::promise<void> do_write(cobalt::channel<void> & c, int times = 1)
 {
