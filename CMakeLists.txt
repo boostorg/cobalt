@@ -178,10 +178,11 @@ else()
     if (NOT BOOST_COBALT_BUILD_INLINE)
         find_package(Threads REQUIRED)
         # Boost 1.82 is the first with a Boost.ASIO with necessary support
-        find_package(Boost REQUIRED COMPONENTS system OPTIONAL_COMPONENTS json context url unit_test_framework)
+        find_package(Boost OPTIONAL_COMPONENTS json context url unit_test_framework)
         if (BOOST_COBALT_USE_BOOST_CONTAINER)
             find_package(Boost REQUIRED container)
         endif()
+        include_directories(${Boost_INCLUDE_DIR})
     endif()
 
     add_library(boost_cobalt
@@ -195,7 +196,6 @@ else()
 
     target_include_directories(boost_cobalt PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
     target_link_libraries(boost_cobalt PUBLIC
-            Boost::system
             Threads::Threads)
     target_compile_definitions(boost_cobalt PRIVATE BOOST_COBALT_SOURCE=1 )
 
